@@ -1,0 +1,9 @@
+
+*.bz2
+*.7z
+*.gz
+*.zip
+ACE_wrappers
+boost
+miniupnp
+openssl
