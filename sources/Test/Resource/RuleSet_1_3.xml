@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<RuleSet Version="1.3">
+	<Rule Name="1-1-1-1-1" IsEnabled="true" ErrorsTreatment="warning" Uuid="468e23c1-f4a9-4bd8-8609-15c9daa2030a">
+		<FilterSet/>
+		<InputSet>
+			<Endpoint Uuid="8c739428-1e9f-4222-b349-751addb0596e">
+				<CombinedAddress ResourceIdentifier="tcp://*:80?adapter=all" IsAcceptor="true"/>
+			</Endpoint>
+		</InputSet>
+		<DestinationSet>
+			<Endpoint Uuid="ffa144aa-6257-4bcf-aa61-976b952fd69d">
+				<CombinedAddress ResourceIdentifier="udp://qqqqq:1234"/>
+			</Endpoint>
+		</DestinationSet>
+	</Rule>
+	<Rule Name="2-2-2-2-2" IsEnabled="false" ErrorsTreatment="error" Uuid="b03335d0-45f1-496a-8507-89be3d860b44">
+		<FilterSet>
+			<Filter Name="DestinationsSorter/Ping"/>
+		</FilterSet>
+		<InputSet>
+			<Endpoint Uuid="67061610-c22c-420b-9c65-854416519f74">
+				<PreListener Name="TrafficLogger/File">c:\zzzzz</PreListener>
+				<SplitAddress ReadResourceIdentifier="tcp://*:1111?adapter=%7B22ECF6FF-F5CA-4C63-847C-EBA3E1490781%7D" WriteResourceIdentifier="udp://*:2222?adapter=all" Acceptor="reader"/>
+			</Endpoint>
+			<Endpoint Uuid="62361610-c22c-420b-9c65-854416519f74">
+				<SplitAddress ReadResourceIdentifier="tcp://qqqqqq:1112" WriteResourceIdentifier="udp://gggg:2223?adapter=all" Acceptor="none"/>
+			</Endpoint>
+		</InputSet>
+		<DestinationSet>
+			<Endpoint Uuid="7611979d-53fd-4942-9a58-4c624ce40051">
+				<SplitAddress ReadResourceIdentifier="pipe://ppp" WriteResourceIdentifier="serial://COM1?baudrate=9600&amp;databits=8&amp;stopbits=1&amp;parity=none&amp;flowcontrol=xon%2Fxoff"/>
+			</Endpoint>
+			<Endpoint Uuid="1611979d-53fd-4942-9a58-4c624ce40051">
+				<SplitAddress ReadResourceIdentifier="pipe://ppp2" WriteResourceIdentifier="serial://COM2?baudrate=9600&amp;databits=8&amp;stopbits=1&amp;parity=none&amp;flowcontrol=xon%2Fxoff"/>
+			</Endpoint>
+		</DestinationSet>
+	</Rule>
+	<Rule Name="ftp" IsEnabled="true" ErrorsTreatment="warning" Uuid="d1ae6295-6973-4cb9-80d2-a72ebf349e56">
+		<FilterSet/>
+		<InputSet>
+			<Endpoint Uuid="6df638a6-a368-442e-8bd4-f3dfd330bcc4">
+				<PreListener Name="Tunnel/Ftp/Passive"></PreListener>
+				<CombinedAddress ResourceIdentifier="tcp://*:21?adapter=all" IsAcceptor="false"/>
+			</Endpoint>
+		</InputSet>
+		<DestinationSet>
+			<Endpoint Uuid="8090688a-0e22-477d-97a2-b89f535f8813">
+				<PostListener Name="Tunnel/Ftp/Active">123</PostListener>
+				<CombinedAddress ResourceIdentifier="pathfinder://qweqwe:21?proxy=http://asdasd:8080"/>
+			</Endpoint>
+		</DestinationSet>
+	</Rule>
+</RuleSet>

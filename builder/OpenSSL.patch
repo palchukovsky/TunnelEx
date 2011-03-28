@@ -1,0 +1,67 @@
+diff -crBN openssl-1.0.0c/util/pl/VC-32.pl openssl-1.0.0c.TunnelEx/util/pl/VC-32.pl
+*** openssl-1.0.0c/util/pl/VC-32.pl	2010-09-14 00:28:34.000000000 +0700
+--- openssl-1.0.0c.TunnelEx/util/pl/VC-32.pl	2010-12-13 17:44:44.545719800 +0600
+***************
+*** 3,8 ****
+--- 3,9 ----
+  # Win64 and WinCE [follow $FLAVOR variable to trace the differences].
+  #
+  
++ $debug=0;
+  $ssl=	"ssleay32";
+  $crypto="libeay32";
+  
+***************
+*** 138,146 ****
+  	}
+  
+  # generate symbols.pdb unconditionally
+! $app_cflag.=" /Zi /Fd\$(TMP_D)/app";
+! $lib_cflag.=" /Zi /Fd\$(TMP_D)/lib";
+! $lflags.=" /debug";
+  
+  $obj='.obj';
+  $asm_suffix='.asm';
+--- 139,146 ----
+  	}
+  
+  # generate symbols.pdb unconditionally
+! $app_cflag.=" /Fd\$(TMP_D)/app";
+! $lib_cflag.=" /Fd\$(TMP_D)/lib";
+  
+  $obj='.obj';
+  $asm_suffix='.asm';
+***************
+*** 185,191 ****
+  		$asm='nasm -f win64 -DNEAR -Ox -g';
+  		$afile='-o ';
+  	} else {
+! 		$asm='ml64 /c /Cp /Cx /Zi';
+  		$afile='/Fo';
+  	}
+  } elsif ($FLAVOR =~ /WIN64I/) {
+--- 185,191 ----
+  		$asm='nasm -f win64 -DNEAR -Ox -g';
+  		$afile='-o ';
+  	} else {
+! 		$asm='ml64 /c /Cp /Cx';
+  		$afile='/Fo';
+  	}
+  } elsif ($FLAVOR =~ /WIN64I/) {
+***************
+*** 199,205 ****
+  	$asmtype="win32n";
+  	$afile='-o ';
+  } else {
+! 	$asm='ml /nologo /Cp /coff /c /Cx /Zi';
+  	$afile='/Fo';
+  	$asmtype="win32";
+  }
+--- 199,205 ----
+  	$asmtype="win32n";
+  	$afile='-o ';
+  } else {
+! 	$asm='ml /nologo /Cp /coff /c /Cx';
+  	$afile='/Fo';
+  	$asmtype="win32";
+  }

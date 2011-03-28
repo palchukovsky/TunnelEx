@@ -1,0 +1,8 @@
+EXPORTS
+	GetTunnelExModuleName
+	GetTunnelExModuleVersion
+	CreateTcpEndpointAddress
+	CreateUdpEndpointAddress
+	CreateActiveFtpListener
+	CreatePassiveFtpListener
+	CreateDestinationPingFilter

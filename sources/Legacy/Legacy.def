@@ -1,0 +1,6 @@
+EXPORTS
+	MigrateCurrentRuleSet
+	MigrateRuleSet
+	MigrateCurrentServiceConfiguration
+	MigrateAllAndSave
+	SetTestModeToggle = ?SetTestModeToggle@@YAX_N@Z

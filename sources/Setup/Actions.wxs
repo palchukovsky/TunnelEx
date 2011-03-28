@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Fragment Id="ActionsFragment">
+
+		<CustomAction Id="NoDowngrade"
+					  Error="A later version of [ProductName] is already installed. Please uninstall it first, if you want to downgrade." />
+		<CustomAction Id="NoUpgrade"
+					  Error="A version of [ProductName] that does not support upgrade is installed. Please uninstall it first." />
+
+		<CustomAction Id="LaunchControlCenter"
+					  FileKey="TunnelExControlCenter$(var.TexFileNameSuffix).exe"
+					  ExeCommand=" "
+					  Return="asyncNoWait" />
+
+		<CustomAction Id="SetUninstallArgs"
+					  Property="UNINSTALL_ARGS"
+					  Value="/x {[ProductCode]}" />
+		<CustomAction Id="SetUninstallCmd"
+					  Property="UNINSTALL_CMD"
+					  Value="msiexec.exe" />
+
+		<CustomAction Id="SetInstallWebPopupUrl"
+					  Property="WixShellExecTarget"
+					  Value="[ProductWebSite]/welcome/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?buid=$(var.ProductVersionMinorLow)" />
+		<CustomAction Id="SetUpgradeWebPopupUrl"
+					  Property="WixShellExecTarget"
+					  Value="[ProductWebSite]/whatsnew/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?buid=$(var.ProductVersionMinorLow)" />
+		<CustomAction Id="SetUninstallWebPopupUrl"
+					  Property="WixShellExecTarget"
+					  Value="[ProductWebSite]/survey/uninstall/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?buid=$(var.ProductVersionMinorLow)" />
+		<CustomAction Id="OpenWebPopup"
+					  BinaryKey="WixCA"
+					  DllEntry="WixShellExec"
+					  Execute="immediate"
+					  Return="ignore"
+					  Impersonate="yes"/>
+
+		<CustomAction Id="MigrateLocalService"
+					  FileKey="TunnelExControlCenter$(var.TexFileNameSuffix).exe"
+					  ExeCommand=" --migrateLocalService"
+					  Return="ignore"
+					  Impersonate="yes"
+					  Execute="commit" />
+
+		<InstallExecuteSequence>
+			<Custom Action="SetUninstallCmd" Before="FindRelatedProducts" />
+			<Custom Action="SetUninstallArgs" After="SetUninstallCmd" />
+			<FindRelatedProducts After="LaunchConditions" />
+			<Custom Action="NoDowngrade"
+					After="FindRelatedProducts">INSTALLED_LATER_VERSION_PRODUCT_CODE</Custom>
+			<Custom Action="NoUpgrade"
+					After="FindRelatedProducts">INSTALLED_CURRENT_VERSION_PRODUCT_CODE</Custom>
+			<RemoveExistingProducts After="InstallInitialize">INSTALLED_OLD_VERSION_PRODUCT_CODE</RemoveExistingProducts>
+			<Custom Action="MigrateLocalService" Before="InstallFinalize">
+				<![CDATA[&ControlCenterFeature = 3 AND &ServiceFeature = 3]]>
+			</Custom>
+			<Custom Action="SetUninstallWebPopupUrl"
+					After="InstallFinalize">
+				<![CDATA[REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE]]>
+			</Custom>
+			<Custom Action="OpenWebPopup"
+					After="SetUninstallWebPopupUrl">
+				<![CDATA[REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE]]>
+			</Custom>
+		</InstallExecuteSequence>
+
+	</Fragment>
+
+</Wix>

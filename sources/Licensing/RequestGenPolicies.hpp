@@ -1,0 +1,111 @@
+/**************************************************************************
+ *   Created: 2009/11/19 1:07
+ *    Author: Eugene V. Palchukovsky
+ *    E-mail: eugene@palchukovsky.com
+ * -------------------------------------------------------------------
+ *   Project: TunnelEx
+ *       URL: http://tunnelex.net
+ * -------------------------------------------------------------------
+ *       $Id: RequestGenPolicies.hpp 1127 2011-02-22 17:23:32Z palchukovsky $
+ **************************************************************************/
+
+#ifndef INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
+#define INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
+
+#include "Version/Version.h"
+
+#ifdef TUNNELEX_CORE
+#	include "String.hpp"
+#else // #ifdef TUNNELEX_CORE
+#	include <TunnelEx/String.hpp>
+#endif // #ifdef TUNNELEX_CORE
+
+namespace TunnelEx { namespace Licensing {
+
+	template<class ClientTrait, bool isTestMode>
+	struct RequestGenerationPolicy {
+	
+		inline static void Generate(
+					const std::string &license,
+					std::string &requestResult,
+					std::string &privateKeyResult,
+					const boost::any &clientParam) {
+		
+			using namespace std;
+			using namespace boost;
+			using namespace TunnelEx::Helpers::Crypto;
+			using namespace TunnelEx::Helpers::Xml;
+			
+			typedef ClientTrait::ConstantStorage ConstantStorage;
+			typedef ClientTrait::LocalStorage LocalStorage;
+			
+			shared_ptr<Document> doc = Document::CreateNew("LicenseKeyRequest");
+			doc->GetRoot()->SetAttribute("Version", "1.1");
+			
+			doc->GetRoot()->CreateNewChild("License")->SetContent(to_upper_copy(license));
+			
+			shared_ptr<Node> release = doc->GetRoot()->CreateNewChild("Release");
+			{
+				string now = to_iso_extended_string(posix_time::second_clock::universal_time());
+				BOOST_ASSERT(now[10] == 'T');
+				now[10] = ' ';
+				release->CreateNewChild("Time")->SetContent(now);
+			}
+			
+			{
+				shared_ptr<Node> product = release->CreateNewChild("Product");
+				product->SetAttribute("Name", ProductTrait<PRODUCT_TUNNELEX>::GetUuid());
+				product->SetAttribute("Edition", EditionTrait<EDITION_STANDARD>::GetUuid());
+				product->SetAttribute("Version", wstring(TUNNELEX_VERSION_FULL_W));
+			}
+			
+			{
+				typedef ClientTrait::WorkstationPropertiesQuery WorkstationPropertiesQuery;
+				typedef ClientTrait::WorkstationPropertiesLocal WorkstationPropertiesLocal;
+				WorkstationPropertyValues localProps;
+				WorkstationPropertiesLocal::Get(localProps, clientParam);
+				shared_ptr<Node> worstation = doc->GetRoot()->CreateNewChild("Workstation");
+				BOOST_FOREACH (
+						const WorkstationPropertyValues::value_type &prop,
+						localProps) {
+					shared_ptr<Node> node = worstation->CreateNewChild("WorkstationProperty");
+					node->SetAttribute(
+						"Name",
+						WorkstationPropertiesQuery::CastPropertyToString(prop.first));
+					node->SetContent(prop.second);
+				}
+			}
+
+			const auto_ptr<const Rsa> rsa(Rsa::Generate(Key::SIZE_512));
+			doc->GetRoot()
+				->CreateNewChild("PublicKey")
+				->SetContent(rsa->GetPublicKey().Export());
+
+			TunnelEx::UString xml;
+			doc->Dump(xml);
+			
+			vector<unsigned char> serverPubKeyStr;
+			ConstantStorage::GetLicenseServerAsymmetricPublicKey(serverPubKeyStr);
+			PublicKey serverPubKey(serverPubKeyStr);
+			Seale seale(xml.GetCStr(), xml.GetLength(), serverPubKey);
+			
+			InBase64Stream base64(true);
+			base64
+				<< seale.GetSealed()
+				<< seale.GetEnvKey()
+				<< unsigned short(seale.GetEnvKey().size());
+			
+			string request = "-----BEGIN TUNNELEX LICENSE KEY REQUEST-----\r\n";
+			request += base64.GetString();
+			request += "-----END TUNNELEX LICENSE KEY REQUEST-----\r\n";
+			
+			rsa->GetPrivateKey().Export().swap(privateKeyResult);
+			requestResult.swap(request);
+			
+		}
+		
+	};
+		
+} }
+
+#endif // INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107

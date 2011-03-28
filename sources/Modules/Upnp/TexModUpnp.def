@@ -1,0 +1,4 @@
+EXPORTS
+	CreateUpnpTcpEndpointAddress
+	CreateUpnpUdpEndpointAddress
+	CreateUpnpcService

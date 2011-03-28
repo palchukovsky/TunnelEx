@@ -1,0 +1,13 @@
+diff -crBN openssl-1.0.0c/util/pl/VC-32.pl openssl-1.0.0c.TunnelEx/util/pl/VC-32.pl
+*** openssl-1.0.0c/util/pl/VC-32.pl	2010-09-14 00:28:34.000000000 +0700
+--- openssl-1.0.0c.TunnelEx/util/pl/VC-32.pl	2010-12-08 19:47:48.159828900 +0600
+***************
+*** 3,8 ****
+--- 3,9 ----
+  # Win64 and WinCE [follow $FLAVOR variable to trace the differences].
+  #
+  
++ $debug=1;
+  $ssl=	"ssleay32";
+  $crypto="libeay32";
+  

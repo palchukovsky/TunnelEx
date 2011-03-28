@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8,00"
+	Name="Docs"
+	ProjectGUID="{9F4B8D91-2911-4F1F-98FD-3345D8AE993D}"
+	RootNamespace="Docs"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(ProjectDir)..\..\output\doc\"
+			IntermediateDirectory="$(ProjectDir)..\..\output\int\$(ConfigurationName)\$(ProjectName)\"
+			ConfigurationType="10"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				CommandLine="@echo on&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath=".\API.Doxyfile"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="@echo on&#x0D;&#x0A;set Dir=$(OutDir)sources\API\&#x0D;&#x0A;rmdir /Q /S &quot;%Dir%&quot;&#x0D;&#x0A;mkdir &quot;%Dir%&quot;&#x0D;&#x0A;doxygen &quot;$(InputFileName)&quot;&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
+					Outputs="$(OutDir)sources\API\*"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\Core.Doxyfile"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Building docs for core sources..."
+					CommandLine="@echo on&#x0D;&#x0A;set Dir=$(OutDir)sources\Core\&#x0D;&#x0A;rmdir /Q /S &quot;%Dir%&quot;&#x0D;&#x0A;mkdir &quot;%Dir%&quot;&#x0D;&#x0A;doxygen &quot;$(InputFileName)&quot;&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
+					Outputs="$(OutDir)sources\Core\*"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\SDK.Doxyfile"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="@echo on&#x0D;&#x0A;set Dir=$(OutDir)sources\Core\&#x0D;&#x0A;rmdir /Q /S &quot;%Dir%&quot;&#x0D;&#x0A;mkdir &quot;%Dir%&quot;&#x0D;&#x0A;doxygen &quot;$(InputFileName)&quot;&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
+					Outputs="$(OutDir)sources\SDK\*"
+				/>
+			</FileConfiguration>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

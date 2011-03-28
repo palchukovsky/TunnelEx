@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LicenseKey Id="E6E00E31-EFB6-4FE1-9C86-1AC57FC3992F" Version="1.1">
+  <Owner>Join Smith and Co</Owner>
+  <Type>regular</Type>
+  <Release>
+    <Time>2009-09-01 12:08:00</Time>
+    <Product Name="185B591A-9206-499E-915B-450A52DDB916"
+             Edition="4B7D5CEF-9EC3-4BB8-A051-189C4D0E591B"
+             Version="2.0.0" />
+  </Release>
+  <Update From="2009-08-01 12:08:00" To="2100-01-03 00:00:00" />
+  <Limitations>
+    <TimeInterval From="2009-08-03 12:08:00" To="2100-01-01 00:00:02" />
+    <Scores>10</Scores>
+    <Workstation>
+      <WorkstationProperty Name="81D96D9C-3A5D-4FB2-8A9B-8658470B972F">10FD0CD9137F001204E495FA84D40998EC183765</WorkstationProperty>
+    </Workstation>
+  </Limitations>
+  <FeatureSet>
+    <Feature Name="91D848B9-3F43-4594-84D2-FF8EB6AD2F61">
+      <Limitations>
+        <Scores>7</Scores>
+      </Limitations>
+      <Value>true</Value>
+    </Feature>
+    <Feature Name="565E33DA-FC88-4E7D-B613-39F39D9F496B">
+      <Limitations>
+        <Scores>7</Scores>
+        <Workstation>
+          <WorkstationProperty Name="80187FDC-8BDE-4A8B-9082-4C05765C39B5">89867FD0CD97F00D5204E958840998AEC1893F13</WorkstationProperty>
+        </Workstation>
+      </Limitations>
+      <Value>30</Value>
+    </Feature>
+    <Feature Name="B70D4EE4-377C-4E11-B8DC-2E36E06BFDD8">
+      <Limitations>
+        <Scores>6</Scores>
+      </Limitations>
+      <Value>40</Value>
+    </Feature>
+    <Feature Name="E55F3478-E0EA-442E-A14E-AD961029F1AF">
+      <Value>true</Value>
+      <Limitations>
+        <TimeInterval From="2009-09-01 12:08:00" To="2100-01-01 00:00:00" />
+      </Limitations>
+    </Feature>
+    <Feature Name="04EA6E7A-9229-4B81-9A3F-7497BD7297E5">
+      <Value>false</Value>
+    </Feature>
+  </FeatureSet>
+  <Options>
+    <ScoresOptions>
+      <WorkstationScores Property="B7BB6274-2943-4E9F-8408-6A3F7587A3FD">10</WorkstationScores>
+      <WorkstationScores Property="4790BEFA-ACE6-457A-A3DE-BEEE0B90591D">6</WorkstationScores>
+      <WorkstationScores Property="80187FDC-8BDE-4A8B-9082-4C05765C39B5">5</WorkstationScores>
+      <WorkstationScores Property="81D96D9C-3A5D-4FB2-8A9B-8658470B972F">5</WorkstationScores>
+    </ScoresOptions>
+  </Options>
+  <LicenseKeyRequest Version="1.1">
+    <License>056F070E-2374-4A12-9DC6-9AAB0DB309E7</License>
+    <Release>
+      <Time>2009-09-01 12:08:00</Time>
+      <Product Name="185B591A-9206-499E-915B-450A52DDB916"
+               Edition="4B7D5CEF-9EC3-4BB8-A051-189C4D0E591B"
+               Version="2.0.0" />
+    </Release>
+    <Workstation>
+      <WorkstationProperty Name="B7BB6274-2943-4E9F-8408-6A3F7587A3FD">34D45871D8C3D98F00B204E9800998ECF8427389</WorkstationProperty>
+      <WorkstationProperty Name="4790BEFA-ACE6-457A-A3DE-BEEE0B90591D">41D8CD98F00B204E9800998ECF8427E43F35A151</WorkstationProperty>
+      <WorkstationProperty Name="80187FDC-8BDE-4A8B-9082-4C05765C39B5">005204E98401FD1CD97F001201E98409FD0CD97F005204E9840998EC183F13167D376489409F01D989867FD0CD97F00D5204E958840998AEC1893F13</WorkstationProperty>
+      <WorkstationProperty Name="81D96D9C-3A5D-4FB2-8A9B-8658470B972F">10FD0CD9137F001204E495FA84D40998EC183765</WorkstationProperty>
+    </Workstation>
+  </LicenseKeyRequest>
+</LicenseKey>

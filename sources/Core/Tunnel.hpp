@@ -1,0 +1,179 @@
+/**************************************************************************
+ *   Created: 2007/03/01 2:05
+ *    Author: Eugene V. Palchukovsky
+ *    E-mail: eugene@palchukovsky.com
+ * -------------------------------------------------------------------
+ *   Project: TunnelEx
+ *       URL: http://tunnelex.net
+ * -------------------------------------------------------------------
+ *       $Id: Tunnel.hpp 1078 2010-11-30 06:54:19Z palchukovsky $
+ **************************************************************************/
+
+#ifndef INCLUDED_FILE__Tunnel_h__0703010205
+#define INCLUDED_FILE__Tunnel_h__0703010205
+
+#include "Instance.hpp"
+#include "SharedPtr.hpp"
+
+class ACE_Proactor;
+
+namespace TunnelEx {
+
+	class TunnelRule;
+	class Listener;
+	class Connection;
+	class ServerWorker;
+	class TunnelConnectionSignal;
+	class TunnelBuffer;
+
+	//! Connection process handler.
+	/** Opens and manages the current tunnel instance. */
+	class Tunnel : public Instance {
+	
+	private:
+
+		typedef std::pair<
+				SharedPtr<Connection>,
+				SharedPtr<Connection> >
+			ReadWriteConnections;
+		struct Licenses;
+
+		typedef ACE_Thread_Mutex ConnectionClosedMutex;
+		typedef ACE_Guard<ConnectionClosedMutex> ConnectionClosedLock;
+
+	public:
+		
+		//! C'tor for new tunnel instance.
+		explicit Tunnel(
+				const bool isStatic,
+				ServerWorker &server,
+				SharedPtr<const TunnelRule> rule,
+				SharedPtr<Connection> sourceRead,
+				SharedPtr<Connection> sourceWrite);
+
+		//! D'tor.
+		~Tunnel() throw();
+
+	public:
+
+		bool IsStatic() const {
+			return m_isStatic;
+		}
+		
+		const Connection & GetIncomingReadConnection() const {
+			return const_cast<Tunnel *>(this)->GetIncomingReadConnection();
+		}
+		const Connection & GetIncomingWriteConnection() const {
+			return const_cast<Tunnel *>(this)->GetIncomingWriteConnection();
+		}
+		const Connection & GetOutcomingReadConnection() const {
+			return const_cast<Tunnel *>(this)->GetOutcomingReadConnection();
+		}
+		const Connection & GetOutcomingWriteConnection() const {
+			return const_cast<Tunnel *>(this)->GetOutcomingWriteConnection();
+		}
+		
+		const TunnelRule & GetRule() const {
+			return *m_rule;
+		}
+
+		const ACE_Proactor & GetProactor() const {
+			return const_cast<Tunnel *>(this)->GetProactor();
+		}
+
+		ACE_Proactor & GetProactor();
+
+		ServerWorker & GetServer() {
+			return m_server;
+		}
+
+		const ServerWorker & GetServer() const {
+			return const_cast<Tunnel *>(this)->GetServer();
+		}
+
+		void StartSetup();
+
+		boost::shared_ptr<TunnelBuffer> GetBuffer() {
+			return m_buffer;
+		}
+
+		void SetForceClosingMode();
+
+		//! Closes current destination and tries to open next. Returns
+		//! false if there no more destinations in list.
+		bool Switch(
+			const boost::optional<SharedPtr<Connection> > &sourceRead,
+			const boost::optional<SharedPtr<Connection> > &sourceWrite);
+
+		bool IsSetupFailed() const;
+
+		bool IsSourceSetupFailed() const;
+		bool IsDestinationSetupFailed() const;
+
+	private:
+
+		void Init();
+
+		ReadWriteConnections CreateDestinationConnections(size_t &) const;
+
+		void ReportOpened() const;
+		void ReportClosed() const;
+
+		Connection & GetIncomingReadConnection() {
+			return *m_source.first;
+		}
+		Connection & GetIncomingWriteConnection() {
+			return *m_source.second;
+		}
+		Connection & GetOutcomingReadConnection() {
+			return *m_destination.first;
+		}
+		Connection & GetOutcomingWriteConnection() {
+			return *m_destination.second;
+		}
+
+		void OnConnectionSetup(Instance::Id);
+		
+		void OnConnectionClose(Instance::Id);
+		void OnConnectionClosed(Instance::Id);
+
+		void StartRead();
+
+		Licenses & GetLicenses();
+
+	private:
+	
+		class ListenerBinder;
+		template<class Base>
+		class ConnectionOpeningExceptionImpl;
+		
+	private:
+
+		const bool m_isStatic;
+
+		ServerWorker &m_server;
+		const SharedPtr<const TunnelRule> m_rule;
+
+		SharedPtr<TunnelConnectionSignal> m_sourceDataTransferSignal;
+		SharedPtr<TunnelConnectionSignal> m_destinationDataTransferSignal;
+
+		std::list<Connection *> m_connectionsToSetup;
+		size_t m_connectionsToClose;
+		size_t m_setupComplitedConnections;
+
+		boost::shared_ptr<TunnelBuffer> m_buffer;
+
+		ReadWriteConnections m_source;
+		ReadWriteConnections m_destination;
+
+		std::list<SharedPtr<const Listener> > m_listeners;
+
+		unsigned int m_destinationIndex;
+
+		ACE_Atomic_Op<ACE_Thread_Mutex, unsigned long> m_closedConnections;
+
+	};
+
+}
+
+#endif // ifndef INCLUDED_FILE__Tunnel_h__0703010205

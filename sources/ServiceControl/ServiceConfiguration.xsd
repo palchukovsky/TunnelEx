@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		   elementFormDefault="qualified">
+	<xs:simpleType name="DocumentVersionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="1.2" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FilePathType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z]:(\\|/)+([^:*?&quot;&lt;&gt;|]+(\\|/)*)*[^\\/:*?&quot;&lt;&gt;|]+" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ServerStateType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="started" />
+			<xs:enumeration value="stopped" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LogLevelType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="track" />
+			<xs:enumeration value="debug" />
+			<xs:enumeration value="information" />
+			<xs:enumeration value="warning" />
+			<xs:enumeration value="error" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="LogType">
+		<xs:simpleContent>
+			<xs:extension base="FilePathType">
+				<xs:attribute name="Level"
+							  use="required"
+							  type="LogLevelType" />
+				<xs:attribute name="MaxSize"
+							  use="required"
+							  type="xs:unsignedLong" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="ConfigurationType">
+		<xs:sequence>
+			<xs:element name="Rules"
+						type="FilePathType"
+						minOccurs="1"
+						maxOccurs="1" />
+			<xs:element name="Log"
+						type="LogType"
+						minOccurs="1"
+						maxOccurs="1" />
+			<xs:element name="ServerState"
+						type="ServerStateType"
+						minOccurs="1"
+						maxOccurs="1" />
+			<xs:element name="CertificatesStorage"
+						type="FilePathType"
+						minOccurs="1"
+						maxOccurs="1" />
+		</xs:sequence>
+		<xs:attribute name="Version"
+					  use="required"
+					  type="DocumentVersionType" />
+	</xs:complexType>
+	<xs:element name="Configuration" type="ConfigurationType" />
+</xs:schema>

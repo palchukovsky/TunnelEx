@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+
+	<!-- ******************************************************************
+        Simple types:
+	***************************************************************** -->
+
+	<xs:simpleType name="Boolean">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="true" />
+			<xs:enumeration value="false" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="DocumentVersionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="2.1" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="ResourceIdentifierType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[^:/]+://[^/].*" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="UuidType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9]{8,8}\-[a-zA-Z0-9]{4,4}\-[a-zA-Z0-9]{4,4}\-[a-zA-Z0-9]{4,4}\-[a-zA-Z0-9]{12,12}" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- ******************************************************************
+        Module:
+	******************************************************************* -->
+
+	<xs:complexType name="ModuleType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="Name" type="xs:string" use="required" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<!-- ******************************************************************
+        Address:
+	******************************************************************* -->
+
+	<xs:complexType name="AddressType" />
+
+	<xs:complexType name="CombinedAddressType">
+		<xs:complexContent>
+			<xs:extension base="AddressType">
+				<xs:attribute name="ResourceIdentifier"
+							  type="ResourceIdentifierType"
+							  use="required" />
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="CombinedInputAddressType">
+		<xs:complexContent>
+			<xs:extension base="CombinedAddressType">
+				<xs:attribute name="IsAcceptor" type="Boolean" />
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="CombinedDestintationAddressType">
+		<xs:complexContent>
+			<xs:extension base="CombinedAddressType" />
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="SplitAddressType">
+		<xs:complexContent>
+			<xs:extension base="AddressType">
+				<xs:attribute name="ReadResourceIdentifier"
+							  type="ResourceIdentifierType"
+							  use="required" />
+				<xs:attribute name="WriteResourceIdentifier"
+							  type="ResourceIdentifierType"
+							  use="required" />
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:simpleType name="SplitAddressAccepterType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="reader" />
+			<xs:enumeration value="writer" />
+			<xs:enumeration value="none" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="SplitInputAddressType">
+		<xs:complexContent>
+			<xs:extension base="SplitAddressType">
+				<xs:attribute name="Acceptor"
+							  type="SplitAddressAccepterType"
+							  use="required" />
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="SplitDestinationAddressType">
+		<xs:complexContent>
+			<xs:extension base="SplitAddressType" />
+		</xs:complexContent>
+	</xs:complexType>
+
+	<!-- ******************************************************************
+       Endpoint:
+	******************************************************************* -->
+
+	<xs:complexType name="EndpointType">
+		<xs:sequence>
+			<xs:element name="PreListener"
+						type="ModuleType"
+						maxOccurs="unbounded"
+						minOccurs="0" />
+			<xs:element name="PostListener"
+						type="ModuleType"
+						maxOccurs="unbounded"
+						minOccurs="0" />
+		</xs:sequence>
+		<xs:attribute name="Uuid" type="UuidType" use="required" />
+	</xs:complexType>
+
+	<xs:complexType name="InputEndpointType">
+		<xs:complexContent>
+			<xs:extension base="EndpointType">
+				<xs:choice>
+					<xs:element name="CombinedAddress"
+								type="CombinedInputAddressType"
+								minOccurs="1"
+								maxOccurs="1" />
+					<xs:element name="SplitAddress"
+								type="SplitInputAddressType"
+								minOccurs="1"
+								maxOccurs="1" />
+				</xs:choice>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="DestinationEndpointType">
+		<xs:complexContent>
+			<xs:extension base="EndpointType">
+				<xs:choice>
+					<xs:element name="CombinedAddress"
+								type="CombinedDestintationAddressType"
+								minOccurs="1"
+								maxOccurs="1" />
+					<xs:element name="SplitAddress"
+								type="SplitDestinationAddressType"
+								minOccurs="1"
+								maxOccurs="1" />
+				</xs:choice>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<!-- ******************************************************************
+       Input and Destinations sets:
+	******************************************************************* -->
+
+	<xs:complexType name="InputSetType">
+		<xs:sequence>
+			<xs:element name="Endpoint"
+						type="InputEndpointType"
+						minOccurs="1"
+						maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="DestinationSetType">
+		<xs:sequence>
+			<xs:element name="Endpoint"
+						type="DestinationEndpointType"
+						minOccurs="1"
+						maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ******************************************************************
+       Filters:
+	******************************************************************* -->
+
+	<xs:complexType name="FilterSetType">
+		<xs:sequence>
+			<xs:element name="Filter"
+						type="ModuleType"
+						minOccurs="0"
+						maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ******************************************************************
+       Service:
+	******************************************************************* -->
+
+	<xs:complexType name="ServiceType">
+		<xs:complexContent>
+			<xs:extension base="ModuleType">
+				<xs:attribute name="Uuid" type="UuidType" use="required" />
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<!-- ******************************************************************
+       Errors treatment:
+	******************************************************************* -->
+
+	<xs:simpleType name="ErrorsTreatmentType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="information" />
+			<xs:enumeration value="warning" />
+			<xs:enumeration value="error" />
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<!-- ******************************************************************
+       Rule:
+	******************************************************************* -->
+
+	<xs:complexType name="RuleType">
+		<xs:attribute name="Name" type="xs:string" use="required" />
+		<xs:attribute name="ErrorsTreatment"
+					  type="ErrorsTreatmentType"
+					  use="required"/>
+		<xs:attribute name="Uuid" type="UuidType" use="required" />
+		<xs:attribute name="IsEnabled" type="Boolean" use="required" />
+	</xs:complexType>
+
+	<xs:complexType name="ServiceRuleType">
+		<xs:complexContent>
+			<xs:extension base="RuleType">
+				<xs:sequence>
+					<xs:element name="Service"
+								type="ServiceType"
+								minOccurs="1"
+								maxOccurs="unbounded" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="TunnelRuleType">
+		<xs:complexContent>
+			<xs:extension base="RuleType">
+				<xs:sequence>
+					<xs:element name="FilterSet"
+								type="FilterSetType"
+								minOccurs="1"
+								maxOccurs="1" />
+					<xs:element name="InputSet"
+								type="InputSetType"
+								minOccurs="1"
+								maxOccurs="1" />
+					<xs:element name="DestinationSet"
+								type="DestinationSetType"
+								minOccurs="1"
+								maxOccurs="1" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!-- ******************************************************************
+       Rule set:
+	******************************************************************* -->
+
+	<xs:complexType name="RuleSetType">
+		<xs:sequence>
+			<xs:element name="ServiceRule"
+						type="ServiceRuleType"
+						minOccurs="0"
+						maxOccurs="unbounded" />
+			<xs:element name="TunnelRule"
+						type="TunnelRuleType"
+						minOccurs="0"
+						maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="Version"
+					  use="required"
+					  type="DocumentVersionType" />
+	</xs:complexType>
+
+	<!-- ******************************************************************
+       Root:
+	******************************************************************* -->
+
+	<xs:element name="RuleSet" type="RuleSetType" />
+
+</xs:schema>

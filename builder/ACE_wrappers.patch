@@ -1,0 +1,473 @@
+diff -crBN ACE_wrappers.Original/ace/ace.mwc ACE_wrappers.TunnelEx/ace/ace.mwc
+*** ACE_wrappers.Original/ace/ace.mwc	2008-07-26 13:35:20.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/ace.mwc	2011-02-23 03:04:01.608368400 +0600
+***************
+*** 4,18 ****
+  
+  workspace {
+    ace.mpc
+!   ace_for_tao.mpc
+!   ace_flreactor.mpc
+!   ace_foxreactor.mpc
+!   ace_qt3reactor.mpc
+!   ace_qt4reactor.mpc
+!   ace_tkreactor.mpc
+!   ace_xtreactor.mpc
+!   ETCL
+!   Monitor_Control
+!   QoS
+!   SSL
+  }
+--- 4,8 ----
+  
+  workspace {
+    ace.mpc
+!   SSL/ssl.mpc
+  }
+diff -crBN ACE_wrappers.Original/ace/config-win32-common.h ACE_wrappers.TunnelEx/ace/config-win32-common.h
+*** ACE_wrappers.Original/ace/config-win32-common.h	2010-01-15 16:21:50.000000000 +0600
+--- ACE_wrappers.TunnelEx/ace/config-win32-common.h	2011-02-23 03:04:01.675372200 +0600
+***************
+*** 650,656 ****
+  # endif /* !ACE_HAS_WINCE */
+  
+  #if !defined (WINVER)
+! # define WINVER 0x0400 // pretend it's at least WinNT 4.0
+  #endif
+  
+  ///////////////////////////////////////
+--- 650,656 ----
+  # endif /* !ACE_HAS_WINCE */
+  
+  #if !defined (WINVER)
+! # define WINVER 0x0501 // pretend it's at least WinNT 4.0
+  #endif
+  
+  ///////////////////////////////////////
+diff -crBN ACE_wrappers.Original/ace/config.h ACE_wrappers.TunnelEx/ace/config.h
+*** ACE_wrappers.Original/ace/config.h	1970-01-01 06:00:00.000000000 +0600
+--- ACE_wrappers.TunnelEx/ace/config.h	2011-02-23 03:04:01.697373500 +0600
+***************
+*** 0 ****
+--- 1,18 ----
++ /**************************************************************************
++  *   Created: 2010/06/11 09:00
++  *    Author: Eugene V. Palchukovsky
++  *    E-mail: eugene@palchukovsky.com
++  * -------------------------------------------------------------------
++  *   Project: TunnelEx
++  *       URL: http://tunnelex.net
++  **************************************************************************/
++ 
++ #ifndef INCLUDED_FILE__TUNNELEX__config_h__1005091822
++ #define INCLUDED_FILE__TUNNELEX__config_h__1005091822
++ 
++ #define ACE_HAS_ICMP_SUPPORT 1
++ #define ACE_USES_WCHAR 1
++ 
++ #include <ace/config-win32.h>
++ 
++ #endif // INCLUDED_FILE__TUNNELEX__config_h__1005091822
+diff -crBN ACE_wrappers.Original/ace/WIN32_Asynch_IO.cpp ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp
+*** ACE_wrappers.Original/ace/WIN32_Asynch_IO.cpp	2010-03-11 15:35:26.000000000 +0600
+--- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp	2011-02-23 03:05:47.402419400 +0600
+***************
+*** 1717,1722 ****
+--- 1717,1768 ----
+    return return_val;
+  }
+  
++ // copied from ACE_WIN32_Asynch_Write_Stream::shared_write
++ // see TEX-653 for details
++ int
++ ACE_WIN32_Asynch_Write_File::shared_write (ACE_WIN32_Asynch_Write_Stream_Result *result)
++ {
++   u_long bytes_written;
++   if (result->bytes_to_write () > MAXDWORD)
++     {
++       errno = ERANGE;
++       return -1;
++     }
++   DWORD bytes_to_write = static_cast<DWORD> (result->bytes_to_write ());
++ 
++   result->set_error (0); // Clear error before starting IO.
++ 
++   int initiate_result = 0;
++   initiate_result = ::WriteFile (result->handle (),
++                                  result->message_block ().rd_ptr (),
++                                  bytes_to_write,
++                                  &bytes_written,
++                                  result);
++   if (initiate_result == 1)
++     // Immediate success: the OVERLAPPED will still get queued.
++     return 0;
++ 
++   // If initiate failed, check for a bad error.
++   ACE_OS::set_errno_to_last_error ();
++   switch (errno)
++     {
++     case ERROR_IO_PENDING:
++       // The IO will complete proactively: the OVERLAPPED will still
++       // get queued.
++       return 0;
++ 
++     default:
++       // Something else went wrong: the OVERLAPPED will not get
++       // queued.
++ 
++       if (ACE::debug ())
++         ACE_DEBUG ((LM_ERROR,
++                     ACE_TEXT ("%p\n"),
++                     ACE_TEXT ("Initiating write")));
++       return -1;
++     }
++ }
++ 
+  int
+  ACE_WIN32_Asynch_Write_File::writev (ACE_Message_Block &message_block,
+                                       size_t bytes_to_write,
+diff -crBN ACE_wrappers.Original/ace/WIN32_Asynch_IO.h ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h
+*** ACE_wrappers.Original/ace/WIN32_Asynch_IO.h	2008-03-04 20:51:24.000000000 +0600
+--- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h	2011-02-23 03:06:14.694980500 +0600
+***************
+*** 960,965 ****
+--- 960,972 ----
+                const void *act,
+                int priority,
+                int signal_number = 0);
++ 
++ protected:
++ 
++ 	// copied from ACE_WIN32_Asynch_Write_Stream::shared_write
++ 	// see TEX-653 for details
++ 	int shared_write (ACE_WIN32_Asynch_Write_Stream_Result *result);
++ 
+  };
+  
+  /**
+diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/ace_output.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb
+*** ACE_wrappers.Original/bin/MakeProjectCreator/config/ace_output.mpb	2008-03-04 20:51:24.000000000 +0600
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb	2011-02-23 03:04:01.726375100 +0600
+***************
+*** 2,8 ****
+  // $Id: ace_output.mpb 80826 2008-03-04 14:51:23Z wotte $
+  
+  project {
+!   libout = $(ACE_ROOT)/lib
+  
+    specific(automake) {
+      libout -= $(ACE_ROOT)/lib
+--- 2,9 ----
+  // $Id: ace_output.mpb 80826 2008-03-04 14:51:23Z wotte $
+  
+  project {
+!   dllout = $(BinDir)
+!   libout = $(LibDir)
+  
+    specific(automake) {
+      libout -= $(ACE_ROOT)/lib
+diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/acedefaults.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb
+*** ACE_wrappers.Original/bin/MakeProjectCreator/config/acedefaults.mpb	2010-06-23 10:24:28.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb	2011-02-23 03:04:01.747376300 +0600
+***************
+*** 4,10 ****
+  project: ipv6, vc_warnings, build_files, test_files, svc_conf_files, ace_unicode {
+    staticflags += ACE_AS_STATIC_LIBS
+    includes    += $(ACE_ROOT)
+!   libpaths    += $(ACE_ROOT)/lib
+  
+    // Support the alternative Borland Make project type
+    specific(bmake) {
+--- 4,10 ----
+  project: ipv6, vc_warnings, build_files, test_files, svc_conf_files, ace_unicode {
+    staticflags += ACE_AS_STATIC_LIBS
+    includes    += $(ACE_ROOT)
+!   libpaths    += $(LibDir)
+  
+    // Support the alternative Borland Make project type
+    specific(bmake) {
+diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/default.rel ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel
+*** ACE_wrappers.Original/bin/MakeProjectCreator/config/default.rel	2008-03-04 20:51:24.000000000 +0600
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel	2011-02-23 03:04:01.773377800 +0600
+***************
+*** 4,8 ****
+--- 4,9 ----
+  // The second (optional) column is the value to build up if it isn't defined
+  // as an environmenment variable.
+  *_ROOT
++ *Dir
+  TAO_ROOT,  $ACE_ROOT/TAO
+  CIAO_ROOT, $TAO_ROOT/CIAO
+diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features
+*** ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features	2010-06-23 17:30:54.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features	2011-02-23 03:04:01.808379800 +0600
+***************
+*** 18,31 ****
+  // settings can be set here.
+  
+  // Enable these by default.
+! acexml        = 1
+  ace_svcconf   = 1
+! ace_token     = 1
+  
+  // By default we disable these.
+  ace_for_tao   = 0
+  cross_compile = 0
+! ssl           = 0
+  qos           = 0
+  rapi          = 0
+  repo          = 0
+--- 18,31 ----
+  // settings can be set here.
+  
+  // Enable these by default.
+! acexml        = 0
+  ace_svcconf   = 1
+! ace_token     = 0
+  
+  // By default we disable these.
+  ace_for_tao   = 0
+  cross_compile = 0
+! ssl           = 1
+  qos           = 0
+  rapi          = 0
+  repo          = 0
+***************
+*** 86,92 ****
+  // 1 - Athena widgets libraries are available
+  athena        = 0
+  // 1 - X11 libraries are available
+! x11           = 1
+  // 1 - X Toolkit libraries are available
+  xt            = 0
+  // 1 - Tk libraries are available
+--- 86,92 ----
+  // 1 - Athena widgets libraries are available
+  athena        = 0
+  // 1 - X11 libraries are available
+! x11           = 0
+  // 1 - X Toolkit libraries are available
+  xt            = 0
+  // 1 - Tk libraries are available
+***************
+*** 101,131 ****
+  // 1 - Fox libraries are available
+  fox           = 0
+  // 1 - OpenGL libraries are available
+! gl            = 1
+  
+  // Features for ACE support for various GUI libraries
+  // Use QtReactor
+! ace_qtreactor    = 1
+  // Use XtReactor
+! ace_xtreactor    = 1
+  // Use TkReactor
+! ace_tkreactor    = 1
+  // Use FlReactor
+! ace_flreactor    = 1
+  // Use FoxReactor
+! ace_foxreactor   = 1
+  
+  // Features for TAO support for various GUI libraries
+  // Use QtResources for TAO
+! tao_qtresource    = 1
+  // Use XtResources for TAO
+! tao_xtresource    = 1
+  // Use TkResources for TAO
+! tao_tkresource    = 1
+  // Use FlResources for TAO
+! tao_flresource    = 1
+  // Use FoxResources for TAO
+! tao_foxresource    = 1
+  
+  //Use the ZIP_Wrapper feature for when using the ZIP wrapper classes
+  ZIP_Wrapper = 0
+--- 101,131 ----
+  // 1 - Fox libraries are available
+  fox           = 0
+  // 1 - OpenGL libraries are available
+! gl            = 0
+  
+  // Features for ACE support for various GUI libraries
+  // Use QtReactor
+! ace_qtreactor    = 0
+  // Use XtReactor
+! ace_xtreactor    = 0
+  // Use TkReactor
+! ace_tkreactor    = 0
+  // Use FlReactor
+! ace_flreactor    = 0
+  // Use FoxReactor
+! ace_foxreactor   = 0
+  
+  // Features for TAO support for various GUI libraries
+  // Use QtResources for TAO
+! tao_qtresource    = 0
+  // Use XtResources for TAO
+! tao_xtresource    = 0
+  // Use TkResources for TAO
+! tao_tkresource    = 0
+  // Use FlResources for TAO
+! tao_flresource    = 0
+  // Use FoxResources for TAO
+! tao_foxresource    = 0
+  
+  //Use the ZIP_Wrapper feature for when using the ZIP wrapper classes
+  ZIP_Wrapper = 0
+diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/vc8.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features
+*** ACE_wrappers.Original/bin/MakeProjectCreator/config/vc8.features	2009-09-17 01:45:38.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features	2011-02-23 03:04:01.833381200 +0600
+***************
+*** 1,6 ****
+  // $Id: vc8.features 86721 2009-09-16 18:45:37Z johnnyw $
+  
+! ssl=0
+  qos=1
+  rwho=0
+  sctp=0
+--- 1,6 ----
+  // $Id: vc8.features 86721 2009-09-16 18:45:37Z johnnyw $
+  
+! ssl=1
+  qos=1
+  rwho=0
+  sctp=0
+diff -crBN ACE_wrappers.Original/MPC/config/default.rel ACE_wrappers.TunnelEx/MPC/config/default.rel
+*** ACE_wrappers.Original/MPC/config/default.rel	2009-09-03 19:57:26.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/config/default.rel	2011-02-23 03:04:01.854382400 +0600
+***************
+*** 4,6 ****
+--- 4,7 ----
+  // The second (optional) column, which must be comma separated, is the value
+  // to build up if it isn't defined as an environmenment variable.
+  *_ROOT
++ *Dir
+\ No newline at end of file
+diff -crBN ACE_wrappers.Original/MPC/config/openssl.mpb ACE_wrappers.TunnelEx/MPC/config/openssl.mpb
+*** ACE_wrappers.Original/MPC/config/openssl.mpb	2009-05-07 22:44:54.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/config/openssl.mpb	2011-02-23 03:04:01.878383800 +0600
+***************
+*** 6,18 ****
+  // default. If we ever add a new ssl library, then you
+  // would likely enable only one ssl library feature.
+  feature(openssl) {
+!   includes += $(SSL_ROOT)/include
+!   libpaths += $(SSL_ROOT)/lib
+  
+    specific(prop:windows) {
+      lit_libs += libeay32 ssleay32
+-     includes += $(SSL_ROOT)/inc32
+-     libpaths += $(SSL_ROOT)/out32dll $(SSL_ROOT)/out32
+    } else {
+      lit_libs += ssl crypto
+  
+--- 6,15 ----
+  // default. If we ever add a new ssl library, then you
+  // would likely enable only one ssl library feature.
+  feature(openssl) {
+!   includes += $(OpenSslDir)/$(OpenSslVersion)
+  
+    specific(prop:windows) {
+      lit_libs += libeay32 ssleay32
+    } else {
+      lit_libs += ssl crypto
+  
+***************
+*** 27,32 ****
+      libpaths += $(SSL_ROOT)/lib/Builder5
+    }
+    specific(prop:microsoft) {
+!     libpaths += $(SSL_ROOT)/lib/VC
+    }
+  }
+--- 24,29 ----
+      libpaths += $(SSL_ROOT)/lib/Builder5
+    }
+    specific(prop:microsoft) {
+! 
+    }
+  }
+diff -crBN ACE_wrappers.Original/MPC/templates/vc8dll.mpt ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt
+*** ACE_wrappers.Original/MPC/templates/vc8dll.mpt	2010-04-11 02:38:14.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt	2011-02-23 03:04:01.907385500 +0600
+***************
+*** 4,32 ****
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Release
+  common_defines     = WIN32 _WINDOWS _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 2
+  Detect64BitPortabilityProblems = false
+! MinimalRebuild     = false
+  
+  conditional_include "vc8platforms"
+  
+  Release {
+    LinkIncremental  = 1
+    optimize         = 2
+!   defines          = NDEBUG
+    output_dir       = Release
+!   intermediate_dir = Release
+    GenerateDebugInformation = false
+  }
+  
+  Debug {
+!   debug_prj        = 1
+!   defines          = _DEBUG
+!   output_dir       = .
+!   intermediate_dir = Debug
+!   lib_modifier     = d
+  }
+  
+  Memcheck Release {
+--- 4,52 ----
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Test Release
+  common_defines     = WIN32 _WINDOWS _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 2
+  Detect64BitPortabilityProblems = false
+! WarnAsError        = true
+! ExceptionHandling  = 2
+! OptimizeForWindows98 = 1
+! warning_level      = 4
+  
+  conditional_include "vc8platforms"
+  
+  Release {
+    LinkIncremental  = 1
+    optimize         = 2
+!   defines          = NDEBUG;BOOST_DISABLE_ASSERTS
+    output_dir       = Release
+!   intermediate_dir = $(IntDir)\Release
+    GenerateDebugInformation = false
++   WholeProgramOptimization = 1
++   MinimalRebuild   = false
++ }
++ 
++ Test {
++   LinkIncremental  = 2
++   optimize         = 2
++   defines          = TEST;NDEBUG;PROFILE;BOOST_ENABLE_ASSERT_HANDLER
++   output_dir       = Test
++   intermediate_dir = $(IntDir)\Test
++   lib_modifier     = _test
++   WholeProgramOptimization = 1
++   MinimalRebuild   = false
++   GenerateDebugInformation = true
+  }
+  
+  Debug {
+!   debug_prj        = 2
+!   defines          = _DEBUG;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Debug
+!   intermediate_dir = $(IntDir)\Debug
+!   lib_modifier     = _dbg
+!   debug_format     = 4
+!   MinimalRebuild   = true
+!   GenerateDebugInformation = true
+  }
+  
+  Memcheck Release {

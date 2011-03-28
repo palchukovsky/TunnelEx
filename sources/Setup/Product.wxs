@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+	<Product Id="*"
+			 Name="$(var.ProductFullName)"
+			 Manufacturer="$(var.ProductVendor)"
+			 Version="$(var.ProductVersionFull)"
+			 Language="1033"
+			 UpgradeCode="$(var.UpgradeCode)">
+
+		<Package Compressed="yes"
+				 Description="$(var.ProductFullName) version $(var.ProductVersionFull)$(var.ProductRevisionState)"
+				 Keywords="Installer" />
+
+		<Condition Message="This application runs only on Windows 2000 with Service Pack 4 or later.">
+			<![CDATA[(VersionNT = 500 AND ServicePackLevel >= 4) OR VersionNT > 500]]>
+		</Condition>
+
+		<Upgrade Id="$(var.UpgradeCode)">
+			<UpgradeVersion Property="INSTALLED_OLD_VERSION_PRODUCT_CODE"
+							Minimum="1.0.0"
+							Maximum="$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)"
+							IncludeMinimum="yes"
+							IncludeMaximum="no" />
+			<UpgradeVersion OnlyDetect="yes"
+							Property="INSTALLED_CURRENT_VERSION_PRODUCT_CODE"
+							Minimum="$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)"
+							Maximum="$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)"
+							IncludeMinimum="yes"
+							IncludeMaximum="yes" />
+			<UpgradeVersion OnlyDetect="yes"
+							Property="INSTALLED_LATER_VERSION_PRODUCT_CODE"
+							Minimum="$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)"
+							IncludeMinimum="no" />
+		</Upgrade>
+
+		<Media Id="1"
+			   Cabinet="installation.cab"
+			   CompressionLevel="$(var.CompressionLevel)"
+			   EmbedCab="yes"
+			   DiskPrompt="CD-ROM #1" />
+		<Property Id="DiskPrompt" Value="Installation [1]" />
+
+		<Icon Id="Icon" SourceFile="$(var.SolutionDir)icon.ico" />
+		<Property Id="ARPPRODUCTICON" Value="Icon" />
+		<Property Id="ALLUSERS" Value="1"/>
+
+		<Property Id="ProductWebSite" Value="http://$(var.ProductDomain)" />
+
+		<Feature Id="ProductFeature"
+				 Title="$(var.ProductFullName)"
+				 Level="1"
+				 TypicalDefault="install"
+				 ConfigurableDirectory="INSTALLDIR"
+				 AllowAdvertise="no">
+			<ComponentRef Id="UninstallPMenuShortcut" />
+			<ComponentRef Id="WebSiteShortcut" />
+			<ComponentRef Id="WebSiteShortcutPMenuShortcut" />
+			<ComponentRef Id="ProgramHelpShortcut" />
+			<ComponentRef Id="ProgramHelpPMenuShortcut" />
+			<ComponentRef Id="License" />
+			<Feature Id="ServiceFeature"
+					 Title="$(var.ProductFullName) Service"
+					 TypicalDefault="install"
+					 Level="1"
+					 AllowAdvertise="no">
+				<ComponentRef Id="Service" />
+				<ComponentRef Id="ServiceControl" />
+				<ComponentRef Id="Core" />
+				<ComponentRef Id="Libxml" />
+				<ComponentRef Id="OpenSsl" />
+				<ComponentRef Id="Ace" />
+				<ComponentRef Id="MsFramework" />
+				<ComponentRef Id="ModuleInet" />
+				<ComponentRef Id="ModulePathfinder" />
+				<ComponentRef Id="ModulePipe" />
+				<ComponentRef Id="ModuleSerial" />
+				<ComponentRef Id="ModuleUpnp" />
+			</Feature>
+			<Feature Id="ControlCenterFeature"
+					 Title="$(var.ProductFullName) TunnelEx Control Center"
+					 TypicalDefault="install"
+					 Level="1"
+					 AllowAdvertise="no">
+				<ComponentRef Id="ControlCenter" />
+				<ComponentRef Id="ControlCenterDesktopShortcut" />
+				<ComponentRef Id="ControlCenterPMenuShortcut" />
+				<ComponentRef Id="ControlCenterTemplates" />
+				<ComponentRef Id="ServiceControl" />
+				<ComponentRef Id="ModuleInet" />
+				<ComponentRef Id="ModulePathfinder" />
+				<ComponentRef Id="ModuleSerial" />
+				<ComponentRef Id="ModuleUpnp" />
+				<ComponentRef Id="Core" />
+				<ComponentRef Id="Libxml" />
+				<ComponentRef Id="OpenSsl" />
+				<ComponentRef Id="Ace" />
+				<ComponentRef Id="MsFramework" />
+			</Feature>
+		</Feature>
+
+		<UIRef Id="UI" />
+		<UIRef Id="WixUI_ErrorProgressText" />
+
+	</Product>
+
+</Wix>
