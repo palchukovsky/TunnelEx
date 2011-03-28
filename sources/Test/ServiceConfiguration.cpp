@@ -26,8 +26,8 @@ using namespace boost;
 namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 
 	BOOST_AUTO_TEST_CASE(DefaultValues) {
-		fs::path configurationFile = fs::initial_path<fs::path>();
-		configurationFile /= "DefaultServiceConfigurationTest.xml";
+		fs::wpath configurationFile = fs::initial_path<fs::wpath>();
+		configurationFile /= L"DefaultServiceConfigurationTest.xml";
 		if (fs::exists(configurationFile)) {
 			BOOST_REQUIRE(fs::remove(configurationFile));
 		}
@@ -36,13 +36,11 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 			BOOST_REQUIRE(defaultConf->Save(configurationFile.string().c_str()));
 		}
 		::ServiceConfiguration configuration(configurationFile.string().c_str());
-		fs::wpath logFile = tex::ConvertString<tex::WString>(
-			::ServiceConfiguration::GetConfigurationFileDir().c_str()).GetCStr();
+		fs::wpath logFile = ::ServiceConfiguration::GetConfigurationFileDir();
 		logFile /= L"Service.log";
 		BOOST_CHECK(configuration.GetLogPath() == logFile.string());
 		BOOST_CHECK(configuration.GetLogLevel() == tex::LOG_LEVEL_INFO);
-		fs::wpath rulesFile = tex::ConvertString<tex::WString>(
-			::ServiceConfiguration::GetConfigurationFileDir().c_str()).GetCStr();
+		fs::wpath rulesFile = ::ServiceConfiguration::GetConfigurationFileDir();
 		rulesFile /= L"RuleSet.xml";
 		BOOST_CHECK(configuration.GetRulesPath() == rulesFile.string());
 		BOOST_CHECK(configuration.GetMaxLogSize() == (1024 * 1024) * 1);
@@ -50,8 +48,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 	}
 
 	BOOST_AUTO_TEST_CASE(ServiceConfiguration_Validation) {
-		fs::path configurationFile = fs::initial_path<fs::path>();
-		configurationFile /= "DefaultServiceConfigurationTest.xml";
+		fs::wpath configurationFile = fs::initial_path<fs::wpath>();
+		configurationFile /= L"DefaultServiceConfigurationTest.xml";
 		if (fs::exists(configurationFile)) {
 			BOOST_REQUIRE(fs::remove(configurationFile));
 		}
@@ -77,8 +75,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 	}
 
 	BOOST_AUTO_TEST_CASE(Set) {
-		fs::path configurationFile = fs::initial_path<fs::path>();
-		configurationFile /= "DefaultServiceConfigurationTest.xml";
+		fs::wpath configurationFile = fs::initial_path<fs::wpath>();
+		configurationFile /= L"DefaultServiceConfigurationTest.xml";
 		if (fs::exists(configurationFile)) {
 			BOOST_REQUIRE(fs::remove(configurationFile));
 		}

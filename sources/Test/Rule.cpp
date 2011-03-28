@@ -448,9 +448,12 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Rule)
 				L"pipe://TunnelEx/EnablingTesting3");
 		}
 		
-		tex::Server::GetInstance().Start(rules);
-		BOOST_CHECK(tex::Server::GetInstance().GetOpenedEndpointsNumber() == 2);
-		tex::Server::GetInstance().Stop();
+		{
+			tex::SslCertificatesStorage certStorage(L"", 0, 0);
+			tex::Server::GetInstance().Start(rules, certStorage);
+			BOOST_CHECK(tex::Server::GetInstance().GetOpenedEndpointsNumber() == 2);
+			tex::Server::GetInstance().Stop();
+		}
 
 	}
 

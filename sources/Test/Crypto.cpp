@@ -27,6 +27,7 @@ BOOST_AUTO_TEST_CASE(Certificate) {
 	auto_ptr<crypto::X509Private> x509 = crypto::X509Private::GenerateVersion3(
 		rsa->GetPrivateKey(),
 		rsa->GetPublicKey(),
+		rsa->GetPrivateKey(),
 		string(),
 		string(),
 		string(),
