@@ -22,8 +22,6 @@
 #include "Modules/Serial/SerialEndpointAddress.hpp"
 #include "Modules/Upnp/UpnpEndpointAddress.hpp"
 
-#include "Version/Version.h"
-
 //////////////////////////////////////////////////////////////////////////
 
 using namespace std;

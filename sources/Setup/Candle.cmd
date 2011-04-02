@@ -14,7 +14,6 @@ candle.exe ^
 	-dProductVersionMajorLow=%TunnelExVersionMajorLow% ^
 	-dProductVersionMinorHigh=%TunnelExVersionMinorHigh% ^
 	-dProductVersionMinorLow=%TunnelExVersionMinorLow% ^
-	-dProductRevisionState=%TunnelExRevisionState% ^
 	-dCompressionLevel=%CompressionLevel% ^
 	-dUpgradeCode=%UpgradeCode% ^
 	-dSolutionDir=%~s1 ^

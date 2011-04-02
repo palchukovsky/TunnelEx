@@ -15,8 +15,6 @@
 
 #include "Licensing/FsLocalStorage.hpp"
 
-#include "Version/Version.h"
-
 #include <TunnelEx/Log.hpp>
 #include <TunnelEx/Error.hpp>
 

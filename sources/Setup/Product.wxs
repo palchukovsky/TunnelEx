@@ -9,7 +9,7 @@
 			 UpgradeCode="$(var.UpgradeCode)">
 
 		<Package Compressed="yes"
-				 Description="$(var.ProductFullName) version $(var.ProductVersionFull)$(var.ProductRevisionState)"
+				 Description="$(var.ProductFullName) version $(var.ProductVersionFull)"
 				 Keywords="Installer" />
 
 		<Condition Message="This application runs only on Windows 2000 with Service Pack 4 or later.">

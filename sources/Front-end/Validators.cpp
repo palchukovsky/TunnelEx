@@ -10,10 +10,7 @@
  **************************************************************************/
 
 #include "Prec.h"
-
 #include "Validators.hpp"
-
-#include "Version/Version.h"
 
 using namespace std;
 using namespace boost;

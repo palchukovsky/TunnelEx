@@ -24,7 +24,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="call &quot;$(ProjectDir)GenerateCompiler.cmd&quot; Root=&quot;$(SolutionDir)&quot;&#x0D;&#x0A;&quot;$(ProjectDir)Compile.js&quot; &quot;InputFile=$(ProjectDir)version&quot; &quot;OutputDir=$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="&quot;$(ProjectDir)Compile.js&quot; &quot;InputFile=$(ProjectDir)version&quot; &quot;OutputDir=$(OutDir)&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -55,46 +55,10 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath=".\GenerateCompiler.cmd"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 		<Filter
 			Name="Output"
 			>
-			<File
-				RelativePath=".\Revision.h"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\SetRevision.cmd"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
 			<File
 				RelativePath=".\SetVersion.cmd"
 				>
@@ -123,18 +87,6 @@
 		<Filter
 			Name="Input"
 			>
-			<File
-				RelativePath=".\Compile.js.template"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
 			<File
 				RelativePath=".\version"
 				>

@@ -16,7 +16,6 @@
 #include "Application.hpp"
 #include "LicensePolicies.hpp"
 
-#include "Version/Version.h"
 
 using namespace std;
 using namespace TunnelEx::Licensing;

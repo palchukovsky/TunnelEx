@@ -14,7 +14,6 @@
 #include "NewVersionDlg.hpp"
 #include "Application.hpp"
 
-#include "Version/Version.h"
 
 using namespace std;
 

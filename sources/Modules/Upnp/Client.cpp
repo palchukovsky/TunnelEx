@@ -14,8 +14,6 @@
 #include "Client.hpp"
 #include "ClientLib.hpp"
 
-#include "Version/Version.h"
-
 #include <TunnelEx/Log.hpp>
 
 using namespace std;

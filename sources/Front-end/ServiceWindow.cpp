@@ -26,8 +26,6 @@
 #include "LicensePolicies.hpp"
 #include "Auto.hpp"
 
-#include "Version/Version.h"
-
 using namespace std;
 using namespace boost;
 using namespace boost::posix_time;

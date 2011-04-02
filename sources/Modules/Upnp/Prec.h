@@ -13,6 +13,7 @@
 #define INCLUDED_FILE__Prec_h__1006221224
 
 #include "CompileConfig.h"
+#include "Constants.h"
 
 #include <ace/OS_Errno.h>
 

@@ -2,7 +2,6 @@ soapC.cpp
 soapClient.cpp
 soapH.h
 soapServer.cpp
-SoapServiceInterface.vcproj.palchukovsky.Eugene.user
 soapStub.h
 soapTunnelExServiceObject.h
 soapTunnelExServiceProxy.h

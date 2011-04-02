@@ -12,8 +12,6 @@
 #ifndef INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
 #define INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
 
-#include "Version/Version.h"
-
 #ifdef TUNNELEX_CORE
 #	include "String.hpp"
 #else // #ifdef TUNNELEX_CORE

@@ -13,8 +13,6 @@
 
 #include "FtpListener.hpp"
 
-#include "Version/Version.h"
-
 #include <TunnelEx/Rule.hpp>
 #include <TunnelEx/Server.hpp>
 #include <TunnelEx/Connection.hpp>

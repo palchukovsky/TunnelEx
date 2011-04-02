@@ -21,7 +21,6 @@
 #	include <TunnelEx/String.hpp>
 #endif // #ifdef TUNNELEX_CORE
 
-#include "Version/Version.h"
 
 namespace TunnelEx { namespace Licensing {
 

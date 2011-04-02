@@ -14,8 +14,6 @@
 #include "Configuration.hpp"
 #include "Legacy/LegacySupporter.hpp"
 
-#include "Version/Version.h"
-
 #include <TunnelEx/Log.hpp>
 #include <TunnelEx/String.hpp>
 

@@ -17,7 +17,6 @@
 #elif __cplusplus_cli
 #	define TUNNELEX_MOD_UPNP_API
 #else
-#	include "Constants.h"
 #	pragma comment(lib, TUNNELEX_MODULE_UPNP_LIB_FILE_NAME)
 #	define TUNNELEX_MOD_UPNP_API __declspec(dllimport)
 #endif

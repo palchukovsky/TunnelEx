@@ -11,7 +11,6 @@
 
 #include "Prec.h"
 #include "Api.h"
-#include "Version/Version.h"
 
 #include <TunnelEx/Log.hpp>
 #include <TunnelEx/Error.hpp>
@@ -45,7 +44,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	}
 
 	const char * GetTunnelExModuleVersion() {
-		return TUNNELEX_VERSION_FULL TUNNELEX_REVISION_STATE;
+		return TUNNELEX_VERSION_FULL TUNNELEX_BUILD_IDENTITY_ADD;
 	}
 
 } } }

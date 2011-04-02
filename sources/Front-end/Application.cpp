@@ -14,7 +14,6 @@
 #include "Application.hpp"
 #include "MainFrame.hpp"
 #include "ServiceAdapter.hpp"
-#include "Version/Version.h"
 
 using namespace std;
 using namespace boost;

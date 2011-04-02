@@ -22,7 +22,6 @@
 
 #include "Legacy/LegacySupporter.hpp"
 
-#include "Version/Version.h"
 
 using namespace std;
 using namespace boost;
@@ -84,7 +83,11 @@ END_EVENT_TABLE()
 
 MainFrame::MainFrame()
 		: wxFrame(
-			NULL, wxID_ANY, wxGetApp().GetAppName(), GetFramePosition(), GetFrameSize()),
+			NULL,
+			wxID_ANY,
+			wxGetApp().GetAppName() + TUNNELEX_BUILD_IDENTITY_ADD_W,
+			GetFramePosition(),
+			GetFrameSize()),
 		m_updateCheckerStat(new UpdateChecker::Stat) {
 
 	SetIcon(wxICON(ICON));
@@ -723,9 +726,9 @@ void MainFrame::OnCmdAbout(wxCommandEvent &) {
 		}
 		info.SetName(wxString::FromAscii(productName.c_str()));
 	}
-	info.SetVersion(TUNNELEX_VERSION_FULL_W TUNNELEX_REVISION_STATE_W);
+	info.SetVersion(TUNNELEX_VERSION_FULL_W TUNNELEX_BUILD_IDENTITY_ADD_W);
 	info.SetDescription(wxT("See License topic in help for details."));
-	info.SetCopyright(TUNNELEX_COPYRIGHT);
+	info.SetCopyright(TUNNELEX_COPYRIGHT_W);
 	info.SetWebSite(
 		wxT("http://") TUNNELEX_DOMAIN_W wxT("/?about"),
 		wxT("http://") TUNNELEX_DOMAIN_W);

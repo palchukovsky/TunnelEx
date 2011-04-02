@@ -17,8 +17,6 @@
 #include "ServiceAdapter.hpp"
 #include "LicensePolicies.hpp"
 
-#include "Version/Version.h"
-
 using namespace std;
 using namespace boost;
 using namespace TunnelEx;

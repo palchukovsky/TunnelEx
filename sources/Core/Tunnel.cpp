@@ -25,7 +25,6 @@
 #include "String.hpp"
 #include "Licensing/FsLocalStorage.hpp"
 
-#include "Version/Version.h"
 
 using namespace std;
 using namespace boost;

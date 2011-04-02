@@ -20,8 +20,6 @@
 #include "ConnectionsTraits.hpp"
 #include "EndpointResourceIdentifierParsers.hpp"
 
-#include "Version/Version.h"
-
 #include <TunnelEx/Exceptions.hpp>
 #include <TunnelEx/String.hpp>
 

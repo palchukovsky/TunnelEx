@@ -13,8 +13,6 @@
 
 #include "UpdateChecker.hpp"
 
-#include "Version/Version.h"
-
 using namespace std;
 using namespace boost;
 using namespace TunnelEx;

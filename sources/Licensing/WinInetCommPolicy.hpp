@@ -12,8 +12,6 @@
 #ifndef INCLUDED_FILE__TUNNELEX__CommPolicies_hpp__0911190056
 #define INCLUDED_FILE__TUNNELEX__CommPolicies_hpp__0911190056
 
-#include "Version/Version.h"
-
 namespace TunnelEx { namespace Licensing {
 
 	template<class ClientTrait, bool isTestMode>

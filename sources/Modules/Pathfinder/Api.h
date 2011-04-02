@@ -17,7 +17,6 @@
 #elif __cplusplus_cli // #ifdef TUNNELEX_MOD_PATHFINDER
 #	define TUNNELEX_MOD_PATHFINDER_API
 #else
-#	include "Constants.h"
 #	pragma comment(lib, TUNNELEX_MODULE_PATHFINDER_LIB_FILE_NAME)
 #	define TUNNELEX_MOD_PATHFINDER_API __declspec(dllimport)
 #endif // #ifdef TUNNELEX_MOD_PATHFINDER

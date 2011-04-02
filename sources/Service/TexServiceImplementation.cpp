@@ -16,7 +16,6 @@
 #include "Modules/Upnp/Client.hpp"
 #include "Licensing/RequestGenPolicies.hpp"
 #include "ServiceFilesSecurity.hpp"
-#include "Version/Version.h"
 #include <TunnelEx/Server.hpp>
 #include <TunnelEx/SslCertificatesStorage.hpp>
 #include <TunnelEx/Rule.hpp>
@@ -342,7 +341,7 @@ TexServiceImplementation::TexServiceImplementation()
 #	endif
 	Log::GetInstance().SetMinimumRegistrationLevel(conf.GetLogLevel());
 	Log::GetInstance().AppendInfo(
-		ConvertString<String>(L"Logging stated: " TUNNELEX_NAME_W L" " TUNNELEX_VERSION_FULL_W TUNNELEX_REVISION_STATE_W).GetCStr());
+		ConvertString<String>(L"Logging stated: " TUNNELEX_NAME_W L" " TUNNELEX_VERSION_FULL_W TUNNELEX_BUILD_IDENTITY_ADD_W).GetCStr());
 	if (logWasTruncated) {
 		Log::GetInstance().AppendInfo(
 			(Format("Log was truncated, previous size - %1% bytes.") % previousLogSize).str());

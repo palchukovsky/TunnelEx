@@ -10,10 +10,7 @@
  **************************************************************************/
 
 #include "Prec.h"
-
 #include "Control.hpp"
-
-#include "Version/Version.h"
 
 using namespace boost;
 

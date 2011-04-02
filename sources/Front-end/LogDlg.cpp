@@ -16,8 +16,6 @@
 #include "ServiceWindow.hpp"
 #include "Application.hpp"
 
-#include "Version/Version.h"
-
 #include <TunnelEx/Log.hpp>
 
 using namespace std;

@@ -10,11 +10,7 @@
  **************************************************************************/
 
 #include "Prec.h"
-
 #include "ServiceAdapter.hpp"
-
-#include "Version/Version.h"
-
 #include <TunnelEx/Exceptions.hpp>
 
 using namespace std;
