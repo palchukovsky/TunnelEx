@@ -384,9 +384,9 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetOwner().empty());
 			BOOST_CHECK(license.GetLicense().empty());
@@ -399,14 +399,14 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(11));
 		}
 
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 		}
 
@@ -503,8 +503,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_WORSTATION);
@@ -514,7 +514,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(11));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_WORSTATION);
 			License::FeatureValue featureValue;
@@ -523,8 +523,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(6));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(6));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_WORSTATION);
@@ -564,8 +564,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_WORSTATION);
@@ -601,8 +601,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_SCORES);
@@ -612,8 +612,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_SCORES);
@@ -623,8 +623,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_SCORES);
@@ -679,8 +679,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_SCORES);
@@ -785,8 +785,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_TIME);
@@ -796,8 +796,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_TIME);
@@ -807,8 +807,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_TIME);
@@ -840,8 +840,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_UPDATE);
@@ -851,8 +851,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_UPDATE);
@@ -862,8 +862,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_UPDATE);
@@ -895,8 +895,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_TIME);
@@ -906,8 +906,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_TIME);
@@ -917,8 +917,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_TIME);
@@ -950,8 +950,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
-			BOOST_CHECK(license.IsFeatureValueAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_UPDATE);
@@ -961,8 +961,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_UPDATE);
@@ -972,8 +972,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_UPDATE);
@@ -1118,7 +1118,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(true));
+			BOOST_CHECK(!license.IsFeatureAvailable(true));
 			BOOST_CHECK(!license.IsFeatureAvailable(false));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_FORMAT);
 			License::FeatureValue featureValue;
@@ -1127,8 +1127,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(10));
-			BOOST_CHECK(license.IsFeatureValueAvailable(10));
+			BOOST_CHECK(!license.IsFeatureAvailable(10));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(10));
 			BOOST_CHECK(!license.IsFeatureAvailable(10 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(10 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_FORMAT);
@@ -1138,8 +1138,8 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 		{
 			typedef tex::Licensing::RuleSetLicenseTesting License;
 			License license;
-			BOOST_CHECK(license.IsFeatureAvailable(5));
-			BOOST_CHECK(license.IsFeatureValueAvailable(5));
+			BOOST_CHECK(!license.IsFeatureAvailable(5));
+			BOOST_CHECK(!license.IsFeatureValueAvailable(5));
 			BOOST_CHECK(!license.IsFeatureAvailable(5 + 1));
 			BOOST_CHECK(!license.IsFeatureValueAvailable(5 + 1));
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_FORMAT);

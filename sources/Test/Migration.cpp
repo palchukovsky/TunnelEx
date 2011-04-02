@@ -573,7 +573,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Migration)
 	BOOST_AUTO_TEST_CASE(ServiceConfiguration_1_0) {
 
 		const tex::String serviceConfigurationXmlVer_1_0
-			=	"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+			=	"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 				"<Configuration Version=\"1.0\">"
 					"<Rules>C:/xxx/YYY/zzz/Ruuuuules.xml</Rules>"
 					"<Log Level=\"error\" MaxSize=\"123456\">C:/zzz/YYY/xxx/TeeeexService.log</Log>"
@@ -583,6 +583,35 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Migration)
 		legacySupporter.SetTestModeToggle(true);
 		ServiceConfiguration::SetTestModeToggle(true);
 		xml::Document::LoadFromString(serviceConfigurationXmlVer_1_0)
+			->Save(ServiceConfiguration::GetConfigurationFilePath());
+
+		const shared_ptr<const ServiceConfiguration> migrated(
+			new ServiceConfiguration(
+				LegacySupporter().MigrateCurrentServiceConfiguration().Get()));
+
+		BOOST_CHECK(migrated->GetLogPath() == L"C:/zzz/YYY/xxx/TeeeexService.log");
+		BOOST_CHECK(migrated->GetLogLevel() == tex::LOG_LEVEL_ERROR);
+		BOOST_CHECK(migrated->GetRulesPath() == L"C:/xxx/YYY/zzz/Ruuuuules.xml");
+		BOOST_CHECK(migrated->GetMaxLogSize() == 123456);
+		BOOST_CHECK(migrated->IsServerStarted() == false);
+		BOOST_CHECK(migrated->IsChanged() == true);
+
+	}
+
+	BOOST_AUTO_TEST_CASE(ServiceConfiguration_1_1) {
+
+		const tex::String serviceConfigurationXmlVer_1_1
+			=	"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+				"<Configuration Version=\"1.1\">"
+					"<Rules>C:/xxx/YYY/zzz/Ruuuuules.xml</Rules>"
+					"<Log Level=\"error\" MaxSize=\"123456\">C:/zzz/YYY/xxx/TeeeexService.log</Log>"
+					"<ServerState>stopped</ServerState>"
+				"</Configuration>";
+
+		LegacySupporter legacySupporter;
+		legacySupporter.SetTestModeToggle(true);
+		ServiceConfiguration::SetTestModeToggle(true);
+		xml::Document::LoadFromString(serviceConfigurationXmlVer_1_1)
 			->Save(ServiceConfiguration::GetConfigurationFilePath());
 
 		const shared_ptr<const ServiceConfiguration> migrated(

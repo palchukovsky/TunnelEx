@@ -102,15 +102,15 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 			xml::Document::LoadFromFile(configurationFile.string().c_str())->GetXPath());
 		xml::ConstNodeCollection  queryResult;
 		string buffer;
-		xpath->Query("//Configuration[@Version = '1.1']/Rules", queryResult);
+		xpath->Query("//Configuration[@Version = '1.2']/Rules", queryResult);
 		BOOST_REQUIRE(1 == queryResult.size());
 		BOOST_CHECK(queryResult[0]->GetContent(buffer) == "X:\\xxx yyy hhh\\vv ooov.xml");
-		xpath->Query("//Configuration[@Version = '1.1']/Log", queryResult);
+		xpath->Query("//Configuration[@Version = '1.2']/Log", queryResult);
 		BOOST_REQUIRE(1 == queryResult.size());
 		BOOST_CHECK(queryResult[0]->GetContent(buffer) == "D:\\xxx yyy hhh\\vvv kkkks.log");
 		BOOST_CHECK(queryResult[0]->GetAttribute("Level", buffer) == "track");
 		BOOST_CHECK(queryResult[0]->GetAttribute("MaxSize", buffer) == "123456789");
-		xpath->Query("//Configuration[@Version = '1.1']/ServerState", queryResult);
+		xpath->Query("//Configuration[@Version = '1.2']/ServerState", queryResult);
 		BOOST_REQUIRE(1 == queryResult.size());
 		BOOST_CHECK(queryResult[0]->GetContent(buffer) == "started");
 	}
