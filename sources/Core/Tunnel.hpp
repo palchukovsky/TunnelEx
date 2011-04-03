@@ -171,6 +171,7 @@ namespace TunnelEx {
 		unsigned int m_destinationIndex;
 
 		ACE_Atomic_Op<ACE_Thread_Mutex, unsigned long> m_closedConnections;
+		bool m_closingNow;
 
 	};
 

@@ -13,6 +13,7 @@
 #define INCLUDED_FILE_Server_h__0702110532
 
 #include "Rule.hpp"
+#include "String.hpp"
 #include "Singleton.hpp"
 #include "Time.h"
 #include "Api.h"
@@ -74,6 +75,8 @@ namespace TunnelEx {
 			bool IsRuleEnabled(const ::TunnelEx::WString &uuid) const;
 
 			const SslCertificatesStorage & GetCertificatesStorage() const;
+
+			const ::TunnelEx::String & GetName() const;
 
 		private:
 			

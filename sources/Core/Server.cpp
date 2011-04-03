@@ -160,20 +160,33 @@ public:
 		return *m_certificatesStorage;
 	}
 
+	const String & GetName() const {
+		if (m_name.IsEmpty()) {
+			String(ACE_INET_Addr("127.0.0").get_host_name()).Swap(
+				const_cast<Implementation *>(this)->m_name);
+			BOOST_ASSERT(!m_name.IsEmpty());
+			if (m_name.IsEmpty()) {
+				String("localhost").Swap(const_cast<Implementation *>(this)->m_name);
+			}
+		}
+		BOOST_ASSERT(!m_name.IsEmpty());
+		return m_name;
+	}
+
 private:
 
 	auto_ptr<ServerWorker> m_worker;
 	mutable CtrlMutex m_ctrlMutex;
 	Server::Ref m_server;
 	const SslCertificatesStorage *m_certificatesStorage;
+	String m_name;
 
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-Singletons::ServerPolicy::ServerPolicy()
-		: m_pimpl(new Implementation(*this)) {
-	//...//
+Singletons::ServerPolicy::ServerPolicy() {
+	m_pimpl = new Implementation(*this);
 }
 Singletons::ServerPolicy::~ServerPolicy() throw() {
 	delete m_pimpl;
@@ -227,6 +240,10 @@ size_t Singletons::ServerPolicy::GetOpenedEndpointsNumber() const {
 
 const SslCertificatesStorage & Singletons::ServerPolicy::GetCertificatesStorage() const {
 	return m_pimpl->GetCertificatesStorage();
+}
+
+const String & Singletons::ServerPolicy::GetName() const {
+	return m_pimpl->GetName();
 }
 
 //////////////////////////////////////////////////////////////////////////

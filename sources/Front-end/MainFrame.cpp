@@ -144,7 +144,7 @@ wxSize MainFrame::GetFrameSize() {
 
 void MainFrame::CreateStatusBar() {
 	wxFrame::CreateStatusBar(SBP_SIZE);
-	int widths[] = {-1, 60, /*60, */200, 140};
+	int widths[] = {-1, 100, /*60, */300, 200};
 	SetStatusWidths(4, widths);
 	int styles[] = {wxSB_FLAT, wxSB_FLAT, /*wxSB_FLAT, */wxSB_FLAT, wxSB_FLAT};
 	GetStatusBar()->SetStatusStyles(4, styles);

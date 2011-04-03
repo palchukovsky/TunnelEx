@@ -372,13 +372,13 @@ public:
 public:
 
 	void OnSetupSuccess() {
-		CompletedSetup(true);
+		CompleteSetup(true);
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
 		m_signal->OnConnectionSetupCompleted(m_instanceId);
 	}
 
 	void OnSetupFail(const WString &failReason) {
-		CompletedSetup(false);
+		CompleteSetup(false);
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
 			"Setup for connection %1% has been canceled - connection will be closed.",
@@ -395,13 +395,13 @@ public:
 
 private:
 
-	void CompletedSetup(bool setupCompletedWithSuccess) {
+	void CompleteSetup(bool setupCompletedWithSuccess) {
 		StateLock lock(m_stateMutex);
 		m_isSetupCompleted = true;
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
 		BOOST_ASSERT(m_idleTimeoutTimer == -1);
-		if (m_isSetupCompleted) {
+		if (m_isSetupCompletedWithSuccess) {
 			UpdateIdleTimer();
 		}
 	}

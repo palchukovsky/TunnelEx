@@ -189,9 +189,10 @@ Tunnel::Tunnel(
 		m_buffer(new TunnelBuffer),
 		m_source(make_pair(sourceRead, sourceWrite)),
 		m_destinationIndex(0),
-		m_closedConnections(0) {
+		m_closedConnections(0),
+		m_closingNow(false) {
 	m_destination = CreateDestinationConnections(m_destinationIndex);
-	Log::GetInstance().AppendDebug("Outcoming connection created.");
+	Log::GetInstance().AppendDebug("Outcoming connection created for %1%.", GetInstanceId());
 	Init();
 }
 
@@ -351,6 +352,7 @@ void Tunnel::Init() {
 Tunnel::~Tunnel() throw() {
 	//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
 	try {
+		m_closingNow = true;
 		m_sourceDataTransferSignal->DisconnectDataTransfer();
 		m_destinationDataTransferSignal->DisconnectDataTransfer();
 		{
@@ -510,24 +512,9 @@ void Tunnel::ReportOpened() const {
 		message
 			<< " \""
 			<< ConvertString(m_rule->GetName(), appender.buffer).GetCStr()
-			<< "\"";
+			<< '\"';
 	}
-	message << ": " << GetInstanceId() << "/";
-	if (&GetIncomingReadConnection() == &GetIncomingWriteConnection()) {
-		message << GetIncomingReadConnection().GetInstanceId() << "RW/";
-	} else {
-		message
-			<< GetIncomingReadConnection().GetInstanceId() << "R/"
-			<< GetIncomingWriteConnection().GetInstanceId() << "W/";
-	}
-	if (&GetOutcomingReadConnection() == &GetOutcomingWriteConnection()) {
-		message << GetOutcomingReadConnection().GetInstanceId() << "RW";
-	} else {
-		message
-			<< GetOutcomingReadConnection().GetInstanceId() << "R/"
-			<< GetOutcomingWriteConnection().GetInstanceId() << "W";
-	}
-	message << " - ";
+	message << ": ";
 
 	bool isReadRemote = false;
 	bool isWriteRemote = false;
@@ -538,22 +525,40 @@ void Tunnel::ReportOpened() const {
 		appender.AppendRemote(GetIncomingWriteConnection(), false, &isWriteRemote);
 		message << ")";
 	}
-	message << " -> ";
 	if (isReadRemote || isWriteRemote) {
+		message << " > ";
 		appender.AppendLocal(GetIncomingReadConnection(), true);
 		if (&GetIncomingReadConnection() != &GetIncomingWriteConnection()) {
 			message << "(write: ";
 			appender.AppendLocal(GetIncomingWriteConnection(), false);
 			message << ")";
 		}
-		message << " -> ";
 	}
+	message << " < " << m_server.GetServer().GetName().GetCStr() << " > ";
 	appender.AppendRemote(GetOutcomingReadConnection(), true);
 	if (&GetOutcomingReadConnection() != &GetOutcomingWriteConnection()) {
 		message << "(write: ";
 		appender.AppendRemote(GetOutcomingWriteConnection(), false);
 		message << ")";
 	}
+	
+	message << " (" << GetInstanceId() << ':';
+	if (&GetIncomingReadConnection() == &GetIncomingWriteConnection()) {
+		message << GetIncomingReadConnection().GetInstanceId();
+	} else {
+		message
+			<< GetIncomingReadConnection().GetInstanceId()
+			<< '>' << GetIncomingWriteConnection().GetInstanceId() ;
+	}
+	message << "<>";
+	if (&GetOutcomingReadConnection() == &GetOutcomingWriteConnection()) {
+		message << GetOutcomingReadConnection().GetInstanceId();
+	} else {
+		message
+			<< GetOutcomingReadConnection().GetInstanceId()
+			<< '>' << GetOutcomingWriteConnection().GetInstanceId();
+	}
+	message << ')';
 
 	Log::GetInstance().AppendInfo(message.str());
 
@@ -568,7 +573,6 @@ void Tunnel::ReportClosed() const throw() {
 		message % GetInstanceId();
 		Log::GetInstance().AppendInfo(message.str());
 	} catch (...) {
-		LogTracking("Tunnel", "ReportClosed", __FILE__, __LINE__);
 		BOOST_ASSERT(false);
 	}
 }
@@ -621,25 +625,31 @@ void Tunnel::OnConnectionSetup(Instance::Id instanceId) {
 
 void Tunnel::OnConnectionClose(Instance::Id instanceId) {
 	BOOST_ASSERT(m_closedConnections < m_connectionsToClose);
-	++m_closedConnections;
+	const bool closingNow = m_closingNow;
 	Log::GetInstance().AppendDebug(
-		"Connection %4% closed in tunnel %1% (connections: %2%, already closed: %3%).",
+		"Closing connection %1% in tunnel %2% (connections: %3%, already closed: %4%, closing: %5%).",
+		instanceId,
 		GetInstanceId(),
 		m_connectionsToClose,
 		m_closedConnections.value(),
-		instanceId);
+		!closingNow);
+	++m_closedConnections;
+	if (closingNow) {
+		// object can be deleted here!
+	}
 	m_server.CloseTunnel(GetInstanceId(), false);
 }
 
 void Tunnel::OnConnectionClosed(Instance::Id instanceId) {
 	BOOST_ASSERT(m_closedConnections < m_connectionsToClose);
-	++m_closedConnections;
 	Log::GetInstance().AppendDebug(
-		"Connection %4% closed in tunnel %1% (connections: %2%, already closed: %3%).",
+		"Connection %1% closed in tunnel %2% (connections: %3%, already closed: %4%).",
+		instanceId,
 		GetInstanceId(),
 		m_connectionsToClose,
-		m_closedConnections.value(),
-		instanceId);
+		m_closedConnections.value());
+	++m_closedConnections;
+	// object can be deleted here!
 }
 
 Tunnel::Licenses & Tunnel::GetLicenses() {
@@ -774,9 +784,7 @@ bool Tunnel::Switch(
 	destination.swap(m_destination);
 	m_destinationIndex = destinationIndex;
 
-	Log::GetInstance().AppendDebug(
-		"Outcoming connection created for tunnel %1%.",
-		GetInstanceId());
+	Log::GetInstance().AppendDebug("Outcoming connection created for %1%.", GetInstanceId());
 
 	Init();
 

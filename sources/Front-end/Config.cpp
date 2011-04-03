@@ -40,6 +40,7 @@ Config::~Config() {
 		if (!m_confFilePathCache.IsEmpty()) {
 			return m_confFilePathCache;
 		}
+
 		std::vector<wxChar> buffer(MAX_PATH, 0);
 		if (SHGetSpecialFolderPath(NULL, &buffer[0], CSIDL_APPDATA, TRUE)) {
 			wpath path(&buffer[0]);

@@ -98,6 +98,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				WFormat message(L"Failed to create secure (SSL/TLS) connection for %2%: %1%");
 				message % ex.GetWhat() % GetInstanceId();
 				CancelSetup(message.str().c_str());
+				// Object may be deleted here
 				return;
 			}
 
@@ -126,6 +127,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				WFormat message(L"Failed to create secure (SSL/TLS) connection for %1%: unknown error");
 				message % GetInstanceId();
 				CancelSetup(message.str().c_str());
+				// Object may be deleted here
+				return;
 			}
 
 		}

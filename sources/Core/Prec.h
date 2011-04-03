@@ -53,6 +53,7 @@
 #	include <ace/Reactor.h>
 #	include <ace/OS_NS_unistd.h>
 #	include <ace/Atomic_Op.h>
+#	include <ace/INET_Addr.h>
 #include "CompileWarningsAce.h"
 
 #include "CompileWarningsBoost.h"
@@ -82,7 +83,6 @@
 
 #include <string.h>
 #include <malloc.h>
-
 #include <sstream>
 #include <fstream>
 #include <memory>
