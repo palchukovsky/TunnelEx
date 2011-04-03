@@ -104,4 +104,11 @@
 #define TUNNELEX_MODULE_INET_NAME "Inet Module"
 #define TUNNELEX_MODULE_INET_NAME_FULL TUNNELEX_NAME " " TUNNELEX_MODULE_INET_NAME
 
+#define TUNNELEX_FAKE_HTTP_CLIENT \
+	"Mozilla/5.0 (Windows NT 6.1; rv:2.0)" \
+	" Gecko/20100101 Firefox/4.0"
+#define TUNNELEX_FAKE_HTTP_CLIENT_W \
+	L"Mozilla/5.0 (Windows NT 6.1; rv:2.0)" \
+	L" Gecko/20100101 Firefox/4.0"
+
 #endif // INCLUDED_FILE__TUNNELEX__Constants_h__0812150237

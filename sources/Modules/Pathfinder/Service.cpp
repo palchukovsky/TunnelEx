@@ -208,10 +208,10 @@ void ServiceImpl::InitConnection(
 
 	if (proxy.empty()) {
 		m_handles->inet.handle
-			= InternetOpenW(TUNNELEX_NAME_W, INTERNET_OPEN_TYPE_DIRECT, 0, 0, 0);
+			= InternetOpenW(TUNNELEX_FAKE_HTTP_CLIENT_W, INTERNET_OPEN_TYPE_DIRECT, 0, 0, 0);
 	} else {
 		m_handles->inet.handle = InternetOpenW(
-			TUNNELEX_NAME_W,
+			TUNNELEX_FAKE_HTTP_CLIENT_W,
 			INTERNET_OPEN_TYPE_PROXY,
 			proxy.c_str(),
 			0,

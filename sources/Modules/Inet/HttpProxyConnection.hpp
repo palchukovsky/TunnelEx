@@ -164,7 +164,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					<< targetHostA.GetCStr() << ":" << targetPort
 					<< " HTTP/1.0"
 					<< "\r\n"
-				<< "User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)\r\n"
+				<< "User-Agent: " TUNNELEX_FAKE_HTTP_CLIENT "\r\n"
 				<< "Host: " << targetHostA.GetCStr() << ":" << targetPort << "\r\n"
 				<< "Content-Length: 0\r\n"
 				<< "Proxy-Connection: Keep-Alive\r\n";
