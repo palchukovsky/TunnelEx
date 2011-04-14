@@ -13,9 +13,9 @@
 #define INCLUDED_FILE__TUNNELEX__UpnpEndpointAddress_hpp__1005310859
 
 #include "Api.h"
-#include <TunnelEx/SslCertificatesStorage.hpp>
-#include <TunnelEx/EndpointAddress.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/SslCertificatesStorage.hpp"
+#include "Core/EndpointAddress.hpp"
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Upnp {
 

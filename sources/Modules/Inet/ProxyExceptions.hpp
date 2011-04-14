@@ -13,7 +13,7 @@
 #define INCLUDED_FILE__TUNNELEX__ProxyExceptions_hpp__1003281609
 
 #include "Api.h"
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/Exceptions.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

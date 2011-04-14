@@ -14,19 +14,17 @@
 
 #include "DtorTester.hpp"
 
-#include <TunnelEx/SharedPtr.hpp>
-#include <TunnelEx/UniquePtr.hpp>
+#include "Core/SharedPtr.hpp"
+#include "Core/UniquePtr.hpp"
 
 namespace ut = boost::unit_test;
 namespace tex = TunnelEx;
-using namespace std;
-using namespace boost;
 
 namespace Test { BOOST_AUTO_TEST_SUITE(SmartPtr)
 
 	BOOST_AUTO_TEST_CASE(Share) {
 		
-		string lastDelObj;
+		std::string lastDelObj;
 		unsigned int delObjNumb = 0;
 		{
 			tex::SharedPtr<DtorTester> foo(new DtorTester(delObjNumb, lastDelObj));
@@ -144,7 +142,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(SmartPtr)
 
 	BOOST_AUTO_TEST_CASE(Auto) {
 
-		string lastDelObj;
+		std::string lastDelObj;
 		unsigned int delObjNumb = 0;
 		{
 			tex::UniquePtr<DtorTester> foo(new DtorTester(delObjNumb, lastDelObj));
@@ -198,7 +196,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(SmartPtr)
 
 	BOOST_AUTO_TEST_CASE(SmartPtr_Cross) {
 
-		string lastDelObj;
+		std::string lastDelObj;
 		unsigned int delObjNumb = 0;
 
 		{

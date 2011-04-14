@@ -23,14 +23,14 @@ namespace TunnelEx {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	//! ANSI string.
+	//! ANSI std::string.
 	typedef ::TunnelEx::BasicString<char> String;
 
 	typedef unsigned char Utf8Char;
-	//! UTF-8 string.
+	//! UTF-8 std::string.
 	typedef ::TunnelEx::BasicString<Utf8Char> UString;
 
-	//! UTF-16 BE string.
+	//! UTF-16 BE std::string.
 	typedef ::TunnelEx::BasicString<wchar_t> WString;
 
 }

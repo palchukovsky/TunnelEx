@@ -14,8 +14,6 @@
 #include "Collection.hpp"
 #include "Exceptions.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -79,83 +77,82 @@ public:
 
 private:
 
-	ptr_vector<Item> m_collection;
+	boost::ptr_vector<Item> m_collection;
 
 };
-
 
 //////////////////////////////////////////////////////////////////////////
 
 template<class Item>
-Collection<Item>::Collection()
+TunnelEx::Collection<Item>::Collection()
 		: m_pimpl(new Implementation) {
 	//...//
 }
 
 template<class Item>
-Collection<Item>::Collection(size_t reserve)
+TunnelEx::Collection<Item>::Collection(size_t reserve)
 		: m_pimpl(new Implementation(reserve)) {
 	//...//
 }
 
 template<class Item>
-Collection<Item>::Collection(const Collection &rhs)
+TunnelEx::Collection<Item>::Collection(const Collection &rhs)
 		: m_pimpl(new Implementation(*rhs.m_pimpl)) {
 	//...//
 } 
 
 template<class Item>
-Collection<Item>::~Collection() throw() {
+TunnelEx::Collection<Item>::~Collection() throw() {
 	delete m_pimpl;
 }
 
 template<class Item>
-void Collection<Item>::Reserve(size_t reserve) {
+void TunnelEx::Collection<Item>::Reserve(size_t reserve) {
 	m_pimpl->Reserve(reserve);
 }
 
 template<class Item>
-const Collection<Item> &
-Collection<Item>::operator =(const Collection &rhs) {
+const TunnelEx::Collection<Item> &
+TunnelEx::Collection<Item>::operator =(const TunnelEx::Collection<Item> &rhs) {
 	Collection<typename Item> tmp(rhs);
 	Swap(tmp);
 	return *this;
 }
 
 template<class Item>
-void Collection<Item>::Swap(Collection<Item> &rho) throw() {
+void TunnelEx::Collection<Item>::Swap(TunnelEx::Collection<Item> &rho) throw() {
 	Implementation *const oldImpl(m_pimpl);
 	m_pimpl = rho.m_pimpl;
 	rho.m_pimpl = oldImpl;
 }
 
 template<class Item>
-const Item & Collection<Item>::operator [](size_t index) const {
-	return const_cast<Collection *>(this)->operator [](index);
+const Item & TunnelEx::Collection<Item>::operator [](size_t index) const {
+	return const_cast<TunnelEx::Collection<Item> *>(this)->operator [](index);
 }
 
 template<class Item>
-Item& Collection<Item>::operator [](size_t index) {
+Item & TunnelEx::Collection<Item>::operator [](size_t index) {
 	return m_pimpl->GetAt(index);
 }
 
 template<class Item>
-size_t Collection<Item>::GetSize() const {
+size_t TunnelEx::Collection<Item>::GetSize() const {
 	return m_pimpl->GetSize();
 }
 
 template<class Item>
-void Collection<Item>::SetSize(size_t size) {
+void TunnelEx::Collection<Item>::SetSize(size_t size) {
 	m_pimpl->SetSize(size);
 }
 
 template<class Item>
-void Collection<Item>::Append(const Item &item) {
+void TunnelEx::Collection<Item>::Append(const Item &item) {
 	m_pimpl->Append(item);
 }
 
 template<class Item>
-void Collection<Item>::Remove(size_t intdex) {
+void TunnelEx::Collection<Item>::Remove(size_t intdex) {
 	m_pimpl->Delete(intdex);
 }
 

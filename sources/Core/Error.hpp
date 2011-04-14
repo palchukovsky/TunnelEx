@@ -31,7 +31,7 @@ namespace TunnelEx {
 
 		bool IsError() const;
 
-		//! Returns true if error could be resolved to string.
+		//! Returns true if error could be resolved to std::string.
 		bool CheckError() const;
 
 	private:

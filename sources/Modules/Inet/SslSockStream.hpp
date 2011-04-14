@@ -12,8 +12,8 @@
 #ifndef INCLUDED_FILE__TUNNELEX__SslSockStream_hpp__1012092215
 #define INCLUDED_FILE__TUNNELEX__SslSockStream_hpp__1012092215
 
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/MessageBlock.hpp>
+#include "Core/Exceptions.hpp"
+#include "Core/MessageBlock.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

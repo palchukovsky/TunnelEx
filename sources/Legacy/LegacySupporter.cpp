@@ -14,26 +14,24 @@
 #include "ServiceConfiguration.h"
 #include "ServiceControl/Configuration.hpp"
 #include "ServiceFilesSecurity.hpp"
-#include <TunnelEx/Rule.hpp>
+#include "Core/Rule.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
-using namespace boost::posix_time;
+namespace fs = boost::filesystem;
+namespace pt = boost::posix_time;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 
-void BackupPreviousVersionFile(const wpath &filePath) {
+void BackupPreviousVersionFile(const fs::wpath &filePath) {
 	//! \todo: reimplement with facets [2008/06/12 20:20]
-	tm now(to_tm(second_clock::local_time()));
+	tm now(pt::to_tm(pt::second_clock::local_time()));
 	WFormat backupExt(L".%04d%02d%02d%02d%02d%02d.bak.xml");
 	backupExt % (now.tm_year + 1900) % (now.tm_mon + 1) % now.tm_mday;
 	backupExt % now.tm_hour % now.tm_min % now.tm_sec;
-	const wpath configurationBackup(filePath.string() + backupExt.str());
-	if (exists(filePath)) {
+	const fs::wpath configurationBackup(filePath.string() + backupExt.str());
+	if (fs::exists(filePath)) {
 		try {
 			copy_file(filePath, configurationBackup);
-		} catch (const boost::filesystem::filesystem_error &) {
+		} catch (const fs::filesystem_error &) {
 			// silent for user (could not block work if backup is fail),
 			// but assert for developer
 			BOOST_ASSERT(false);
@@ -43,7 +41,7 @@ void BackupPreviousVersionFile(const wpath &filePath) {
 
 void MigrateAllAndSave() {
 
-	shared_ptr<ServiceConfiguration> configuration(MigrateCurrentServiceConfiguration());
+	boost::shared_ptr<ServiceConfiguration> configuration(MigrateCurrentServiceConfiguration());
 	if (configuration->IsChanged()) {
 		BackupPreviousVersionFile(ServiceConfiguration::GetConfigurationFilePath());
 		configuration->Save();
@@ -54,24 +52,24 @@ void MigrateAllAndSave() {
 
 	RuleSet ruleSet;
 	if (MigrateCurrentRuleSet(ruleSet)) {
-		const wpath ruleSetFilePath(ServiceConfiguration().GetRulesPath());
+		const fs::wpath ruleSetFilePath(ServiceConfiguration().GetRulesPath());
 		BackupPreviousVersionFile(ruleSetFilePath);
 		try {
-			create_directories(ruleSetFilePath.branch_path());
-			wofstream rulesFile(
+			fs::create_directories(ruleSetFilePath.branch_path());
+			std::wofstream rulesFile(
 				ruleSetFilePath.string().c_str(),
-				ios::binary | ios::out | ios::trunc);
+				std::ios::binary | std::ios::out | std::ios::trunc);
 			if (rulesFile) {
 				WString rulesXml;
 				ruleSet.GetXml(rulesXml);
 				rulesFile << rulesXml.GetCStr();
 			} else {
-				Format message("Could not save new rule set: could not open file \"%1%\".");
+				Format message("Could not save new rule std::set: could not open file \"%1%\".");
 				message % ConvertString<String>(ruleSetFilePath.string().c_str()).GetCStr();
 				Log::GetInstance().AppendFatalError(message.str().c_str());
 			}
 		} catch (const boost::filesystem::filesystem_error &ex) {
-			Format message("Could not save new rule set: could not create directory \"%1%\".");
+			Format message("Could not save new rule std::set: could not create directory \"%1%\".");
 			message % ex.what();
 			Log::GetInstance().AppendSystemError(message.str().c_str());
 		}

@@ -18,14 +18,12 @@
 #include "TexServiceImplementation.hpp"
 #include "ServiceEndpointBroadcaster.hpp"
 
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Server.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/Log.hpp"
+#include "Core/Server.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/String.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -41,7 +39,7 @@ TexWinService::~TexWinService() {
 	ServiceEndpointBroadcaster().CallbackAll();
 	soap_done(&m_soap);
 	{
-		mutex::scoped_lock lock(m_connectionRemoveMutex);
+		boost::mutex::scoped_lock lock(m_connectionRemoveMutex);
 		const Connections::const_iterator end(m_connections.end());
 		for (Connections::const_iterator i(m_connections.begin()); i != end; ++i) {
 			soap_done(*i);
@@ -86,9 +84,9 @@ void TexWinService::HandleSoapRequest() {
 
 void TexWinService::SoapServeThread(soap *soap) {
 	
-	class Cleaner : private noncopyable {
+	class Cleaner : private boost::noncopyable {
 	public:
-		Cleaner(::soap *soap, Connections &connections, mutex &connectionsMutex)
+		Cleaner(::soap *soap, Connections &connections, boost::mutex &connectionsMutex)
 				: m_soap(soap),
 				m_connections(connections),
 				m_connectionsMutex(connectionsMutex) {
@@ -98,7 +96,7 @@ void TexWinService::SoapServeThread(soap *soap) {
 			soap_destroy(m_soap);
 			soap_end(m_soap);
 			{
-				mutex::scoped_lock lock(m_connectionsMutex);
+				boost::mutex::scoped_lock lock(m_connectionsMutex);
 				const Connections::iterator pos(m_connections.find(m_soap));
 				if (pos != m_connections.end()) {
 					soap_done(m_soap);
@@ -111,7 +109,7 @@ void TexWinService::SoapServeThread(soap *soap) {
 	private:
 		::soap *m_soap;
 		Connections &m_connections;
-		mutex &m_connectionsMutex;
+		boost::mutex &m_connectionsMutex;
 	};
 
 	Cleaner cleaner(soap, m_connections, m_connectionRemoveMutex);
@@ -123,9 +121,9 @@ void TexWinService::SoapServeThread(soap *soap) {
 }
 
 //! \todo: will be dangerous in multi-threading [2008/02/17 5:39]
-shared_ptr<TexServiceImplementation> TexWinService::m_texService;
+boost::shared_ptr<TexServiceImplementation> TexWinService::m_texService;
 
-shared_ptr<TexServiceImplementation> TexWinService::GetTexServiceInstance() {
+boost::shared_ptr<TexServiceImplementation> TexWinService::GetTexServiceInstance() {
 	//! \todo: will be dangerous in multi-threading [2008/02/17 5:39]
 	return m_texService;
 }
@@ -141,7 +139,7 @@ void TexWinService::RunSoapServer(HANDLE stopEvent) {
 	}
 	unsigned char eventsNumb = 1;
 	HANDLE events[2] = {stopEvent, NULL};
-	shared_ptr<ConnectionAcceptEvent> acceptEvent;
+	boost::shared_ptr<ConnectionAcceptEvent> acceptEvent;
 	if (masterSocket < 0) {
 		LogSoapError();
 	} else {
@@ -179,11 +177,15 @@ void TexWinService::Run(HANDLE stopEvent) {
 }
 
 void TexWinService::LogSoapError() const {
-	ostringstream oss;
+	std::ostringstream oss;
 	soap_stream_fault(&m_soap, oss);
-	string soapError(
-		regex_replace(oss.str(), regex("[\n\t\r]"), " ", match_default | format_all));
-	trim(soapError);
+	std::string soapError(
+		boost::regex_replace(
+			oss.str(),
+			boost::regex("[\n\t\r]"),
+			" ",
+			boost::match_default | boost::format_all));
+	boost::trim(soapError);
 	if (soapError.empty()) {
 		soapError = "Unknown SOAP error.";
 	}
@@ -243,7 +245,7 @@ void WINAPI ServiceMain(DWORD, LPWSTR*) {
 	g_serviceStatus.dwCheckPoint				= 0; 
 	g_serviceStatus.dwWaitHint					= 0; 
 	
-	g_serviceStatusHandle = RegisterServiceCtrlHandler(g_serviceName, &ServiceCtrlHandler);
+	g_serviceStatusHandle = RegisterServiceCtrlHandlerW(g_serviceName, &ServiceCtrlHandler);
 	if (!g_serviceStatusHandle) {
 		Log::GetInstance().AppendSystemError("Service handle registration has been failed.");
 		return;
@@ -282,7 +284,7 @@ void RunAsTexService() {
 		{const_cast<wchar_t*>(g_serviceName), &ServiceMain},
 		{NULL, NULL}
 	};
-	StartServiceCtrlDispatcher(dispatchTable);
+	StartServiceCtrlDispatcherW(dispatchTable);
 }
 
 
@@ -429,13 +431,13 @@ bool InstallTexService() {
 			message = (messagef % err).str().c_str();
 		}
 		Log::GetInstance().AppendError(ConvertString<String>(message).GetCStr());
-		MessageBox(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
+		MessageBoxW(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
 
 	bool isSuccess = true;
 
-	const wstring serviceBinary = Helpers::GetModuleFilePath().string() + L" --service";
+	const std::wstring serviceBinary = Helpers::GetModuleFilePath().string() + L" --service";
 
 	SC_HANDLE service = CreateServiceW(
 		scManager,
@@ -464,7 +466,7 @@ bool InstallTexService() {
 			message = (messagef % err).str().c_str();
 		}
 		Log::GetInstance().AppendError(ConvertString<String>(message).GetCStr());
-		MessageBox(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
+		MessageBoxW(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
 		isSuccess = false;
 	} else {
 		CloseServiceHandle(service); 
@@ -491,13 +493,13 @@ bool UninstallTexService() {
 			message = (messagef % err).str().c_str();
 		}
 		Log::GetInstance().AppendError(ConvertString<String>(message).GetCStr());
-		MessageBox(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
+		MessageBoxW(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
 	
 	bool isSuccess = true;
 	
-	SC_HANDLE service = OpenService(scManager, g_serviceName, SERVICE_ALL_ACCESS);
+	SC_HANDLE service = OpenServiceW(scManager, g_serviceName, SERVICE_ALL_ACCESS);
 	if (!service) {
 		const DWORD err = GetLastError();
 		WString message;
@@ -509,7 +511,7 @@ bool UninstallTexService() {
 			message = (messagef % err).str().c_str();
 		}
 		Log::GetInstance().AppendError(ConvertString<String>(message).GetCStr());
-		MessageBox(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
+		MessageBoxW(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
 		isSuccess = false;
 	} else {
 		StopService(scManager, service, TRUE, 1000*60);
@@ -524,7 +526,7 @@ bool UninstallTexService() {
 				message = (messagef % err).str().c_str();
 			}
 			Log::GetInstance().AppendError(ConvertString<String>(message).GetCStr());
-			MessageBox(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
+			MessageBoxW(NULL, message.GetCStr(), L"Service error", MB_OK | MB_ICONERROR);
 			isSuccess = false;
 		}
 		CloseServiceHandle(service);

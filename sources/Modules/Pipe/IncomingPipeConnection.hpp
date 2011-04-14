@@ -15,10 +15,10 @@
 
 #include "PipeConnection.hpp"
 
-#include <TunnelEx/Endpoint.hpp>
-#include <TunnelEx/Error.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/Endpoint.hpp"
+#include "Core/Error.hpp"
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Pipe {
 

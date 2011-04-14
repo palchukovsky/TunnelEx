@@ -15,7 +15,6 @@
 
 #include "Modules/Inet/InetEndpointAddress.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods;
 using namespace TunnelEx::Mods::Upnp;
@@ -25,7 +24,6 @@ UdpConnection::UdpConnection(
 			const Inet::UdpEndpointAddress &address,
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
-		throw (TunnelEx::ConnectionOpeningException)
 		: Base(address, ruleEndpoint, ruleEndpointAddress) {
 
 	const UniquePtr<EndpointAddress> openedAddress = Base::GetLocalAddress();
@@ -36,9 +34,9 @@ UdpConnection::UdpConnection(
 	service.param = UpnpcService::CreateParam(
 		Client::PROTO_UDP,
 		externalPort,
-		polymorphic_downcast<Inet::InetEndpointAddress *>(
+		boost::polymorphic_downcast<Inet::InetEndpointAddress *>(
 			openedAddress.Get())->GetHostName(),
-		polymorphic_downcast<Inet::InetEndpointAddress *>(
+		boost::polymorphic_downcast<Inet::InetEndpointAddress *>(
 			openedAddress.Get())->GetPort(),
 		true, // @todo: see TEX-610
 		false);

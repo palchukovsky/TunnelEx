@@ -1,0 +1,1270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Test|Win32">
+      <Configuration>Test</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{EC901218-837D-4C0C-B116-6CC02097ED88}</ProjectGuid>
+    <RootNamespace>Frontend</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Default.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Default.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Default.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\..\output\int\$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(ProjectDir)..\..\output\int\$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</EnableManagedIncrementalBuild>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TunnelExControlCenter_dbg</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TunnelExControlCenter</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">TunnelExControlCenter_test</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <ClCompile>
+      <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\externals\wxWidgets\wxWidgets-2.8.10\include\;$(SolutionDir)..\externals\wxWidgets\wxWidgets-2.8.10\mswud\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;BOOST_ENABLE_ASSERT_HANDLER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Prec.h</PrecompiledHeaderFile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <ForcedIncludeFiles>%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>wxmsw28ud_vc_lib_2_8_10.lib;wxpngd_vc_lib_2_8_10.lib;wxzlibd_vc_lib_2_8_10.lib;Rpcrt4.lib;comctl32.lib;comsuppwd.lib;ACE_dbg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <ClCompile>
+      <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\externals\wxWidgets\wxWidgets-2.8.10\include\;$(SolutionDir)..\externals\wxWidgets\wxWidgets-2.8.10\mswu\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;BOOST_DISABLE_ASSERTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Prec.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <ResourceCompile />
+    <Link>
+      <AdditionalDependencies>wxmsw28u_vc_lib_2_8_10.lib;wxpng_vc_lib_2_8_10.lib;wxzlib_vc_lib_2_8_10.lib;Rpcrt4.lib;comctl32.lib;comsuppw.lib;ACE.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <ClCompile>
+      <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\externals\wxWidgets\wxWidgets-2.8.10\include\;$(SolutionDir)..\externals\wxWidgets\wxWidgets-2.8.10\mswu\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;BOOST_ENABLE_ASSERT_HANDLER;TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Prec.h</PrecompiledHeaderFile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <ForcedIncludeFiles>%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>wxmsw28u_vc_lib_2_8_10.lib;wxpng_vc_lib_2_8_10.lib;wxzlib_vc_lib_2_8_10.lib;Rpcrt4.lib;comctl32.lib;comsuppw.lib;ACE_test.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Assert.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Auto.cpp" />
+    <ClCompile Include="Config.cpp" />
+    <ClCompile Include="EndpointDlg.cpp" />
+    <ClCompile Include="LicenseDlg.cpp" />
+    <ClCompile Include="LicenseEnterDlg.cpp" />
+    <ClCompile Include="LicenseRestrictionDlg.cpp" />
+    <ClCompile Include="LicenseStartDlg.cpp" />
+    <ClCompile Include="LogDlg.cpp" />
+    <ClCompile Include="MainFrame.cpp" />
+    <ClCompile Include="NewVersionDlg.cpp" />
+    <ClCompile Include="Prec.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ProxyDlg.cpp" />
+    <ClCompile Include="RuleDlg.cpp" />
+    <ClCompile Include="RuleListCtrl.cpp" />
+    <ClCompile Include="RuleUtils.cpp" />
+    <ClCompile Include="ServiceAdapter.cpp" />
+    <ClCompile Include="ServiceRuleDlg.cpp" />
+    <ClCompile Include="ServiceStateCtrl.cpp" />
+    <ClCompile Include="ServiceWindow.cpp" />
+    <ClCompile Include="SslCertificateDlg.cpp" />
+    <ClCompile Include="SslCertificateListDlg.cpp" />
+    <ClCompile Include="SslEndpointSettingsDlg.cpp" />
+    <ClCompile Include="SslGenerationResultDlg.cpp" />
+    <ClCompile Include="Theme.cpp" />
+    <ClCompile Include="TunnelRuleDlg.cpp" />
+    <ClCompile Include="TunnelRuleShortDlg.cpp" />
+    <ClCompile Include="UpdateChecker.cpp" />
+    <ClCompile Include="Validators.cpp" />
+    <ClCompile Include="..\SoapServiceInterface\soapC.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4101; 4065;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4101; 4065;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">4101; 4065;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="..\SoapServiceInterface\soapClient.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4101; 4065;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4101; 4065;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">4101; 4065;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="..\..\externals\gSOAP\stdsoap2.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+      </PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Level3</WarningLevel>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4244</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4244</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">4244</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Application.hpp" />
+    <ClInclude Include="Auto.hpp" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="EndpointDlg.hpp" />
+    <ClInclude Include="LicenseDlg.hpp" />
+    <ClInclude Include="LicenseEnterDlg.hpp" />
+    <ClInclude Include="LicensePolicies.hpp" />
+    <ClInclude Include="LicenseRestrictionDlg.hpp" />
+    <ClInclude Include="LicenseStartDlg.hpp" />
+    <ClInclude Include="LogDlg.hpp" />
+    <ClInclude Include="MainFrame.hpp" />
+    <ClInclude Include="NewVersionDlg.hpp" />
+    <ClInclude Include="Prec.h" />
+    <ClInclude Include="ProxyDlg.hpp" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Rule.hpp" />
+    <ClInclude Include="RuleDlg.hpp" />
+    <ClInclude Include="RuleListCtrl.hpp" />
+    <ClInclude Include="RuleUtils.hpp" />
+    <ClInclude Include="ServiceAdapter.hpp" />
+    <ClInclude Include="ServiceRuleDlg.hpp" />
+    <ClInclude Include="ServiceState.hpp" />
+    <ClInclude Include="ServiceStateCtrl.hpp" />
+    <ClInclude Include="ServiceWindow.hpp" />
+    <ClInclude Include="SslCertificateDlg.hpp" />
+    <ClInclude Include="SslCertificateListDlg.hpp" />
+    <ClInclude Include="SslEndpointSettingsDlg.hpp" />
+    <ClInclude Include="SslGenerationResultDlg.hpp" />
+    <ClInclude Include="Theme.hpp" />
+    <ClInclude Include="TunnelRuleDlg.hpp" />
+    <ClInclude Include="TunnelRuleShortDlg.hpp" />
+    <ClInclude Include="UpdateChecker.hpp" />
+    <ClInclude Include="Validators.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Templates\ServiceState.html">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+copy /Y "%(RootDir)%(Directory)x.gif" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+copy /Y "%(RootDir)%(Directory)x.gif" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+copy /Y "%(RootDir)%(Directory)x.gif" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddItemButton.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddItemButtonDisabled.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddItemIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddRuleIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddRuleIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowDownButton.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowDownButtonDisabled.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowUpButton.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowUpButtonDisabled.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\BloggerIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\BugIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\BugIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CopyIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CopyIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CutIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CutIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditItemButton.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditItemButtonDisabled.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditItemIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditRuleDisabledIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditRuleIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditRuleIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoProIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoProIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoRuleIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoRuleIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\HelpIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\HelpIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\KeyIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\LogIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\LogIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PasteIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PasteIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PlayIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PlayIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveItemButton.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveItemButtonDisabled.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveItemIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveRuleIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveRuleIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RuleIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RuleIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\StopIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\StopIconBig.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Icons\WarningRuleIcon.png">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
+mkdir $(OutDir)Templates
+copy /Y "%(FullPath)" "$(OutDir)Templates"
+echo off
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Front-end.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{db90fdfc-2f4c-4f37-9203-a87eec39b4d4}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Legacy\Legacy support.vcxproj">
+      <Project>{cdca539c-f37d-4df4-9473-39c561b92ba0}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Licensing\Licensing.vcxproj">
+      <Project>{808188b6-5131-4c69-b1c9-05b4260fa355}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Inet\Inet.vcxproj">
+      <Project>{bf7a25bf-7f5d-4fd3-bf5c-889361eac5a2}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Pathfinder\Pathfinder.vcxproj">
+      <Project>{c458a337-2bbb-45bd-82ff-fc9cf13931a9}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Serial\Module Serial.vcxproj">
+      <Project>{487c6572-1ce5-40fc-8a0a-ace48f162f57}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Upnp\Module Upnp.vcxproj">
+      <Project>{c30530f5-b52d-4e6b-aa2c-713c05c263f8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\SoapServiceInterface\SoapServiceInterface.vcxproj">
+      <Project>{e792f2f5-e6f8-49ff-a1aa-47e0243e5180}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Version\Version.vcxproj">
+      <Project>{6884dfb9-d84c-4f37-853f-79565671a1e3}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

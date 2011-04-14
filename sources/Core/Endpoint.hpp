@@ -94,18 +94,19 @@ namespace TunnelEx {
 
 
 		//! Returns combined resource identifier.
-		const ::TunnelEx::WString & GetCombinedResourceIdentifier()
-			const
-			throw(::TunnelEx::EndpointAddressTypeMismatchException);
+		/** @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
+		const ::TunnelEx::WString & GetCombinedResourceIdentifier() const;
 
 		//! Returns read resource identifier.
-		const ::TunnelEx::WString & GetReadResourceIdentifier()
-			const
-			throw(::TunnelEx::EndpointAddressTypeMismatchException);
+		/** @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
+		const ::TunnelEx::WString & GetReadResourceIdentifier() const;
+			
 		//! Returns write resource identifier.
-		const ::TunnelEx::WString & GetWriteResourceIdentifier()
-			const
-			throw(::TunnelEx::EndpointAddressTypeMismatchException);
+		/** @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
+		const ::TunnelEx::WString & GetWriteResourceIdentifier() const;
 
 		//! Sets combined address implementation and changes endpoint type to "combined".
 		void SetCombinedAddress(
@@ -121,60 +122,42 @@ namespace TunnelEx {
 
 		//! Returns combined address implementation.
 		/** Creates address object if it does not created yet.
-		  * @return	nil if address does not set.
+		  * @throw TunnelEx::InvalidLinkException
+		  * @throw TunnelEx::EndpointAddressTypeMismatchException
+		  * @return	nil if address does not std::set.
 		  */
-		::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> GetCombinedAddress()
-			const
-			throw(
-				::TunnelEx::InvalidLinkException,
-				::TunnelEx::EndpointAddressTypeMismatchException);
-		::TunnelEx::SharedPtr<::TunnelEx::EndpointAddress> GetCombinedAddress()
-			throw(
-				::TunnelEx::InvalidLinkException,
-				::TunnelEx::EndpointAddressTypeMismatchException);
+		::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> GetCombinedAddress() const;
+		::TunnelEx::SharedPtr<::TunnelEx::EndpointAddress> GetCombinedAddress();
 
 		//! Returns read addresses implementation.
 		/** Creates address object if it does not created yet.
-		  * @return	nil if address does not set.
+		  * @throw TunnelEx::InvalidLinkException
+		  * @throw TunnelEx::EndpointAddressTypeMismatchException
+		  * @return	nil if address does not std::set.
 		  */
-		::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> GetReadAddress()
-			const
-			throw(
-				::TunnelEx::InvalidLinkException,
-				::TunnelEx::EndpointAddressTypeMismatchException);
-		::TunnelEx::SharedPtr<::TunnelEx::EndpointAddress> GetReadAddress()
-			throw(
-				::TunnelEx::InvalidLinkException,
-				::TunnelEx::EndpointAddressTypeMismatchException);
+		::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> GetReadAddress() const;
+		::TunnelEx::SharedPtr<::TunnelEx::EndpointAddress> GetReadAddress();
 
 		//! Returns write addresses implementation.
 		/** Creates address object if it does not created yet.
-		  * @return	nil if address does not set.
+		  * @throw TunnelEx::InvalidLinkException
+		  * @throw TunnelEx::EndpointAddressTypeMismatchException
+		  * @return	nil if address does not std::set.
 		  */
-		::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> GetWriteAddress() const
-			throw(
-				::TunnelEx::InvalidLinkException,
-				::TunnelEx::EndpointAddressTypeMismatchException);
-		::TunnelEx::SharedPtr<::TunnelEx::EndpointAddress> GetWriteAddress()
-			throw(
-				::TunnelEx::InvalidLinkException,
-				::TunnelEx::EndpointAddressTypeMismatchException);
+		::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> GetWriteAddress() const;
+		::TunnelEx::SharedPtr<::TunnelEx::EndpointAddress> GetWriteAddress();
 
 
 		//! Returns combined typed address.
+		/** @throw TunnelEx::InvalidLinkException
+		  * @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
 		template<class T>
-		const T & GetCombinedTypedAddress()
-				const
-				throw(
-					::TunnelEx::InvalidLinkException,
-					::TunnelEx::EndpointAddressTypeMismatchException) {
+		const T & GetCombinedTypedAddress() const {
 			return (const_cast<Endpoint *>(this))->GetCombinedTypedAddress<typename T>();
 		}
 		template<class T>
-		T & GetCombinedTypedAddress()
-				throw(
-					::TunnelEx::InvalidLinkException,
-					::TunnelEx::EndpointAddressTypeMismatchException) {
+		T & GetCombinedTypedAddress() {
 			T *const result = dynamic_cast<T *>(GetCombinedAddress().Get());
 			if (result == 0) {
 				throw ::TunnelEx::EndpointAddressTypeMismatchException(
@@ -184,19 +167,15 @@ namespace TunnelEx {
 		}
 
 		//! Returns read typed address.
+		/** @throw TunnelEx::InvalidLinkException
+		  * @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
 		template<class T>
-		const T & GetReadTypedAddress()
-				const
-				throw(
-					::TunnelEx::InvalidLinkException,
-					::TunnelEx::EndpointAddressTypeMismatchException) {
+		const T & GetReadTypedAddress() const {
 			return (const_cast<Endpoint *>(this))->GetReadTypedAddress<typename T>();
 		}
 		template<class T>
-		T & GetReadTypedAddress()
-				throw(
-					::TunnelEx::InvalidLinkException,
-					::TunnelEx::EndpointAddressTypeMismatchException) {
+		T & GetReadTypedAddress() {
 			T *const result = dynamic_cast<T *>(GetReadAddress().Get());
 			if (result == 0) {
 				throw ::TunnelEx::EndpointAddressTypeMismatchException(
@@ -206,19 +185,15 @@ namespace TunnelEx {
 		}
 
 		//! Returns write typed address.
+		/** @throw TunnelEx::InvalidLinkException
+		  * @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
 		template<class T>
-		const T & GetWriteTypedAddress()
-				const
-				throw(
-					::TunnelEx::InvalidLinkException,
-					::TunnelEx::EndpointAddressTypeMismatchException) {
+		const T & GetWriteTypedAddress() const {
 			return (const_cast<Endpoint *>(this))->GetWriteTypedAddress<typename T>();
 		}
 		template<class T>
-		T & GetWriteTypedAddress()
-				throw(
-					::TunnelEx::InvalidLinkException,
-					::TunnelEx::EndpointAddressTypeMismatchException) {
+		T & GetWriteTypedAddress() {
 			T *const result = dynamic_cast<T *>(GetWriteAddress().Get());
 			if (result == 0) {
 				throw ::TunnelEx::EndpointAddressTypeMismatchException(
@@ -227,32 +202,28 @@ namespace TunnelEx {
 			return *result;
 		}
 
+		/** @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
 		template<class T>
-		bool CheckCombinedAddressType()
-				const
-				throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+		bool CheckCombinedAddressType() const {
 			return dynamic_cast<const T *>(GetCombinedAddress().Get()) != 0;
 		}
 		template<class T>
-		bool CheckReadAddressType()
-				const
-				throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+		bool CheckReadAddressType() const {
 			return dynamic_cast<const T *>(GetReadAddress().Get()) != 0;
 		}
 		template<class T>
-		bool CheckWriteAddressType()
-				const
-				throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+		bool CheckWriteAddressType() const {
 			return dynamic_cast<const T *>(GetWriteAddress().Get()) != 0;
 		}
 
-		bool IsCombinedAcceptor()
-			const
-			throw(::TunnelEx::EndpointAddressTypeMismatchException);
+		/** @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
+		bool IsCombinedAcceptor() const;
 
-		::TunnelEx::Endpoint::Acceptor GetReadWriteAcceptor()
-			const 
-			throw(::TunnelEx::EndpointAddressTypeMismatchException);
+		/** @throw TunnelEx::EndpointAddressTypeMismatchException
+		  */
+		::TunnelEx::Endpoint::Acceptor GetReadWriteAcceptor() const;
 
 	private:
 

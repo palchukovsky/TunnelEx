@@ -12,15 +12,14 @@
 #include "Prec.h"
 
 #include "FtpListener.hpp"
+#include "Licensing.hpp"
 
-#include <TunnelEx/Rule.hpp>
-#include <TunnelEx/Server.hpp>
-#include <TunnelEx/Connection.hpp>
-#include <TunnelEx/EndpointAddress.hpp>
-#include <TunnelEx/MessageBlock.hpp>
+#include "Core/Rule.hpp"
+#include "Core/Server.hpp"
+#include "Core/Connection.hpp"
+#include "Core/EndpointAddress.hpp"
+#include "Core/MessageBlock.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Inet;
 
@@ -33,7 +32,7 @@ FtpListener::FtpListener(
 		: m_server(server),
 		m_currentConnection(currentConnection),
 		m_oppositeConnection(oppositeConnection),
-		m_cmdRegExpression(cmdRegExp, regex_constants::icase),
+		m_cmdRegExpression(cmdRegExp, boost::regex_constants::icase),
 		m_cmdStart(cmdStart) {
 	static Licensing::FsLocalStorageState licenseState;
 	static Licensing::FtpTunnelLicense license(&licenseState);
@@ -59,34 +58,34 @@ FtpListener::~FtpListener() throw() {
 }
 
 inline NetworkPort FtpListener::MakePort(
-			const string &highStr,
-			const string &lowStr) {
+			const std::string &highStr,
+			const std::string &lowStr) {
 	try {
-		const unsigned short high = lexical_cast<unsigned short>(highStr);
-		const unsigned short low = lexical_cast<unsigned short>(lowStr);
+		const unsigned short high = boost::lexical_cast<unsigned short>(highStr);
+		const unsigned short low = boost::lexical_cast<unsigned short>(lowStr);
 		return ((high & 0xff) << 8) | (low & 0xff);
 	} catch (const boost::bad_lexical_cast &) {
-		return numeric_limits<NetworkPort>::max();
+		return std::numeric_limits<NetworkPort>::max();
 	}
 }
 
 TunnelRule FtpListener::CreateRule(
-			const string &originalIpAddress,
+			const std::string &originalIpAddress,
 			NetworkPort originalPort)
 		const {
 
 	TunnelRule result;
 	WString wStrIpAddressBuffer;
-	string inputIpAddress;
+	std::string inputIpAddress;
 
 	{
 		const SharedPtr<const EndpointAddress> currentInputRuleEndpointHolder(
 			m_currentConnection.GetRuleEndpointAddress());
 		const TcpEndpointAddress &currentInputRuleEndpoint
-			= *polymorphic_downcast<const TcpEndpointAddress *>(
+			= *boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				currentInputRuleEndpointHolder.Get());
 		const UniquePtr<const TcpEndpointAddress> currentInputEndpoint(
-			polymorphic_downcast<const TcpEndpointAddress *>(
+			boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				m_currentConnection.GetLocalAddress().Release()));
 		UniquePtr<TcpEndpointAddress> input(
 			new TcpEndpointAddress(
@@ -100,19 +99,19 @@ TunnelRule FtpListener::CreateRule(
 			m_currentConnection.GetRemoteAddress());
 		input->CopyCertificate(
 			currentInputRuleEndpoint,
-			*polymorphic_downcast<const TcpEndpointAddress *>(
+			*boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				remoteAddress.Get()));
 		result.GetInputs().Append(RuleEndpoint(input, true));
 	}
 
 	{
 		UniquePtr<TcpEndpointAddress> destination(
-			polymorphic_downcast<TcpEndpointAddress *>(
+			boost::polymorphic_downcast<TcpEndpointAddress *>(
 				m_oppositeConnection.GetRuleEndpointAddress()->Clone().Release()));
 		const UniquePtr<const EndpointAddress> oppositeAddress(
 			m_oppositeConnection.GetRemoteAddress());
 		destination->CopyRemoteCertificate(
-			*polymorphic_downcast<const TcpEndpointAddress *>(
+			*boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				oppositeAddress.Get()));
 		destination->SetHost(
 			ConvertString(originalIpAddress.c_str(), wStrIpAddressBuffer).GetCStr());
@@ -128,7 +127,7 @@ TunnelRule FtpListener::CreateRule(
 
 void FtpListener::ReplaceCmd(
 			MessageBlock &messageBlock,
-			const string &originalIpAddress,
+			const std::string &originalIpAddress,
 			NetworkPort originalPort) {
 
 	const TunnelRule dataConnectionRule = CreateRule(originalIpAddress, originalPort);
@@ -148,11 +147,11 @@ void FtpListener::ReplaceCmd(
 			.GetCombinedTypedAddress<const InetEndpointAddress>()
 			.GetHostName()
 			.c_str();
-		string outcomingIpForCmd = ConvertString<String>(inputAddress).GetCStr();
-		replace_all(outcomingIpForCmd, ".", ",");
+		std::string outcomingIpForCmd = ConvertString<String>(inputAddress).GetCStr();
+		boost::replace_all(outcomingIpForCmd, ".", ",");
 
 		const UniquePtr<const InetEndpointAddress> input(
-			polymorphic_downcast<InetEndpointAddress *>(
+			boost::polymorphic_downcast<InetEndpointAddress *>(
 				m_server.GetRealOpenedEndpointAddress(
 						dataConnectionRule.GetUuid(),
 						dataConnectionRule.GetInputs()[0].GetUuid())
@@ -221,20 +220,20 @@ DataTransferCommand FtpListener::OnNewMessageBlock(MessageBlock &messageBlock) {
 		}
 	}
 
-	smatch what;
-	if (!regex_match(m_buffer, what, m_cmdRegExpression)) {
+	boost::smatch what;
+	if (!boost::regex_match(m_buffer, what, m_cmdRegExpression)) {
 		return DATA_TRANSFER_CMD_SKIP_PACKET;
 	}
 
-	string originalIpAddress(what[1]);
-	replace_all(originalIpAddress, ",", ".");
+	std::string originalIpAddress(what[1]);
+	boost::replace_all(originalIpAddress, ",", ".");
 	try {
 		ReplaceCmd(messageBlock, originalIpAddress, MakePort(what[2], what[3]));
 		if (Log::GetInstance().IsDebugRegistrationOn()) {
-			string oldCmd = m_buffer;
-			trim(oldCmd);
-			string newCmd(messageBlock.GetData(), messageBlock.GetUnreadedDataSize());
-			trim(newCmd);
+			std::string oldCmd = m_buffer;
+			boost::trim(oldCmd);
+			std::string newCmd(messageBlock.GetData(), messageBlock.GetUnreadedDataSize());
+			boost::trim(newCmd);
 			Log::GetInstance().AppendDebug(
 				"FTP-command has been changed from \"%1%\" to \"%2%\".", oldCmd, newCmd);
 		}

@@ -17,8 +17,6 @@
 #include "ServiceAdapter.hpp"
 #include "LicensePolicies.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Licensing;
 
@@ -115,14 +113,14 @@ void LicenseKeyDlg::OnOk(wxCommandEvent &) {
 		= wxGetApp().GetConfig().Read(wxT("/License/OfflineActivation/State"));
 	BOOST_ASSERT(!privateKeySerialized.IsEmpty());
 	if (!privateKeySerialized.IsEmpty()) {
-		string privateKey;
+		std::string privateKey;
 		{
-			vector<unsigned char> encryptedPrivateKey;
+			std::vector<unsigned char> encryptedPrivateKey;
 			TunnelEx::Helpers::StringUtil::AsciiToBin(
 					privateKeySerialized.ToAscii(),
 					privateKeySerialized.size(),
 					encryptedPrivateKey);
-			vector<unsigned char> key;
+			std::vector<unsigned char> key;
 			LicenseDataEncryption::GetOfflineActivationPrivateKeyEncryptingKey(key);
 			size_t token = 0;
 			foreach (unsigned char ch, encryptedPrivateKey) {
@@ -130,7 +128,7 @@ void LicenseKeyDlg::OnOk(wxCommandEvent &) {
 				privateKey.push_back(ch);
 			}
 		}
-		const string licenseKey = m_licenseKeyCtrl->GetValue().ToAscii();
+		const std::string licenseKey = m_licenseKeyCtrl->GetValue().ToAscii();
 		OfflineKeyRequest request(
 			licenseKey,
 			privateKey,
@@ -297,9 +295,9 @@ LicenseEnterDlg::~LicenseEnterDlg() {
 }
 
 void LicenseEnterDlg::TrimLicense() {
-	wxString trimed = polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
+	wxString trimed = boost::polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
 		->GetValue().Trim(false);
-	polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
+	boost::polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
 		->SetValue(trimed.Trim(true));
 }
 
@@ -310,8 +308,8 @@ void LicenseEnterDlg::OnOnlineActivation(wxCommandEvent &) {
 	}
 	OnlineActivation activation;
 	activation.Activate(
-		string(
-			polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
+		std::string(
+			boost::polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
 				->GetValue().ToAscii()),
 		m_service);
 	if (!activation.GetActivationResult()) {
@@ -325,14 +323,14 @@ void LicenseEnterDlg::OnOfflineActivation(wxCommandEvent &) {
 	if (!Validate()) {
 		return;
 	}
-	const string license
-		= polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
+	const std::string license
+		= boost::polymorphic_downcast<wxTextCtrl *>(FindWindow(CTRL_LICENSE))
 			->GetValue().ToAscii();
 	OfflineKeyRequest request(license, LicenseState(m_service));
 	wxString privateKey;
 	{
-		vector<unsigned char> key;
-		vector<unsigned char> encrypted;
+		std::vector<unsigned char> key;
+		std::vector<unsigned char> encrypted;
 		LicenseDataEncryption::GetOfflineActivationPrivateKeyEncryptingKey(key);
 		size_t token = 0;
 		foreach (char ch, request.GetPrivateKey()) {

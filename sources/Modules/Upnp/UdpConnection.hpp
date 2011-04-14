@@ -26,12 +26,13 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 
 	public:
 
+		/** @throw TunnelEx::ConnectionOpeningException
+		  */
 		explicit UdpConnection(
 					unsigned short externalPort,
 					const Inet::UdpEndpointAddress &address,
 					const RuleEndpoint &ruleEndpoint,
-					SharedPtr<const EndpointAddress> ruleEndpointAddress)
-				throw (TunnelEx::ConnectionOpeningException);
+					SharedPtr<const EndpointAddress> ruleEndpointAddress);
 
 		virtual ~UdpConnection() throw();
 

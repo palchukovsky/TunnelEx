@@ -15,9 +15,9 @@
 #include "InetConnection.hpp"
 #include "InetEndpointAddress.hpp"
 #include "SslSockStream.hpp"
-#include <TunnelEx/MessageBlock.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/MessageBlock.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Error.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 
@@ -174,7 +174,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		GetRemoteAceAddress(aceAddr);
 		X509 *const x509Ptr = SSL_get_peer_certificate(m_dataStream->ssl());
 		if (x509Ptr != 0) {
-			auto_ptr<X509Shared> x509(new X509Shared(X509_dup(x509Ptr)));
+			std::auto_ptr<X509Shared> x509(new X509Shared(X509_dup(x509Ptr)));
 			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(aceAddr, x509));
 		} else {
 			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(aceAddr));

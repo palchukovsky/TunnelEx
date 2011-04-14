@@ -15,10 +15,9 @@
 #include "CompileConfig.h"
 #include "Constants.h"
 
-#include <ace/OS_Errno.h>
+#define BOOST_FILESYSTEM_VERSION 2
 
-#include "Licensing/Prec.h"
-#include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
+#include <ace/OS_Errno.h>
 
 #include "Foreach.h"
 #include "MultipleStream.hpp"
@@ -28,6 +27,8 @@
 #include "ObjectsDeletionCheck.h"
 #include "Uuid.hpp"
 #include "Crypto.hpp"
+
+#include "Licensing/Prec.h"
 
 #include <Windows.h>
 
@@ -81,8 +82,10 @@
 #	include <boost/static_assert.hpp>
 #include "CompileWarningsBoost.h"
 
+#include <mbstring.h>
 #include <string.h>
 #include <malloc.h>
+
 #include <sstream>
 #include <fstream>
 #include <memory>
@@ -92,7 +95,5 @@
 #include <string>
 #include <numeric>
 #include <exception>
-
-#pragma warning(disable: 4503)
 
 #endif

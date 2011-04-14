@@ -17,8 +17,6 @@
 #include "LicenseRestrictionDlg.hpp"
 #include "Modules/Serial/SerialEndpointAddress.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Licensing;
 using namespace TunnelEx::Mods::Inet;
@@ -100,12 +98,12 @@ bool RuleUtils::ListenerFinder::Find(const TunnelRule &rule) const {
 void RuleUtils::SelectAdapter(
 			wxChoice &ctrl,
 			const wxString &newAdapter,
-			const list<texs__NetworkAdapterInfo> &adapters) {
+			const std::list<texs__NetworkAdapterInfo> &adapters) {
 	if (!adapters.size() || newAdapter.IsEmpty()) {
 		return;
 	}
 	size_t selectedIndex = 0;
-	const string newAdapterA = newAdapter.ToAscii();
+	const std::string newAdapterA = newAdapter.ToAscii();
 	foreach (const texs__NetworkAdapterInfo &info, adapters) {
 		if (newAdapterA == info.id) {
 			break;
@@ -118,7 +116,7 @@ void RuleUtils::SelectAdapter(
 				wxT("Could not find selected adapter.")
 				wxT(" Current adapters has been set to \"Loopback\"."));
 			// 1 - index of loopback
-			selectedIndex = min(size_t(1), ctrl.GetCount());
+			selectedIndex = std::min(size_t(1), ctrl.GetCount());
 		} else {
 			selectedIndex = 0;
 		}
@@ -127,7 +125,7 @@ void RuleUtils::SelectAdapter(
 }
 
 wxChoice & RuleUtils::CreateAdapterSelector(
-			const list<texs__NetworkAdapterInfo> &serviceNetworkAdapters,
+			const std::list<texs__NetworkAdapterInfo> &serviceNetworkAdapters,
 			wxWindow *const parent /*= 0*/,
 			const wxWindowID id /*= wxID_ANY*/,
 			const bool isFtpEndpoint /*false*/,
@@ -303,7 +301,7 @@ bool RuleUtils::ShowProxySettingsDialog(
 			LicenseRestrictionDlg(service, parent, proxyLicense, false).ShowModal();
 		}
 	
-		auto_ptr<ProxyDlg> dlg(proxyCascadeTmp.size() == 0
+		std::auto_ptr<ProxyDlg> dlg(proxyCascadeTmp.size() == 0
 			?	new ProxyDlg(
 					parent,
 					false,
@@ -425,11 +423,11 @@ bool RuleUtils::CheckInactiveAdapterWarning(
 bool RuleUtils::CheckInactiveAdapterWarning(
 			const InetEndpointAddress &addr,
 			const ServiceAdapter &service) {
-	const string id = wxString(addr.GetAdapter()).ToAscii();
+	const std::string id = wxString(addr.GetAdapter()).ToAscii();
 	if (id.empty()) {
 		return false;
 	}
-	list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
+	std::list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
 	service.GetNetworkAdapters(false, serviceNetworkAdapters);
 	foreach (const texs__NetworkAdapterInfo &info, serviceNetworkAdapters) {
 		if (info.id == id) {
@@ -503,20 +501,20 @@ WString RuleUtils::CreateSerialResourceIdentifier(
 			const wxString &flowControlStr) {
 	
 	int baudRate;
-	wistringstream(baudRateStr.c_str()) >> baudRate;
+	std::wistringstream(baudRateStr.c_str()) >> baudRate;
 		
 	unsigned short dataBits;
-	wistringstream(dataBitsStr.c_str()) >> dataBits;
+	std::wistringstream(dataBitsStr.c_str()) >> dataBits;
 
 	unsigned short stopBits;
-	wistringstream(stopBitsStr.c_str()) >> stopBits;
+	std::wistringstream(stopBitsStr.c_str()) >> stopBits;
 
-	typedef map<wxString, SerialEndpointAddress::Parity> ParityMap;
+	typedef std::map<wxString, SerialEndpointAddress::Parity> ParityMap;
 	ParityMap parityMap;
 	GetSerialParityValsMap(parityMap);
 	BOOST_ASSERT(parityMap.find(parityStr) != parityMap.end());
 
-	typedef map<wxString, SerialEndpointAddress::FlowControl> FcMap;
+	typedef std::map<wxString, SerialEndpointAddress::FlowControl> FcMap;
 	FcMap fcMap;
 	GetSerialFlowControlValsMap(fcMap);
 	BOOST_ASSERT(fcMap.find(flowControlStr) != fcMap.end());
@@ -533,11 +531,11 @@ WString RuleUtils::CreateSerialResourceIdentifier(
 
 unsigned short RuleUtils::ConvertPort(const wxString &port) {
 	try {
-		wstring portStr = port;
-		trim(portStr);
-		return lexical_cast<unsigned short>(portStr);
-	} catch (const bad_lexical_cast &) {
-		const unsigned int portNum = numeric_limits<unsigned short>::max();
+		std::wstring portStr = port;
+		boost::trim(portStr);
+		return boost::lexical_cast<unsigned short>(portStr);
+	} catch (const boost::bad_lexical_cast &) {
+		const unsigned int portNum = std::numeric_limits<unsigned short>::max();
 		WFormat message(L"Network port value truncated from \"%1%\" to \"%2%\".");
 		message % port.c_str() % portNum;
 		wxLogWarning(message.str().c_str());

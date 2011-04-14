@@ -13,7 +13,6 @@
 
 #include "Error.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 
 Error::Error(int errorNo) throw()
@@ -40,7 +39,7 @@ bool Error::CheckError() const {
 			(LPWSTR)&buffer,
 			0,
 			NULL);
-		shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
+		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
 		BOOST_ASSERT(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
 		return bufferSize;
 #	else
@@ -60,7 +59,7 @@ WString Error::GetString() const {
 			(LPWSTR)&buffer,
 			0,
 			NULL);
-		shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
+		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
 		BOOST_ASSERT(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
 		for (
 				; bufferSize > 0
@@ -75,8 +74,8 @@ WString Error::GetString() const {
 		}
 #	else // BOOST_WINDOWS
 		WString result;
-		using namespace boost::system;
-		ConvertString(system_error(m_errorNo, get_system_category()).what(), result);
+		namespace fs::boost::system;
+		ConvertString(fs::system_error(m_errorNo, fs::get_system_category()).what(), result);
 		return result;
 #	endif // BOOST_WINDOWS
 }

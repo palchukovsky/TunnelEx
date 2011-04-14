@@ -15,7 +15,7 @@
 #include "UpnpcService.hpp"
 #include "Modules/Inet/TcpConnectionAcceptor.hpp"
 
-#include <TunnelEx/Server.hpp>
+#include "Core/Server.hpp"
 
 
 namespace TunnelEx { namespace Mods { namespace Upnp {

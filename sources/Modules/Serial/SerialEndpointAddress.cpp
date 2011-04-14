@@ -13,10 +13,8 @@
 #include "SerialEndpointAddress.hpp"
 #include "SerialConnection.hpp"
 #include "EndpointResourceIdentifierParsers.hpp"
-#include <TunnelEx/Server.hpp>
+#include "Core/Server.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Mods::Serial;
@@ -28,16 +26,16 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 	void ParseEndpointParity(
 				EndpointResourceIdentifierParsers::UrlSplitConstIterator source,
 				SerialEndpointAddress::Parity &result) {
-		wstring tmp;
+		std::wstring tmp;
 		EndpointResourceIdentifierParsers::ParseUrlParamValue(source, tmp);
-		to_lower(tmp);
-		typedef map<wstring, SerialEndpointAddress::Parity> Map;
+		boost::to_lower(tmp);
+		typedef std::map<std::wstring, SerialEndpointAddress::Parity> Map;
 		Map valsMap;
-		valsMap.insert(make_pair(L"none", SerialEndpointAddress::P_NONE));
-		valsMap.insert(make_pair(L"odd", SerialEndpointAddress::P_ODD));
-		valsMap.insert(make_pair(L"even", SerialEndpointAddress::P_EVEN));
-		valsMap.insert(make_pair(L"mark", SerialEndpointAddress::P_MARK));
-		valsMap.insert(make_pair(L"space", SerialEndpointAddress::P_SPACE));
+		valsMap.insert(std::make_pair(L"none", SerialEndpointAddress::P_NONE));
+		valsMap.insert(std::make_pair(L"odd", SerialEndpointAddress::P_ODD));
+		valsMap.insert(std::make_pair(L"even", SerialEndpointAddress::P_EVEN));
+		valsMap.insert(std::make_pair(L"mark", SerialEndpointAddress::P_MARK));
+		valsMap.insert(std::make_pair(L"space", SerialEndpointAddress::P_SPACE));
 		const Map::const_iterator pos = valsMap.find(tmp);
 		if (pos == valsMap.end()) {
 			throw InvalidLinkException(L"Could not resolve parity parameter value");
@@ -48,15 +46,15 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 	void ParseEndpointFlowControl(
 				EndpointResourceIdentifierParsers::UrlSplitConstIterator source,
 				SerialEndpointAddress::FlowControl &result) {
-		wstring tmp;
+		std::wstring tmp;
 		EndpointResourceIdentifierParsers::ParseUrlParamValue(source, tmp);
-		to_lower(tmp);
-		typedef map<wstring, SerialEndpointAddress::FlowControl> Map;
+		boost::to_lower(tmp);
+		typedef std::map<std::wstring, SerialEndpointAddress::FlowControl> Map;
 		Map valsMap;
-		valsMap.insert(make_pair(L"none", SerialEndpointAddress::FC_NONE));
-		valsMap.insert(make_pair(L"xon/xoff", SerialEndpointAddress::FC_XON_XOFF));
-		valsMap.insert(make_pair(L"rts/cts", SerialEndpointAddress::FC_RTS_CTS));
-		valsMap.insert(make_pair(L"dsr/dtr", SerialEndpointAddress::FC_DSR_DTR));
+		valsMap.insert(std::make_pair(L"none", SerialEndpointAddress::FC_NONE));
+		valsMap.insert(std::make_pair(L"xon/xoff", SerialEndpointAddress::FC_XON_XOFF));
+		valsMap.insert(std::make_pair(L"rts/cts", SerialEndpointAddress::FC_RTS_CTS));
+		valsMap.insert(std::make_pair(L"dsr/dtr", SerialEndpointAddress::FC_DSR_DTR));
 		const Map::const_iterator pos = valsMap.find(tmp);
 		if (pos == valsMap.end()) {
 			throw InvalidLinkException(L"Could not resolve flow control parameter value");
@@ -65,8 +63,8 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 	}
 
 	void ParseEndpoint(
-				const wstring &source,
-				wstring &line,
+				const std::wstring &source,
+				std::wstring &line,
 				int &baudRate,
 				unsigned char &dataBits,
 				unsigned char &stopBits,
@@ -74,9 +72,9 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 				SerialEndpointAddress::FlowControl &flowControl) {
 
 		EndpointResourceIdentifierParsers::UrlSplitConstIterator pathIt
-			= make_split_iterator(source, token_finder(is_any_of(L"?&")));
+			= boost::make_split_iterator(source, boost::token_finder(boost::is_any_of(L"?&")));
 
-		line = copy_range<wstring>(*pathIt++);
+		line = boost::copy_range<std::wstring>(*pathIt++);
 		if (line.empty()) {
 			throw InvalidLinkException(L"Format is invalid");
 		}
@@ -84,36 +82,36 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"baudrate",
-			bind(
+			boost::bind(
 				&EndpointResourceIdentifierParsers::ParseUrlParamValue<int>,
 				_1,
-				ref(baudRate)),
+				boost::ref(baudRate)),
 			false);
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"databits",
-			bind(
+			boost::bind(
 				&EndpointResourceIdentifierParsers::ParseUrlParamValue<unsigned char>,
 				_1,
-				ref(dataBits)),
+				boost::ref(dataBits)),
 			false);
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"stopbits",
-			bind(
+			boost::bind(
 				&EndpointResourceIdentifierParsers::ParseUrlParamValue<unsigned char>,
 				_1,
-				ref(stopBits)),
+				boost::ref(stopBits)),
 			false);
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"parity",
-			bind(&ParseEndpointParity, _1, ref(parity)),
+			boost::bind(&ParseEndpointParity, _1, boost::ref(parity)),
 			false);
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"flowcontrol",
-			bind(&ParseEndpointFlowControl, _1, ref(flowControl)),
+			boost::bind(&ParseEndpointFlowControl, _1, boost::ref(flowControl)),
 			false);
 
 	}
@@ -156,7 +154,7 @@ SerialEndpointAddress::SerialEndpointAddress()
 		
 SerialEndpointAddress::SerialEndpointAddress(const WString &path)
 		: m_pimpl(new Implementation()) {
-	wstring line;
+	std::wstring line;
 	ParseEndpoint(
 		path.GetCStr(),
 		line,
@@ -245,8 +243,8 @@ ACE_DEV_Addr & SerialEndpointAddress::GetAceDevAddr() {
 	return m_pimpl->m_addr;
 }
 
-wstring SerialEndpointAddress::GetHumanReadable() const {
-	wstring result(L"serial://");
+std::wstring SerialEndpointAddress::GetHumanReadable() const {
+	std::wstring result(L"serial://");
 	result += GetLine();
 	return result;
 }
@@ -276,7 +274,7 @@ SerialEndpointAddress::FlowControl SerialEndpointAddress::GetFlowControl() const
 }
 
 WString SerialEndpointAddress::CreateResourceIdentifier(
-			const wstring &line,
+			const std::wstring &line,
 			int baudRate,
 			unsigned char dataBits,
 			unsigned char stopBits,
@@ -284,7 +282,7 @@ WString SerialEndpointAddress::CreateResourceIdentifier(
 			FlowControl flowControl) {
 	BOOST_ASSERT(!line.empty());
 	BOOST_ASSERT(baudRate > 0);
-	wostringstream result;
+	std::wostringstream result;
 	result
 		<< L"serial://" << StringUtil::EncodeUrl(line)
 		<< L"?baudrate=" << baudRate

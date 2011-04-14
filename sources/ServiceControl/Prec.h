@@ -15,6 +15,8 @@
 #include "CompileConfig.h"
 #include "Constants.h"
 
+#define BOOST_FILESYSTEM_VERSION 2
+
 #include "ModulePath.hpp"
 #include "Xml.hpp"
 

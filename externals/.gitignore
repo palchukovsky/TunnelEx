@@ -3,6 +3,7 @@
 *.7z
 *.gz
 *.zip
+*.exe
 ACE_wrappers
 boost
 miniupnp

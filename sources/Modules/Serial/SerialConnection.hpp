@@ -14,10 +14,10 @@
 
 #include "SerialEndpointAddress.hpp"
 
-#include <TunnelEx/Connection.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Connection.hpp"
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Error.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Serial {
 
@@ -29,9 +29,7 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 					const SerialEndpointAddress &address,
 					const RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
-				throw(ConnectionOpeningException)
 				: Connection(ruleEndpoint, ruleEndpointAddress) {
-			LogTracking("SerialConnection", "SerialConnection", __FILE__, __LINE__);
 			const int connectResult = m_connector.connect(
 				m_io,
 				address.GetAceDevAddr(),

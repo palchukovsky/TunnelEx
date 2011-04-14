@@ -11,11 +11,7 @@
 
 #include "CompileConfig.h"
 
-#ifdef TUNNELEX_CORE
-#	include "Core/Log.hpp"
-#else
-#	include <TunnelEx/Log.hpp>
-#endif
+#include "Core/Log.hpp"
 #include <assert.h> // .h to support old libraries w/o <cassert> - effect is the same
 #include <sstream>
 

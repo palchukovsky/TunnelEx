@@ -25,8 +25,6 @@
 # include "Server.hpp"
 #endif
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -133,7 +131,7 @@ public:
 		try {
 			UpdateIdleTimer();
 		} catch (...) {
-			swap(oldInterval, m_idleTimeoutInterval);
+			std::swap(oldInterval, m_idleTimeoutInterval);
 			throw;
 		}
 	}
@@ -157,7 +155,7 @@ public:
 			return;
 		}
 
-		shared_ptr<TunnelBuffer> buffer;
+		boost::shared_ptr<TunnelBuffer> buffer;
 		TunnelBuffer::Allocators allocators;
 
 		try {
@@ -179,16 +177,16 @@ public:
 			
 			IoHandleInfo ioHandleInfo = m_myInterface.GetIoHandle();
 			
-			auto_ptr<ACE_Asynch_Operation> readStream;
-			auto_ptr<ACE_Asynch_Operation> writeStream;
+			std::auto_ptr<ACE_Asynch_Operation> readStream;
+			std::auto_ptr<ACE_Asynch_Operation> writeStream;
 
-			function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
+			boost::function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
 				openReadStreamFunc;
-			function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
+			boost::function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
 				openWriteStreamFunc;
 
-			function<int(ACE_Message_Block &, size_t)> readStreamFunc;
-			function<int(ACE_Message_Block &, size_t)> writeStreamFunc;
+			boost::function<int(ACE_Message_Block &, size_t)> readStreamFunc;
+			boost::function<int(ACE_Message_Block &, size_t)> writeStreamFunc;
 			
 			if (ioHandleInfo.handle != 0) {
 				switch (ioHandleInfo.type) {
@@ -196,16 +194,16 @@ public:
 						BOOST_ASSERT(false);
 					case IoHandleInfo::TYPE_OTHER:
 						readStream.reset(new ACE_Asynch_Read_File);
-						openReadStreamFunc = bind(
+						openReadStreamFunc = boost::bind(
 							&ACE_Asynch_Read_File::open,
-							polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
+							boost::polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
 							_1,
 							_2,
 							_3,
 							_4);
-						readStreamFunc = bind(
+						readStreamFunc = boost::bind(
 							&ACE_Asynch_Read_File::read,
-							polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
+							boost::polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
 							_1,
 							_2,
 							0,
@@ -215,16 +213,16 @@ public:
 							ACE_SIGRTMIN);
 						if (isReadingAllowed) {
 							writeStream.reset(new ACE_Asynch_Write_File);
-							openWriteStreamFunc = bind(
+							openWriteStreamFunc = boost::bind(
 								&ACE_Asynch_Write_File::open,
-								polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
+								boost::polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
 								_1,
 								_2,
 								_3,
 								_4);
-							writeStreamFunc = bind(
+							writeStreamFunc = boost::bind(
 								&ACE_Asynch_Write_File::write,
-								polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
+								boost::polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
 								_1,
 								_2,
 								0,
@@ -236,16 +234,16 @@ public:
 						break;
 					case IoHandleInfo::TYPE_SOCKET:
 						readStream.reset(new ACE_Asynch_Read_Stream);
-						openReadStreamFunc = bind(
+						openReadStreamFunc = boost::bind(
 							&ACE_Asynch_Read_Stream::open,
-							polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
+							boost::polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
 							_1,
 							_2,
 							_3,
 							_4);
-						readStreamFunc = bind(
+						readStreamFunc = boost::bind(
 							&ACE_Asynch_Read_Stream::read,
-							polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
+							boost::polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
 							_1,
 							_2,
 							static_cast<void *>(0),
@@ -253,16 +251,16 @@ public:
 							ACE_SIGRTMIN);
 						if (isReadingAllowed) {
 							writeStream.reset(new ACE_Asynch_Write_Stream);
-							openWriteStreamFunc = bind(
+							openWriteStreamFunc = boost::bind(
 								&ACE_Asynch_Write_Stream::open,
-								polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
+								boost::polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
 								_1,
 								_2,
 								_3,
 								_4);
-							writeStreamFunc = bind(
+							writeStreamFunc = boost::bind(
 								&ACE_Asynch_Write_Stream::write,
-								polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
+								boost::polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
 								_1,
 								_2,
 								static_cast<void *>(0),
@@ -324,7 +322,7 @@ public:
 		UpdateIdleTimer();
 
 		UniqueMessageBlockHolder &messageBlockHolder
-			= *polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
+			= *boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
 
 		BOOST_ASSERT(messageBlock.GetUnreadedDataSize() > 0);
 		UniqueMessageBlockHolder blockToSend(messageBlockHolder.Get().duplicate());
@@ -675,7 +673,7 @@ private:
 
 	}
 
-	void InitRead() const throw(ConnectionException) {
+	void InitRead() const {
 		if (!m_readStream.get()) {
 			return;
 		}
@@ -728,10 +726,10 @@ private:
 	
 	SharedPtr<ConnectionSignal> m_signal;
 	
-	auto_ptr<ACE_Asynch_Operation> m_readStream;
-	auto_ptr<ACE_Asynch_Operation> m_writeStream;
-	function<int(ACE_Message_Block &, size_t)> m_readStreamFunc;
-	function<int(ACE_Message_Block &, size_t)> m_writeStreamFunc;
+	std::auto_ptr<ACE_Asynch_Operation> m_readStream;
+	std::auto_ptr<ACE_Asynch_Operation> m_writeStream;
+	boost::function<int(ACE_Message_Block &, size_t)> m_readStreamFunc;
+	boost::function<int(ACE_Message_Block &, size_t)> m_writeStreamFunc;
 	
 	bool m_isReadingAllowed;
 	
@@ -751,7 +749,7 @@ private:
 	bool m_closeAtLastMessageBlock;
 	size_t m_sendQueueSize;
 
-	shared_ptr<TunnelBuffer> m_buffer;
+	boost::shared_ptr<TunnelBuffer> m_buffer;
 	TunnelBuffer::Allocators m_allocators;
 
 	bool m_forceClosingMode;

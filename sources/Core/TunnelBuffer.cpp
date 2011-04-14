@@ -13,7 +13,6 @@
 
 #include "TunnelBuffer.hpp"
 
-using namespace std;
 using namespace TunnelEx;
 
 TunnelBuffer::TunnelBuffer() {
@@ -45,11 +44,11 @@ TunnelBuffer::Allocators TunnelBuffer::CreateBuffer(
 			BlocksAllocatorMutex>
 		DataBlocksBufferAllocator;
 
-	auto_ptr<ACE_Allocator> messageBlocksAllocator(
+	std::auto_ptr<ACE_Allocator> messageBlocksAllocator(
 		new MessageBlocksAllocator(messageBlocksCount));
-	auto_ptr<ACE_Allocator> dataBlocksAllocator(
+	std::auto_ptr<ACE_Allocator> dataBlocksAllocator(
 		new DataBlocksAllocator(messageBlocksCount));
-	auto_ptr<ACE_Allocator> dataBlocksBufferAllocator(
+	std::auto_ptr<ACE_Allocator> dataBlocksBufferAllocator(
 		new DataBlocksBufferAllocator(dataBlocksCount, dataBlockSize));
 
 	Allocators result;

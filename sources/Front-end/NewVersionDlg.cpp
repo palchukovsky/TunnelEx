@@ -14,9 +14,6 @@
 #include "NewVersionDlg.hpp"
 #include "Application.hpp"
 
-
-using namespace std;
-
 NewVersionDlg::NewVersionDlg(
 			const UpdateChecker::Version &version,
 			wxWindow *parent)
@@ -24,7 +21,7 @@ NewVersionDlg::NewVersionDlg(
 			parent,
 			wxID_ANY,
 			wxT("New version is available!")) {
-	auto_ptr<wxBoxSizer> sizer(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> sizer(new wxBoxSizer(wxVERTICAL));
 	sizer->Add(
 		new wxStaticText(
 			this,
@@ -66,7 +63,7 @@ NewVersionDlg::NewVersionDlg(
 	
 	sizer->Add(new wxStaticLine(this), wxGetApp().GetTheme().GetTopSizerFlags());
 	
-	auto_ptr<wxBoxSizer> buttonSizer(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> buttonSizer(new wxBoxSizer(wxHORIZONTAL));
 	m_doNotCheckCtrl = new wxCheckBox(
 		this,
 		wxID_ANY,

@@ -17,7 +17,7 @@
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Pipe;
  
-UniquePtr<Connection> PipeConnectionAcceptor::Accept() throw(ConnectionOpeningException) {
+UniquePtr<Connection> PipeConnectionAcceptor::Accept() {
 	return UniquePtr<Connection>(
 		new IncomingPipeConnection(
 			GetRuleEndpoint(),

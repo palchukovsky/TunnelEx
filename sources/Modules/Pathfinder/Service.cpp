@@ -12,14 +12,11 @@
 #include "Prec.h"
 
 #include "Service.hpp"
+#include "Licensing.hpp"
 
-#include "Licensing/FsLocalStorage.hpp"
+#include "Core/Log.hpp"
+#include "Core/Error.hpp"
 
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Error.hpp>
-
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Mods::Pathfinder;
@@ -31,18 +28,18 @@ using Mods::Inet::TcpEndpointAddress;
 
 namespace {
 
-	Proxy ExtractProxy(const string proxyStr) {
-		typedef split_iterator<string::const_iterator> HostSplitInterator;
+	Proxy ExtractProxy(const std::string proxyStr) {
+		typedef boost::split_iterator<std::string::const_iterator> HostSplitInterator;
 		HostSplitInterator hostIt
-			= make_split_iterator(proxyStr, first_finder(L":", is_equal()));
+			= boost::make_split_iterator(proxyStr, boost::first_finder(L":", boost::is_equal()));
 		Proxy result;
-		const string proxyHost = copy_range<string>(*hostIt);
+		const std::string proxyHost = boost::copy_range<std::string>(*hostIt);
 		result.host = ConvertString<WString>(proxyHost.c_str()).GetCStr();
 		BOOST_ASSERT(!result.host.empty());
 		result.port = 0;
 		if (++hostIt != HostSplitInterator()) {
 			try {
-				result.port = lexical_cast<unsigned short>(*hostIt);
+				result.port = boost::lexical_cast<unsigned short>(*hostIt);
 				BOOST_ASSERT(result.port > 0);
 			} catch (const boost::bad_lexical_cast &) {
 				BOOST_ASSERT(false);
@@ -61,10 +58,9 @@ namespace {
 		return result;
 	} 
 
-	void SetupProxyAuth(
-				HINTERNET handle,
-				const TcpEndpointAddress &target)
-			throw(ServiceException) {
+	/** @throw ServiceException
+	  */
+	void SetupProxyAuth(HINTERNET handle, const TcpEndpointAddress &target) {
 		if (	target.GetProxyList().size() == 0
 				|| target.GetProxyList().begin()->user.empty()) {
 			return;
@@ -179,15 +175,13 @@ ServiceImpl::~ServiceImpl() throw() {
 	delete m_licensing;
 }
 
-void ServiceImpl::InitConnection(
-			const TcpEndpointAddress &target)
-		throw(TunnelEx::Mods::Pathfinder::ServiceException){
+void ServiceImpl::InitConnection(const TcpEndpointAddress &target) {
 
 	if (m_handles->connect.handle) {
 		return;
 	}
 	
-	wstring proxy;
+	std::wstring proxy;
 	if (target.GetProxyList().size() > 0) {
 		WFormat proxyFormat(L"%1%:%2%");
 		proxyFormat
@@ -269,10 +263,10 @@ bool ServiceImpl::RequestProxy(
 		return false;
 	}
 
-	wostringstream requestStr;
+	std::wostringstream requestStr;
 	requestStr << L"proxy/list?";
 	{
-		wstring key
+		std::wstring key
 			= ConvertString<WString>(m_licensing->license.GetKey().c_str()).GetCStr();
 		if (key.empty()) {
 			key = (WFormat(L"%1%%1%%2%%1%%2%%1%%2%%1%%2%%1%%1%%1%") % L"0000" % L"-").str();
@@ -334,7 +328,7 @@ bool ServiceImpl::RequestProxy(
 		throw ServiceException(message.str().c_str());
 	}
 
-	vector<char> answer;
+	std::vector<char> answer;
 	{
 #		ifdef _DEBUG
 			answer.resize(10);
@@ -381,23 +375,23 @@ bool ServiceImpl::RequestProxy(
 
 #	if defined(_DEBUG) || defined(TEST)
 	{
-		filesystem::path dumpPath = GetModuleFilePathA().branch_path();
+		boost::filesystem::path dumpPath = GetModuleFilePathA().branch_path();
 		dumpPath /= "PathfindServiceAnswer.html";
-		ofstream f(dumpPath.string().c_str(), ios::trunc | ios::binary);
-		f.write(&answer[0], streamsize(answer.size()));
+		std::ofstream f(dumpPath.string().c_str(), std::ios::trunc | std::ios::binary);
+		f.write(&answer[0], std::streamsize(answer.size()));
 	}
 #	endif
 
 	{
-		typedef split_iterator<vector<char>::iterator> AnswerSplitIterator;
+		typedef boost::split_iterator<std::vector<char>::iterator> AnswerSplitIterator;
 		AnswerSplitIterator lineIt
-			= make_split_iterator(answer, first_finder("\n", is_equal()));
+			= boost::make_split_iterator(answer, boost::first_finder("\n", boost::is_equal()));
 		AnswerSplitIterator resultCodeIt
-			= make_split_iterator(answer, token_finder(!is_digit()));
+			= boost::make_split_iterator(answer, boost::token_finder(!boost::is_digit()));
 		int resultCode;
 		try {
 			resultCode = begin(*resultCodeIt) != end(*resultCodeIt)
-				?	lexical_cast<int>(*resultCodeIt)
+				?	boost::lexical_cast<int>(*resultCodeIt)
 				:	(target.GetProxyList().size() > 0 ? 201 : 200);
 		} catch (const boost::bad_lexical_cast &) {
 			BOOST_ASSERT(false);
@@ -409,8 +403,8 @@ bool ServiceImpl::RequestProxy(
 			case 1:
 				// custom
 				{
-					string error(begin(*++resultCodeIt), end(*lineIt));
-					trim_if(error, is_space() || is_cntrl());
+					std::string error(begin(*++resultCodeIt), end(*lineIt));
+					boost::trim_if(error, boost::is_space() || boost::is_cntrl());
 					WFormat message(errorTemplate);
 					message % 
 						(!error.empty()
@@ -436,8 +430,8 @@ bool ServiceImpl::RequestProxy(
 				{
 					ProxyList proxyList;
 					while (++lineIt != AnswerSplitIterator()) {
-						string proxyStr = copy_range<string>(*lineIt);
-						trim_if(proxyStr, is_space() || is_cntrl());
+						std::string proxyStr = boost::copy_range<std::string>(*lineIt);
+						boost::trim_if(proxyStr, boost::is_space() || boost::is_cntrl());
 						BOOST_ASSERT(!proxyStr.empty());
 						if (!proxyStr.empty()) {
 							const Proxy proxy = ExtractProxy(proxyStr);
@@ -507,7 +501,7 @@ void ServiceImpl::Report(
 		m_goodProxy.reset();
 	}
 
-	wostringstream requestStr;
+	std::wostringstream requestStr;
 	requestStr << L"report/" << result;
 
 	try {
@@ -555,9 +549,9 @@ void ServiceImpl::Report(
 	const char *const headers
 		= "Content-Type: application/x-www-form-urlencoded";
 
-	ostringstream postDataStr;
+	std::ostringstream postDataStr;
 	{
-		string key = m_licensing->license.GetKey();
+		std::string key = m_licensing->license.GetKey();
 		if (key.empty()) {
 			key = (Format("%1%%1%%2%%1%%2%%1%%2%%1%%2%%1%%1%%1%") % "0000" % "-").str();
 		}

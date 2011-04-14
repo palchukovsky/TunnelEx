@@ -26,9 +26,6 @@
 #include "Modules/Serial/SerialEndpointAddress.hpp"
 #include "Modules/Upnp/UpnpEndpointAddress.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::algorithm;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods;
 using namespace TunnelEx::Mods::Inet;
@@ -62,7 +59,7 @@ struct EndpointDlg::Licenses {
 
 void EndpointDlg::EndpointInfoItem::SetAdapter(
 			const wxString &newAdapter,
-			const list<texs__NetworkAdapterInfo> &adapters) {
+			const std::list<texs__NetworkAdapterInfo> &adapters) {
 	RuleUtils::SelectAdapter(*adapterInput, newAdapter, adapters);
 }
 
@@ -240,11 +237,11 @@ bool EndpointDlg::SaveEndpointAddress(
 			bool isOrigEndpointCombined,
 			bool isNewEndpointCombined,
 			const EndpointInfoItem &info,
-			function<SharedPtr<EndpointAddress>(void)> getAddressFunc,
+			boost::function<SharedPtr<EndpointAddress>(void)> getAddressFunc,
 			TunnelEx::WString &resultResourceIdentifier)
 		const {
 	
-	wostringstream resourceIdentifier;
+	std::wostringstream resourceIdentifier;
 	switch (info.GetType()) {
 
 		default:
@@ -279,52 +276,52 @@ bool EndpointDlg::SaveEndpointAddress(
 				
 				} else if (info.networkProtoInput->GetStringSelection() == wxT("TCP")) {
 					
-					typedef function<WString()>
+					typedef boost::function<WString()>
 						SimpleResourceIdentifierFabric;
-					typedef function<WString(const ProxyList &)>
+					typedef boost::function<WString(const ProxyList &)>
 						ProxyResourceIdentifierFabric;
 
 					SimpleResourceIdentifierFabric simpleResourceIdentifierFabric;
 					ProxyResourceIdentifierFabric proxyResourceIdentifierFabric;
 					if (!info.pathfinderUseInput->GetValue()) {
-						simpleResourceIdentifierFabric = bind(
+						simpleResourceIdentifierFabric = boost::bind(
 							&TcpEndpointAddress::CreateResourceIdentifier,
-							wstring(info.hostInput->GetValue().c_str()),
+							std::wstring(info.hostInput->GetValue().c_str()),
 							port,
-							cref(info.certificate),
-							cref(info.remoteCertificates));
-						proxyResourceIdentifierFabric = bind(
+							boost::cref(info.certificate),
+							boost::cref(info.remoteCertificates));
+						proxyResourceIdentifierFabric = boost::bind(
 							static_cast<
 									WString(*)(
-										const wstring &,
+										const std::wstring &,
 										NetworkPort,
 										const SslCertificateId &,
 										const SslCertificateIdCollection &,
 										const ProxyList &)>(
 								&TcpEndpointAddress::CreateResourceIdentifier),
-							wstring(info.hostInput->GetValue().c_str()),
+							std::wstring(info.hostInput->GetValue().c_str()),
 							port,
-							cref(info.certificate),
-							cref(info.remoteCertificates),
+							boost::cref(info.certificate),
+							boost::cref(info.remoteCertificates),
 							_1);
 					} else {
-						simpleResourceIdentifierFabric = bind(
+						simpleResourceIdentifierFabric = boost::bind(
 							&PathfinderEndpointAddress::CreateResourceIdentifier,
-							wstring(info.hostInput->GetValue().c_str()),
+							std::wstring(info.hostInput->GetValue().c_str()),
 							port,
-							cref(info.certificate),
-							cref(info.remoteCertificates));
-						proxyResourceIdentifierFabric = bind(
+							boost::cref(info.certificate),
+							boost::cref(info.remoteCertificates));
+						proxyResourceIdentifierFabric = boost::bind(
 							&PathfinderEndpointAddress::CreateResourceIdentifier,
-							wstring(info.hostInput->GetValue().c_str()),
+							std::wstring(info.hostInput->GetValue().c_str()),
 							port,
-							cref(info.certificate),
-							cref(info.remoteCertificates),
+							boost::cref(info.certificate),
+							boost::cref(info.remoteCertificates),
 							_1);
 					}
 					
 					if (info.IsAccepting() && m_isInputEndpoint) {
-						list<texs__NetworkAdapterInfo>::const_iterator adapter
+						std::list<texs__NetworkAdapterInfo>::const_iterator adapter
 							= m_serviceNetworkAdapters.begin();
 						advance(adapter, info.adapterInput->GetCurrentSelection());
 						resourceIdentifier
@@ -359,9 +356,9 @@ bool EndpointDlg::SaveEndpointAddress(
 					}
 				} else if (info.networkProtoInput->GetStringSelection() == wxT("UDP")) {
 					if (info.IsAccepting() && m_isInputEndpoint) {
-						list<texs__NetworkAdapterInfo>::const_iterator adapter
+						std::list<texs__NetworkAdapterInfo>::const_iterator adapter
 							= m_serviceNetworkAdapters.begin();
-						advance(adapter, info.adapterInput->GetCurrentSelection());
+						std::advance(adapter, info.adapterInput->GetCurrentSelection());
 						resourceIdentifier
 							<< UdpEndpointAddress::CreateResourceIdentifier(
 									wxString::FromAscii(adapter->id.c_str())
@@ -424,7 +421,7 @@ void EndpointDlg::OnOk(wxCommandEvent &) {
 			m_endpoint.IsCombined(),
 			true,
 			m_endpointsInfo[0],
-			bind(&RuleEndpoint::GetCombinedAddress, &newEndpoint),
+			boost::bind(&RuleEndpoint::GetCombinedAddress, &newEndpoint),
 			resourceIdentifier);
 		const bool isAcceptor = m_isInputEndpoint && m_endpointsInfo[0].IsAccepting();
 		hasChanges
@@ -438,7 +435,7 @@ void EndpointDlg::OnOk(wxCommandEvent &) {
 			m_endpoint.IsCombined(),
 			false,
 			m_endpointsInfo[0],
-			bind(&RuleEndpoint::GetReadAddress, &newEndpoint),
+			boost::bind(&RuleEndpoint::GetReadAddress, &newEndpoint),
 			readResourceIdentifier);
 		WString writeResourceIdentifier;
 		hasChanges
@@ -446,7 +443,7 @@ void EndpointDlg::OnOk(wxCommandEvent &) {
 				m_endpoint.IsCombined(),
 				false,
 				m_endpointsInfo[1],
-				bind(&RuleEndpoint::GetWriteAddress, &newEndpoint),
+				boost::bind(&RuleEndpoint::GetWriteAddress, &newEndpoint),
 				writeResourceIdentifier)
 			|| hasChanges;
 		Endpoint::Acceptor acceptor = Endpoint::ACCEPTOR_NONE;
@@ -496,7 +493,7 @@ void EndpointDlg::OnOk(wxCommandEvent &) {
 
 	if (hasChanges) {
 		SaveEnpointTemplate();
-		swap(m_endpoint, newEndpoint);
+		std::swap(m_endpoint, newEndpoint);
 		m_hasChanges = true;
 	}
 
@@ -612,15 +609,15 @@ void EndpointDlg::OnCombinedOrReadPortChanged(wxCommandEvent &) {
 }
 
 void EndpointDlg::OnPortChanged(EndpointInfoItem &info) const {
-	wstring checkValue = info.portInput->GetValue().c_str();
-	trim(checkValue);
+	std::wstring checkValue = info.portInput->GetValue().c_str();
+	boost::trim(checkValue);
 	if (checkValue.empty()) {
 		return;
 	}
-	if (!regex_match(checkValue, wregex(L"\\d+"))) {
-		const long pos = max(long(0), info.portInput->GetInsertionPoint() - 1);
+	if (!boost::regex_match(checkValue, boost::wregex(L"\\d+"))) {
+		const long pos = std::max(long(0), info.portInput->GetInsertionPoint() - 1);
 		info.portInput->ChangeValue(info.portValid);
-		info.portInput->SetInsertionPoint(min(info.portInput->GetLastPosition(), pos));
+		info.portInput->SetInsertionPoint(std::min(info.portInput->GetLastPosition(), pos));
 	} else {
 		info.portValid = checkValue;
 	}
@@ -933,9 +930,9 @@ void EndpointDlg::ShowControlEndpointNetworkAddress(EndpointInfoItem &info, int 
 		info.adapterInput->GetPosition(&x, 0);
 		info.adapterInput->SetPosition(wxPoint(x, y));
 		if (!isUpnp) {
-			list<texs__NetworkAdapterInfo>::const_iterator adapter
+			std::list<texs__NetworkAdapterInfo>::const_iterator adapter
 				= m_serviceNetworkAdapters.begin();
-			advance(adapter, info.adapterInput->GetCurrentSelection());
+			std::advance(adapter, info.adapterInput->GetCurrentSelection());
 			wxString toolTip = wxString::FromAscii(adapter->name.c_str());
 			if (!toolTip.empty() && !adapter->ipAddress.empty()) {
 				toolTip += wxT(": ");
@@ -1249,7 +1246,7 @@ void EndpointDlg::CreateControlEndpointAction(
 			list,
 			wxCHK_2STATE);
 	}
-	const int width = max(
+	const int width = std::max(
 		info.isAcceptingInput->GetSize().GetWidth(),
 		info.isAcceptingUdp->GetSize().GetWidth());
 	info.isAcceptingInput->SetSize(
@@ -1607,10 +1604,11 @@ void EndpointDlg::CreateControlLog() {
 				wxTextCtrl *ctrl = dynamic_cast<wxTextCtrl*>(GetWindow());
 				BOOST_ASSERT(ctrl);
 				//! \todo: implemented only for Windows [2008/01/29 4:19]
-				const wstring dir(ctrl->GetValue().c_str());
-				result = regex_match(
+				const std::wstring dir(ctrl->GetValue().c_str());
+				result = boost::regex_match(
 					dir,
-					wregex(L"[a-z]:(\\\\|/)[^\"*?<>|]*", regex_constants::perl | regex_constants::icase));
+					boost::wregex(L"[a-z]:(\\\\|/)[^\"*?<>|]*",
+					boost::regex_constants::perl | boost::regex_constants::icase));
 			}
 			if (!result) {
 				//! \todo: make two different messages for these errors [2008/01/29 4:24]
@@ -1760,7 +1758,7 @@ void EndpointDlg::ReadLogInfo() {
 	LogInfo info;
 	info.path = RuleUtils::GetEndpoindLogPath(m_endpoint);
 	info.isOn = !info.path.IsEmpty();
-	swap(info, m_logInfoSource);
+	std::swap(info, m_logInfoSource);
 }
 
 template<typename Address>
@@ -1792,20 +1790,20 @@ void EndpointDlg::ReadEndpointInfo(
 		BOOST_ASSERT(dynamic_cast<const TcpEndpointAddress *>(&address) != 0);
 		if (dynamic_cast<const TcpEndpointAddress *>(&address) != 0) {
 			const TcpEndpointAddress &typedAddress
-				= *polymorphic_downcast<const TcpEndpointAddress *>(&address);
+				= *boost::polymorphic_downcast<const TcpEndpointAddress *>(&address);
 			if (typedAddress.GetHostName() != L"*") {
 				info.hostInput->SetValue(typedAddress.GetHostName());
 			}
 			info.SetAdapter(typedAddress.GetAdapter(), m_serviceNetworkAdapters);
 			if (typedAddress.GetPort()) {
-				info.portInput->SetValue(lexical_cast<wstring>(typedAddress.GetPort()));
+				info.portInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetPort()));
 			}
 			info.EnableProxy(typedAddress.GetProxyList().size() > 0);
 			if (typedAddress.GetProxyList().size() > 0) {
 				foreach (const Proxy &proxy, typedAddress.GetProxyList()) {
 					ProxyDlg::Info proxyInfo;
 					proxyInfo.host = proxy.host;
-					proxyInfo.port = lexical_cast<wstring>(proxy.port);
+					proxyInfo.port = boost::lexical_cast<std::wstring>(proxy.port);
 					proxyInfo.isAuthInUse = !proxy.user.empty();
 					proxyInfo.user = proxy.user;
 					proxyInfo.password = proxy.password;
@@ -1827,24 +1825,24 @@ void EndpointDlg::ReadEndpointInfo(
 				:	wxT("TCP"));
 	
 		const InetEndpointAddress &inetAddress
-			= *polymorphic_downcast<const InetEndpointAddress *>(&address);
+			= *boost::polymorphic_downcast<const InetEndpointAddress *>(&address);
 		if (inetAddress.GetHostName() != L"*") {
 			info.hostInput->SetValue(inetAddress.GetHostName());
 		}
 		info.SetAdapter(inetAddress.GetAdapter(), m_serviceNetworkAdapters);
 		if (inetAddress.GetPort()) {
-			info.portInput->SetValue(lexical_cast<wstring>(inetAddress.GetPort()));
+			info.portInput->SetValue(boost::lexical_cast<std::wstring>(inetAddress.GetPort()));
 		}
 
 		if (dynamic_cast<const TcpEndpointAddress *>(&inetAddress)) {
 			const TcpEndpointAddress &tcpAddress
-				= *polymorphic_downcast<const TcpEndpointAddress *>(&inetAddress);
+				= *boost::polymorphic_downcast<const TcpEndpointAddress *>(&inetAddress);
 			info.EnableProxy(tcpAddress.GetProxyList().size() > 0);
 			if (tcpAddress.GetProxyList().size() > 0) { 
 				foreach (const Proxy &proxy, tcpAddress.GetProxyList()) {
 					ProxyDlg::Info proxyInfo;
 					proxyInfo.host = proxy.host;
-					proxyInfo.port = lexical_cast<wstring>(proxy.port);
+					proxyInfo.port = boost::lexical_cast<std::wstring>(proxy.port);
 					proxyInfo.isAuthInUse = !proxy.user.empty();
 					proxyInfo.user = proxy.user;
 					proxyInfo.password = proxy.password;
@@ -1861,12 +1859,12 @@ void EndpointDlg::ReadEndpointInfo(
 		info.SetType(ENDPOINT_TYPE_SERIAL);
 
 		const SerialEndpointAddress &typedAddress
-			= *polymorphic_downcast<const SerialEndpointAddress *>(&address);
+			= *boost::polymorphic_downcast<const SerialEndpointAddress *>(&address);
 		info.serialLineInput->SetValue(typedAddress.GetLine());
-		info.serialBaudRateInput->SetValue(lexical_cast<wstring>(typedAddress.GetBaudRate()));
-		info.serialDataBitsInput->SetValue(lexical_cast<wstring>(typedAddress.GetDataBits()));
-		info.serialStopBitsInput->SetValue(lexical_cast<wstring>(typedAddress.GetStopBits()));
-		typedef map<wxString, SerialEndpointAddress::Parity> ParityMap;
+		info.serialBaudRateInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetBaudRate()));
+		info.serialDataBitsInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetDataBits()));
+		info.serialStopBitsInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetStopBits()));
+		typedef std::map<wxString, SerialEndpointAddress::Parity> ParityMap;
 		ParityMap parityMap;
 		RuleUtils::GetSerialParityValsMap(parityMap);
 		foreach (const ParityMap::value_type &val, parityMap) {
@@ -1875,7 +1873,7 @@ void EndpointDlg::ReadEndpointInfo(
 				break;
 			}
 		}
-		typedef map<wxString, SerialEndpointAddress::FlowControl> FcMap;
+		typedef std::map<wxString, SerialEndpointAddress::FlowControl> FcMap;
 		FcMap fcMap;
 		RuleUtils::GetSerialFlowControlValsMap(fcMap);
 		foreach (const FcMap::value_type &val, fcMap) {
@@ -1888,13 +1886,13 @@ void EndpointDlg::ReadEndpointInfo(
 	} else if (dynamic_cast<const UpnpEndpointAddress *>(&address)) {
 
 		const UpnpEndpointAddress &typedAddress
-			= *polymorphic_downcast<const UpnpEndpointAddress *>(&address);
+			= *boost::polymorphic_downcast<const UpnpEndpointAddress *>(&address);
 
 		info.SetType(ENDPOINT_TYPE_NETWORK);
 		info.SetUpnpAdapter();
 
 		if (typedAddress.GetExternalPort()) {
-			info.portInput->SetValue(lexical_cast<wstring>(typedAddress.GetExternalPort()));
+			info.portInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetExternalPort()));
 		}
 
 		if (dynamic_cast<const UpnpTcpEndpointAddress *>(&address)) {
@@ -1906,10 +1904,10 @@ void EndpointDlg::ReadEndpointInfo(
 
 	} else {
 
-		const wstring resourceIdentifier(address.GetResourceIdentifier().GetCStr());
-		const wregex exp(L"([^:/]+)://(.+)");
-		wsmatch what;
-		if (	regex_match(resourceIdentifier, what, exp)
+		const std::wstring resourceIdentifier(address.GetResourceIdentifier().GetCStr());
+		const boost::wregex exp(L"([^:/]+)://(.+)");
+		boost::wsmatch what;
+		if (	boost::regex_match(resourceIdentifier, what, exp)
 				&& !wxString(what[1].str()).CompareTo(wxT("pipe"), wxString::ignoreCase)) {
 			info.SetType(ENDPOINT_TYPE_PIPE);
 			info.pipeInput->SetValue(what[2].str());
@@ -2049,13 +2047,13 @@ bool EndpointDlg::ShowSslSettingsDialog(EndpointInfoItem &info) {
 void EndpointDlg::OnProxyUseToggle(wxCommandEvent &event) {
 	CheckProxyUseControls(
 		true,
-		polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
+		boost::polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
 }
 
 void EndpointDlg::OnProxyUseWriteToggle(wxCommandEvent &event) {
 	CheckProxyUseControls(
 		false,
-		polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
+		boost::polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
 }
 
 void EndpointDlg::CheckSslUseControls(
@@ -2113,13 +2111,13 @@ void EndpointDlg::CheckProxyUseControls(
 void EndpointDlg::OnSslUseToggle(wxCommandEvent &event) {
 	CheckSslUseControls(
 		true,
-		polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
+		boost::polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
 }
 
 void EndpointDlg::OnSslUseWriteToggle(wxCommandEvent &event) {
 	CheckSslUseControls(
 		false,
-		polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
+		boost::polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
 }
 
 void EndpointDlg::OnSslSettings(wxCommandEvent &) {
@@ -2133,13 +2131,13 @@ void EndpointDlg::OnSslSettingsWrite(wxCommandEvent &) {
 void EndpointDlg::OnPathfinderUseToggle(wxCommandEvent &event) {
 	CheckPathfinderUseControls(
 		true,
-		polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
+		boost::polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
 }
 
 void EndpointDlg::OnIsPathfinderUseWriteToggle(wxCommandEvent &event) {
 	CheckPathfinderUseControls(
 		false,
-		polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
+		boost::polymorphic_downcast<wxCheckBox *>(event.GetEventObject())->GetValue());
 }
 
 void EndpointDlg::CheckPathfinderUseControls(
@@ -2203,10 +2201,10 @@ void EndpointDlg::ShowSplitRwLicenseRestriction() const {
 }
 
 void EndpointDlg::OnNetworkAdapterChange(wxCommandEvent &event) {
-	wxChoice &ctrl = *polymorphic_downcast<wxChoice *>(event.GetEventObject());
+	wxChoice &ctrl = *boost::polymorphic_downcast<wxChoice *>(event.GetEventObject());
 	ctrl.SetToolTip(ctrl.GetStringSelection());
 	if (!RuleUtils::IsUpnpAdapterSelected(ctrl)) {
-		list<texs__NetworkAdapterInfo>::const_iterator adapter
+		std::list<texs__NetworkAdapterInfo>::const_iterator adapter
 			= m_serviceNetworkAdapters.begin();
 		advance(adapter, ctrl.GetCurrentSelection());
 		CheckInactiveAdapterWarning(*adapter);
@@ -2254,7 +2252,7 @@ bool EndpointDlg::CheckInactiveAdapterWarning(const Endpoint &endpoint) const {
 bool EndpointDlg::CheckInactiveAdapterWarning(
 			const InetEndpointAddress &addr)
 		const {
-	const string id = wxString(addr.GetAdapter()).ToAscii();
+	const std::string id = wxString(addr.GetAdapter()).ToAscii();
 	if (id.empty()) {
 		return false;
 	}

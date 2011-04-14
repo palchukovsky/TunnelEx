@@ -607,9 +607,7 @@ namespace Crypto {
 	
 		void Take(std::vector<unsigned char> &result) {
 		
-			using namespace std;
-
-			const string &str = m_encoded.str();
+			const std::string &str = m_encoded.str();
 			const int encodedSize = int(str.size());
 			if (!encodedSize) {
 				result.clear();
@@ -642,7 +640,7 @@ namespace Crypto {
 			}
 
 			buffer.resize(readedTotal);
-			m_encoded.str(string());
+			m_encoded.clear();
 			buffer.swap(result);
 
 		}
@@ -1440,18 +1438,17 @@ namespace Crypto {
 	public:
 
 		std::string GetSerialNumber() const {
-			using namespace std;
 			const ASN1_INTEGER *const asn1Serial = X509_get_serialNumber(m_cert);
 			if (!asn1Serial) {
 				throw OpenSslException(OpenSslError::GetLast(true));
 			}
-			ostringstream result;
+			std::ostringstream result;
 			if (asn1Serial->type == V_ASN1_NEG_INTEGER) {
 				result << "-";
 			}
-			result << setfill('0') << hex << uppercase;
+			result << std::setfill('0') << std::hex << std::uppercase;
 			for (int i = 0; i < asn1Serial->length; ++i) {
-				result << setw(2) << int(asn1Serial->data[i]);
+				result << std::setw(2) << int(asn1Serial->data[i]);
 				if (i + 1 < asn1Serial->length) {
 					result << ':';
 				}
@@ -1550,11 +1547,10 @@ namespace Crypto {
 		}
 
 		std::string GetEntry(X509_NAME &name, int nid) const {
-			using namespace std;
 			for (int pos = -1; ; ) {
 				pos = X509_NAME_get_index_by_NID(&name, nid, pos);
 				if (pos == -1) {
-					return string();
+					return std::string();
 				}
 				X509_NAME_ENTRY &entry = *X509_NAME_get_entry(&name, pos);
 				unsigned char *out;
@@ -1563,7 +1559,7 @@ namespace Crypto {
 					continue;
 				}
 				try {
-					const string result(&out[0], &out[outlen]);
+					const std::string result(&out[0], &out[outlen]);
 					OPENSSL_free(out);
 					return result;
 				} catch (...) {
@@ -1711,13 +1707,11 @@ namespace Crypto {
 					const std::string &subjectStateOrProvinceOptional,
 					const std::string &subjectCountryOptional) {
 
-			using namespace std;
-
-			auto_ptr<X509Private> result(new X509Private(privateKey));
+			std::auto_ptr<X509Private> result(new X509Private(privateKey));
 			X509_set_version(&result->Get(), 2);
 			
 			{
-				const auto_ptr<Asn1Integer> serial(
+				const std::auto_ptr<Asn1Integer> serial(
 					BigNumber::GeneratePseudoRandomSerial()->GetAsAsn1Integer());
 				if (!X509_set_serialNumber(&result->Get(), &serial->Get())) {
 					throw OpenSslException(OpenSslError::GetLast(true));
@@ -1731,7 +1725,7 @@ namespace Crypto {
 			X509_gmtime_adj(X509_get_notBefore(&result->Get()), 0);
 			X509_gmtime_adj(
 				X509_get_notAfter(&result->Get()),
-				numeric_limits<long>::max());
+				std::numeric_limits<long>::max());
 
 			Util::AddX509Entries(
 				&result->Get(),
@@ -1935,10 +1929,9 @@ namespace Crypto {
 		}
 
 		std::string GetFriendlyName() const {
-			using namespace std;
 			const STACK_OF(PKCS7) *const safes = PKCS12_unpack_authsafes(m_pkcs12);
 			if (!safes) {
-				return string();
+				return std::string();
 			}
 			const char *name = 0;
 		    for (int i = 0; !name && i < sk_PKCS7_num(safes); ++i) {
@@ -1960,7 +1953,7 @@ namespace Crypto {
 			}
 			sk_PKCS7_pop_free(safes, PKCS7_free);
 			if (!name) {
-				return string();
+				return std::string();
 			}
 			return name;
 		}

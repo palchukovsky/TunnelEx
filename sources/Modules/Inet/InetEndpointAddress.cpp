@@ -19,12 +19,11 @@
 #include "HttpProxyConnection.hpp"
 #include "ConnectionsTraits.hpp"
 #include "EndpointResourceIdentifierParsers.hpp"
+#include "Licensing.hpp"
 
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/Exceptions.hpp"
+#include "Core/String.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Helpers::Crypto;
@@ -45,12 +44,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	void ParseEndpointProxyUserPass(
 				EndpointResourceIdentifierParsers::UrlSplitConstIterator source,
-				wstring &user,
-				wstring &password) {
+				std::wstring &user,
+				std::wstring &password) {
 		EndpointResourceIdentifierParsers::UrlSplitConstIterator it
-			= make_split_iterator(*source, first_finder(L":", is_equal()));
-		wstring userTmp = StringUtil::DecodeUrl(begin(*it), end(*it));
-		wstring passTmp; 
+			= boost::make_split_iterator(
+				*source,
+				boost::first_finder(L":", boost::is_equal()));
+		std::wstring userTmp = StringUtil::DecodeUrl(begin(*it), end(*it));
+		std::wstring passTmp; 
 		if (it != source) {
 			passTmp = StringUtil::DecodeUrl(begin(*++it), end(*source));
 		}
@@ -62,13 +63,17 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				EndpointResourceIdentifierParsers::UrlSplitConstIterator source,
 				ProxyList &proxyList) {
 		EndpointResourceIdentifierParsers::UrlSplitConstIterator paramIt
-			= make_split_iterator(*source, first_finder(L"//", is_equal()));
+			= boost::make_split_iterator(
+				*source,
+				boost::first_finder(L"//", boost::is_equal()));
 		if (paramIt == source || !equals(*paramIt, L"http:") || (++paramIt).eof()) {
 			throw InvalidLinkException(L"Unknown proxy type");
 		}
 		Proxy proxy;
 		EndpointResourceIdentifierParsers::UrlSplitConstIterator accessParamIt
-			= make_split_iterator(*paramIt, first_finder(L"@", is_equal()));
+			= boost::make_split_iterator(
+				*paramIt,
+				boost::first_finder(L"@", boost::is_equal()));
 		if (accessParamIt != paramIt) {
 			ParseEndpointProxyUserPass(accessParamIt, proxy.user, proxy.password);
 			++accessParamIt;
@@ -84,11 +89,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	WString CreateEndpointResourceIdentifier(
 				const wchar_t *const proto,
-				const wstring &host,
+				const std::wstring &host,
 				NetworkPort port,
 				const SslCertificateId &certificate = SslCertificateId(),
 				const SslCertificateIdCollection &remoteCertificates = SslCertificateIdCollection()) {
-		BOOST_ASSERT(wstring(proto).size() > 0);
+		BOOST_ASSERT(std::wstring(proto).size() > 0);
 		BOOST_ASSERT(host.size() > 0);
 		WString result;
 		{
@@ -121,9 +126,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	WString CreateEndpointResourceIdentifier(
 				const wchar_t *const proto,
-				const wstring &adapter,
+				const std::wstring &adapter,
 				NetworkPort port,
-				const wstring &allowedHost,
+				const std::wstring &allowedHost,
 				const SslCertificateId &certificate = SslCertificateId(),
 				const SslCertificateIdCollection &remoteCertificates = SslCertificateIdCollection()) {
 		BOOST_ASSERT(adapter.size() > 0);
@@ -145,7 +150,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	WString CreateEndpointResourceIdentifier(
 				const wchar_t *proto,
-				const wstring &host,
+				const std::wstring &host,
 				NetworkPort port,
 				const SslCertificateId &certificate,
 				const SslCertificateIdCollection &remoteCertificates,
@@ -163,7 +168,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		if (proxyList.size() > 0) {
 			const wchar_t *const proxyType = L"http";
-			vector<wstring> proxyListStr;
+			std::vector<std::wstring> proxyListStr;
 			proxyListStr.reserve(proxyList.size());
 			foreach (const Proxy &proxy, proxyList) {
 				if (!proxy.user.empty()) {
@@ -200,7 +205,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			} else {
 				result += L'&';
 			}
-			result += join(proxyListStr, L"&").c_str();
+			result += boost::join(proxyListStr, L"&").c_str();
 		} 
 		
 		return result;
@@ -225,9 +230,11 @@ public:
 				const WString &resourceIdentifier,
 				Server::ConstPtr server = 0)
 			: m_server(server) {
-		const wstring path = resourceIdentifier.GetCStr();
+		const std::wstring path = resourceIdentifier.GetCStr();
 		EndpointResourceIdentifierParsers::UrlSplitConstIterator pathIt
-			= make_split_iterator(path, token_finder(is_any_of(L"?&")));
+			= boost::make_split_iterator(
+				path,
+				boost::token_finder(boost::is_any_of(L"?&")));
 		EndpointResourceIdentifierParsers::ParseEndpointHostPort(
 			pathIt,
 			m_host,
@@ -238,10 +245,10 @@ public:
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"adapter",
-			bind(
-				&EndpointResourceIdentifierParsers::ParseUrlParamValue<wstring>,
+			boost::bind(
+				&EndpointResourceIdentifierParsers::ParseUrlParamValue<std::wstring>,
 				_1,
-				ref(m_adapter)),
+				boost::ref(m_adapter)),
 			false);
 	}
 		
@@ -282,10 +289,10 @@ private:
 
 public:
 
-	mutable auto_ptr<ACE_INET_Addr> m_addr;
-	wstring m_host;
+	mutable std::auto_ptr<ACE_INET_Addr> m_addr;
+	std::wstring m_host;
 	NetworkPort m_port;
-	wstring m_adapter;
+	std::wstring m_adapter;
 
 	Server::ConstPtr const m_server;
 
@@ -298,23 +305,23 @@ public:
 		}
 
 		if (!m_adapter.empty()) {
-			if (iequals(m_adapter, L"all")) {
+			if (boost::iequals(m_adapter, L"all")) {
 				if (m_host != L"*") {
 					m_addr.reset(new ACE_INET_Addr(m_port, m_host.c_str(), AF_INET));
 				} else {
 					m_addr.reset(new ACE_INET_Addr(m_port, static_cast<ACE_UINT32>(INADDR_ANY)));
 				}
-			} else if (iequals(m_adapter, L"loopback")) {
+			} else if (boost::iequals(m_adapter, L"loopback")) {
 				if (	m_host != L"*"
-						&& !iequals(m_host, L"127.0.0.1")
-						&& !iequals(m_host, L"localhost")) {
+						&& !boost::iequals(m_host, L"127.0.0.1")
+						&& !boost::iequals(m_host, L"localhost")) {
 					// see this text below too
 					throw InvalidLinkException(
 						L"Network adapter has another IP address");
 				}
 				m_addr.reset(new ACE_INET_Addr(m_port, L"127.0.0.1", AF_INET));
 			} else {
-				vector<unsigned char> adaptersInfo(sizeof(IP_ADAPTER_INFO));
+				std::vector<unsigned char> adaptersInfo(sizeof(IP_ADAPTER_INFO));
 				ULONG adaptersInfoBufferLen = ULONG(adaptersInfo.size());
 				if (	GetAdaptersInfo(
 							reinterpret_cast<PIP_ADAPTER_INFO>(&adaptersInfo[0]),
@@ -339,7 +346,7 @@ public:
 							throw InvalidLinkException(
 								L"Network adapter is inactive");
 						} else if (	m_host != L"*"
-									&& !iequals(m_host, ConvertString<WString>(ipAddr).GetCStr())) {
+									&& !boost::iequals(m_host, ConvertString<WString>(ipAddr).GetCStr())) {
 							// see this text on "localhost" too
 							throw InvalidLinkException(
 								L"Network adapter has another IP address");
@@ -414,7 +421,7 @@ InetEndpointAddress::~InetEndpointAddress() {
 
 const InetEndpointAddress & InetEndpointAddress::operator =(
 			const InetEndpointAddress &rhs) {
-	auto_ptr<Implementation> newImpl(new Implementation(*rhs.m_pimpl));
+	std::auto_ptr<Implementation> newImpl(new Implementation(*rhs.m_pimpl));
 	EndpointAddress::operator =(rhs);
 	delete m_pimpl;
 	m_pimpl = newImpl.release();
@@ -432,11 +439,11 @@ Server::ConstPtr InetEndpointAddress::GetServer() const {
 	return m_pimpl->m_server;
 }
 
-const wstring & InetEndpointAddress::GetAdapter() const {
+const std::wstring & InetEndpointAddress::GetAdapter() const {
 	return m_pimpl->m_adapter;
 }
 
-const wstring & InetEndpointAddress::GetHostName() const {
+const std::wstring & InetEndpointAddress::GetHostName() const {
 	if (m_pimpl->m_host.empty() && m_pimpl->m_addr.get()) {
 		const_cast<InetEndpointAddress *>(this)->m_pimpl->m_host
 			= ConvertString<WString>(GetHostAddress()).GetCStr();
@@ -444,8 +451,8 @@ const wstring & InetEndpointAddress::GetHostName() const {
 	return m_pimpl->m_host;
 }
 
-void InetEndpointAddress::GetResovedHostName(wstring &result) const {
-	vector<wchar_t> buffer(MAXHOSTNAMELEN + 1);
+void InetEndpointAddress::GetResovedHostName(std::wstring &result) const {
+	std::vector<wchar_t> buffer(MAXHOSTNAMELEN + 1);
 	const int getHostNameResult
 		= GetAceInetAddr().get_host_name(&buffer[0], buffer.size());
 	result = getHostNameResult == 0
@@ -494,14 +501,16 @@ public:
 
 	explicit Implementation(const WString &resourceIdentifier)
 			: m_forceSslStatus(FSS_NONE) {
-		const wstring path = resourceIdentifier.GetCStr();
+		const std::wstring path = resourceIdentifier.GetCStr();
 		EndpointResourceIdentifierParsers::UrlSplitConstIterator pathIt
-			= make_split_iterator(path, token_finder(is_any_of(L"?&")));
+			= boost::make_split_iterator(
+				path,
+				boost::token_finder(boost::is_any_of(L"?&")));
 		++pathIt;
 		EndpointResourceIdentifierParsers::ParseUrlParam(
 			pathIt,
 			L"proxy",
-			bind(&ParseEndpointProxy, _1, ref(m_proxyList)),
+			boost::bind(&ParseEndpointProxy, _1, boost::ref(m_proxyList)),
 			true);
 		EndpointResourceIdentifierParsers::ParseEndpointCertificates(
 			pathIt,
@@ -553,12 +562,12 @@ public:
 		return m_sslClientContext || m_forceSslStatus == FSS_CLIENT;
 	}
 
-	auto_ptr<ACE_SSL_Context> CreateSslContext(
+	std::auto_ptr<ACE_SSL_Context> CreateSslContext(
 				bool isServer,
 				Server::ConstRef server)
 			const {
 
-		auto_ptr<ACE_SSL_Context> result(new ACE_SSL_Context);
+		std::auto_ptr<ACE_SSL_Context> result(new ACE_SSL_Context);
 
 		{
 			int endpointMode;
@@ -607,7 +616,7 @@ public:
 			=	!m_privateKey
 				&& m_certificate == TcpEndpointAddress::GetAnonymousSslCertificateMagicName();
 
-		// Certificate set
+		// Certificate std::set
 		if (isServer || !isAnonymous) {
 			if (!m_privateKey) {
 				UniquePtr<X509Private> certificate = !isAnonymous
@@ -628,7 +637,7 @@ public:
 						.GetCStr();
 				throw SystemException(message.str().c_str());
 			}
-			// Private key set
+			// Private key std::set
 			//! @todo: Check implementation for this code in ACE after version 5.8.0 [2010/12/05 23:09]
 			if (	SSL_CTX_use_PrivateKey(result->context(), &m_privateKey->GetPrivateKey().Get()) <= 0
 					|| result->verify_private_key() != 0) {
@@ -642,7 +651,7 @@ public:
 		}
 
 		bool remoteKey = false;
-		// Remote side verification certificates set
+		// Remote side verification certificates std::set
 		//! @todo: Check implementation for this code in ACE after version 5.8.0 [2010/12/05 23:09]
 		if (m_remotePublicCertificate) {
 			if (	!X509_STORE_add_cert(
@@ -706,7 +715,7 @@ public:
 private:
 
 	UniquePtr<X509Private> GenerateAnonymousPrivateCertificate() const {
-		const auto_ptr<const Rsa> rsa(Rsa::Generate(Key::SIZE_2048));
+		const std::auto_ptr<const Rsa> rsa(Rsa::Generate(Key::SIZE_2048));
 		UniquePtr<X509Private> cert(
 			X509Private::GenerateVersion3(
 				rsa->GetPrivateKey(),
@@ -731,16 +740,16 @@ private:
 public:
 
 	ProxyList m_proxyList;
-	mutable auto_ptr<ACE_INET_Addr> m_proxyAddr;
+	mutable std::auto_ptr<ACE_INET_Addr> m_proxyAddr;
 
 	WString m_resourceIdentifier;
 
 	SslCertificateId m_certificate;
 	SslCertificateIdCollection m_remoteCertificates;
-	shared_ptr<X509Private> m_privateKey;
-	shared_ptr<X509Shared> m_remotePublicCertificate;
-	shared_ptr<ACE_SSL_Context> m_sslServerContext;
-	shared_ptr<ACE_SSL_Context> m_sslClientContext;
+	boost::shared_ptr<X509Private> m_privateKey;
+	boost::shared_ptr<X509Shared> m_remotePublicCertificate;
+	boost::shared_ptr<ACE_SSL_Context> m_sslServerContext;
+	boost::shared_ptr<ACE_SSL_Context> m_sslClientContext;
 
 	enum ForceSslStatus {
 		FSS_NONE,
@@ -774,7 +783,7 @@ TcpEndpointAddress::TcpEndpointAddress(const ACE_INET_Addr &addr)
 
 TcpEndpointAddress::TcpEndpointAddress(
 			const ACE_INET_Addr &addr,
-			auto_ptr<TunnelEx::Helpers::Crypto::X509Shared> remoteCertificate)
+			std::auto_ptr<TunnelEx::Helpers::Crypto::X509Shared> remoteCertificate)
 		: InetEndpointAddress(addr),
 		m_pimpl(new Implementation) {
 	m_pimpl->m_remotePublicCertificate = remoteCertificate;
@@ -801,7 +810,7 @@ TcpEndpointAddress::TcpEndpointAddress(const TcpEndpointAddress &rhs)
 
 const TcpEndpointAddress & TcpEndpointAddress::operator =(
 			const TcpEndpointAddress &rhs) {
-	auto_ptr<Implementation> newImpl(new Implementation(*rhs.m_pimpl));
+	std::auto_ptr<Implementation> newImpl(new Implementation(*rhs.m_pimpl));
 	InetEndpointAddress::operator =(rhs);
 	delete m_pimpl;
 	m_pimpl = newImpl.release();
@@ -962,11 +971,11 @@ const ACE_INET_Addr * TcpEndpointAddress::GetFirstProxyAceInetAddr(
 	return m_pimpl->m_proxyAddr.get();
 }
 
-wstring TcpEndpointAddress::GetHumanReadable(
-			function<wstring(const wstring &)> adapterSearcher)
+std::wstring TcpEndpointAddress::GetHumanReadable(
+			boost::function<std::wstring(const std::wstring &)> adapterSearcher)
 		const {
-	wstring result;
-	list<wstring> props;
+	std::wstring result;
+	std::list<std::wstring> props;
 	if (!GetCertificate().IsEmpty()) {
 		props.push_back(L"secured");
 	}
@@ -994,7 +1003,7 @@ wstring TcpEndpointAddress::GetHumanReadable(
 	}
 	if (props.size() > 0) {
 		result += L" (";
-		result += join(props, L", ");
+		result += boost::join(props, L", ");
 		result += L")";
 	}
 	return result;
@@ -1031,7 +1040,7 @@ const WString & TcpEndpointAddress::GetResourceIdentifier() const {
 }
 
 WString TcpEndpointAddress::CreateResourceIdentifier(
-			const wstring &host,
+			const std::wstring &host,
 			NetworkPort port,
 			const SslCertificateId &certificate,
 			const SslCertificateIdCollection &remoteCertificates) {
@@ -1044,7 +1053,7 @@ WString TcpEndpointAddress::CreateResourceIdentifier(
 }
 
 WString TcpEndpointAddress::CreateResourceIdentifier(
-			const wstring &host,
+			const std::wstring &host,
 			NetworkPort port,
 			const SslCertificateId &certificate,
 			const SslCertificateIdCollection &remoteCertificates,
@@ -1059,9 +1068,9 @@ WString TcpEndpointAddress::CreateResourceIdentifier(
 }
 
 WString TcpEndpointAddress::CreateResourceIdentifier(
-			const wstring &adapter,
+			const std::wstring &adapter,
 			NetworkPort port,
-			const wstring &allowedHost,
+			const std::wstring &allowedHost,
 			const SslCertificateId &certificate,
 			const SslCertificateIdCollection &remoteCertificates) {
 	return CreateEndpointResourceIdentifier(
@@ -1161,11 +1170,11 @@ void TcpEndpointAddress::CopyCertificate(
 			const TcpEndpointAddress &remoteEndpoint) {
 	SslCertificateId certificate(localEndpoint.m_pimpl->m_certificate);
 	SslCertificateIdCollection remoteCertificates;
-	shared_ptr<X509Private> privateKey(localEndpoint.m_pimpl->m_privateKey);
-	shared_ptr<X509Shared> remotePublicCertificate(
+	boost::shared_ptr<X509Private> privateKey(localEndpoint.m_pimpl->m_privateKey);
+	boost::shared_ptr<X509Shared> remotePublicCertificate(
 		remoteEndpoint.m_pimpl->m_remotePublicCertificate);
-	shared_ptr<ACE_SSL_Context> sslServerContext;
-	shared_ptr<ACE_SSL_Context> sslClientContext;
+	boost::shared_ptr<ACE_SSL_Context> sslServerContext;
+	boost::shared_ptr<ACE_SSL_Context> sslClientContext;
 	Implementation::ForceSslStatus forceSslStatus
 		= localEndpoint.m_pimpl->m_forceSslStatus;
 	if (forceSslStatus == Implementation::FSS_NONE) {
@@ -1192,9 +1201,10 @@ void TcpEndpointAddress::CopyCertificate(
 
 void TcpEndpointAddress::CopyRemoteCertificate(const TcpEndpointAddress &remoteEndpoint) {
 	SslCertificateIdCollection remoteCertificates;
-	shared_ptr<X509Shared> remotePublicCertificate(remoteEndpoint.m_pimpl->m_remotePublicCertificate);
-	shared_ptr<ACE_SSL_Context> sslServerContext;
-	shared_ptr<ACE_SSL_Context> sslClientContext;
+	boost::shared_ptr<X509Shared> remotePublicCertificate(
+		remoteEndpoint.m_pimpl->m_remotePublicCertificate);
+	boost::shared_ptr<ACE_SSL_Context> sslServerContext;
+	boost::shared_ptr<ACE_SSL_Context> sslClientContext;
 	Implementation::ForceSslStatus forceSslStatus = m_pimpl->m_forceSslStatus;
 	if (forceSslStatus == Implementation::FSS_NONE) {
 		BOOST_ASSERT(!m_pimpl->m_sslClientContext || !m_pimpl->m_sslServerContext);
@@ -1279,7 +1289,7 @@ UdpEndpointAddress::UdpEndpointAddress(const UdpEndpointAddress &rhs)
 
 const UdpEndpointAddress & UdpEndpointAddress::operator =(
 			const UdpEndpointAddress &rhs) {
-	auto_ptr<Implementation> newImpl;
+	std::auto_ptr<Implementation> newImpl;
 	if (rhs.m_pimpl) {
 		newImpl.reset(new Implementation(*rhs.m_pimpl));
 	}
@@ -1349,23 +1359,23 @@ const WString & UdpEndpointAddress::GetResourceIdentifier() const {
 }
 
 WString UdpEndpointAddress::CreateResourceIdentifier(
-			const wstring &host,
+			const std::wstring &host,
 			NetworkPort port) {
 	return CreateEndpointResourceIdentifier(GetProto(), host, port);
 }
 
 WString UdpEndpointAddress::CreateResourceIdentifier(
-			const wstring &adapter,
+			const std::wstring &adapter,
 			NetworkPort port,
-			const wstring &allowedHost) {
+			const std::wstring &allowedHost) {
 	return CreateEndpointResourceIdentifier(GetProto(), adapter, port, allowedHost);
 }
 
-wstring UdpEndpointAddress::GetHumanReadable(
-			function<wstring(const wstring &adapter)> adapterSearcher)
+std::wstring UdpEndpointAddress::GetHumanReadable(
+			boost::function<std::wstring(const std::wstring &adapter)> adapterSearcher)
 		const {
-	wstring result;
-	list<wstring> props;
+	std::wstring result;
+	std::list<std::wstring> props;
 	if (GetAdapter().empty()) {
 		result += CreateEndpointResourceIdentifier(
 				GetProto(),
@@ -1382,7 +1392,7 @@ wstring UdpEndpointAddress::GetHumanReadable(
 	}
 	if (props.size() > 0) {
 		result += L" (";
-		result += join(props, L", ");
+		result += boost::join(props, L", ");
 		result += L")";
 	}
 	return result;

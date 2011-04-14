@@ -18,10 +18,10 @@
 #include "TcpConnectionAcceptor.hpp"
 #include "InetEndpointAddress.hpp"
 #include "IncomingTcpSslClientConnection.hpp"
-#include <TunnelEx/Acceptor.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Acceptor.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Log.hpp"
+#include "Core/Error.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

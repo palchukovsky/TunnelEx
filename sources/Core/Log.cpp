@@ -15,17 +15,15 @@
 #include "String.hpp"
 #include "PosixTime.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::posix_time;
-using namespace boost::filesystem;
+namespace pt = boost::posix_time;
+namespace fs = boost::filesystem;
 using namespace TunnelEx;
 using namespace TunnelEx::Singletons;
 
 //////////////////////////////////////////////////////////////////////////
 
 //! Log implementation.
-class TunnelEx::Singletons::LogPolicy::Implementation : private noncopyable {
+class TunnelEx::Singletons::LogPolicy::Implementation : private boost::noncopyable {
 
 public:
 
@@ -39,17 +37,17 @@ public:
 		LevelInfo()
 				: isRegistrationOn(false),
 				name("<?>"),
-				lastOccurTime(gregorian::date(1970, 1, 1)) {
+				lastOccurTime(boost::gregorian::date(1970, 1, 1)) {
 			//...//
 		}
 
 		const char *name;
 		bool isRegistrationOn;
-		ptime lastOccurTime;
+		pt::ptime lastOccurTime;
 		
 	};
 
-	typedef vector<LevelInfo> Levels;
+	typedef std::vector<LevelInfo> Levels;
 
 public:
 	
@@ -102,7 +100,7 @@ public:
 		return const_cast<Implementation *>(this)->GetLevelInfo(levelId);
 	}
 
-	void CheckAndAppend(const LogLevel levelId, const string &message) throw() {
+	void CheckAndAppend(const LogLevel levelId, const std::string &message) throw() {
 		LevelInfo &levelInfo = GetLevelInfo(levelId);
 		if (!levelInfo.isRegistrationOn) {
 			return;
@@ -110,18 +108,18 @@ public:
 		Append(levelInfo, message);
 	}
 
-	void Append(LevelInfo &level, const string &message) throw() {
+	void Append(LevelInfo &level, const std::string &message) throw() {
 		try {
-			const ptime occurTime(microsec_clock::local_time());
+			const pt::ptime occurTime(pt::microsec_clock::local_time());
 			Lock lock(m_streamMutex);
 			m_stream
 				<< occurTime
-				<< ' ' << setw(12) << level.name
+				<< ' ' << std::setw(12) << level.name
 				<< ": " << message;
 			if (*message.rbegin() != '.') {
 				m_stream << '.';
 			}
-			m_stream << endl;
+			m_stream << std::endl;
 			++m_size;
 			if (level.lastOccurTime < occurTime) {
 				level.lastOccurTime = occurTime;
@@ -131,11 +129,11 @@ public:
 		}
 	}
 
-	bool AttachFile(const wstring &filePath) throw() {
+	bool AttachFile(const std::wstring &filePath) throw() {
 		try {
 			try {
-				create_directories(wpath(filePath).branch_path());
-			} catch (const filesystem_error &ex) {
+				create_directories(fs::wpath(filePath).branch_path());
+			} catch (const fs::filesystem_error &ex) {
 				Log::GetInstance().AppendError(
 					(Format("Log: could not create directory for attached file: \"%1%\".") % ex.what()).str());
 			}
@@ -147,7 +145,7 @@ public:
 		}
 	}
 
-	bool DetachFile(const wstring &filePath) throw() {
+	bool DetachFile(const std::wstring &filePath) throw() {
 		try {
 			Lock lock(m_streamMutex);
 			return m_stream.DetachFile(
@@ -160,7 +158,7 @@ public:
 	bool AttachStdoutStream() throw() {
 		try {
 			Lock lock(m_streamMutex);
-			return m_stream.AttachStream(cout);
+			return m_stream.AttachStream(std::cout);
 		} catch (...) {
 			return false;
 		}
@@ -169,7 +167,7 @@ public:
 	bool DetachStdoutStream() throw() {
 		try {
 			Lock lock(m_streamMutex);
-			return m_stream.DetachStream(cout);
+			return m_stream.DetachStream(std::cout);
 		} catch (...) {
 			return false;
 		}
@@ -178,7 +176,7 @@ public:
 	bool AttachStderrStream() throw() {
 		try {
 			Lock lock(m_streamMutex);
-			return m_stream.AttachStream(cerr);
+			return m_stream.AttachStream(std::cerr);
 		} catch (...) {
 			return false;
 		}
@@ -187,7 +185,7 @@ public:
 	bool DetachStderrStream() throw() {
 		try {
 			Lock lock(m_streamMutex);
-			return m_stream.DetachStream(cerr);
+			return m_stream.DetachStream(std::cerr);
 		} catch (...) {
 			return false;
 		}
@@ -195,14 +193,14 @@ public:
 
 	LogLevel ResolveLevel(const char *nameToResolvePch) const throw() {
 		try {
-			string nameToResolve = nameToResolvePch;
-			to_lower(nameToResolve);
+			std::string nameToResolve = nameToResolvePch;
+			boost::to_lower(nameToResolve);
 			//! @todo: optimize search
 			const Levels::const_iterator begin = m_levels.begin();
 			const Levels::const_iterator end = m_levels.end();
 			for (Levels::const_iterator i = begin; i != end; ++i) {
-				string name = i->name;
-				to_lower(name);
+				std::string name = i->name;
+				boost::to_lower(name);
 				if (name == nameToResolve) {
 					return static_cast<LogLevel>(distance(begin, i));
 				}
@@ -255,7 +253,7 @@ LogPolicy::~LogPolicy() {
 		if (!level.isRegistrationOn) {
 			return;
 		}
-		ostringstream oss;
+		std::ostringstream oss;
 		oss << ACE_OS::thr_self() << " -> ";
 		if (!className[0] == 0) {
 			oss << className << "::";
@@ -265,12 +263,12 @@ LogPolicy::~LogPolicy() {
 	}
 #endif // LOG_LEVEL_TRACK_REGISTRATION_AVAILABLE
 
-void LogPolicy::AppendDebug(const string &message) throw() {
+void LogPolicy::AppendDebug(const std::string &message) throw() {
 	if (!IsDebugRegistrationOn()) {
 		return;
 	}
 	try {
-		ostringstream oss;
+		std::ostringstream oss;
 		oss << ACE_OS::thr_self() << " " << message;
 		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
 	} catch (...) {
@@ -278,23 +276,23 @@ void LogPolicy::AppendDebug(const string &message) throw() {
 		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), message);
 	}
 }
-void LogPolicy::AppendInfo(const string &message) throw() {
+void LogPolicy::AppendInfo(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_INFO, message);
 }
 
-void LogPolicy::AppendWarn(const string &message) throw() {
+void LogPolicy::AppendWarn(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_WARN, message);
 }
 
-void LogPolicy::AppendError(const string &message) throw() {
+void LogPolicy::AppendError(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_ERROR, message);
 }
 
-void LogPolicy::AppendSystemError(const string &message) throw() {
+void LogPolicy::AppendSystemError(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_SYSTEM_ERROR, message);
 }
 
-void LogPolicy::AppendFatalError(const string &message) throw() {
+void LogPolicy::AppendFatalError(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_FATAL_ERROR, message);
 }
 
@@ -330,11 +328,11 @@ bool LogPolicy::IsFatalErrorsRegistrationOn() const  throw() {
 	return m_pimpl->IsLevelRegistrationOn(LOG_LEVEL_FATAL_ERROR);
 }
 
-bool LogPolicy::AttachFile(const wstring &filePath) throw() {
+bool LogPolicy::AttachFile(const std::wstring &filePath) throw() {
 	return m_pimpl->AttachFile(filePath);
 }
 
-bool LogPolicy::DetachFile(const wstring &filePath) throw() {
+bool LogPolicy::DetachFile(const std::wstring &filePath) throw() {
 	return m_pimpl->DetachFile(filePath);
 }
 
@@ -367,9 +365,9 @@ TimeT LogPolicy::GetLastWarnTime() const {
 }
 
 TimeT LogPolicy::GetLastErrorTime() const {
-	return max(
+	return std::max(
 		m_pimpl->GetLastOccurTime(LOG_LEVEL_ERROR),
-		max(
+		std::max(
 			m_pimpl->GetLastOccurTime(LOG_LEVEL_FATAL_ERROR),
 			m_pimpl->GetLastOccurTime(LOG_LEVEL_SYSTEM_ERROR)));
 }

@@ -19,27 +19,9 @@ namespace TunnelEx {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	//! Template for string wrappers.
+	//! Template for std::string wrappers.
 	template<class Element>
 	class TUNNELEX_CORE_API BasicString {
-
-		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
-			const ::TunnelEx::WString &, ::TunnelEx::UString &);
-
-		friend TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
-			const ::TunnelEx::WString &, ::TunnelEx::String &);
-
-		friend TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
-			const ::TunnelEx::UString &, ::TunnelEx::WString &);
-
-		friend TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
-			const ::TunnelEx::UString &, ::TunnelEx::String &);
-
-		friend TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
-			const ::TunnelEx::String &, ::TunnelEx::WString &);
-
-		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
-			const ::TunnelEx::String &, ::TunnelEx::UString &);
 
 	public:
 
@@ -48,6 +30,48 @@ namespace TunnelEx {
 		typedef typename Element ValueType;
 		typedef ValueType value_type;
 		typedef BasicString<typename Element> MyType;
+
+		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
+				const ::TunnelEx::WString &,
+				::TunnelEx::UString &);
+		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
+				const wchar_t *,
+				::TunnelEx::UString &);
+
+		friend TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
+				const ::TunnelEx::WString &,
+				::TunnelEx::String &);
+		friend TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
+				const wchar_t *,
+				::TunnelEx::String &);
+
+		friend TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
+				const ::TunnelEx::UString &,
+				::TunnelEx::WString &);
+		friend TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
+				const ::TunnelEx::Utf8Char *,
+				::TunnelEx::WString &);
+
+		friend TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
+				const ::TunnelEx::UString &,
+				::TunnelEx::String &);
+		friend TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
+				const ::TunnelEx::Utf8Char *,
+				::TunnelEx::String &);
+
+		friend TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
+				const ::TunnelEx::String &,
+				::TunnelEx::WString &);
+		friend TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
+				const char *,
+				::TunnelEx::WString &);
+		
+		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
+				const ::TunnelEx::String &,
+				::TunnelEx::UString &);
+		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
+				const char *,
+				::TunnelEx::UString &);
 
 	public:
 		
@@ -77,8 +101,8 @@ namespace TunnelEx {
 
 		//! Returns substring.
 		/** @param	destination		the destination object for substring;
-		  * @param	offset			substaing start in parent string;
-		  * @param	count			substring end in parent string (zero - to parent end);
+		  * @param	offset			substaing start in parent std::string;
+		  * @param	count			substring end in parent std::string (zero - to parent end);
 		  */
 		void SubStr(
 					MyType &destination,
@@ -120,22 +144,46 @@ namespace TunnelEx {
 	//////////////////////////////////////////////////////////////////////////
 
 	TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
-		const ::TunnelEx::WString &source, ::TunnelEx::UString &destination);
+			const ::TunnelEx::WString &source,
+			::TunnelEx::UString &destination);
+	TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
+			const ::TunnelEx::WString::ValueType *source,
+			::TunnelEx::UString &destination);
 
 	TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
-		const ::TunnelEx::WString &source, ::TunnelEx::String &destination);
+			const ::TunnelEx::WString &source,
+			::TunnelEx::String &destination);
+	TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
+			const ::TunnelEx::WString::ValueType *source,
+			::TunnelEx::String &destination);
 
 	TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
-		const ::TunnelEx::UString &source, ::TunnelEx::WString &destination);
+			const ::TunnelEx::UString &source,
+			::TunnelEx::WString &destination);
+	TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
+			const ::TunnelEx::UString::ValueType *source,
+			::TunnelEx::WString &destination);
 
 	TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
-		const ::TunnelEx::UString &source, ::TunnelEx::String &destination);
+			const ::TunnelEx::UString &source,
+			::TunnelEx::String &destination);
+	TUNNELEX_CORE_API ::TunnelEx::String & ConvertString(
+			const ::TunnelEx::UString::ValueType *source,
+			::TunnelEx::String &destination);
 
 	TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
-		const ::TunnelEx::String &source, ::TunnelEx::WString &destination);
+			const ::TunnelEx::String &source,
+			::TunnelEx::WString &destination);
+	TUNNELEX_CORE_API ::TunnelEx::WString & ConvertString(
+			const ::TunnelEx::String::ValueType *source,
+			::TunnelEx::WString &destination);
 
 	TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
-		const ::TunnelEx::String &source, ::TunnelEx::UString &destination);
+			const ::TunnelEx::String &source,
+			::TunnelEx::UString &destination);
+	TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
+			const ::TunnelEx::String::ValueType *source,
+			::TunnelEx::UString &destination);
 
 	template<typename Destination, typename Source>
 	Destination ConvertString(const Source &source) {

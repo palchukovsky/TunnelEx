@@ -11,12 +11,10 @@
 
 #include "Prec.h"
 #include "IncomingTcpSslClientConnection.hpp"
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Error.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Inet;
 
@@ -73,9 +71,9 @@ void IncomingTcpSslClientConnection::AcceptConnection(
 	UniquePtr<const TcpEndpointAddress> remoteAddress(
 		new TcpEndpointAddress(aceRemoteAddr));
 
-	auto_ptr<DecodeStream> decodeStream(
+	std::auto_ptr<DecodeStream> decodeStream(
 		new DecodeStream(
-			polymorphic_downcast<const TcpEndpointAddress *>(
+			boost::polymorphic_downcast<const TcpEndpointAddress *>(
 					&ruleEndpointAddress)
 				->GetSslClientContext()));
 	SetDataStream(decodeStream);
@@ -113,7 +111,7 @@ void IncomingTcpSslClientConnection::Setup() {
 	} else if (GetDataStream().IsConnected()) {
 		BOOST_ASSERT(
 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
-			|| polymorphic_downcast<const TcpEndpointAddress *>(
+			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
 					GetRuleEndpointAddress().Get())
 				->GetRemoteCertificates().GetSize() == 0);
 		BOOST_ASSERT(

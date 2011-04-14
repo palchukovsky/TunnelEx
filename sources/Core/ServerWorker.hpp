@@ -59,10 +59,14 @@ namespace TunnelEx {
 		//! @todo: temp-method remove when tunnel collection will be implemented [2008/09/10 0:28]
 		size_t GetTunnelsNumber() const;
 
+		/**
+		  * @throw TunnelEx::LogicalException
+		  * @throw TunnelEx::ConnectionOpeningException
+		  */
 		UniquePtr<EndpointAddress> GetRealOpenedEndpointAddress(
 				const WString &ruleUuid,
 				const WString &endpointUuid)
-			const throw(LogicalException, ConnectionOpeningException);
+			const;
 
 		bool Update(const RuleSet &rules);
 		bool Update(const ServiceRule &rule);
@@ -86,7 +90,7 @@ namespace TunnelEx {
 	private:
 
 		class Implementation;
-		std::auto_ptr<Implementation> m_pimpl;
+		Implementation *m_pimpl;
 
 	};
 

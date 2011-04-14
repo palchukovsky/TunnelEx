@@ -14,12 +14,10 @@
 #include "ServiceConfiguration.h"
 #include "ServiceControl/Configuration.hpp"
 
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers::Xml;
 
@@ -27,14 +25,14 @@ using namespace TunnelEx::Helpers::Xml;
 /** @param	source	the DOM-document, rules in format 1.0.
 *	@return		DOM-document, rules in current format.
 */
-shared_ptr<Document> MigrateServiceConfigurationFrom_1_0(
-			shared_ptr<const Document> source) {
+boost::shared_ptr<Document> MigrateServiceConfigurationFrom_1_0(
+			boost::shared_ptr<const Document> source) {
 
-	shared_ptr<const XPath> oldDocXpath(source->GetXPath());
+	boost::shared_ptr<const XPath> oldDocXpath(source->GetXPath());
 	ConstNodeCollection oldDocQueryResult;
 
-	shared_ptr<Document> newDoc(ServiceConfiguration::GetDefaultConfigurationDoc());
-	shared_ptr<XPath> newDocXPath(newDoc->GetXPath());
+	boost::shared_ptr<Document> newDoc(ServiceConfiguration::GetDefaultConfigurationDoc());
+	boost::shared_ptr<XPath> newDocXPath(newDoc->GetXPath());
 	NodeCollection newDocQueryResult;
 	UString buffer;
 
@@ -78,16 +76,16 @@ shared_ptr<Document> MigrateServiceConfigurationFrom_1_0(
 
 }
 
-shared_ptr<Document> MigrateServiceConfigurationFrom_1_1(
-			shared_ptr<const Document> source) {
+boost::shared_ptr<Document> MigrateServiceConfigurationFrom_1_1(
+			boost::shared_ptr<const Document> source) {
 
-	shared_ptr<Document> result = MigrateServiceConfigurationFrom_1_0(source);
-	shared_ptr<XPath> newDocXPath(result->GetXPath());
+	boost::shared_ptr<Document> result = MigrateServiceConfigurationFrom_1_0(source);
+	boost::shared_ptr<XPath> newDocXPath(result->GetXPath());
 	NodeCollection newDocQueryResult;
 
 	UString buffer;
 
-	shared_ptr<const XPath> oldDocXpath(source->GetXPath());
+	boost::shared_ptr<const XPath> oldDocXpath(source->GetXPath());
 	ConstNodeCollection oldDocQueryResult;
 	oldDocXpath->Query("/Configuration/ServerState", oldDocQueryResult);
 	if (oldDocQueryResult.size() > 0) {
@@ -103,7 +101,7 @@ shared_ptr<Document> MigrateServiceConfigurationFrom_1_1(
 
 }
 
-shared_ptr<ServiceConfiguration> MigrateCurrentServiceConfiguration() {
+boost::shared_ptr<ServiceConfiguration> MigrateCurrentServiceConfiguration() {
 
 	// shared_ptr (not auto_ptr): result exports from DLL and deleter must be safe.
 
@@ -111,14 +109,14 @@ shared_ptr<ServiceConfiguration> MigrateCurrentServiceConfiguration() {
 
 	try {
 		Log::GetInstance().AppendInfo("Opening current configuration file...");
-		shared_ptr<ServiceConfiguration> conf(new ServiceConfiguration());
+		boost::shared_ptr<ServiceConfiguration> conf(new ServiceConfiguration());
 		Log::GetInstance().AppendInfo(
 			"Migration is not required, migration stopped.");
 		return conf;
 	} catch (const ServiceConfiguration::ConfigurationNotFoundException &) {
 		Log::GetInstance().AppendInfo(
 			"File not found, creating default configuration...");
-		shared_ptr<ServiceConfiguration> conf(
+		boost::shared_ptr<ServiceConfiguration> conf(
 			ServiceConfiguration::GetDefault());
 		Log::GetInstance().AppendInfo("Migration stopped.");
 		return conf;
@@ -126,34 +124,34 @@ shared_ptr<ServiceConfiguration> MigrateCurrentServiceConfiguration() {
 		//...//
 	}
 
-	if (!exists(ServiceConfiguration::GetConfigurationFilePath())) {
+	if (!fs::exists(ServiceConfiguration::GetConfigurationFilePath())) {
 		Log::GetInstance().AppendInfo(
 			"File not found, creating default configuration...");
-		shared_ptr<ServiceConfiguration> conf(
+		boost::shared_ptr<ServiceConfiguration> conf(
 			ServiceConfiguration::GetDefault());
 		Log::GetInstance().AppendInfo("Migration stopped.");
 		return conf;
 	}
 
-	shared_ptr<const Document> oldDoc;
+	boost::shared_ptr<const Document> oldDoc;
 	try {
 		oldDoc
 			= Document::LoadFromFile(ServiceConfiguration::GetConfigurationFilePath());
 	} catch (const Document::ParseException &) {
 		Log::GetInstance().AppendWarn(
 			"File has invalid format, stopping migration and creating default configuration...");
-		shared_ptr<ServiceConfiguration> conf(
+		boost::shared_ptr<ServiceConfiguration> conf(
 			ServiceConfiguration::GetDefault());
 		Log::GetInstance().AppendInfo("Migration stopped.");
 		return conf;
 	}
 
-	shared_ptr<ServiceConfiguration> result;
+	boost::shared_ptr<ServiceConfiguration> result;
 	try {
-		shared_ptr<const XPath> xpath(oldDoc->GetXPath());
+		boost::shared_ptr<const XPath> xpath(oldDoc->GetXPath());
 		ConstNodeCollection  queryResult;
 		xpath->Query("/Configuration", queryResult);
-		shared_ptr<Document> newDoc;
+		boost::shared_ptr<Document> newDoc;
 		WString buffer;
 		if (queryResult.size() == 1 && queryResult[0]->HasAttribute("Version")) {
 			if (queryResult[0]->GetAttribute("Version", buffer) == L"1.0") {

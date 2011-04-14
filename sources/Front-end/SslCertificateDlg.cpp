@@ -14,9 +14,6 @@
 #include "SslCertificateDlg.hpp"
 #include "Application.hpp"
 
-using namespace std;
-using namespace boost;
-
 enum SslCertificateDlg::Control {
 	CONTROL_COUNTRY,
 	CONTROL_BROWSE_SIGN_KEY,
@@ -60,7 +57,7 @@ void SslCertificateDlg::CreateControls() {
 
 	const Theme &theme = wxGetApp().GetTheme();
 
-	auto_ptr<wxFlexGridSizer> contentBox(
+	std::auto_ptr<wxFlexGridSizer> contentBox(
 		new wxFlexGridSizer(
 			m_isGenerateMode ? 7 : 9,
 			2,
@@ -87,17 +84,17 @@ void SslCertificateDlg::CreateControls() {
 			wxDefaultSize,
 			keySizes,
 			wxTE_NOHIDESEL | wxTE_PROCESS_ENTER);
-		if (!m_keySize->SetStringSelection(lexical_cast<wstring>(m_certificate.keySize).c_str())) {
+		if (!m_keySize->SetStringSelection(boost::lexical_cast<std::wstring>(m_certificate.keySize).c_str())) {
 			m_keySize->SetStringSelection(wxT("2048"));
 		}
 		contentBox->Add(m_keySize);
 	} else {
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 		m_keySize = 0;
 		wxTextCtrl &keySize = *new wxTextCtrl(
 			this,
 			wxID_ANY,
-			lexical_cast<wstring>(m_certificate.keySize).c_str());
+			boost::lexical_cast<std::wstring>(m_certificate.keySize).c_str());
 		keySize.SetEditable(false);
 		box->Add(&keySize);
 		box->AddSpacer(theme.GetDlgBorder() / 2);
@@ -244,7 +241,7 @@ void SslCertificateDlg::CreateControls() {
 		labelFlags);
 
 	{
-		auto_ptr<wxBoxSizer> stateBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> stateBox(new wxBoxSizer(wxHORIZONTAL));
 		m_stateOrProvince = new wxTextCtrl(
 			this,
 			wxID_ANY,
@@ -280,7 +277,7 @@ void SslCertificateDlg::CreateControls() {
 		contentBox->Add(
 			new wxStaticText(this, wxID_ANY, wxT("Key for signing:")),
 			labelFlags);
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 		m_signKeyPath = new wxTextCtrl(
 			this,
 			wxID_ANY,
@@ -297,7 +294,7 @@ void SslCertificateDlg::CreateControls() {
 		box.release();
 	}
 
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 
 	topBox->Add(contentBox.get(), theme.GetTopSizerFlags());
 	contentBox.release();
@@ -322,10 +319,10 @@ void SslCertificateDlg::CreateControls() {
 		topBox->Add(
 			CreateButtonSizer(wxOK | wxHELP | wxCANCEL),
 			theme.GetTopSizerFlags());
-		polymorphic_downcast<wxButton *>(FindWindow(wxID_OK))
+		boost::polymorphic_downcast<wxButton *>(FindWindow(wxID_OK))
 			->SetLabel(wxT("Generate"));
 	} else {
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 		box->Add(
 			new wxButton(this, CONTROL_SAVE_TO_FILE, wxT("Save to file")),
 			wxSizerFlags(0).Expand().Left());
@@ -362,26 +359,26 @@ void SslCertificateDlg::OnOk(wxCommandEvent &) {
 		return;
 	}
 
-	string signKey;
+	std::string signKey;
 	if (!m_signKeyPath->GetValue().IsEmpty()) {
-		ifstream f(m_signKeyPath->GetValue().c_str(), ios::binary);
+		std::ifstream f(m_signKeyPath->GetValue().c_str(), std::ios::binary);
 		if (!f) {
 			wxLogError(wxT("Could not open %s."), m_signKeyPath->GetValue());
 			return;
 		}
-		f.seekg(0, ios::end);
-		vector<char> buffer;
+		f.seekg(0, std::ios::end);
+		std::vector<char> buffer;
 		buffer.resize(f.tellg());
-		f.seekg(0, ios::beg);
+		f.seekg(0, std::ios::beg);
 		f.read(&buffer[0], buffer.size());
-		string(buffer.begin(), buffer.end()).swap(signKey);
+		std::string(buffer.begin(), buffer.end()).swap(signKey);
 	} else {
 		signKey.clear();
 	}
 
 	texs__SslCertificateInfo certificate;
 	certificate.keySize
-		= lexical_cast<int>(m_keySize->GetStringSelection().c_str());
+		= boost::lexical_cast<int>(m_keySize->GetStringSelection().c_str());
 	certificate.subjectCommonName
 		= certificate.issuerCommonName
 		= m_subjectCommonName->GetValue().ToAscii();
@@ -402,7 +399,7 @@ void SslCertificateDlg::OnOk(wxCommandEvent &) {
 		= m_country->GetValue().ToAscii();
 
 	signKey.swap(m_signKey);
-	swap(certificate, m_certificate);
+	std::swap(certificate, m_certificate);
 	EndModal(wxID_OK);
 
 }
@@ -412,9 +409,9 @@ void SslCertificateDlg::OnCountryText(wxCommandEvent &) {
 		return;
 	}
 	if (!m_country->GetValue().IsWord()) {
-		const long pos = max(long(0), m_country->GetInsertionPoint() - 1);
+		const long pos = std::max(long(0), m_country->GetInsertionPoint() - 1);
 		m_country->ChangeValue(m_validCountry);
-		m_country->SetInsertionPoint(min(m_country->GetLastPosition(), pos));
+		m_country->SetInsertionPoint(std::min(m_country->GetLastPosition(), pos));
 	} else {
 		wxString val = m_country->GetValue();
 		val.UpperCase();
@@ -452,7 +449,7 @@ void SslCertificateDlg::OnSaveToFile(wxCommandEvent &) {
 	if (fileRequestDlg.ShowModal() != wxID_OK) {
 		return;
 	}
-	ofstream f(fileRequestDlg.GetPath().c_str(), ios::trunc | ios::binary);
+	std::ofstream f(fileRequestDlg.GetPath().c_str(), std::ios::trunc | std::ios::binary);
 	if (!f) {
 		wxLogError(wxT("Could not open \"%s\" to save."), fileRequestDlg.GetPath());
 		return;

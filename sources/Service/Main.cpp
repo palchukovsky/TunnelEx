@@ -14,12 +14,10 @@
 #include "WinService.hpp"
 #include "ServiceControl/Control.hpp"
 
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Server.hpp>
-#include <TunnelEx/Log.hpp>
+#include "Core/Exceptions.hpp"
+#include "Core/Server.hpp"
+#include "Core/Log.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 #define TEX_SERVICE_CL_CMD_SERVICE		L"--service"
@@ -29,6 +27,7 @@ using namespace TunnelEx;
 #define TEX_SERVICE_CL_CMD_STOP			L"--stop"
 #define TEX_SERVICE_CL_CMD_STATUS		L"--status"
 #define TEX_SERVICE_CL_CMD_STANDALONE	L"--standalone"
+#define TEX_SERVICE_CL_CMD_DEBUG		L"--debug"
 
 void LaunchControlCenter();
 bool RunAsTexService2();
@@ -59,9 +58,9 @@ int main(int, const char*[]) {
 		ERR_load_crypto_strings();
 		OpenSSL_add_all_algorithms();
 
-		function<bool(void)> func;
+		boost::function<bool(void)> func;
 		{
-			typedef map<wstring, function<bool(void)> > Commands;
+			typedef std::map<std::wstring, boost::function<bool(void)> > Commands;
 			Commands commands;
 			commands[TEX_SERVICE_CL_CMD_SERVICE]	= &RunAsTexService2;
 			commands[TEX_SERVICE_CL_CMD_INSTALL]	= &InstallTexService;
@@ -70,6 +69,7 @@ int main(int, const char*[]) {
 			commands[TEX_SERVICE_CL_CMD_STOP]		= &StopTexService;
 			commands[TEX_SERVICE_CL_CMD_STATUS]		= &ShowTexServiceStatus;
 			commands[TEX_SERVICE_CL_CMD_STANDALONE]	= &RunStandalone;
+			commands[TEX_SERVICE_CL_CMD_DEBUG]		= &RunStandalone;
 			const Commands::const_iterator commandPos = commands.find(argv[1]);
 			if (commandPos == commands.end()) {
 				result = 2;
@@ -88,11 +88,9 @@ int main(int, const char*[]) {
 
 	}
 
-#	if defined(_DEBUG) || defined(TEST)
-		if (!wcscmp(argv[1], TEX_SERVICE_CL_CMD_STANDALONE)) {
-			getchar();
-		}
-#	endif
+	if (!wcscmp(argv[1], TEX_SERVICE_CL_CMD_DEBUG)) {
+		getchar();
+	}
 
 	return result;
 
@@ -172,10 +170,10 @@ bool RunStandalone() {
 	Log::GetInstance().SetMinimumRegistrationLevel(TunnelEx::LOG_LEVEL_INFO);
 	Log::GetInstance().AttachStderrStream();
 	
-	class ThreadHolder : private noncopyable {
+	class ThreadHolder : private boost::noncopyable {
 	public:
 		ThreadHolder()
-				: noncopyable(),
+				: boost::noncopyable(),
 				m_stopEvent(CreateEvent(NULL, FALSE, TRUE, NULL)) {
 			ResetEvent(m_stopEvent);
 		}
@@ -195,7 +193,7 @@ bool RunStandalone() {
 	private:
 		HANDLE m_stopEvent;
 	} threadHolder;
-	thread thread(boost::bind(&ThreadHolder::Run, &threadHolder));
+	boost::thread thread(boost::bind(&ThreadHolder::Run, &threadHolder));
 	
 	getchar();
 	threadHolder.Stop();

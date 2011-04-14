@@ -12,21 +12,17 @@
 #include "Prec.h"
 #include "Control.hpp"
 
-using namespace boost;
-
 //////////////////////////////////////////////////////////////////////////
 
-class ServiceControl::Implementation : private noncopyable {
+class ServiceControl::Implementation : private boost::noncopyable {
 
 public:
 
 	Implementation(const DWORD accessLevel)
-		: noncopyable()
-		, manager(OpenSCManager(NULL, NULL, accessLevel))
-		, service(NULL) {
+			: manager(OpenSCManager(NULL, NULL, accessLevel)),
+			service(NULL) {
 		HandleError(manager != NULL);
-		//! \todo: hardcode: service name [2008/01/05 14:03]
-		service = OpenService(manager, TUNNELEX_NAME_W, accessLevel);
+		service = OpenServiceW(manager, TUNNELEX_NAME_W, accessLevel);
 		if (service == NULL) {
 			CloseServiceHandle(manager);
 		}
@@ -107,17 +103,16 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
-ServiceControl::ServiceControl()
-: noncopyable() {
-	/*...*/
+ServiceControl::ServiceControl() {
+	//...//
 }
 
 ServiceControl::~ServiceControl() {
-	/*...*/
+	//...//
 }
 
 bool ServiceControl::Start() {
-	shared_ptr<Implementation> impl(
+	boost::shared_ptr<Implementation> impl(
 		new Implementation(SERVICE_START | SERVICE_CHANGE_CONFIG | SERVICE_QUERY_STATUS));
 	impl->ChangeStartType(SERVICE_AUTO_START);
 	impl->HandleError(StartService(impl->service, 0, NULL));
@@ -129,7 +124,7 @@ bool ServiceControl::Start() {
 }
 
 bool ServiceControl::Stop() {
-	shared_ptr<Implementation> impl(
+	boost::shared_ptr<Implementation> impl(
 		new Implementation(SERVICE_STOP | SERVICE_CHANGE_CONFIG | SERVICE_QUERY_STATUS));
 	impl->ChangeStartType(SERVICE_DEMAND_START);
 	SERVICE_STATUS statusInfo;
@@ -142,21 +137,21 @@ bool ServiceControl::Stop() {
 }
 
 bool ServiceControl::IsStarted() const {
-	shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
+	boost::shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
 	SERVICE_STATUS_PROCESS statusInfo;
 	impl->HandleError(impl->QueryServiceStatus(statusInfo));
 	return statusInfo.dwCurrentState == SERVICE_RUNNING;
 }
 
 bool ServiceControl::IsStopped() const {
-	shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
+	boost::shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
 	SERVICE_STATUS_PROCESS statusInfo;
 	impl->HandleError(impl->QueryServiceStatus(statusInfo));
 	return statusInfo.dwCurrentState == SERVICE_STOPPED;
 }
 
 bool ServiceControl::WaitStartPending() const {
-	shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
+	boost::shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
 	impl->WaitPending(SERVICE_START_PENDING, true);
 	SERVICE_STATUS_PROCESS statusInfo;
 	impl->HandleError(impl->QueryServiceStatus(statusInfo));
@@ -164,7 +159,7 @@ bool ServiceControl::WaitStartPending() const {
 }
 
 bool ServiceControl::WaitStopPending() const {
-	shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
+	boost::shared_ptr<Implementation> impl(new Implementation(SERVICE_QUERY_STATUS));
 	impl->WaitPending(SERVICE_STOP_PENDING, false);
 	SERVICE_STATUS_PROCESS statusInfo;
 	impl->HandleError(impl->QueryServiceStatus(statusInfo));

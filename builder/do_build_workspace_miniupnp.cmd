@@ -3,7 +3,7 @@ set MiniUpnpVersion=1.4
 set MiniUpnpBuild=20100418
 set MiniUpnpBinArchiveName=upnpc-exe-win32-%MiniUpnpBuild%
 set MiniUpnpSourceArchiveName=miniupnpc-%MiniUpnpVersion%.%MiniUpnpBuild%
-set MiniUpnpDir=%ExternalsDir%\miniupnp
+set MiniUpnpDir=%ExternalsDir%\miniupnp\miniupnp\
 
 7z x -y -bd -o"%MiniUpnpDir%" "%ExternalsDir%\%MiniUpnpBinArchiveName%.zip" > nul
 @if %errorlevel% neq 0 goto Error

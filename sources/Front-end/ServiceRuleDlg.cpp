@@ -23,8 +23,6 @@
 
 #include "Modules/Upnp/UpnpcService.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -34,7 +32,7 @@ ServiceRuleDlg::ServiceRuleDlg(
 			ServiceWindow &service,
 			wxWindow *parent)
 		: RuleDlg(title, service, parent) {
-	SetRule(auto_ptr<Rule>(new ServiceRule));
+	SetRule(std::auto_ptr<Rule>(new ServiceRule));
 }
 
 ServiceRuleDlg::ServiceRuleDlg(
@@ -51,17 +49,17 @@ ServiceRuleDlg::~ServiceRuleDlg() {
 }
 
 bool ServiceRuleDlg::Save(Rule &ruleAbstract) const {
-	ServiceRule &rule = *polymorphic_downcast<ServiceRule *>(&ruleAbstract);
+	ServiceRule &rule = *boost::polymorphic_downcast<ServiceRule *>(&ruleAbstract);
 	const bool isChanged = rule.GetServices().GetSize() != 1;
 	rule.GetServices().SetSize(1);
 	return SaveService(rule.GetServices()[0]) || isChanged;
 }
 
-auto_ptr<ServiceRule> ServiceRuleDlg::EditRule(
+std::auto_ptr<ServiceRule> ServiceRuleDlg::EditRule(
 			ServiceWindow &service,
 			wxWindow &parent,
 			const TunnelEx::ServiceRule &rule) {
-	auto_ptr<ServiceRule> result;
+	std::auto_ptr<ServiceRule> result;
 	BOOST_ASSERT(
 		rule.GetServices().GetSize() == 1 && rule.GetServices()[0].name == L"Upnpc");
 	UpnpServiceRuleDlg dlg(service, &parent, rule);
@@ -132,7 +130,7 @@ void UpnpServiceRuleDlg::Init() {
 		using namespace Mods::Upnp;
 		Client::Proto proto = Client::PROTO_TCP;
 		unsigned short externalPort = 0;
-		wstring destinationHost;
+		std::wstring destinationHost;
 		unsigned short destinationPort = 0;
 		bool isForce = false;
 		bool isPersistent = false;
@@ -150,10 +148,10 @@ void UpnpServiceRuleDlg::Init() {
 			wxLogError(wxT("Could not parse rule: the rule has invalid format."));
 		}
 		m_sourceProto = proto == Client::PROTO_UDP ? wxT("UDP") : wxT("TCP");
-		m_sourceExternalPort = lexical_cast<wstring>(externalPort);
+		m_sourceExternalPort = boost::lexical_cast<std::wstring>(externalPort);
 		m_externalValidPort = m_sourceExternalPort;
 		m_sourceDestinationHost = destinationHost;
-		m_sourceDestinationPort = lexical_cast<wstring>(destinationPort);
+		m_sourceDestinationPort = boost::lexical_cast<std::wstring>(destinationPort);
 		m_destinationValidPort = m_sourceDestinationPort;
 		m_sourceIsForceMode = isForce;
 	}
@@ -171,8 +169,8 @@ void UpnpServiceRuleDlg::CheckLicense() {
 	m_isLicenseValid = true;
 }
 
-auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlAdditionalOptions() {
-	auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
+std::auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlAdditionalOptions() {
+	std::auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
 	m_forceRecriation = new wxCheckBox(
 		this,
 		wxID_ANY,
@@ -185,15 +183,15 @@ auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlAdditionalOptions() {
 	return result;
 }
 
-auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlContent() {
+std::auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlContent() {
 
 	const Theme &theme = wxGetApp().GetTheme();
 	
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 
 	{
 
-		auto_ptr<wxFlexGridSizer> groupBox(
+		std::auto_ptr<wxFlexGridSizer> groupBox(
 			new wxFlexGridSizer(2, 2, theme.GetDlgBorder(), 0));
 		groupBox->SetFlexibleDirection(wxHORIZONTAL);
 		groupBox->AddGrowableCol(1, 1);
@@ -221,7 +219,7 @@ auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlContent() {
 			new wxStaticText(this, wxID_ANY, wxT("IP address:")),
 			wxSizerFlags(0).Align(wxALIGN_RIGHT | wxALIGN_CENTRE_VERTICAL));
 
-		auto_ptr<wxBoxSizer> addressBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> addressBox(new wxBoxSizer(wxHORIZONTAL));
 
 		wxTextCtrl &ip = *new wxTextCtrl(
 			this,
@@ -265,7 +263,7 @@ auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlContent() {
 
 	{
 
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 
 		box->Add(
 			new wxStaticText(this, wxID_ANY, wxT("Host:")),
@@ -371,15 +369,15 @@ void UpnpServiceRuleDlg::OnDestinationPortChanged(wxCommandEvent &) {
 }
 
 void UpnpServiceRuleDlg::CheckPortValue(wxTextCtrl &ctrl, wxString &validPort) const {
-	wstring val = ctrl.GetValue().c_str();
-	trim(val);
+	std::wstring val = ctrl.GetValue().c_str();
+	boost::trim(val);
 	if (val.empty()) {
 		return;
 	}
-	if (!regex_match(val, wregex(L"\\d+"))) {
-		const long pos = max(long(0), ctrl.GetInsertionPoint() - 1);
+	if (!boost::regex_match(val, boost::wregex(L"\\d+"))) {
+		const long pos = std::max(long(0), ctrl.GetInsertionPoint() - 1);
 		ctrl.ChangeValue(validPort);
-		ctrl.SetInsertionPoint(min(ctrl.GetLastPosition(), pos));
+		ctrl.SetInsertionPoint(std::min(ctrl.GetLastPosition(), pos));
 	} else {
 		validPort = val;
 	}

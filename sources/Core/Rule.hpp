@@ -229,11 +229,11 @@ namespace TunnelEx {
 
 		RuleSet();
 
-		explicit RuleSet(
-				const ::TunnelEx::WString &)
-			throw(
-				::TunnelEx::InvalidXmlException,
-				::TunnelEx::XmlDoesNotMatchException);
+		// C-tor
+		/** @throw TunnelEx::InvalidXmlException 
+		  * @throw TunnelEx::XmlDoesNotMatchException
+		  */
+		explicit RuleSet(const ::TunnelEx::WString &);
 
 		explicit RuleSet(
 				const ::TunnelEx::ServiceRuleSet &,

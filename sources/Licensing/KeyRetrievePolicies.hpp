@@ -30,17 +30,15 @@ namespace TunnelEx { namespace Licensing {
 		inline static void ExtractEncryptedLicenseKey(
 					const std::string &key,
 					ResultStream &resultStream) {
-			using namespace std;
-			using namespace boost;
-			const string keyStart = "-----BEGIN TUNNELEX LICENSE KEY-----";
-			const string keyEnd = "-----END TUNNELEX LICENSE KEY-----";
+			const std::string keyStart = "-----BEGIN TUNNELEX LICENSE KEY-----";
+			const std::string keyEnd = "-----END TUNNELEX LICENSE KEY-----";
 			bool isStarted = false;
-			typedef split_iterator<string::const_iterator> Iterator;
-			for (	Iterator i = make_split_iterator(key, first_finder("\n", is_iequal()));
+			typedef boost::split_iterator<std::string::const_iterator> Iterator;
+			for (	Iterator i = boost::make_split_iterator(key, boost::first_finder("\n", boost::is_iequal()));
 					i != Iterator();
 					++i) {
-				string line = copy_range<string>(*i);
-				trim_if(line, is_space() || is_cntrl());
+				std::string line = boost::copy_range<std::string>(*i);
+				boost::trim_if(line, boost::is_space() || boost::is_cntrl());
 				if (line.empty()) {
 					continue;
 				}
@@ -49,7 +47,7 @@ namespace TunnelEx { namespace Licensing {
 				} else if (line == keyEnd) {
 					break;
 				} else {
-					resultStream << copy_range<string>(*i) << "\n";
+					resultStream << boost::copy_range<std::string>(*i) << "\n";
 				}
 			}
 		}
@@ -76,16 +74,15 @@ namespace TunnelEx { namespace Licensing {
 					const std::string &licenseKey,
 					const std::string &privateKeyStr) {
 			
-			using namespace std;
 			using namespace TunnelEx::Helpers::Crypto;
 			
-			string result;
+			std::string result;
 			
 			try {
 
 				OutBase64Stream outBase64;
 				ExtractEncryptedLicenseKey(licenseKey, outBase64);
-				vector<unsigned char> encryptedLicenseKey;
+				std::vector<unsigned char> encryptedLicenseKey;
 				outBase64.Take(encryptedLicenseKey);
 				if (encryptedLicenseKey.empty()) {
 					encryptedLicenseKey.push_back('x');
@@ -128,7 +125,7 @@ namespace TunnelEx { namespace Licensing {
 					signLen = decryptedWithAsymmetricLicenseKeyLen;
 				}
 				const size_t encryptedWithSymmetricLicenseKeyLen = signStartIndex;
-				vector<unsigned char> serverPublicKeyStr;
+				std::vector<unsigned char> serverPublicKeyStr;
 				ConstantStorage::GetLicenseServerAsymmetricPublicKey(serverPublicKeyStr);
 				if (serverPublicKeyStr.empty()) {
 					serverPublicKeyStr.push_back('x');
@@ -144,7 +141,7 @@ namespace TunnelEx { namespace Licensing {
 					decryptedWithAsymmetric.resize(0);
 				}
 				
-				vector<unsigned char> symmetricKey;
+				std::vector<unsigned char> symmetricKey;
 				ConstantStorage::GetLocalSymmetricKey(symmetricKey);
 				size_t token = 0;
 				foreach (unsigned char ch, decryptedWithAsymmetric) {

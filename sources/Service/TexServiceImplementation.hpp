@@ -12,7 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__TexServiceImplementation_h__0802170531
 #define INCLUDED_FILE__TUNNELEX__TexServiceImplementation_h__0802170531
 
-#include <TunnelEx/Log.hpp>
+#include "Core/Log.hpp"
 
 class TexServiceImplementation : private boost::noncopyable {
 

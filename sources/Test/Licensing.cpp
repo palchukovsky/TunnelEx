@@ -13,14 +13,14 @@
 
 #include "Licensing/RequestGenPolicies.hpp"
 #include "Licensing/WinInetCommPolicy.hpp"
+#include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
+#include "Licensing/License.hpp"
 
-#include <TunnelEx/String.hpp>
+#include "Core/String.hpp"
 
 namespace ut = boost::unit_test;
 namespace tex = TunnelEx;
-using namespace std;
-using namespace boost;
-using namespace boost::posix_time;
+namespace pt = boost::posix_time;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -32,10 +32,10 @@ namespace Test {
 
 	public:
 
-		typedef function<bool(string &, const any &)> XmlLicenseKeyRetrieverFunc;
-		typedef function<bool(tex::Licensing::WorkstationPropertyValues &, const any &)>
+		typedef boost::function<bool(std::string &, const boost::any &)> XmlLicenseKeyRetrieverFunc;
+		typedef boost::function<bool(tex::Licensing::WorkstationPropertyValues &, const boost::any &)>
 			LocalWorkstationPropertyValuesGetterFunc;
-		typedef function<std::string(void)> EncryptedLicenseKeyRetrieverFunc;
+		typedef boost::function<std::string(void)> EncryptedLicenseKeyRetrieverFunc;
 
 	public:
 
@@ -56,7 +56,7 @@ namespace Test {
 		explicit LicenseKeyTestServer(
 					XmlLicenseKeyRetrieverFunc xmlLicenseKeyRetrieverFunc,
 					LocalWorkstationPropertyValuesGetterFunc localWorkstationPropertyValuesGetterFunc,
-					ptime currentTime,
+					pt::ptime currentTime,
 					const char *const asymmetricPrivateKeyFileModif = "")
 				: m_xmlLicenseKeyRetrieverFunc(xmlLicenseKeyRetrieverFunc),
 				m_localWorkstationPropertyValuesGetterFunc(localWorkstationPropertyValuesGetterFunc),
@@ -81,7 +81,7 @@ namespace Test {
 
 	public:
 
-		void SetCurrentTime(const ptime &currentTime) {
+		void SetCurrentTime(const pt::ptime &currentTime) {
 			m_currentTime = currentTime;
 		}
 
@@ -95,15 +95,15 @@ namespace Test {
 			return m_localWorkstationPropertyValuesGetterFunc;
 		}
 		
-		string GetLicenseKeyFileModif() const {
+		std::string GetLicenseKeyFileModif() const {
 			return m_licenseKeyFileModif;
 		}
 		
-		string GetAsymmetricPrivateKeyFileModif() const {
+		std::string GetAsymmetricPrivateKeyFileModif() const {
 			return m_asymmetricPrivateKeyFileModif;
 		}
 
-		ptime GetCurrentTime() const {
+		pt::ptime GetCurrentTime() const {
 			return m_currentTime;
 		}
 		
@@ -111,13 +111,13 @@ namespace Test {
 
 		XmlLicenseKeyRetrieverFunc m_xmlLicenseKeyRetrieverFunc;
 		LocalWorkstationPropertyValuesGetterFunc m_localWorkstationPropertyValuesGetterFunc;
-		const string m_licenseKeyFileModif;
-		const string m_asymmetricPrivateKeyFileModif;
-		ptime m_currentTime;
+		const std::string m_licenseKeyFileModif;
+		const std::string m_asymmetricPrivateKeyFileModif;
+		pt::ptime m_currentTime;
 
 	};
 	
-	auto_ptr<LicenseKeyTestServer> licenseKeyTestServer;
+	std::auto_ptr<LicenseKeyTestServer> licenseKeyTestServer;
 
 }
 
@@ -134,32 +134,32 @@ namespace TunnelEx { namespace Licensing {
 			Original;
 		
 		static void GetLicenseServerAsymmetricPublicKey(
-					vector<unsigned char> &result) {
+					std::vector<unsigned char> &result) {
 			Original::GetLicenseServerAsymmetricPublicKey(result);
 		}
 		
-		static std::string GetLocalAsymmetricPrivateKey(const any &) {
-			ostringstream oss;
+		static std::string GetLocalAsymmetricPrivateKey(const boost::any &) {
+			std::ostringstream oss;
 			oss
 				<< "Resource\\LocalAsymmetricPrivateKey"
 				<< Test::licenseKeyTestServer->GetAsymmetricPrivateKeyFileModif()
 				<< ".pem";
-			ifstream f(oss.str().c_str());
+			std::ifstream f(oss.str().c_str());
 			BOOST_ASSERT(f);
-			f.unsetf(ios_base::skipws);
-			return string(istreambuf_iterator<char>(f), istreambuf_iterator<char>());
+			f.unsetf(std::ios::skipws);
+			return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 		}
 		
-		static string GetLicenseKey(const any &) {
-			ostringstream oss;
+		static std::string GetLicenseKey(const boost::any &) {
+			std::ostringstream oss;
 			oss << "Resource\\LicenseKey" << Test::licenseKeyTestServer->GetLicenseKeyFileModif() << ".key";
-			ifstream f(oss.str().c_str());
+			std::ifstream f(oss.str().c_str());
 			BOOST_ASSERT(f);
-			f.unsetf(ios_base::skipws);
-			return string(istreambuf_iterator<char>(f), istreambuf_iterator<char>());
+			f.unsetf(std::ios::skipws);
+			return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 		}
 		
-		static void StoreLocalAsymmetricPrivateKey(const string &) {
+		static void StoreLocalAsymmetricPrivateKey(const std::string &) {
 			//...//
 		}
 	
@@ -180,19 +180,19 @@ namespace TunnelEx { namespace Licensing {
 			Original;
 
 		static void GetLicenseServerAsymmetricPublicKey(
-					vector<unsigned char> &result) {
+					std::vector<unsigned char> &result) {
 			Original::GetLicenseServerAsymmetricPublicKey(result);
 		}
 
-		static std::string GetLocalAsymmetricPrivateKey(const any &) {
-			return string();
+		static std::string GetLocalAsymmetricPrivateKey(const boost::any &) {
+			return std::string();
 		}
 
-		static string GetLicenseKey(const any &) {
-			return string();
+		static std::string GetLicenseKey(const boost::any &) {
+			return std::string();
 		}
 
-		static void StoreLocalAsymmetricPrivateKey(const string &) {
+		static void StoreLocalAsymmetricPrivateKey(const std::string &) {
 			//...//
 		}
 
@@ -206,11 +206,11 @@ namespace TunnelEx { namespace Licensing {
 		typedef XmlLicenseKeyRetrievePolicy<ClientTrait, false>
 			Original;
 
-		static string Import(const string &lKey, const string &pKey) {
+		static std::string Import(const std::string &lKey, const std::string &pKey) {
 			return Original::Import(lKey, pKey);
 		}
 
-		static bool Get(string &key, const any &clientParam) {
+		static bool Get(std::string &key, const boost::any &clientParam) {
 			return Test::licenseKeyTestServer->GetXmlLicenseKeyRetriever()
 				?	Test::licenseKeyTestServer->GetXmlLicenseKeyRetriever()(key, clientParam)
 				:	Original::Get(key, clientParam);
@@ -226,10 +226,10 @@ namespace TunnelEx { namespace Licensing {
 		typedef WorkstationPropertiesLocalPolicy<ClientTrait, false>
 			Original;
 
-		static bool Get(WorkstationPropertyValues &result, const any &clientParam) {
+		static bool Get(WorkstationPropertyValues &result, const boost::any &clientParam) {
 			return Test::licenseKeyTestServer->GetLocalWorkstationPropertyValuesGetter()
 				?	Test::licenseKeyTestServer
-						->GetLocalWorkstationPropertyValuesGetter()(ref(result), clientParam)
+						->GetLocalWorkstationPropertyValuesGetter()(boost::ref(result), clientParam)
 				:	Original::Get(result, clientParam);
 		}
 
@@ -242,11 +242,11 @@ namespace TunnelEx { namespace Licensing {
 
 		typedef LocalInfoQueryPolicy<ClientTrait, false> Original;
 
-		inline static auto_ptr<const LocalInfo> Get(
+		inline static std::auto_ptr<const LocalInfo> Get(
 					const tex::Helpers::Xml::Document &doc,
 					const Options &options,
-					const any &clientParam) {
-			auto_ptr<const LocalInfo> result = Original::Get(doc, options, clientParam);
+					const boost::any &clientParam) {
+			std::auto_ptr<const LocalInfo> result = Original::Get(doc, options, clientParam);
 			if (	result.get()
 					&& !Test::licenseKeyTestServer->GetCurrentTime().is_not_a_date_time()) {
 				const_cast<LocalInfo &>(*result).time
@@ -267,32 +267,32 @@ namespace Test {
 
 	//////////////////////////////////////////////////////////////////////////
 	
-	string LoadEncryptedLicenseKey(const char *licenseKeyFileModif) {
-		ostringstream oss;
+	std::string LoadEncryptedLicenseKey(const char *licenseKeyFileModif) {
+		std::ostringstream oss;
 		oss << "Resource\\LicenseKey" << licenseKeyFileModif << ".key";
-		ifstream f(oss.str().c_str());
-		f.unsetf(ios_base::skipws);
-		return string(istreambuf_iterator<char>(f), istreambuf_iterator<char>());
+		std::ifstream f(oss.str().c_str());
+		f.unsetf(std::ios::skipws);
+		return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 
-	bool GetValidLicenseKeyXml(string &result, const any &) {
-		ifstream f("Resource\\LicenseKeyValid.xml");
+	bool GetValidLicenseKeyXml(std::string &result, const boost::any &) {
+		std::ifstream f("Resource\\LicenseKeyValid.xml");
 		BOOST_ASSERT(f);
-		f.unsetf(ios_base::skipws);
-		string(istreambuf_iterator<char>(f), istreambuf_iterator<char>()).swap(result);
+		f.unsetf(std::ios::skipws);
+		std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()).swap(result);
 		return true;
 	}
 
-	bool GetEmptyLicenseKeyXml(string &result, const any &) {
+	bool GetEmptyLicenseKeyXml(std::string &result, const boost::any &) {
 		result.clear();
 		return false;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 
-	bool GetInvalidLicenseKeyXml(string &result, const any &userParam) {
+	bool GetInvalidLicenseKeyXml(std::string &result, const boost::any &userParam) {
 		const bool isExists = GetValidLicenseKeyXml(result, userParam);
 		result.resize(result.size() - (result.size() / 4));
 		return isExists;
@@ -302,7 +302,7 @@ namespace Test {
 
 	bool GetValidLocalWorkstationProperties(
 				tex::Licensing::WorkstationPropertyValues &result,
-				const any &) {
+				const boost::any &) {
 		result[tex::Licensing::WORKSTATION_PROPERTY_OS_VER]
 			= "34D45871D8C3D98F00B204E9800998ECF8427389";
 		result[tex::Licensing::WORKSTATION_PROPERTY_INSTALLATION_INFO]
@@ -316,7 +316,7 @@ namespace Test {
 	
 	bool GetLocalWorkstationPropertiesWithInvalidOsVer(
 				tex::Licensing::WorkstationPropertyValues &result,
-				const any &userParam) {
+				const boost::any &userParam) {
 		tex::Licensing::WorkstationPropertyValues resultTmp;
 		if (!GetValidLocalWorkstationProperties(resultTmp, userParam)) {
 			return false;
@@ -329,7 +329,7 @@ namespace Test {
 
 	bool GetLocalWorkstationPropertiesWithInvalidOsSerial(
 				tex::Licensing::WorkstationPropertyValues &result,
-				const any &userParam) {
+				const boost::any &userParam) {
 		tex::Licensing::WorkstationPropertyValues resultTmp;
 		if (!GetValidLocalWorkstationProperties(resultTmp, userParam)) {
 			return false;
@@ -342,7 +342,7 @@ namespace Test {
 
 	bool GetLocalWorkstationPropertiesWithInvalidAdapter(
 				tex::Licensing::WorkstationPropertyValues &result,
-				const any &userParam) {
+				const boost::any &userParam) {
 		tex::Licensing::WorkstationPropertyValues resultTmp;
 		if (!GetValidLocalWorkstationProperties(resultTmp, userParam)) {
 			return false;
@@ -355,7 +355,7 @@ namespace Test {
 
 	bool GetLocalWorkstationPropertiesWithInvalidOsVolume(
 				tex::Licensing::WorkstationPropertyValues &result,
-				const any &userParam) {
+				const boost::any &userParam) {
 		tex::Licensing::WorkstationPropertyValues resultTmp;
 		if (!GetValidLocalWorkstationProperties(resultTmp, userParam)) {
 			return false;
@@ -450,10 +450,10 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_NO);
 			BOOST_CHECK(license.GetLicense() == "056F070E-2374-4A12-9DC6-9AAB0DB309E7");
 			BOOST_CHECK(license.GetUnactivityReason() == tex::Licensing::UR_NO);
-			BOOST_CHECK(license.GetLimitationTimeFrom() == time_from_string("2009-08-03 12:08:00"));
-			BOOST_CHECK(license.GetLimitationTimeTo() == time_from_string("2100-01-01 00:00:02"));
-			BOOST_CHECK(license.GetUpdateTimeFrom() == time_from_string("2009-08-01 12:08:00"));
-			BOOST_CHECK(license.GetUpdateTimeTo() == time_from_string("2100-01-03 00:00:00"));
+			BOOST_CHECK(license.GetLimitationTimeFrom() == pt::time_from_string("2009-08-03 12:08:00"));
+			BOOST_CHECK(license.GetLimitationTimeTo() == pt::time_from_string("2100-01-01 00:00:02"));
+			BOOST_CHECK(license.GetUpdateTimeFrom() == pt::time_from_string("2009-08-01 12:08:00"));
+			BOOST_CHECK(license.GetUpdateTimeTo() == pt::time_from_string("2100-01-03 00:00:00"));
 		}
 		{
 			typedef tex::Licensing::TunnelLicenseTesting License;
@@ -719,11 +719,11 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 				//...//
 			}
 			//! workaround for VS compiler warning C4180
-			bool GetKey(string &result, const any &clientParam) {
+			bool GetKey(std::string &result, const boost::any &clientParam) {
 				return const_cast<const KeyRequestProxy *>(this)
 					->GetKey(result, clientParam);
 			}
-			bool GetKey(string &result, const any &clientParam) const {
+			bool GetKey(std::string &result, const boost::any &clientParam) const {
 				++requestsCount;
 				return GetValidLicenseKeyXml(result, clientParam);
 			}
@@ -732,7 +732,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 
 		licenseKeyTestServer.reset(
 			new LicenseKeyTestServer(
-				bind(&KeyRequestProxy::GetKey, &keyRequestProxy, _1, _2),
+				boost::bind(&KeyRequestProxy::GetKey, &keyRequestProxy, _1, _2),
 				&GetValidLocalWorkstationProperties));
 
 		{
@@ -780,7 +780,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			new LicenseKeyTestServer(
 				&GetValidLicenseKeyXml,
 				&GetValidLocalWorkstationProperties,
-				time_from_string("2009-08-02 12:07:59")));
+				pt::time_from_string("2009-08-02 12:07:59")));
 
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
@@ -835,7 +835,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			new LicenseKeyTestServer(
 				&GetValidLicenseKeyXml,
 				&GetValidLocalWorkstationProperties,
-				time_from_string("2009-08-01 00:01:59")));
+				pt::time_from_string("2009-08-01 00:01:59")));
 
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
@@ -890,7 +890,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			new LicenseKeyTestServer(
 				&GetValidLicenseKeyXml,
 				&GetValidLocalWorkstationProperties,
-				time_from_string("2100-01-02 00:00:01")));
+				pt::time_from_string("2100-01-02 00:00:01")));
 
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
@@ -945,7 +945,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			new LicenseKeyTestServer(
 				&GetValidLicenseKeyXml,
 				&GetValidLocalWorkstationProperties,
-				time_from_string("2100-01-04 00:00:03")));
+				pt::time_from_string("2100-01-04 00:00:03")));
 
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
@@ -1000,7 +1000,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			new LicenseKeyTestServer(
 				&GetValidLicenseKeyXml,
 				&GetValidLocalWorkstationProperties,
-				time_from_string("2009-09-01 12:07:59")));
+				pt::time_from_string("2009-09-01 12:07:59")));
 
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
@@ -1058,7 +1058,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 			new LicenseKeyTestServer(
 				&GetValidLicenseKeyXml,
 				&GetValidLocalWorkstationProperties,
-				time_from_string("2100-01-01 00:00:01")));
+				pt::time_from_string("2100-01-01 00:00:01")));
 
 		{
 			typedef tex::Licensing::ExeLicenseTesting License;
@@ -1161,7 +1161,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Licensing)
 	
 	BOOST_AUTO_TEST_CASE(WorstationInfo) {
 		tex::Licensing::WorkstationPropertyValues propValues;
-		tex::Licensing::ExeLicense::WorkstationPropertiesLocal::Get(propValues, any());
+		tex::Licensing::ExeLicense::WorkstationPropertiesLocal::Get(propValues, boost::any());
 		const size_t hashSize = 40;
 		BOOST_REQUIRE(propValues.find(tex::Licensing::WORKSTATION_PROPERTY_OS_VER) != propValues.end());
 		BOOST_CHECK(propValues[tex::Licensing::WORKSTATION_PROPERTY_OS_VER].size() == hashSize);

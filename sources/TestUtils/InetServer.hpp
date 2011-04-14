@@ -28,19 +28,18 @@ namespace Test {
 
 	public:
 
-		virtual void Send(
-				std::size_t connectionIndex,
-				const std::string &)
-			throw(SendError);
-		virtual void Send(
-				std::size_t connectionIndex,
-				const Buffer &)
-			throw(SendError);
+		/** @throw SendError
+		  */
+		virtual void Send(std::size_t connectionIndex, const std::string &);
+		/** @throw SendError
+		  */
+		virtual void Send(std::size_t connectionIndex, const Buffer &);
 
-		virtual Buffer GetReceived(
-				std::size_t connectionIndex)
-			const
-			throw(ReceiveError);
+		/** @throw ReceiveError
+		  */
+		virtual Buffer GetReceived(std::size_t connectionIndex) const;
+		/** @throw ReceiveError
+		  */
 		virtual void ClearReceived(std::size_t connectionIndex);
 
 	public:
@@ -73,10 +72,10 @@ namespace Test {
 
 	public:
 
-		virtual void Send(const std::string &) throw(SendError);
-		virtual void Send(const Buffer &) throw(SendError);
+		virtual void Send(const std::string &);
+		virtual void Send(const Buffer &);
 
-		virtual Buffer Receive() throw(ReceiveError);
+		virtual Buffer Receive();
 
 	private:
 
@@ -96,10 +95,10 @@ namespace Test {
 
 	public:
 
-		virtual void Send(const std::string &) throw(SendError);
-		virtual void Send(const Buffer &) throw(SendError);
+		virtual void Send(const std::string &);
+		virtual void Send(const Buffer &);
 
-		virtual Buffer Receive() throw(ReceiveError);
+		virtual Buffer Receive();
 
 	private:
 

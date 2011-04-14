@@ -208,16 +208,14 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline static Edition Parse(const TunnelEx::Helpers::Xml::Document &doc) {
-			using namespace std;
-			using namespace boost;
 			using namespace Helpers::Xml;
 			WorkstationPropertyValues resultTmp;
-			const shared_ptr<const Node> node
+			const boost::shared_ptr<const Node> node
 				= doc.GetXPath()->Query(QueryPath::GetLicenseKeyProductQueryPath().c_str());
 			if (!node || !node->HasAttribute("Edition")) {
 				return EDITION_STANDARD;
 			}
-			string buffer;
+			std::string buffer;
 			try {
 				const Edition id
 					= CastStringToEdition(node->GetAttribute("Edition", buffer));
@@ -278,14 +276,13 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool Parse(
 					const TunnelEx::Helpers::Xml::Node &parentNode,
 					WorkstationPropertyValues &result) {
-			using namespace std;
 			using namespace Helpers::Xml;
 			WorkstationPropertyValues resultTmp;
 			ConstNodeCollection nodes;
 			parentNode.GetXPath()->Query(
 				QueryPath::GetLimitationsWorkstationsQueryPath().c_str(),
 				nodes);
-			string buffer;
+			std::string buffer;
 			foreach (boost::shared_ptr<const Node> &node, nodes) {
 				if (!node->HasAttribute("Name")) {
 					return false;
@@ -313,20 +310,20 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool Parse(
 					const TunnelEx::Helpers::Xml::Node &node,
 					TimeInterval &result) {
-			using namespace boost::posix_time;
+			namespace pt = boost::posix_time;
 			if (!node.HasAttribute("From") && !node.HasAttribute("To")) {
 				return false;
 			}
 			try {
 				TimeInterval resultTmp;
-				string buffer;
+				std::string buffer;
 				if (node.HasAttribute("From")) {
 					resultTmp.first
-						= time_from_string(node.GetAttribute("From", buffer));
+						= pt::time_from_string(node.GetAttribute("From", buffer));
 				}
 				if (node.HasAttribute("To")) {
 					resultTmp.second
-						= time_from_string(node.GetAttribute("To", buffer));
+						= pt::time_from_string(node.GetAttribute("To", buffer));
 				}
 				resultTmp.swap(result);
 				return true;
@@ -352,15 +349,13 @@ namespace TunnelEx { namespace Licensing {
 					const TunnelEx::Helpers::Xml::Node &limitationsNode,
 					Limitations &result) {
 			
-			using namespace std;
-			using namespace boost;
 			using namespace Helpers::Xml;
 			
 			Limitations resultTmp;
-			string buffer;
-			shared_ptr<const XPath> xpath = limitationsNode.GetXPath();
+			std::string buffer;
+			boost::shared_ptr<const XPath> xpath = limitationsNode.GetXPath();
 
-			shared_ptr<const Node> node = xpath->Query("TimeInterval");
+			boost::shared_ptr<const Node> node = xpath->Query("TimeInterval");
 			if (node && !TimeIntervalQuery::Parse(*node, resultTmp.timeInterval)) {
 				return false;
 			}
@@ -402,11 +397,9 @@ namespace TunnelEx { namespace Licensing {
 		inline static std::auto_ptr<const FeatureInfo> Parse(
 					const TunnelEx::Helpers::Xml::Document &doc) {
 
-			using namespace std;
-			using namespace boost;
 			using namespace Helpers::Xml;
 
-			auto_ptr<FeatureInfo> result(new FeatureInfo);
+			std::auto_ptr<FeatureInfo> result(new FeatureInfo);
 
 			const boost::shared_ptr<const Helpers::Xml::Node> featureNode
 				= doc.GetXPath()->Query(
@@ -414,30 +407,30 @@ namespace TunnelEx { namespace Licensing {
 			if (!featureNode) {
 				
 				if (!Feature::GetDefaultValue()) {
-					return auto_ptr<const FeatureInfo>();
+					return std::auto_ptr<const FeatureInfo>();
 				}
 				
 				result->value = *Feature::GetDefaultValue();
 			
 			} else {
 
-				shared_ptr<const XPath> xpath = featureNode->GetXPath();
+				boost::shared_ptr<const XPath> xpath = featureNode->GetXPath();
 
-				shared_ptr<const Node> node = xpath->Query("Limitations");
+				boost::shared_ptr<const Node> node = xpath->Query("Limitations");
 				if (node && !LimitationsQuery::Parse(*node, result->limitations)) {
-					return auto_ptr<const FeatureInfo>();
+					return std::auto_ptr<const FeatureInfo>();
 				}
 				
 				node = xpath->Query("Value");
 				if (!node) {
-					return auto_ptr<const FeatureInfo>();
+					return std::auto_ptr<const FeatureInfo>();
 				}
 				try {
-					string buffer;				
+					std::string buffer;				
 					result->value
 						= ValueCasting::Cast<FeatureValue>(node->GetContent(buffer));
 				} catch (const std::bad_cast &) {
-					return auto_ptr<const FeatureInfo>();
+					return std::auto_ptr<const FeatureInfo>();
 				}
 
 			}
@@ -461,16 +454,14 @@ namespace TunnelEx { namespace Licensing {
 		inline static std::auto_ptr<const LicenseKeyInfo> Parse(
 					const TunnelEx::Helpers::Xml::Document &doc) {
 			
-			using namespace std;
-			using namespace boost;
 			using namespace Helpers::Xml;
 
-			auto_ptr<LicenseKeyInfo> result(new LicenseKeyInfo);
+			std::auto_ptr<LicenseKeyInfo> result(new LicenseKeyInfo);
 
-			shared_ptr<const XPath> xpath = doc.GetXPath();
-			string buffer;
+			boost::shared_ptr<const XPath> xpath = doc.GetXPath();
+			std::string buffer;
 
-			/* shared_ptr<const Node> node
+			/* boost::shared_ptr<const Node> node
 				= doc.GetXPath()->Query(QueryPath::GetLicenseKeyProductQueryPath().c_str());
 			if (	!node
 					|| !node->HasAttribute("Name")!= 
@@ -478,10 +469,10 @@ namespace TunnelEx { namespace Licensing {
 				return EDITION_STANDARD;
 			} */
 
-			shared_ptr<const Node> node
+			boost::shared_ptr<const Node> node
 				= xpath->Query(QueryPath::GetLicenseKeyTypeQueryPath().c_str());
 			if (!node) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			} else {
 				node->GetContent(buffer);
 				if (buffer == "trial") {
@@ -489,40 +480,40 @@ namespace TunnelEx { namespace Licensing {
 				} else if (buffer == "regular") {
 					result->isTrial = false;
 				} else {
-					return auto_ptr<const LicenseKeyInfo>();
+					return std::auto_ptr<const LicenseKeyInfo>();
 				}
 			}
 
 			node = xpath->Query(QueryPath::GetLicenseKeyLimitationsQueryPath().c_str());
 			if (!node || !LimitationsQuery::Parse(*node, result->limitations)) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 
 			node = xpath->Query(QueryPath::GetLicenseKeyUpdateQueryPath().c_str());
 			if (node && !TimeIntervalQuery::Parse(*node, result->update)) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 
 			node = xpath->Query(QueryPath::GetLicenseKeyReleaseTimeQueryPath().c_str());
 			if (!node) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 			try {
 				result->releaseTime
-					= posix_time::time_from_string(node->GetContent(buffer));
+					= boost::posix_time::time_from_string(node->GetContent(buffer));
 			} catch (const std::bad_cast &) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 
 			node = xpath->Query(QueryPath::GetLicenseKeyOwnerQueryPath().c_str());
 			if (!node) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 			node->GetContent(result->owner);
 
 			node = node->GetParent();
 			if (!node || !node->HasAttribute("Id")) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 			node->GetAttribute("Id", result->id);
 
@@ -530,7 +521,7 @@ namespace TunnelEx { namespace Licensing {
 
 			node = xpath->Query(QueryPath::GetLicenseQueryPath().c_str());
 			if (!node) {
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 			node->GetContent(result->license);
 
@@ -554,20 +545,18 @@ namespace TunnelEx { namespace Licensing {
 		inline static std::auto_ptr<const Options> Parse(
 					const TunnelEx::Helpers::Xml::Document &doc) {
 
-			using namespace std;
-			using namespace boost;
 			using namespace Helpers::Xml;
 
-			auto_ptr<Options> result(new Options);
+			std::auto_ptr<Options> result(new Options);
 
 			ConstNodeCollection nodes;
 			doc.GetXPath()->Query(
 				QueryPath::GetLicenseKeyWorkstationPropsScoresQueryPath().c_str(),
 				nodes);
-			string buffer;
-			foreach (shared_ptr<const Node> &node, nodes) {
+			std::string buffer;
+			foreach (boost::shared_ptr<const Node> &node, nodes) {
 				if (!node->HasAttribute("Property")) {
-					return auto_ptr<const Options>();
+					return std::auto_ptr<const Options>();
 				}
 				try {
 					const WorkstationProperty id
@@ -578,7 +567,7 @@ namespace TunnelEx { namespace Licensing {
 					result->workstationPropertiesScores[id]
 						= ValueCasting::Cast<Scores>(node->GetContent(buffer));
 				} catch (const std::bad_cast &) {
-					return auto_ptr<const Options>();
+					return std::auto_ptr<const Options>();
 				}
 			}
 
@@ -608,19 +597,17 @@ namespace TunnelEx { namespace Licensing {
 					const Options &options,
 					const boost::any &clientParam) {
 
-			using namespace std;
-			using namespace boost;
 			using namespace Helpers::Xml;
 
-			auto_ptr<LocalInfo> result(new LocalInfo);
+			std::auto_ptr<LocalInfo> result(new LocalInfo);
 
 			if (	!WorkstationPropertiesLocal::Get(
 						result->workstationProperties, clientParam)) {
-				return auto_ptr<const LocalInfo>();
+				return std::auto_ptr<const LocalInfo>();
 			}
 
 			WorkstationPropertyValues controlWorkstationProperties;
-			const shared_ptr<const Node> licenseKeyRequestNode
+			const boost::shared_ptr<const Node> licenseKeyRequestNode
 				= doc.GetXPath()->Query(
 					QueryPath::GetLicenseKeyRequestQueryPath().c_str());
 			if (	!licenseKeyRequestNode
@@ -632,10 +619,10 @@ namespace TunnelEx { namespace Licensing {
 							options.workstationPropertiesScores,
 							result->workstationProperties,
 							result->scores)) {
-				return auto_ptr<const LocalInfo>();
+				return std::auto_ptr<const LocalInfo>();
 			}
 			
-			result->time = posix_time::second_clock::universal_time();
+			result->time = boost::posix_time::second_clock::universal_time();
 
 			return result;
 

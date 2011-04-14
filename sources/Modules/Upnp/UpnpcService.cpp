@@ -12,10 +12,8 @@
 #include "Prec.h"
 #include "UpnpcService.hpp"
 #include "EndpointResourceIdentifierParsers.hpp"
-#include <TunnelEx/Log.hpp>
+#include "Core/Log.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Mods::Upnp;
@@ -45,12 +43,12 @@ public:
 public:
 
 	Client::Proto m_proto;
-	string m_externalPort;
-	string m_destinationHost;
-	string m_destinationPort;
+	std::string m_externalPort;
+	std::string m_destinationHost;
+	std::string m_destinationPort;
 	bool m_isForceMode;
 	bool m_isPersistent;
-	string m_id;
+	std::string m_id;
 
 	Client m_client;
 
@@ -63,15 +61,14 @@ public:
 UpnpcService::UpnpcService(
 			SharedPtr<const ServiceRule> rule,
 			const ServiceRule::Service &service)
-		throw(TunnelEx::EndpointException)
 		: Service(rule, service) {
 	
 	BOOST_ASSERT(service.name == L"Upnpc");
 	
 	unsigned short externalPort = 0;
-	wstring destinationHost;
+	std::wstring destinationHost;
 	unsigned short destinationPort = 0;
-	auto_ptr<Implementation> pimpl(new Implementation);
+	std::auto_ptr<Implementation> pimpl(new Implementation);
 	ParseParam(
 		GetService().param,
 		pimpl->m_proto,
@@ -80,9 +77,9 @@ UpnpcService::UpnpcService(
 		destinationPort,
 		pimpl->m_isForceMode,
 		pimpl->m_isPersistent);
-	pimpl->m_externalPort = lexical_cast<string>(externalPort);
+	pimpl->m_externalPort = boost::lexical_cast<std::string>(externalPort);
 	pimpl->m_destinationHost = ConvertString<String>(destinationHost.c_str()).GetCStr();
-	pimpl->m_destinationPort = lexical_cast<string>(destinationPort);
+	pimpl->m_destinationPort = boost::lexical_cast<std::string>(destinationPort);
 	pimpl->m_id = ConvertString<String>(GetService().uuid).GetCStr();
 
 	SetStarted(pimpl->m_client.CheckMapping(
@@ -115,9 +112,9 @@ UpnpcService::~UpnpcService() throw() {
 
 namespace {
 
-	wstring GetHumanReadable(
+	std::wstring GetHumanReadable(
 				Client::Proto proto,
-				const wstring &host,
+				const std::wstring &host,
 				unsigned short port) {
 		WFormat result(L"> %1%://%2%:%3%");
 		result
@@ -129,13 +126,12 @@ namespace {
 
 }
 
-wstring UpnpcService::GetHumanReadableExternalPort(
+std::wstring UpnpcService::GetHumanReadableExternalPort(
 			const WString &param,
-			const wstring &externalIp)
-		throw(TunnelEx::InvalidLinkException) {
+			const std::wstring &externalIp) {
 	Client::Proto proto = Client::PROTO_TCP;
 	unsigned short externalPort = 0;
-	wstring destinationHost;
+	std::wstring destinationHost;
 	unsigned short destinationPort = 0;
 	bool isForceMode = false;
 	bool isPersistent = false;
@@ -150,12 +146,10 @@ wstring UpnpcService::GetHumanReadableExternalPort(
 	return GetHumanReadable(proto, externalIp, externalPort);
 }
 
-wstring UpnpcService::GetHumanReadableDestination(
-			const WString &param)
-		throw(TunnelEx::InvalidLinkException) {
+std::wstring UpnpcService::GetHumanReadableDestination(const WString &param) {
 	Client::Proto proto = Client::PROTO_TCP;
 	unsigned short externalPort = 0;
-	wstring destinationHost;
+	std::wstring destinationHost;
 	unsigned short destinationPort = 0;
 	bool isForceMode = false;
 	bool isPersistent = false;
@@ -173,11 +167,11 @@ wstring UpnpcService::GetHumanReadableDestination(
 WString UpnpcService::CreateParam(
 			Client::Proto proto,
 			unsigned short externalPort,
-			const wstring &destinationHost,
+			const std::wstring &destinationHost,
 			unsigned short destinationPort,
 			bool isForceMode,
 			bool isPersistent) {
-	wostringstream result;
+	std::wostringstream result;
 	result << L"proto=";
 	switch (proto) {
 		default:
@@ -202,63 +196,62 @@ void UpnpcService::ParseParam(
 			const WString &paramIn,
 			Client::Proto &proto,
 			unsigned short &externalPort,
-			wstring &destinationHost,
+			std::wstring &destinationHost,
 			unsigned short &destinationPort,
 			bool &isForceMode,
-			bool &isPersistent)
-		throw(TunnelEx::InvalidLinkException) {
+			bool &isPersistent) {
 
-	const wstring param(paramIn.GetCStr());
+	const std::wstring param(paramIn.GetCStr());
 		
 	EndpointResourceIdentifierParsers::UrlSplitConstIterator paramIt
-		= make_split_iterator(param, token_finder(is_any_of(L"&")));
+		= boost::make_split_iterator(param, boost::token_finder(boost::is_any_of(L"&")));
 
 	unsigned short externalPortTmp;
 	EndpointResourceIdentifierParsers::ParseUrlParam(
 		paramIt,
 		L"ext_port",
-		bind(
+		boost::bind(
 			&EndpointResourceIdentifierParsers::ParseUrlParamValue<unsigned short>,
 			_1,
-			ref(externalPortTmp)),
+			boost::ref(externalPortTmp)),
 		false);
 	unsigned short destinationPortTmp;
 	EndpointResourceIdentifierParsers::ParseUrlParam(
 		paramIt,
 		L"dest_port",
-		bind(
+		boost::bind(
 			&EndpointResourceIdentifierParsers::ParseUrlParamValue<unsigned short>,
 			_1,
-			ref(destinationPortTmp)),
+			boost::ref(destinationPortTmp)),
 		false);
 
-	wstring protoStr;
+	std::wstring protoStr;
 	EndpointResourceIdentifierParsers::ParseUrlParam(
 		paramIt,
 		L"proto",
-		bind(
-			&EndpointResourceIdentifierParsers::ParseUrlParamValue<wstring>,
+		boost::bind(
+			&EndpointResourceIdentifierParsers::ParseUrlParamValue<std::wstring>,
 			_1,
-			ref(protoStr)),
+			boost::ref(protoStr)),
 		false);
 	Client::Proto protoTmp;
-	if (iequals(protoStr, L"tcp")) {
+	if (boost::iequals(protoStr, L"tcp")) {
 		protoTmp = Client::PROTO_TCP;
-	} else if (iequals(protoStr, L"udp")) {
+	} else if (boost::iequals(protoStr, L"udp")) {
 		protoTmp = Client::PROTO_UDP;
 	} else {
 		throw TunnelEx::InvalidLinkException(
 			L"Unknown protocol for port mapping by UPnP");
 	}
 
-	wstring destinationHostTmp;
+	std::wstring destinationHostTmp;
 	EndpointResourceIdentifierParsers::ParseUrlParam(
 		paramIt,
 		L"dest_host",
-		bind(
-			&EndpointResourceIdentifierParsers::ParseUrlParamValue<wstring>,
+		boost::bind(
+			&EndpointResourceIdentifierParsers::ParseUrlParamValue<std::wstring>,
 			_1,
-			ref(destinationHostTmp)),
+			boost::ref(destinationHostTmp)),
 		false);
 	destinationHostTmp = StringUtil::DecodeUrl(destinationHostTmp);
 	if (destinationHostTmp.empty()) {
@@ -270,32 +263,32 @@ void UpnpcService::ParseParam(
 	EndpointResourceIdentifierParsers::ParseUrlParam(
 		paramIt,
 		L"is_force",
-		bind(
+		boost::bind(
 			&EndpointResourceIdentifierParsers::ParseUrlParamValue<bool>,
 			_1,
-			ref(isForceModeTmp)),
+			boost::ref(isForceModeTmp)),
 		false);
 
 	bool isPersistentTmp;
 	EndpointResourceIdentifierParsers::ParseUrlParam(
 		paramIt,
 		L"is_persistent",
-		bind(
+		boost::bind(
 		&EndpointResourceIdentifierParsers::ParseUrlParamValue<bool>,
 		_1,
-		ref(isPersistentTmp)),
+		boost::ref(isPersistentTmp)),
 		false);
 
 	proto = protoTmp;
-	swap(externalPortTmp, externalPort);
-	swap(destinationHostTmp, destinationHost);
+	std::swap(externalPortTmp, externalPort);
+	std::swap(destinationHostTmp, destinationHost);
 	destinationPort = destinationPortTmp;
 	isForceMode = isForceModeTmp;
 	isPersistent = isPersistentTmp;
 
 }
 
-void UpnpcService::Start() throw(TunnelEx::EndpointException) {
+void UpnpcService::Start() {
 	BOOST_ASSERT(!IsStarted());
 	ACE_Time_Value nextCheck = m_pimpl->GetNextCheckTime();
 	m_pimpl->m_client.AddPortMapping(
@@ -306,7 +299,7 @@ void UpnpcService::Start() throw(TunnelEx::EndpointException) {
 		m_pimpl->m_id,
 		m_pimpl->m_isForceMode);
 	SetStarted(true);
-	swap(nextCheck, m_pimpl->m_nextCheckTime);
+	std::swap(nextCheck, m_pimpl->m_nextCheckTime);
 }
 
 void UpnpcService::Stop() throw() {
@@ -317,7 +310,7 @@ void UpnpcService::Stop() throw() {
 	}
 }
 
-void UpnpcService::DoWork() throw(TunnelEx::EndpointException) {
+void UpnpcService::DoWork() {
 	
 	BOOST_ASSERT(IsStarted());
 	BOOST_ASSERT(m_pimpl->m_nextCheckTime != ACE_Time_Value::zero);

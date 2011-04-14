@@ -167,11 +167,10 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline void ResetFeatureAvailabilityCache() {
-			using namespace std;
-			auto_ptr<const Options> options;
-			auto_ptr<const LocalInfo> localInfo;
-			auto_ptr<const LicenseKeyInfo> licenseInfo;
-			auto_ptr<const FeatureInfo> featureInfo;
+			std::auto_ptr<const Options> options;
+			std::auto_ptr<const LocalInfo> localInfo;
+			std::auto_ptr<const LicenseKeyInfo> licenseInfo;
+			std::auto_ptr<const FeatureInfo> featureInfo;
 			LocalStorage::ResetLicenseKeyUpdateState(m_clientParam);
 			const bool isExists = ReadKey(
 				options,
@@ -179,7 +178,7 @@ namespace TunnelEx { namespace Licensing {
 				licenseInfo,
 				featureInfo,
 				m_clientParam);
-			auto_ptr<Cache> cache;
+			std::auto_ptr<Cache> cache;
 			if (!isExists) {
 				cache.reset(new Cache(false, UR_NOT_EXISTS, Feature::GetDefaultValue()));
 			} else if (!localInfo.get() || !licenseInfo.get() || !options.get()) {
@@ -216,11 +215,10 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool TestKey(
 					const std::string &key,
 					boost::any clientParam = boost::any()) {
-			using namespace std;
-			auto_ptr<const Options> options;
-			auto_ptr<const LocalInfo> localInfo;
-			auto_ptr<const LicenseKeyInfo> licenseInfo;
-			auto_ptr<const FeatureInfo> featureInfo;
+			std::auto_ptr<const Options> options;
+			std::auto_ptr<const LocalInfo> localInfo;
+			std::auto_ptr<const LicenseKeyInfo> licenseInfo;
+			std::auto_ptr<const FeatureInfo> featureInfo;
 			const bool isExists = ReadKey(
 				options,
 				localInfo,
@@ -234,7 +232,7 @@ namespace TunnelEx { namespace Licensing {
 		inline std::string GetOwner() const {
 			const std::auto_ptr<const LicenseKeyInfo> licenseInfo
 				= GetLicenseInfo();
-			return licenseInfo.get() ? licenseInfo->owner : string();
+			return licenseInfo.get() ? licenseInfo->owner : std::string();
 		}
 
 		inline Edition GetEdition() const {
@@ -293,7 +291,7 @@ namespace TunnelEx { namespace Licensing {
 			const std::auto_ptr<const LicenseKeyInfo> licenseInfo
 				= GetLicenseInfo();
 			if (!licenseInfo.get()) {
-				return string();
+				return std::string();
 			}
 			return licenseInfo->license;
 		}
@@ -302,7 +300,7 @@ namespace TunnelEx { namespace Licensing {
 			const std::auto_ptr<const LicenseKeyInfo> licenseInfo
 				= GetLicenseInfo();
 			if (!licenseInfo.get()) {
-				return string();
+				return std::string();
 			}
 			return licenseInfo->id;
 		}
@@ -310,11 +308,10 @@ namespace TunnelEx { namespace Licensing {
 		inline static std::string GetLicense(
 					const std::string &key,
 					const boost::any &clientParam = boost::any()) {
-			using namespace std;
-			auto_ptr<const Options> options;
-			auto_ptr<const LocalInfo> localInfo;
-			auto_ptr<const LicenseKeyInfo> licenseInfo;
-			auto_ptr<const FeatureInfo> featureInfo;
+			std::auto_ptr<const Options> options;
+			std::auto_ptr<const LocalInfo> localInfo;
+			std::auto_ptr<const LicenseKeyInfo> licenseInfo;
+			std::auto_ptr<const FeatureInfo> featureInfo;
 			const bool isExists = ReadKey(
 				options,
 				localInfo,
@@ -323,17 +320,17 @@ namespace TunnelEx { namespace Licensing {
 				clientParam,
 				&key);
 			if (!isExists || !localInfo.get() || !licenseInfo.get() || !options.get()) {
-				return string();
+				return std::string();
 			}
 			return licenseInfo->license;
 		}
 
 		inline void UpdateCache() {
-			using namespace boost::posix_time;
-			const ptime currentTime = second_clock::universal_time();
+			namespace pt = boost::posix_time;
+			const pt::ptime currentTime = pt::second_clock::universal_time();
 			if (	!m_cache.get()
 					|| m_cache->checkCount > GetMaximumChecksCountFromCache()
-					|| m_cache->since < (currentTime - minutes(30))
+					|| m_cache->since < (currentTime - pt::minutes(30))
 					|| m_cache->since > currentTime
 					|| LocalStorage::IsLicenseKeyChanged(m_clientParam)) {
 				ResetFeatureAvailabilityCache();
@@ -349,12 +346,12 @@ namespace TunnelEx { namespace Licensing {
 					std::auto_ptr<const FeatureInfo> &featureInfo,
 					const boost::any &clientParam,
 					const std::string *clientKey = 0) {
-			using namespace std;
-			using namespace boost;
+
 			using namespace Helpers::Xml;
-			shared_ptr<const Document> doc;
+
+			boost::shared_ptr<const Document> doc;
 			bool isExists;
-			string key;
+			std::string key;
 
 			if (clientKey) {
 				key = *clientKey;
@@ -367,10 +364,12 @@ namespace TunnelEx { namespace Licensing {
 			}
 #			if defined(_DEBUG) || defined(TEST)
 			{
-				filesystem::path dumpPath
+				boost::filesystem::path dumpPath
 					= Helpers::GetModuleFilePathA().branch_path();
 				dumpPath /= "LicenseKey.xml";
-				ofstream f(dumpPath.string().c_str(), ios::trunc | ios::binary);
+				std::ofstream f(
+					dumpPath.string().c_str(),
+					std::ios::trunc | std::ios::binary);
 				f << key;
 			}
 #			endif
@@ -389,11 +388,10 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline std::auto_ptr<const LicenseKeyInfo> GetLicenseInfo() const {
-			using namespace std;
-			auto_ptr<const Options> options;
-			auto_ptr<const LocalInfo> localInfo;
-			auto_ptr<const LicenseKeyInfo> result;
-			auto_ptr<const FeatureInfo> featureInfo;
+			std::auto_ptr<const Options> options;
+			std::auto_ptr<const LocalInfo> localInfo;
+			std::auto_ptr<const LicenseKeyInfo> result;
+			std::auto_ptr<const FeatureInfo> featureInfo;
 			const bool isExists = ReadKey(
 				options,
 				localInfo,
@@ -406,7 +404,7 @@ namespace TunnelEx { namespace Licensing {
 						false,
 						!isExists ? UR_NOT_EXISTS : UR_FORMAT,
 						Feature::GetDefaultValue()));
-				return auto_ptr<const LicenseKeyInfo>();
+				return std::auto_ptr<const LicenseKeyInfo>();
 			}
 			return result;
 		}

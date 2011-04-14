@@ -12,7 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__RuleDlg_hpp__1005230541
 #define INCLUDED_FILE__TUNNELEX__RuleDlg_hpp__1005230541
 
-#include <TunnelEx/Rule.hpp>
+#include "Core/Rule.hpp"
 
 class ServiceAdapter;
 class ServiceWindow;

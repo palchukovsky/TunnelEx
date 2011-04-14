@@ -13,7 +13,7 @@
 #define INCLUDED_FILE__TUNNELEX__Configuration_h__0712272245
 
 #include "Dll.hpp"
-#include <TunnelEx/Log.hpp>
+#include "Core/Log.hpp"
 
 namespace TunnelEx {
 	namespace Helpers {

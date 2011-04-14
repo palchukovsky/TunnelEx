@@ -14,9 +14,9 @@
 
 #include "InetEndpointAddress.hpp"
 
-#include <TunnelEx/Listener.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Server.hpp>
+#include "Core/Listener.hpp"
+#include "Core/Log.hpp"
+#include "Core/Server.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

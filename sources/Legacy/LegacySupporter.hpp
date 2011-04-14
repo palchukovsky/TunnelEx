@@ -38,11 +38,10 @@ public:
 	TunnelEx::Helpers::DllObjectPtr<ServiceConfiguration>
 	MigrateCurrentServiceConfiguration()
 			const {
-		using namespace boost;
 		using namespace TunnelEx::Helpers;
 		return DllObjectPtr<ServiceConfiguration>(
 			m_myDll,
-			m_myDll->GetFunction<shared_ptr<ServiceConfiguration>(void)>("MigrateCurrentServiceConfiguration")());
+			m_myDll->GetFunction<boost::shared_ptr<ServiceConfiguration>(void)>("MigrateCurrentServiceConfiguration")());
 	}
 
 	void MigrateCurrentRuleSet(TunnelEx::RuleSet &ruleSet) const {

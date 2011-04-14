@@ -12,7 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__Rules_h__0806130122
 #define INCLUDED_FILE__TUNNELEX__Rules_h__0806130122
 
-#include <TunnelEx/String.hpp>
+#include "Core/String.hpp"
 
 namespace TunnelEx {
 	class RuleSet;

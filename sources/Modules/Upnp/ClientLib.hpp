@@ -13,8 +13,8 @@
 #define INCLUDED_FILE__TUNNELEX__UpnpClientLib_hpp__1005242254
 
 #include "Dll.hpp"
-#include <TunnelEx/String.hpp>
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/String.hpp"
+#include "Core/Exceptions.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Upnp {
 
@@ -74,15 +74,14 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 	public:
 
 		boost::shared_ptr<UPNPDev> Discover() const {
-			using namespace boost;
 			typedef UPNPDev *(Proto)(int, const char *, const char *, int);
 			UPNPDev *const devList = GetFunction<Proto>("upnpDiscover")(2000, 0, 0, 0);
 			if (!devList) {
 				throw Exception(L"No IGD UPnP device found");
 			}
-			return shared_ptr<UPNPDev>(
+			return boost::shared_ptr<UPNPDev>(
 				devList,
-				bind(&ClientLib::FreeDevList, this, _1));
+				boost::bind(&ClientLib::FreeDevList, this, _1));
 		}
 
 		int GetValidIgd(
@@ -99,7 +98,7 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 				&data,
 				lanAddrBuf,
 				sizeof(lanAddrBuf));
-			urls.dtor = bind(&ClientLib::FreeUrls, this, _1);
+			urls.dtor = boost::bind(&ClientLib::FreeUrls, this, _1);
 			lanAddr = lanAddrBuf;
 			return result;
 		}
@@ -240,17 +239,16 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 				remoteHost,
 				duration);
 			if (result == UPNPCOMMAND_SUCCESS) {
-				using namespace std;
-				string externalPortStr = externalPort;
-				string internalHostStr = internalHost;
-				string internalPortStr = internalPort;
-				string protoStr = proto;
-				string descriptionStr = description;
-				swap(externalPortStr, externalPortResult);
-				swap(internalHostStr, internalHostResult);
-				swap(internalPortStr, internalPortResult);
-				swap(protoStr, protoResult);
-				swap(descriptionStr, descriptionResult);
+				std::string externalPortStr = externalPort;
+				std::string internalHostStr = internalHost;
+				std::string internalPortStr = internalPort;
+				std::string protoStr = proto;
+				std::string descriptionStr = description;
+				externalPortStr.swap(externalPortResult);
+				internalHostStr.swap(internalHostResult);
+				internalPortStr.swap(internalPortResult);
+				protoStr.swap(protoResult);
+				descriptionStr.swap(descriptionResult);
 				return true;
 			} else if (result == 713) {
 				return false;

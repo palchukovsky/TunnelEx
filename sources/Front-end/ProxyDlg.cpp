@@ -18,8 +18,6 @@
 #include "Application.hpp"
 #include "LicenseRestrictionDlg.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 enum ProxyDlg::Control {
@@ -97,11 +95,11 @@ void ProxyDlg::CreateControls(const Info &proxy) {
 
 	const Theme &theme = wxGetApp().GetTheme();
 
-	auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
 
 	// host and port: //////////////////////////////////////////////////////
 	{
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 		wxStaticText *label = new wxStaticText(this, wxID_ANY, wxT("Host:"));
 		label->Enable(!m_readOnly);
 		box->Add(label, wxSizerFlags(0).Center());
@@ -140,7 +138,7 @@ void ProxyDlg::CreateControls(const Info &proxy) {
 
 	// auth: //////////////////////////////////////////////////////////////
 	{
-		auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 		m_isAuth = new wxCheckBox(
 			this,
 			CONTROL_IS_USING_AUTH,
@@ -152,7 +150,7 @@ void ProxyDlg::CreateControls(const Info &proxy) {
 		m_isAuth->SetToolTip(wxT("Check it if proxy server requires authorization."));
 		m_isAuth->SetValue(proxy.isAuthInUse);
 		topBox->Add(m_isAuth);
-		auto_ptr<wxBoxSizer> paramsBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> paramsBox(new wxBoxSizer(wxHORIZONTAL));
 		paramsBox->AddSpacer(theme.GetDlgBorder());
 		m_authUserLabel = new wxStaticText(this, wxID_ANY, wxT("User name:"));
 		m_authUserLabel->Enable(!m_readOnly && m_isAuth->GetValue());
@@ -198,7 +196,7 @@ void ProxyDlg::CreateControls(const Info &proxy) {
 	// buttons: ////////////////////////////////////////////////////////////
 
 	if (!m_isInCascade) {
-		auto_ptr<wxBoxSizer> buttons(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> buttons(new wxBoxSizer(wxHORIZONTAL));
 		wxButton *button
 			= new wxButton(this, CONTROL_CREATE_CASCADE, wxT("Create proxy cascade"));
 		button->Enable(!m_readOnly);
@@ -327,7 +325,7 @@ ProxyCascadeDlg::ProxyCascadeDlg(
 			//...//
 		}
 		virtual bool Validate(wxWindow *) {
-			wxListBox &listBox = *polymorphic_downcast<wxListBox *>(GetWindow());
+			wxListBox &listBox = *boost::polymorphic_downcast<wxListBox *>(GetWindow());
 			const bool result = listBox.GetCount() > 0;
 			if (!result) {
 				wxLogWarning(m_errorText);
@@ -356,7 +354,7 @@ ProxyCascadeDlg::ProxyCascadeDlg(
 
 	//! @todo: Insert tooltips for all controls [2010/09/10 2:09]
 
-	auto_ptr<wxBoxSizer> topStaticBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> topStaticBox(new wxBoxSizer(wxHORIZONTAL));
 
 	m_listCtrl = new wxListBox(
 		this,
@@ -368,7 +366,7 @@ ProxyCascadeDlg::ProxyCascadeDlg(
 		validator);
 	topStaticBox->Add(m_listCtrl, wxSizerFlags(1).Expand());
 
-	auto_ptr<wxBoxSizer> buttonBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> buttonBox(new wxBoxSizer(wxVERTICAL));
 	const wxSizerFlags buttonBoxFlags = wxSizerFlags(0).Bottom().Center();
 
 	const wxSize buttonSize(theme.GetIconButtonSize());
@@ -453,7 +451,7 @@ ProxyCascadeDlg::ProxyCascadeDlg(
 	staticBox.Add(topStaticBox.get(), theme.GetStaticBoxFlags());
 	topStaticBox.release();
 
-	auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
 	topSizer->Add(&staticBox, theme.GetTopSizerFlags());
 	topSizer->Add(new wxStaticLine(this), theme.GetTopSizerFlags());
 	topSizer->Add(CreateButtonSizer(wxOK | wxCANCEL | wxHELP), theme.GetTopSizerFlags());
@@ -552,10 +550,10 @@ void ProxyCascadeDlg::OnRemove(wxCommandEvent &) {
 	}
 	Cascade cascade;
 	for (Cascade::const_iterator i = m_cascade.begin(); i != m_cascade.end(); ++i) {
-		const wxArrayInt::const_iterator pos = find(
+		const wxArrayInt::const_iterator pos = std::find(
 			selections.begin(),
 			selections.end(),
-			distance<Cascade::const_iterator>(m_cascade.begin(), i));
+			std::distance<Cascade::const_iterator>(m_cascade.begin(), i));
 		if (pos == selections.end()) {
 			cascade.push_back(*i);
 		}
@@ -574,7 +572,7 @@ void ProxyCascadeDlg::Move(bool up) {
 	m_listCtrl->GetSelections(selections);
 	BOOST_ASSERT(selections.size() > 0);
 
-	typedef map<unsigned int, unsigned int> ChangesMap;
+	typedef std::map<unsigned int, unsigned int> ChangesMap;
 	ChangesMap selectedIndexes;
 	for (size_t i = 0; i < selections.GetCount(); ++i) {
 		if (	(up && selections.Item(i) <= 0)
@@ -582,7 +580,7 @@ void ProxyCascadeDlg::Move(bool up) {
 			return;
 		}
 		selectedIndexes.insert(
-			make_pair(
+			std::make_pair(
 				up ? selections.Item(i) - 1 : selections.Item(i) + 1,
 				selections.Item(i)));
 	}

@@ -25,8 +25,6 @@ namespace TunnelEx { namespace Licensing {
 		
 			// IPHLPAPI.lib
 			
-			using namespace std;
-			using namespace boost;
 			using namespace TunnelEx::Helpers;
 			using namespace TunnelEx::Helpers::Crypto;
 			
@@ -37,7 +35,7 @@ namespace TunnelEx { namespace Licensing {
 				ZeroMemory(&verInfo, sizeof(OSVERSIONINFOEX));
 				verInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 				if (GetVersionEx(reinterpret_cast<OSVERSIONINFO *>(&verInfo))) {
-					ostringstream oss;
+					std::ostringstream oss;
 					oss
 						<< verInfo.dwMajorVersion << " " << verInfo.dwMinorVersion
 						<< " " << verInfo.dwBuildNumber << " " << verInfo.dwPlatformId
@@ -46,17 +44,17 @@ namespace TunnelEx { namespace Licensing {
 						= DigestSha1(oss.str()).GetAscii();
 				} else {
 					BOOST_ASSERT(false);
-					props[WORKSTATION_PROPERTY_OS_VER] = string();
+					props[WORKSTATION_PROPERTY_OS_VER] = std::string();
 				}
 			}
 
 			{
-				vector<char> windowsDir(MAX_PATH, 0);
+				std::vector<char> windowsDir(MAX_PATH, 0);
 				if (GetWindowsDirectoryA(&windowsDir[0], UINT(windowsDir.size()))) {
 					windowsDir[3] = 0;
 					DWORD serialNumber;
 					if (GetVolumeInformationA(&windowsDir[0], 0, 0, &serialNumber, 0, 0, 0, 0)) {
-						ostringstream oss;
+						std::ostringstream oss;
 						oss << serialNumber;
 						props[WORKSTATION_PROPERTY_OS_VOLUME]
 							= DigestSha1(oss.str()).GetAscii();
@@ -69,7 +67,7 @@ namespace TunnelEx { namespace Licensing {
 			}
 
 			{
-				vector<unsigned char> adaptersInfo(sizeof(IP_ADAPTER_INFO));
+				std::vector<unsigned char> adaptersInfo(sizeof(IP_ADAPTER_INFO));
 				ULONG adaptersInfoBufferLen = ULONG(adaptersInfo.size());
 				if (	GetAdaptersInfo(
 							reinterpret_cast<PIP_ADAPTER_INFO>(&adaptersInfo[0]),
@@ -77,7 +75,7 @@ namespace TunnelEx { namespace Licensing {
 						== ERROR_BUFFER_OVERFLOW) {
 					adaptersInfo.resize(adaptersInfoBufferLen);
 				}
-				string adapterDigests;
+				std::string adapterDigests;
 				if (	GetAdaptersInfo(
 							reinterpret_cast<PIP_ADAPTER_INFO>(&adaptersInfo[0]),
 							&adaptersInfoBufferLen)
@@ -93,7 +91,7 @@ namespace TunnelEx { namespace Licensing {
 							case IF_TYPE_FASTETHER:
 							case IF_TYPE_FASTETHER_FX:
 								{
-									ostringstream oss;
+									std::ostringstream oss;
 									oss
 										<< adapter->AdapterName
 										<< " "
@@ -113,7 +111,7 @@ namespace TunnelEx { namespace Licensing {
 			}
 
 			{
-				format path("%3%\\%1%\\%4% %2%\\%5%");
+				boost::format path("%3%\\%1%\\%4% %2%\\%5%");
 				path % "Microsoft" % "NT" % "SOFTWARE" % "Windows" % "CurrentVersion";
 				HKEY key;
 				LONG status
@@ -121,9 +119,9 @@ namespace TunnelEx { namespace Licensing {
 				BOOST_ASSERT(status == ERROR_SUCCESS);
 				if (status == ERROR_SUCCESS) {
 					//! @todo: replace with unique_ptr [2009/11/10 22:56]
-					shared_ptr<HKEY__> autoKey(key, &RegCloseKey);
+					boost::shared_ptr<HKEY__> autoKey(key, &RegCloseKey);
 					DWORD start = 0;
-					vector<BYTE> buffer;
+					std::vector<BYTE> buffer;
 					DWORD dataType;
 					const char *const items[] = {
 						"BuildGUID",
@@ -133,7 +131,7 @@ namespace TunnelEx { namespace Licensing {
 						"SystemRoot",
 						"ProductName",
 						"PathName"};
-					BOOST_FOREACH (const char *const item, items) {
+					foreach (const char *const item, items) {
 						DWORD bufferSize = DWORD(buffer.size()) - start;
 						if (bufferSize < 255) {
 							buffer.resize(buffer.size() + (255 - bufferSize));
@@ -142,14 +140,14 @@ namespace TunnelEx { namespace Licensing {
 						status = RegQueryValueExA(key, item, NULL, &dataType, &buffer[0], &bufferSize);
 						BOOST_ASSERT(
 							status == ERROR_SUCCESS
-							|| (status == ERROR_FILE_NOT_FOUND && string(item) == "BuildGUID"));
+							|| (status == ERROR_FILE_NOT_FOUND && std::string(item) == "BuildGUID"));
 						if (status == ERROR_SUCCESS) {
 							start += bufferSize;
 						}
 					}
-					props[WORKSTATION_PROPERTY_INSTALLATION_INFO] = buffer.size()
+					props[WORKSTATION_PROPERTY_INSTALLATION_INFO] = !buffer.empty()
 						?	DigestSha1(buffer).GetAscii()
-						:	props[WORKSTATION_PROPERTY_INSTALLATION_INFO] = string();
+						:	std::string();
 				}
 			}
 

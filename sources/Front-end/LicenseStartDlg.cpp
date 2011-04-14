@@ -16,8 +16,6 @@
 #include "Application.hpp"
 #include "LicensePolicies.hpp"
 
-
-using namespace std;
 using namespace TunnelEx::Licensing;
 
 BEGIN_EVENT_TABLE(LicenseStartDlg, wxDialog)
@@ -52,9 +50,9 @@ void LicenseStartDlg::CreateControls() {
 
 	const Theme &theme = wxGetApp().GetTheme();
 
-	auto_ptr<wxBoxSizer> contentBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> contentBox(new wxBoxSizer(wxHORIZONTAL));
 
-	auto_ptr<wxBoxSizer> subBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> subBox(new wxBoxSizer(wxVERTICAL));
 	subBox->AddSpacer(theme.GetDlgBorder() * 2);
 	subBox->Add(
 		new wxStaticText(
@@ -113,7 +111,7 @@ void LicenseStartDlg::CreateControls() {
 	contentBox->Add(subBox.get(), wxSizerFlags(0).Expand().Right());
 	subBox.release();
 
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 	topBox->Add(contentBox.get(), theme.GetTopSizerFlags().Proportion(1));
 	contentBox.release();
 	topBox->AddSpacer(theme.GetDlgBottomBorder());

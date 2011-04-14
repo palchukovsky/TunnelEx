@@ -16,8 +16,6 @@
 
 #include "Singleton.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Singletons;
 
@@ -76,10 +74,16 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-class TunnelEx::Singletons::MultiThreadingModel<T>::Lock : noncopyable {
+class TunnelEx::Singletons::MultiThreadingModel<T>::Lock : private boost::noncopyable {
 public:
-	Lock() : m_lock(m_mutex) {};
-	~Lock() {}
+	Lock()
+			: m_lock(m_mutex) {
+		//...//
+	};
+	~Lock() {
+		//...//
+	}
+
 private:
 	static ACE_Thread_Mutex m_mutex;
 	ACE_Guard<ACE_Thread_Mutex> m_lock;
@@ -115,7 +119,9 @@ void Holder<T, LifetimePolicy, ThreadingModel>::MakeInstance() {
 		}
 		InstancePtr instancePtr = static_cast<T *>(malloc(sizeof T));
 		if (!instancePtr) {
-			throw bad_alloc("New singleton object creation is failed, as insufficient memory available for it.");
+			throw std::bad_alloc(
+				"New singleton object creation is failed"
+				" (insufficient memory available)");
 		}
 		try {
 			new(instancePtr)T;

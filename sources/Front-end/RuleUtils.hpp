@@ -53,7 +53,7 @@ struct RuleUtils {
 		if (ctrl.GetCount() < 1) {
 			return;
 		}
-		// UPnP last in the list
+		// UPnP last in the std::list
 		ctrl.SetSelection(ctrl.GetCount() - 1);
 	}
 
@@ -96,21 +96,21 @@ struct RuleUtils {
 	template<class T>
 	static void GetSerialFlowControlValsMap(T &result) {
 		T tmp;
-		tmp.insert(make_pair(L"none", SerialEndpointAddress::FC_NONE));
-		tmp.insert(make_pair(L"XON/XOFF", SerialEndpointAddress::FC_XON_XOFF));
-		tmp.insert(make_pair(L"RTS/CTS", SerialEndpointAddress::FC_RTS_CTS));
-		tmp.insert(make_pair(L"DSR/DTR", SerialEndpointAddress::FC_DSR_DTR));
+		tmp.insert(std::make_pair(L"none", SerialEndpointAddress::FC_NONE));
+		tmp.insert(std::make_pair(L"XON/XOFF", SerialEndpointAddress::FC_XON_XOFF));
+		tmp.insert(std::make_pair(L"RTS/CTS", SerialEndpointAddress::FC_RTS_CTS));
+		tmp.insert(std::make_pair(L"DSR/DTR", SerialEndpointAddress::FC_DSR_DTR));
 		tmp.swap(result);
 	}
 
 	template<class T>
 	static void GetSerialParityValsMap(T &result) {
 		T tmp;
-		tmp.insert(make_pair(L"none", SerialEndpointAddress::P_NONE));
-		tmp.insert(make_pair(L"odd", SerialEndpointAddress::P_ODD));
-		tmp.insert(make_pair(L"even", SerialEndpointAddress::P_EVEN));
-		tmp.insert(make_pair(L"mark", SerialEndpointAddress::P_MARK));
-		tmp.insert(make_pair(L"space", SerialEndpointAddress::P_SPACE));
+		tmp.insert(std::make_pair(L"none", SerialEndpointAddress::P_NONE));
+		tmp.insert(std::make_pair(L"odd", SerialEndpointAddress::P_ODD));
+		tmp.insert(std::make_pair(L"even", SerialEndpointAddress::P_EVEN));
+		tmp.insert(std::make_pair(L"mark", SerialEndpointAddress::P_MARK));
+		tmp.insert(std::make_pair(L"space", SerialEndpointAddress::P_SPACE));
 		tmp.swap(result);
 	}
 

@@ -13,7 +13,7 @@ set InitialDir=%CD%
 set TempDir=%OutputDir%\temp
 set BuilderDir=%SolutionDir%\builder
 
-set OpenSslVersion=1.0.0c
+set OpenSslVersion=1.0.0d
 set OpenSslDir=%ExternalsDir%\openssl
 
 set IsDebug=false
@@ -24,6 +24,8 @@ set BuildWhat=none
 set IsHelpMode=false
 set IsNoClean=false
 set IsNoBuild=false
+
+set MpcProjectOutTypeName=null
 
 :GetKey
 if "%1"=="" goto GetKeyEnd
@@ -67,10 +69,6 @@ if "%1"=="ace" (
 )
 if "%1"=="wxwidgets" (
 	set BuildWhat=wxWidgets
-	goto GetNextKey
-)
-if "%1"=="boost" (
-	set BuildWhat=Boost
 	goto GetNextKey
 )
 if "%1"=="libxml" (
@@ -148,6 +146,20 @@ if "%BuildWhat%"=="none" (
 	goto Help
 )
 
+
+if "%VSINSTALLDIR%"=="C:\Program Files\Microsoft Visual Studio 8" (
+	set MpcProjectOutTypeName=vc8
+	echo Using Microsoft Visual Studio 8 for building...
+)
+if "%VSINSTALLDIR%"=="C:\Program Files\Microsoft Visual Studio 10.0\" (
+	set MpcProjectOutTypeName=vc10
+	echo Using Microsoft Visual Studio 10.0 for building...
+)
+if "%MpcProjectOutTypeName%"=="null" (
+	echo Failed to get Microsoft Visual Studio version.
+	goto Help
+)
+
 echo Solution dir is "%SolutionDir%".
 goto Finish
 
@@ -167,7 +179,7 @@ echo     conf           - configuration type
 echo                      values: "release", "debug" or "full"
 echo                      ex.: conf=release
 echo     build          - specify what component should be build
-echo                      values: "all", "openssl", "ace", "wxwidgets", "boost", "libxml", "gsoap" or "miniupnp"
+echo                      values: "all", "openssl", "ace", "wxwidgets", "libxml", "gsoap" or "miniupnp"
 echo                      ex.: build=all
 echo     full           - build all components for all configuraions
 echo     create_project - projects generation mode

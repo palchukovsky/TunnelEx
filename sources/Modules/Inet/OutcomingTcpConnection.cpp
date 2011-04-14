@@ -12,8 +12,6 @@
 #include "Prec.h"
 #include "OutcomingTcpConnection.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Inet;
 
@@ -32,7 +30,7 @@ OutcomingTcpConnection::~OutcomingTcpConnection() {
 void OutcomingTcpConnection::OpenConnection(
 				const ACE_INET_Addr &address,
 				const RuleEndpoint &ruleEndpoint) {
-	auto_ptr<Stream> stream(new Stream);
+	std::auto_ptr<Stream> stream(new Stream);
 	ACE_SOCK_Connector connector;
 	const ACE_Time_Value timeout(ruleEndpoint.GetOpenTimeout());
 	if (0 != connector.connect(*stream, address, &timeout, ACE_Addr::sap_any, 1)) {

@@ -20,15 +20,9 @@
 #include <Aclapi.h>
 #include <string> */
 
-#ifdef TUNNELEX_CORE
-#	include "Core/Error.hpp"
-#	include "Core/Log.hpp"
-#	include "Core/String.hpp"
-#else // #ifdef TUNNELEX_CORE
-#	include <TunnelEx/Error.hpp>
-#	include <TunnelEx/Log.hpp>
-#	include <TunnelEx/String.hpp>
-#endif // #ifdef TUNNELEX_CORE
+#include "Core/Error.hpp"
+#include "Core/Log.hpp"
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Helpers {
 

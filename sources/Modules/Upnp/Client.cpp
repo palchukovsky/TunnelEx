@@ -14,10 +14,8 @@
 #include "Client.hpp"
 #include "ClientLib.hpp"
 
-#include <TunnelEx/Log.hpp>
+#include "Core/Log.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Upnp;
 
@@ -75,19 +73,19 @@ UniquePtr<LocalException> Client::DeviceNotExistException::Clone() const {
 
 //////////////////////////////////////////////////////////////////////////
 
-class Client::Implementation : private noncopyable {
+class Client::Implementation : private boost::noncopyable {
 
 public:
 
 	struct Port {
-		string externalPort;
-		string internalHost;
-		string internalPort;
+		std::string externalPort;
+		std::string internalHost;
+		std::string internalPort;
 		Proto proto;
-		string description;
+		std::string description;
 		bool isMyDescription;
 	};
-	typedef list<Port> Ports;
+	typedef std::list<Port> Ports;
 
 	struct PortsCache {
 
@@ -115,10 +113,10 @@ public:
 public:
 
 	ClientLib m_lib;
-	shared_ptr<UPNPDev> m_devList;
+	boost::shared_ptr<UPNPDev> m_devList;
 	ClientLib::Urls m_urls;
 	IGDdatas m_data;
-	string m_lanAddr;
+	std::string m_lanAddr;
 
 private:
 
@@ -129,7 +127,7 @@ private:
 		Ports ports;
 		for (size_t i = 0; ; ++i) {
 			Ports::value_type port;
-			string proto;
+			std::string proto;
 			const bool isFound = m_lib.GetGenericPortMappingEntry(
 				m_urls,
 				m_data,
@@ -143,7 +141,7 @@ private:
 				break;
 			}
 			port.proto = StrToProto(proto);
-			port.isMyDescription = starts_with(port.description, TUNNELEX_NAME " ");
+			port.isMyDescription = boost::starts_with(port.description, TUNNELEX_NAME " ");
 			ports.push_back(port);
 		}
 		
@@ -155,19 +153,18 @@ private:
 
 	bool CheckMapping(
 				const Ports &ports,
-				const string &externalPort,
-				const string &internalHost,
-				const string &internalPort,
+				const std::string &externalPort,
+				const std::string &internalHost,
+				const std::string &internalPort,
 				Proto proto,
-				const string &id)
-			const
-			throw(TunnelEx::LocalException) {
+				const std::string &id)
+			const {
 		foreach (const Ports::value_type &port, ports) {
-			if (iequals(port.externalPort, externalPort) && port.proto == proto) {
+			if (boost::iequals(port.externalPort, externalPort) && port.proto == proto) {
 				return port.isMyDescription
-					&& iequals(port.internalHost, internalHost)
-					&& iequals(port.internalPort, internalPort)
-					&& iends_with(port.description, string(":") + id);
+					&& boost::iequals(port.internalHost, internalHost)
+					&& boost::iequals(port.internalPort, internalPort)
+					&& boost::iends_with(port.description, std::string(":") + id);
 			}
 		}
 		return false;
@@ -180,10 +177,10 @@ public:
 		return proto == PROTO_TCP ? "TCP" : "UDP";
 	}
 
-	Proto StrToProto(const string &str) const throw(TunnelEx::LocalException) {
-		if (iequals(str, "tcp")) {
+	Proto StrToProto(const std::string &str) const {
+		if (boost::iequals(str, "tcp")) {
 			return PROTO_TCP;
-		} else if (iequals(str, "udp")) {
+		} else if (boost::iequals(str, "udp")) {
 			return PROTO_UDP;
 		} else {
 			throw LocalException(L"UPnP client: could not resolve protocol");
@@ -200,13 +197,12 @@ public:
 	}
 
 	bool CheckMapping(
-				const string &externalPort,
-				const string &internalHost,
-				const string &internalPort,
+				const std::string &externalPort,
+				const std::string &internalHost,
+				const std::string &internalPort,
 				Proto proto,
-				const string &id)
-			const
-			throw(TunnelEx::LocalException) {
+				const std::string &id)
+			const {
 
 		bool result = false;
 		bool isChecked = false;
@@ -273,7 +269,7 @@ Client::Client()
 	
 	m_pimpl->m_devList = m_pimpl->m_lib.Discover();
 	if (Log::GetInstance().IsDebugRegistrationOn()) {
-		ostringstream oss;
+		std::ostringstream oss;
 		oss << "Found UPnP devices: ";
 		size_t count = 1;
 		for (	UPNPDev *device = m_pimpl->m_devList.get();
@@ -326,12 +322,12 @@ Client::~Client() throw() {
 	delete m_pimpl;
 }
 
-const string & Client::GetLocalIpAddress() const {
+const std::string & Client::GetLocalIpAddress() const {
 	return m_pimpl->m_lanAddr;
 }
 
-string Client::GetExternalIpAddress() const {
-	const string result
+std::string Client::GetExternalIpAddress() const {
+	const std::string result
 		= m_pimpl->m_lib.GetExternalIPAddress(m_pimpl->m_urls, m_pimpl->m_data);
 	Log::GetInstance().AppendDebug(
 		"External address for UPnP device: %1%.",
@@ -344,11 +340,11 @@ const char * Client::ProtoToStr(Proto proto) const {
 }
 
 void Client::AddPortMapping(
-			const string &externalPort,
-			const string &internalHost,
-			const string &internalPort,
+			const std::string &externalPort,
+			const std::string &internalHost,
+			const std::string &internalPort,
 			Proto proto,
-			const string &id,
+			const std::string &id,
 			bool force) {
 
 	Implementation::PortsCache::WriteLock cacheLock(m_pimpl->GetPortsCache().mutex);
@@ -361,11 +357,11 @@ void Client::AddPortMapping(
 			ProtoToStr(proto));
 	} else {
 		for (size_t i = 0; ; ++i) {
-			string currExternalPort;
-			string currInternalHost;
-			string currInternalPort;
-			string currDescription;
-			string currProto;
+			std::string currExternalPort;
+			std::string currInternalHost;
+			std::string currInternalPort;
+			std::string currDescription;
+			std::string currProto;
 			const bool isFound = m_pimpl->m_lib.GetGenericPortMappingEntry(
 				m_pimpl->m_urls,
 				m_pimpl->m_data,
@@ -378,10 +374,10 @@ void Client::AddPortMapping(
 			if (!isFound) {
 				break;
 			}
-			if (iequals(currExternalPort, externalPort)) {
-				if (	iequals(currInternalHost, internalHost)
-						&& iequals(currInternalPort, internalPort)
-						&& iequals(currProto, ProtoToStr(proto))) {
+			if (boost::iequals(currExternalPort, externalPort)) {
+				if (	boost::iequals(currInternalHost, internalHost)
+						&& boost::iequals(currInternalPort, internalPort)
+						&& boost::iequals(currProto, ProtoToStr(proto))) {
 					Log::GetInstance().AppendDebug(
 						"Recreating UPnP port mapping: %1% to %2%:%3% (\"%4%\")...",
 						currExternalPort,
@@ -428,13 +424,12 @@ void Client::AddPortMapping(
 }
 
 bool Client::CheckMapping(
-			const string &externalPort,
-			const string &internalHost,
-			const string &internalPort,
+			const std::string &externalPort,
+			const std::string &internalHost,
+			const std::string &internalPort,
 			Proto proto,
-			const string &id)
-		const
-		throw(TunnelEx::LocalException) {
+			const std::string &id)
+		const {
 	return m_pimpl->CheckMapping(
 		externalPort,
 		internalHost,
@@ -446,13 +441,13 @@ bool Client::CheckMapping(
 bool Client::DeletePortMapping(const std::string &id) throw() {
 	try {
 		Implementation::PortsCache::WriteLock cacheLock(m_pimpl->GetPortsCache().mutex);
-		const string idSearch = ":" + id;
+		const std::string idSearch = ":" + id;
 		for (size_t i = 0; ; ++i) {
-			string currExternalPort;
-			string currInternalHost;
-			string currInternalPort;
-			string currDescription;
-			string currProto;
+			std::string currExternalPort;
+			std::string currInternalHost;
+			std::string currInternalPort;
+			std::string currDescription;
+			std::string currProto;
 			const bool isFound = m_pimpl->m_lib.GetGenericPortMappingEntry(
 				m_pimpl->m_urls,
 				m_pimpl->m_data,
@@ -468,8 +463,8 @@ bool Client::DeletePortMapping(const std::string &id) throw() {
 					id);
 				return false;
 			} else if (
-					starts_with(currDescription, TUNNELEX_NAME " ")
-					&& iends_with(currDescription, idSearch)) {
+					boost::starts_with(currDescription, TUNNELEX_NAME " ")
+					&& boost::iends_with(currDescription, idSearch)) {
 				const bool result = m_pimpl->m_lib.DeletePortMapping(
 					m_pimpl->m_urls,
 					m_pimpl->m_data,

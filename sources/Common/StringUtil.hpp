@@ -196,11 +196,10 @@ namespace TunnelEx { namespace Helpers {
 		}
 
 		static bool IsUuid(const std::wstring &str) {
-			using namespace boost;
-			const wregex exp(
+			const boost::wregex exp(
 				L"[\\dA-F]{8,8}-[\\dA-F]{4,4}-[\\dA-F]{4,4}-[\\dA-F]{4,4}-[\\dA-F]{12,12}",
-				regex_constants::normal | regex_constants::icase);
-			return regex_match(str, exp);
+				boost::regex_constants::normal | boost::regex_constants::icase);
+			return boost::regex_match(str, exp);
 		}
 
 	};

@@ -24,8 +24,6 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using Mods::Inet::InetEndpointAddress;
 using Mods::Serial::SerialEndpointAddress;
@@ -61,7 +59,7 @@ TunnelRuleDlg::TunnelRuleDlg(
 		m_isLicenseValid(true),
 		m_isFtpTunnel(isFtpTunnel),
 		m_isUpnpDevRequested(false) {
-	SetRule(auto_ptr<Rule>(new TunnelRule));
+	SetRule(std::auto_ptr<Rule>(new TunnelRule));
 	CheckLicense();
 }
 
@@ -109,17 +107,17 @@ void TunnelRuleDlg::OnEditDestination(wxCommandEvent &) {
 
 void TunnelRuleDlg::OnInputSelectionChange(wxCommandEvent &event) {
 	wxArrayInt selections;
-	polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_INPUTS))
+	boost::polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_INPUTS))
 		->GetSelections(selections);
 	EnableInputEndpointListButtons(event.IsSelection(), selections.size() == 1);
 }
 
 void TunnelRuleDlg::OnDestinationSelectionChange(wxCommandEvent &event) {
 	wxArrayInt selections;
-	polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_DESTINATIONS))
+	boost::polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_DESTINATIONS))
 		->GetSelections(selections);
 	const unsigned int allCount
-		= polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_DESTINATIONS))
+		= boost::polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_DESTINATIONS))
 			->GetCount();
 	EnableDestinationEndpointListButtons(
 		event.IsSelection(),
@@ -139,10 +137,10 @@ void TunnelRuleDlg::OnRemoveSelectedInputs(wxCommandEvent &) {
 	RemoveSelectedEndpoints(
 		CONTROL_ID_INPUTS,
 		GetRule().GetInputs(),
-		bind(&TunnelRule::SetInputs, &GetRule(), _1),
+		boost::bind(&TunnelRule::SetInputs, &GetRule(), _1),
 		wxT("Do you realy want to remove selected input endpoints?"));
 	wxArrayInt selections;
-	polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_INPUTS))
+	boost::polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_INPUTS))
 		->GetSelections(selections);
 	EnableInputEndpointListButtons(selections.size() > 0, selections.size() == 1);
 }
@@ -151,13 +149,13 @@ void TunnelRuleDlg::OnRemoveSelectedDestinations(wxCommandEvent &) {
 	RemoveSelectedEndpoints(
 		CONTROL_ID_DESTINATIONS,
 		GetRule().GetDestinations(),
-		bind(&TunnelRule::SetDestinations, &GetRule(), _1),
+		boost::bind(&TunnelRule::SetDestinations, &GetRule(), _1),
 		wxT("Do you realy want to remove selected destination endpoints?"));
 	wxArrayInt selections;
-	polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_INPUTS))
+	boost::polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_INPUTS))
 		->GetSelections(selections);
 	const unsigned int allCount
-		= polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_DESTINATIONS))
+		= boost::polymorphic_downcast<wxListBox *>(FindWindow(CONTROL_ID_DESTINATIONS))
 			->GetCount();
 	EnableDestinationEndpointListButtons(
 		selections.size() > 0,
@@ -170,7 +168,7 @@ void TunnelRuleDlg::OnMoveSelectedDestinationsUp(wxCommandEvent &) {
 		CONTROL_ID_DESTINATIONS,
 		true,
 		GetRule().GetDestinations(),
-		bind(&TunnelRule::SetDestinations, &GetRule(), _1));
+		boost::bind(&TunnelRule::SetDestinations, &GetRule(), _1));
 }
 
 void TunnelRuleDlg::OnMoveSelectedDestinationsDown(wxCommandEvent &) {
@@ -178,7 +176,7 @@ void TunnelRuleDlg::OnMoveSelectedDestinationsDown(wxCommandEvent &) {
 		CONTROL_ID_DESTINATIONS,
 		false,
 		GetRule().GetDestinations(),
-		bind(&TunnelRule::SetDestinations, &GetRule(), _1));
+		boost::bind(&TunnelRule::SetDestinations, &GetRule(), _1));
 }
 
 
@@ -186,7 +184,7 @@ bool TunnelRuleDlg::IsLicenseValid() const {
 	return m_isLicenseValid;
 }
 
-auto_ptr<wxSizer> TunnelRuleDlg::CreateControlAdditionalOptions() {
+std::auto_ptr<wxSizer> TunnelRuleDlg::CreateControlAdditionalOptions() {
 	wxCheckBox &ctrl = *new wxCheckBox(
 		this,
 		CONTROL_ID_SORT_DESTINATIONS_BY_PING,
@@ -199,17 +197,17 @@ auto_ptr<wxSizer> TunnelRuleDlg::CreateControlAdditionalOptions() {
 	ctrl.SetToolTip(
 		wxT("Periodically ping endpoints from the destination list ")
 			wxT("and move items with the less round trip time to the top."));
-	auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
 	result->Add(&ctrl, wxSizerFlags(0).Center());
 	return result;
 }
 
-auto_ptr<wxSizer> TunnelRuleDlg::CreateControlRuleInfo() {
+std::auto_ptr<wxSizer> TunnelRuleDlg::CreateControlRuleInfo() {
 	if (!m_isFtpTunnel) {
-		return auto_ptr<wxSizer>();
+		return std::auto_ptr<wxSizer>();
 	}
 	const wxSizerFlags flags = wxSizerFlags(0).Center();
-	auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
 	result->Add(
 		new wxStaticText(
 			this,
@@ -296,7 +294,7 @@ wxControl & TunnelRuleDlg::CreateControlEnpointList(
 
 }
 
-auto_ptr<wxSizer> TunnelRuleDlg::CreateControlContent() {
+std::auto_ptr<wxSizer> TunnelRuleDlg::CreateControlContent() {
 
 	const Theme &theme = wxGetApp().GetTheme();
 
@@ -318,7 +316,7 @@ auto_ptr<wxSizer> TunnelRuleDlg::CreateControlContent() {
 
 	// input list:
 	
-	auto_ptr<wxBoxSizer> listBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> listBox(new wxBoxSizer(wxHORIZONTAL));
 	listBox->Add(
 		&CreateControlEnpointList(
 			CONTROL_ID_INPUTS,
@@ -326,7 +324,7 @@ auto_ptr<wxSizer> TunnelRuleDlg::CreateControlContent() {
 			wxT("Please, provide one or more input endpoints.")),
 		wxSizerFlags(1).Expand());
 	
-	auto_ptr<wxBoxSizer> listButtonsBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> listButtonsBox(new wxBoxSizer(wxVERTICAL));
 	
 	wxBitmapButton *button = new wxBitmapButton(
 		this,
@@ -473,7 +471,7 @@ auto_ptr<wxSizer> TunnelRuleDlg::CreateControlContent() {
 	destGroup.Add(listBox.get(), theme.GetStaticBoxFlags());
 	listBox.release();
 
-	auto_ptr<wxSizer> topBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxSizer> topBox(new wxBoxSizer(wxHORIZONTAL));
 	topBox->Add(&inputGroup, wxSizerFlags(1).Expand());
 	topBox->AddSpacer(theme.GetDlgBorder());
 	topBox->Add(&destGroup, wxSizerFlags(1).Expand());
@@ -511,7 +509,7 @@ wxString TunnelRuleDlg::ConvertEndpointToStrings(
 		if (ep.CheckCombinedAddressType<InetEndpointAddress>()) {
 			result
 				= ep.GetCombinedTypedAddress<InetEndpointAddress>()
-					.GetHumanReadable(bind(&TunnelRuleDlg::SearchNetworkAdapter, this, _1));
+					.GetHumanReadable(boost::bind(&TunnelRuleDlg::SearchNetworkAdapter, this, _1));
 		} else if (ep.CheckCombinedAddressType<SerialEndpointAddress>()) {
 			result
 				= ep.GetCombinedTypedAddress<SerialEndpointAddress>()
@@ -527,7 +525,7 @@ wxString TunnelRuleDlg::ConvertEndpointToStrings(
 		const wxString writeResourceIdentifier
 			= ep.CheckWriteAddressType<InetEndpointAddress>()
 				?	ep.GetWriteTypedAddress<InetEndpointAddress>()
-						.GetHumanReadable(bind(&TunnelRuleDlg::SearchNetworkAdapter, this, _1))
+						.GetHumanReadable(boost::bind(&TunnelRuleDlg::SearchNetworkAdapter, this, _1))
 				:	ep.CheckWriteAddressType<SerialEndpointAddress>()
 					?	ep.GetWriteTypedAddress<SerialEndpointAddress>()
 							.GetHumanReadable()
@@ -538,7 +536,7 @@ wxString TunnelRuleDlg::ConvertEndpointToStrings(
 		const wxString readResourceIdentifier
 			= ep.CheckReadAddressType<InetEndpointAddress>()
 				?	ep.GetReadTypedAddress<InetEndpointAddress>()
-						.GetHumanReadable(bind(&TunnelRuleDlg::SearchNetworkAdapter, this, _1))
+						.GetHumanReadable(boost::bind(&TunnelRuleDlg::SearchNetworkAdapter, this, _1))
 				:	ep.CheckReadAddressType<SerialEndpointAddress>()
 					?	ep.GetReadTypedAddress<SerialEndpointAddress>()
 							.GetHumanReadable()
@@ -564,7 +562,7 @@ wxString TunnelRuleDlg::ConvertEndpointToStrings(
 bool TunnelRuleDlg::Save(Rule &newAbstractRule) const {
 
 	bool hasChanges = false;
-	TunnelRule &newRule = *polymorphic_downcast<TunnelRule *>(&newAbstractRule);
+	TunnelRule &newRule = *boost::polymorphic_downcast<TunnelRule *>(&newAbstractRule);
 
 	if (m_isFtpTunnel != RuleUtils::IsFtpTunnelIsOnInRule(newRule)) {
 		RuleUtils::SaveFtpInRule(m_isFtpTunnel, newRule);
@@ -572,7 +570,7 @@ bool TunnelRuleDlg::Save(Rule &newAbstractRule) const {
 	}
 
 	wxCheckBox &sortDestinationsByPingCtrl
-		= *polymorphic_downcast<wxCheckBox *>(FindWindow(CONTROL_ID_SORT_DESTINATIONS_BY_PING));
+		= *boost::polymorphic_downcast<wxCheckBox *>(FindWindow(CONTROL_ID_SORT_DESTINATIONS_BY_PING));
 	if (sortDestinationsByPingCtrl.GetValue() != RuleUtils::IsSortDestinationsByPingIsOnInRule(GetRule())) {
 		TunnelRule::Filters& ruleFilters = newRule.GetFilters();
 		if (sortDestinationsByPingCtrl.GetValue()) {
@@ -621,15 +619,15 @@ void TunnelRuleDlg::EditSelectedDestination() {
 }
 
 
-wstring TunnelRuleDlg::SearchNetworkAdapter(const wstring &wId) const {
+std::wstring TunnelRuleDlg::SearchNetworkAdapter(const std::wstring &wId) const {
 	if (wId == L"all") {
 		return L"*";
 	} else if (wId == L"loopback") {
 		return L"127.0.0.1";
 	}
-	const string id = wxString(wId).ToAscii();
-	wstring result;
-	list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
+	const std::string id = wxString(wId).ToAscii();
+	std::wstring result;
+	std::list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
 	GetService().GetNetworkAdapters(false, serviceNetworkAdapters);
 	foreach (const texs__NetworkAdapterInfo &info, serviceNetworkAdapters) {
 		if (info.id == id) {
@@ -649,7 +647,7 @@ void  TunnelRuleDlg::AddEndpoint(
 	const bool isInput = ctrlId == CONTROL_ID_INPUTS;
 	EndpointDlg endpointDlg(GetServiceWindow(), this, isInput, m_isFtpTunnel);
 	if (endpointDlg.ShowModal() == wxID_OK) {
-		wxListBox &ctrl = *polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
+		wxListBox &ctrl = *boost::polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
 		ctrl.Insert(
 			ConvertEndpointToStrings(endpointDlg.GetEndpoint(), isInput),
 			ctrl.GetCount());
@@ -662,7 +660,7 @@ void TunnelRuleDlg::EditSelectedEndpoint(
 			const wxWindowID ctrlId,
 			RuleEndpointCollection &originalEndpoints) {
 
-	wxListBox &ctrl = *polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
+	wxListBox &ctrl = *boost::polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
 
 	wxArrayInt selections;
 	ctrl.GetSelections(selections);
@@ -690,7 +688,7 @@ void TunnelRuleDlg::EditSelectedEndpoint(
 void TunnelRuleDlg::RemoveSelectedEndpoints(
 			const wxWindowID ctrlId,
 			const RuleEndpointCollection &originalEndpoints,
-			function<void(const RuleEndpointCollection &)> saver,
+			boost::function<void(const RuleEndpointCollection &)> saver,
 			const wxChar *confirmationText) {
 	const int answer = wxMessageBox(
 		confirmationText,
@@ -700,7 +698,7 @@ void TunnelRuleDlg::RemoveSelectedEndpoints(
 	if (answer != wxYES) {
 		return;
 	}		
-	wxListBox &ctrl = *polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
+	wxListBox &ctrl = *boost::polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
 	wxArrayInt selections;
 	ctrl.GetSelections(selections);
 	BOOST_ASSERT(selections.GetCount() > 0);
@@ -722,14 +720,14 @@ void TunnelRuleDlg::MoveSelectedEndpoints(
 			const wxWindowID ctrlId,
 			bool up,
 			const RuleEndpointCollection &originalEndpoints,
-			function<void(const RuleEndpointCollection &)> saver) {
+			boost::function<void(const RuleEndpointCollection &)> saver) {
 
-	wxListBox &ctrl = *polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
+	wxListBox &ctrl = *boost::polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
 	wxArrayInt selections;
 	ctrl.GetSelections(selections);
 	const long long endpointsNumb = originalEndpoints.GetSize();
 
-	typedef map<unsigned int, unsigned int> ChangesMap;
+	typedef std::map<unsigned int, unsigned int> ChangesMap;
 	ChangesMap selectedIndexes;
 	for (size_t i = 0; i < selections.GetCount(); ++i) {
 		if (	(up && selections.Item(i) <= 0)
@@ -737,7 +735,7 @@ void TunnelRuleDlg::MoveSelectedEndpoints(
 			return;
 		}
 		selectedIndexes.insert(
-			make_pair(
+			std::make_pair(
 			up ? selections.Item(i) - 1 : selections.Item(i) + 1,
 			selections.Item(i)));
 	}
@@ -774,7 +772,7 @@ void TunnelRuleDlg::MoveSelectedEndpoints(
 
 }
 
-wstring TunnelRuleDlg::GetExternalIpAddress() const {
+std::wstring TunnelRuleDlg::GetExternalIpAddress() const {
 	if (!m_isUpnpDevRequested || !GetService().GetCachedUpnpDeviceExternalIp()) {
 		wxString local;
 		wxString external;

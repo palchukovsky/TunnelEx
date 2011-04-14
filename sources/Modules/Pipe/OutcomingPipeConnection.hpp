@@ -16,10 +16,10 @@
 #include "PipeConnection.hpp"
 #include "PipeEndpointAddress.hpp"
 
-#include <TunnelEx/Endpoint.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Endpoint.hpp"
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Error.hpp"
 
 
 namespace TunnelEx { namespace Mods { namespace Pipe {
@@ -28,30 +28,31 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 
 	public:
 
+		/** @throw ConnectionOpeningException
+		  */
 		explicit OutcomingPipeConnection(
 					const PipeEndpointAddress &address,
 					const RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
-				throw(ConnectionOpeningException)
 				: PipeConnection(
 					ruleEndpoint,
 					ruleEndpointAddress,
 					OpenConnection(address, ruleEndpoint)) {
-			LogTracking("OutcomingPipeConnection", "OutcomingPipeConnection", __FILE__, __LINE__);
+			//...//
 		}
 
 		~OutcomingPipeConnection() {
-			LogTracking("OutcomingPipeConnection", "~OutcomingPipeConnection", __FILE__, __LINE__);
+			//...//
 		}
 
 	private:
 
+		/** @throw ConnectionOpeningException
+		  */
 		std::auto_ptr<ACE_SPIPE_Stream> OpenConnection(
 					const PipeEndpointAddress &address,
 					const TunnelEx::RuleEndpoint &ruleEndpoint)
-				const
-				throw(ConnectionOpeningException) {
-			LogTracking("OutcomingPipeConnection", "OpenConnection", __FILE__, __LINE__);
+				const {
 			std::auto_ptr<ACE_SPIPE_Stream> stream(new ACE_SPIPE_Stream);
 			ACE_SPIPE_Connector connector;
 			ACE_Time_Value timeout(ruleEndpoint.GetOpenTimeout());
@@ -60,7 +61,6 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 				O_RDWR | FILE_FLAG_OVERLAPPED);
 			if (connectResult != 0) {
 				const Error error(errno);
-				LogTracking("OutcomingPipeConnection", "OpenConnection", __FILE__, __LINE__);
 				WFormat message(L"Could not open pipe: \"%1% (%2%)\".");
 				message % error.GetString().GetCStr() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());

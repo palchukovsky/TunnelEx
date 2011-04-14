@@ -12,8 +12,8 @@
 #ifndef INCLUDED_FILE__TUNNELEX__PipeEndpointAddress_hpp__0811261434
 #define INCLUDED_FILE__TUNNELEX__PipeEndpointAddress_hpp__0811261434
 
-#include <TunnelEx/EndpointAddress.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/EndpointAddress.hpp"
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Pipe {
 

@@ -92,7 +92,7 @@ namespace TunnelEx {
 					try {
 						AppendDebug((TunnelEx::Format(str) % insert1).str());
 					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
+						AppendWarn((TunnelEx::Format("Format-error for the std::string \"%1%\".") % str).str());
 					}
 				}
 			}
@@ -103,7 +103,7 @@ namespace TunnelEx {
 					try {
 						AppendDebug((TunnelEx::Format(str) % insert1 % insert2).str());
 					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
+						AppendWarn((TunnelEx::Format("Format-error for the std::string \"%1%\".") % str).str());
 					}
 				}
 			}
@@ -119,7 +119,7 @@ namespace TunnelEx {
 					try {
 						AppendDebug((TunnelEx::Format(str) % insert1 % insert2 % insert3).str());
 					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
+						AppendWarn((TunnelEx::Format("Format-error for the std::string \"%1%\".") % str).str());
 					}
 				}
 			}
@@ -136,7 +136,7 @@ namespace TunnelEx {
 					try {
 						AppendDebug((TunnelEx::Format(str) % insert1 % insert2 % insert3 % insert4).str());
 					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
+						AppendWarn((TunnelEx::Format("Format-error for the std::string \"%1%\".") % str).str());
 					}
 				}
 			}
@@ -154,7 +154,7 @@ namespace TunnelEx {
 					try {
 						AppendDebug((TunnelEx::Format(str) % insert1 % insert2 % insert3 % insert4 % insert5).str());
 					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
+						AppendWarn((TunnelEx::Format("Format-error for the std::string \"%1%\".") % str).str());
 					}
 				}
 			}

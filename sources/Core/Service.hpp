@@ -24,10 +24,12 @@ namespace TunnelEx {
 
 	public:
 
+		/**
+		  * @throw TunnelEx::EndpointException
+		  */
 		explicit Service(::TunnelEx::SharedPtr<
 					const ::TunnelEx::ServiceRule> rule,
-					const ::TunnelEx::ServiceRule::Service &serviceInfo)
-				throw(TunnelEx::EndpointException);
+					const ::TunnelEx::ServiceRule::Service &serviceInfo);
 		virtual ~Service() throw();
 
 	public:
@@ -39,10 +41,16 @@ namespace TunnelEx {
 
 	public:
 
-		virtual void Start() throw(TunnelEx::EndpointException) = 0;
+		/**
+		  * @throw TunnelEx::EndpointException
+		  */
+		virtual void Start() = 0;
 		virtual void Stop() throw() = 0;
 		
-		virtual void DoWork() throw(TunnelEx::EndpointException) = 0;
+		/**
+		  * @throw TunnelEx::EndpointException
+		  */
+		virtual void DoWork() = 0;
 
 	protected:
 

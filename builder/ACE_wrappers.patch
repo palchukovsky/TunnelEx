@@ -1,34 +1,21 @@
-diff -crBN ACE_wrappers.Original/ace/ace.mwc ACE_wrappers.TunnelEx/ace/ace.mwc
-*** ACE_wrappers.Original/ace/ace.mwc	2008-07-26 13:35:20.000000000 +0700
---- ACE_wrappers.TunnelEx/ace/ace.mwc	2011-02-23 03:04:01.608368400 +0600
+diff -crBN ACE_wrappers/ace/ace.mwc ACE_wrappers.TunnelEx/ace/ace.mwc
+*** ACE_wrappers/ace/ace.mwc	2010-09-15 16:42:34.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/ace.mwc	2011-04-09 22:56:32.416815300 +0700
 ***************
-*** 4,18 ****
+*** 2,6 ****
+--- 2,8 ----
+  // $Id: ace.mwc 91777 2010-09-15 09:42:34Z johnnyw $
   
   workspace {
-    ace.mpc
-!   ace_for_tao.mpc
-!   ace_flreactor.mpc
-!   ace_foxreactor.mpc
-!   ace_qt3reactor.mpc
-!   ace_qt4reactor.mpc
-!   ace_tkreactor.mpc
-!   ace_xtreactor.mpc
-!   ETCL
-!   Monitor_Control
-!   QoS
-!   SSL
++   ace.mpc
++   SSL/ssl.mpc
   }
---- 4,8 ----
   
-  workspace {
-    ace.mpc
-!   SSL/ssl.mpc
-  }
-diff -crBN ACE_wrappers.Original/ace/config-win32-common.h ACE_wrappers.TunnelEx/ace/config-win32-common.h
-*** ACE_wrappers.Original/ace/config-win32-common.h	2010-01-15 16:21:50.000000000 +0600
---- ACE_wrappers.TunnelEx/ace/config-win32-common.h	2011-02-23 03:04:01.675372200 +0600
+diff -crBN ACE_wrappers/ace/config-win32-common.h ACE_wrappers.TunnelEx/ace/config-win32-common.h
+*** ACE_wrappers/ace/config-win32-common.h	2010-10-01 19:00:02.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/config-win32-common.h	2011-04-09 22:57:34.448363300 +0700
 ***************
-*** 650,656 ****
+*** 619,625 ****
   # endif /* !ACE_HAS_WINCE */
   
   #if !defined (WINVER)
@@ -36,7 +23,7 @@ diff -crBN ACE_wrappers.Original/ace/config-win32-common.h ACE_wrappers.TunnelEx
   #endif
   
   ///////////////////////////////////////
---- 650,656 ----
+--- 619,625 ----
   # endif /* !ACE_HAS_WINCE */
   
   #if !defined (WINVER)
@@ -44,9 +31,9 @@ diff -crBN ACE_wrappers.Original/ace/config-win32-common.h ACE_wrappers.TunnelEx
   #endif
   
   ///////////////////////////////////////
-diff -crBN ACE_wrappers.Original/ace/config.h ACE_wrappers.TunnelEx/ace/config.h
-*** ACE_wrappers.Original/ace/config.h	1970-01-01 06:00:00.000000000 +0600
---- ACE_wrappers.TunnelEx/ace/config.h	2011-02-23 03:04:01.697373500 +0600
+diff -crBN ACE_wrappers/ace/config.h ACE_wrappers.TunnelEx/ace/config.h
+*** ACE_wrappers/ace/config.h	1970-01-01 06:00:00.000000000 +0600
+--- ACE_wrappers.TunnelEx/ace/config.h	2011-04-09 22:17:18.898201800 +0700
 ***************
 *** 0 ****
 --- 1,18 ----
@@ -68,12 +55,12 @@ diff -crBN ACE_wrappers.Original/ace/config.h ACE_wrappers.TunnelEx/ace/config.h
 + #include <ace/config-win32.h>
 + 
 + #endif // INCLUDED_FILE__TUNNELEX__config_h__1005091822
-diff -crBN ACE_wrappers.Original/ace/WIN32_Asynch_IO.cpp ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp
-*** ACE_wrappers.Original/ace/WIN32_Asynch_IO.cpp	2010-03-11 15:35:26.000000000 +0600
---- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp	2011-02-23 03:05:47.402419400 +0600
+diff -crBN ACE_wrappers/ace/WIN32_Asynch_IO.cpp ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp
+*** ACE_wrappers/ace/WIN32_Asynch_IO.cpp	2010-08-16 20:03:34.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp	2011-04-09 22:59:14.185068000 +0700
 ***************
-*** 1717,1722 ****
---- 1717,1768 ----
+*** 1713,1718 ****
+--- 1713,1764 ----
     return return_val;
   }
   
@@ -126,9 +113,9 @@ diff -crBN ACE_wrappers.Original/ace/WIN32_Asynch_IO.cpp ACE_wrappers.TunnelEx/a
   int
   ACE_WIN32_Asynch_Write_File::writev (ACE_Message_Block &message_block,
                                        size_t bytes_to_write,
-diff -crBN ACE_wrappers.Original/ace/WIN32_Asynch_IO.h ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h
-*** ACE_wrappers.Original/ace/WIN32_Asynch_IO.h	2008-03-04 20:51:24.000000000 +0600
---- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h	2011-02-23 03:06:14.694980500 +0600
+diff -crBN ACE_wrappers/ace/WIN32_Asynch_IO.h ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h
+*** ACE_wrappers/ace/WIN32_Asynch_IO.h	2010-10-21 18:15:18.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h	2011-04-09 22:59:21.804503800 +0700
 ***************
 *** 960,965 ****
 --- 960,972 ----
@@ -145,9 +132,9 @@ diff -crBN ACE_wrappers.Original/ace/WIN32_Asynch_IO.h ACE_wrappers.TunnelEx/ace
   };
   
   /**
-diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/ace_output.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb
-*** ACE_wrappers.Original/bin/MakeProjectCreator/config/ace_output.mpb	2008-03-04 20:51:24.000000000 +0600
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb	2011-02-23 03:04:01.726375100 +0600
+diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/ace_output.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb
+*** ACE_wrappers/bin/MakeProjectCreator/config/ace_output.mpb	2008-03-04 20:51:24.000000000 +0600
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb	2011-04-09 22:59:55.878452700 +0700
 ***************
 *** 2,8 ****
   // $Id: ace_output.mpb 80826 2008-03-04 14:51:23Z wotte $
@@ -166,9 +153,9 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/ace_output.mpb AC
   
     specific(automake) {
       libout -= $(ACE_ROOT)/lib
-diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/acedefaults.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb
-*** ACE_wrappers.Original/bin/MakeProjectCreator/config/acedefaults.mpb	2010-06-23 10:24:28.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb	2011-02-23 03:04:01.747376300 +0600
+diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/acedefaults.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb
+*** ACE_wrappers/bin/MakeProjectCreator/config/acedefaults.mpb	2010-06-23 10:24:28.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb	2011-04-09 22:59:49.514088700 +0700
 ***************
 *** 4,10 ****
   project: ipv6, vc_warnings, build_files, test_files, svc_conf_files, ace_unicode {
@@ -186,9 +173,9 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/acedefaults.mpb A
   
     // Support the alternative Borland Make project type
     specific(bmake) {
-diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/default.rel ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel
-*** ACE_wrappers.Original/bin/MakeProjectCreator/config/default.rel	2008-03-04 20:51:24.000000000 +0600
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel	2011-02-23 03:04:01.773377800 +0600
+diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/default.rel ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel
+*** ACE_wrappers/bin/MakeProjectCreator/config/default.rel	2008-03-04 20:51:24.000000000 +0600
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel	2011-04-09 23:00:07.123095800 +0700
 ***************
 *** 4,8 ****
 --- 4,9 ----
@@ -198,9 +185,9 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/default.rel ACE_w
 + *Dir
   TAO_ROOT,  $ACE_ROOT/TAO
   CIAO_ROOT, $TAO_ROOT/CIAO
-diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features
-*** ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features	2010-06-23 17:30:54.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features	2011-02-23 03:04:01.808379800 +0600
+diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/global.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features
+*** ACE_wrappers/bin/MakeProjectCreator/config/global.features	2010-10-20 16:26:46.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features	2011-04-09 23:00:50.238561900 +0700
 ***************
 *** 18,31 ****
   // settings can be set here.
@@ -233,7 +220,7 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features A
   rapi          = 0
   repo          = 0
 ***************
-*** 86,92 ****
+*** 89,95 ****
   // 1 - Athena widgets libraries are available
   athena        = 0
   // 1 - X11 libraries are available
@@ -241,7 +228,7 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features A
   // 1 - X Toolkit libraries are available
   xt            = 0
   // 1 - Tk libraries are available
---- 86,92 ----
+--- 89,95 ----
   // 1 - Athena widgets libraries are available
   athena        = 0
   // 1 - X11 libraries are available
@@ -250,7 +237,7 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features A
   xt            = 0
   // 1 - Tk libraries are available
 ***************
-*** 101,131 ****
+*** 104,134 ****
   // 1 - Fox libraries are available
   fox           = 0
   // 1 - OpenGL libraries are available
@@ -282,7 +269,7 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features A
   
   //Use the ZIP_Wrapper feature for when using the ZIP wrapper classes
   ZIP_Wrapper = 0
---- 101,131 ----
+--- 104,134 ----
   // 1 - Fox libraries are available
   fox           = 0
   // 1 - OpenGL libraries are available
@@ -314,9 +301,27 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/global.features A
   
   //Use the ZIP_Wrapper feature for when using the ZIP wrapper classes
   ZIP_Wrapper = 0
-diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/vc8.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features
-*** ACE_wrappers.Original/bin/MakeProjectCreator/config/vc8.features	2009-09-17 01:45:38.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features	2011-02-23 03:04:01.833381200 +0600
+diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/vc10.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc10.features
+*** ACE_wrappers/bin/MakeProjectCreator/config/vc10.features	2009-09-17 01:45:38.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc10.features	2011-04-09 23:00:58.605040400 +0700
+***************
+*** 1,6 ****
+  // $Id: vc10.features 86721 2009-09-16 18:45:37Z johnnyw $
+  
+! ssl=0
+  qos=1
+  rwho=0
+  sctp=0
+--- 1,6 ----
+  // $Id: vc10.features 86721 2009-09-16 18:45:37Z johnnyw $
+  
+! ssl=1
+  qos=1
+  rwho=0
+  sctp=0
+diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/vc8.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features
+*** ACE_wrappers/bin/MakeProjectCreator/config/vc8.features	2009-09-17 01:45:38.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features	2011-04-09 23:01:08.647614800 +0700
 ***************
 *** 1,6 ****
   // $Id: vc8.features 86721 2009-09-16 18:45:37Z johnnyw $
@@ -332,9 +337,9 @@ diff -crBN ACE_wrappers.Original/bin/MakeProjectCreator/config/vc8.features ACE_
   qos=1
   rwho=0
   sctp=0
-diff -crBN ACE_wrappers.Original/MPC/config/default.rel ACE_wrappers.TunnelEx/MPC/config/default.rel
-*** ACE_wrappers.Original/MPC/config/default.rel	2009-09-03 19:57:26.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/config/default.rel	2011-02-23 03:04:01.854382400 +0600
+diff -crBN ACE_wrappers/MPC/config/default.rel ACE_wrappers.TunnelEx/MPC/config/default.rel
+*** ACE_wrappers/MPC/config/default.rel	2009-09-03 19:57:26.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/config/default.rel	2011-04-09 23:02:30.826315200 +0700
 ***************
 *** 4,6 ****
 --- 4,7 ----
@@ -343,9 +348,9 @@ diff -crBN ACE_wrappers.Original/MPC/config/default.rel ACE_wrappers.TunnelEx/MP
   *_ROOT
 + *Dir
 \ No newline at end of file
-diff -crBN ACE_wrappers.Original/MPC/config/openssl.mpb ACE_wrappers.TunnelEx/MPC/config/openssl.mpb
-*** ACE_wrappers.Original/MPC/config/openssl.mpb	2009-05-07 22:44:54.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/config/openssl.mpb	2011-02-23 03:04:01.878383800 +0600
+diff -crBN ACE_wrappers/MPC/config/openssl.mpb ACE_wrappers.TunnelEx/MPC/config/openssl.mpb
+*** ACE_wrappers/MPC/config/openssl.mpb	2009-05-07 22:44:54.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/config/openssl.mpb	2011-04-09 23:03:07.993441000 +0700
 ***************
 *** 6,18 ****
   // default. If we ever add a new ssl library, then you
@@ -387,9 +392,368 @@ diff -crBN ACE_wrappers.Original/MPC/config/openssl.mpb ACE_wrappers.TunnelEx/MP
 ! 
     }
   }
-diff -crBN ACE_wrappers.Original/MPC/templates/vc8dll.mpt ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt
-*** ACE_wrappers.Original/MPC/templates/vc8dll.mpt	2010-04-11 02:38:14.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt	2011-02-23 03:04:01.907385500 +0600
+diff -crBN ACE_wrappers/MPC/templates/vc10.mpd ACE_wrappers.TunnelEx/MPC/templates/vc10.mpd
+*** ACE_wrappers/MPC/templates/vc10.mpd	2010-11-02 00:36:40.000000000 +0600
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10.mpd	2011-04-10 01:34:58.670773500 +0700
+***************
+*** 305,311 ****
+  <%if(TreatSpecificWarningsAsErrors)%>
+        <TreatSpecificWarningsAsErrors><%TreatSpecificWarningsAsErrors%>;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
+  <%endif%>
+! <%if(WarnAsError)%>
+        <TreatWarningAsError>true</TreatWarningAsError>
+  <%endif%>
+  <%if(CompileAsManaged)%>
+--- 305,311 ----
+  <%if(TreatSpecificWarningsAsErrors)%>
+        <TreatSpecificWarningsAsErrors><%TreatSpecificWarningsAsErrors%>;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
+  <%endif%>
+! <%if(WarnAsError && compares(WarnAsError, true))%>
+        <TreatWarningAsError>true</TreatWarningAsError>
+  <%endif%>
+  <%if(CompileAsManaged)%>
+diff -crBN ACE_wrappers/MPC/templates/vc10dll.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10dll.mpt
+*** ACE_wrappers/MPC/templates/vc10dll.mpt	2010-08-18 05:03:32.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10dll.mpt	2011-04-10 00:59:48.808864800 +0700
+***************
+*** 4,32 ****
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Release
+  common_defines     = WIN32 _WINDOWS _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 2
+! MinimalRebuild     = false
+! GenerateDebugInformation = true
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+    optimize         = MaxSpeed
+!   defines          = NDEBUG
+    output_dir       = Release
+!   intermediate_dir = Release
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG
+!   output_dir       = .
+!   intermediate_dir = Debug
+!   lib_modifier     = d
+  }
+  
+  Memcheck Release {
+--- 4,51 ----
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Test Release
+  common_defines     = WIN32 _WINDOWS _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 2
+! 
+! ExceptionHandling  = Async
+! WarnAsError        = true
+! OptimizeForWindows98 = 1
+! warning_level      = 4
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+    optimize         = MaxSpeed
+!   defines          = NDEBUG;BOOST_DISABLE_ASSERTS
+    output_dir       = Release
+!   intermediate_dir = $(IntDir)\Release
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
++   MinimalRebuild   = false
++   GenerateDebugInformation = false
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Debug
+!   intermediate_dir = $(IntDir)\Debug
+!   lib_modifier     = _dbg
+!   LinkIncremental  = 2
+!   MinimalRebuild   = true
+! }
+! 
+! Test {
+!   optimize         = MaxSpeed
+!   defines          = TEST;NDEBUG;PROFILE;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Test
+!   intermediate_dir = $(IntDir)\Test
+!   lib_modifier     = _test
+!   EnableIntrinsicFunctions = true
+!   WholeProgramOptimization = true
+!   MinimalRebuild   = false
+!   GenerateDebugInformation = true
+  }
+  
+  Memcheck Release {
+diff -crBN ACE_wrappers/MPC/templates/vc10exe.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10exe.mpt
+*** ACE_wrappers/MPC/templates/vc10exe.mpt	2010-08-18 05:03:32.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10exe.mpt	2011-04-10 00:59:54.985218000 +0700
+***************
+*** 4,33 ****
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Release
+  common_defines     = WIN32 _CONSOLE _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 1
+  SubSystem          = Console
+! MinimalRebuild     = false
+! GenerateDebugInformation = true
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+-   LinkIncremental  = 1
+    optimize         = MaxSpeed
+!   defines          = NDEBUG
+    output_dir       = Release
+!   intermediate_dir = Release
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG
+!   intermediate_dir = Debug
+!   lib_modifier     = d
+  }
+  
+  Memcheck Release {
+--- 4,52 ----
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Test Release
+  common_defines     = WIN32 _CONSOLE _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 1
+  SubSystem          = Console
+! 
+! ExceptionHandling  = Async
+! WarnAsError        = true
+! OptimizeForWindows98 = 1
+! warning_level      = 4
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+    optimize         = MaxSpeed
+!   defines          = NDEBUG;BOOST_DISABLE_ASSERTS
+    output_dir       = Release
+!   intermediate_dir = $(IntDir)\Release
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
++   MinimalRebuild   = false
++   GenerateDebugInformation = false
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Debug
+!   intermediate_dir = $(IntDir)\Debug
+!   lib_modifier     = _dbg
+!   LinkIncremental  = 2
+!   MinimalRebuild   = true
+! }
+! 
+! Test {
+!   optimize         = MaxSpeed
+!   defines          = TEST;NDEBUG;PROFILE;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Test
+!   intermediate_dir = $(IntDir)\Test
+!   lib_modifier     = _test
+!   EnableIntrinsicFunctions = true
+!   WholeProgramOptimization = true
+!   MinimalRebuild   = false
+!   GenerateDebugInformation = true
+  }
+  
+  Memcheck Release {
+diff -crBN ACE_wrappers/MPC/templates/vc10lib.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10lib.mpt
+*** ACE_wrappers/MPC/templates/vc10lib.mpt	2010-08-18 05:03:32.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10lib.mpt	2011-04-10 00:59:33.619996000 +0700
+***************
+*** 4,33 ****
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Release
+  common_defines     = WIN32 _WINDOWS _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 4
+! MinimalRebuild     = false
+! GenerateDebugInformation = true
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+    optimize         = MaxSpeed
+!   defines          = NDEBUG
+!   output_dir       = Static_Release
+!   intermediate_dir = Static_Release
+!   lib_modifier     = s
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG
+!   output_dir       = Static_Debug
+!   intermediate_dir = Static_Debug
+!   lib_modifier     = sd
+  }
+  
+  Memcheck Release {
+--- 4,51 ----
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Test Release
+  common_defines     = WIN32 _WINDOWS _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 4
+! 
+! ExceptionHandling  = Async
+! WarnAsError        = true
+! OptimizeForWindows98 = 1
+! warning_level      = 4
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+    optimize         = MaxSpeed
+!   defines          = NDEBUG;BOOST_DISABLE_ASSERTS
+!   output_dir       = Release
+!   intermediate_dir = $(IntDir)\Release
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
++   MinimalRebuild   = false
++   GenerateDebugInformation = false
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Debug
+!   intermediate_dir = $(IntDir)\Debug
+!   lib_modifier     = _dbg
+!   LinkIncremental  = 2
+!   MinimalRebuild   = true
+! }
+! 
+! Test {
+!   optimize         = MaxSpeed
+!   defines          = TEST;NDEBUG;PROFILE;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Test
+!   intermediate_dir = $(IntDir)\Test
+!   lib_modifier     = _test
+!   EnableIntrinsicFunctions = true
+!   WholeProgramOptimization = true
+!   MinimalRebuild   = false
+!   GenerateDebugInformation = true
+  }
+  
+  Memcheck Release {
+diff -crBN ACE_wrappers/MPC/templates/vc10libexe.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10libexe.mpt
+*** ACE_wrappers/MPC/templates/vc10libexe.mpt	2010-08-18 05:03:32.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10libexe.mpt	2011-04-10 00:59:28.473701700 +0700
+***************
+*** 4,35 ****
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Release
+  common_defines     = WIN32 _CONSOLE _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 1
+  SubSystem          = Console
+! MinimalRebuild     = false
+! GenerateDebugInformation = true
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+-   LinkIncremental  = 1
+    optimize         = MaxSpeed
+!   defines          = NDEBUG
+!   output_dir       = Static_Release
+!   intermediate_dir = Static_Release
+!   lib_modifier     = s
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG
+!   output_dir       = Static_Debug
+!   intermediate_dir = Static_Debug
+!   lib_modifier     = sd
+  }
+  
+  Memcheck Release {
+--- 4,52 ----
+  conditional_include "common"
+  conditional_include "windowscommon"
+  
+! configurations     = Debug Test Release
+  common_defines     = WIN32 _CONSOLE _CRT_NONSTDC_NO_WARNINGS
+  ConfigurationType  = 1
+  SubSystem          = Console
+! 
+! ExceptionHandling  = Async
+! WarnAsError        = true
+! OptimizeForWindows98 = 1
+! warning_level      = 4
+  
+  conditional_include "vc10platforms"
+  
+  Release {
+    optimize         = MaxSpeed
+!   defines          = NDEBUG;BOOST_DISABLE_ASSERTS
+!   output_dir       = Release
+!   intermediate_dir = $(IntDir)\Release
+    EnableIntrinsicFunctions = true
+    WholeProgramOptimization = true
++   MinimalRebuild   = false
++   GenerateDebugInformation = false
+  }
+  
+  Debug {
+    debug_prj        = 1
+!   defines          = _DEBUG;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Debug
+!   intermediate_dir = $(IntDir)\Debug
+!   lib_modifier     = _dbg
+!   LinkIncremental  = 2
+!   MinimalRebuild   = true
+! }
+! 
+! Test {
+!   optimize         = MaxSpeed
+!   defines          = TEST;NDEBUG;PROFILE;BOOST_ENABLE_ASSERT_HANDLER
+!   output_dir       = Test
+!   intermediate_dir = $(IntDir)\Test
+!   lib_modifier     = _test
+!   EnableIntrinsicFunctions = true
+!   WholeProgramOptimization = true
+!   MinimalRebuild   = false
+!   GenerateDebugInformation = true
+  }
+  
+  Memcheck Release {
+diff -crBN ACE_wrappers/MPC/templates/vc8dll.mpt ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt
+*** ACE_wrappers/MPC/templates/vc8dll.mpt	2010-04-11 02:38:14.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt	2011-04-09 23:04:18.165454600 +0700
 ***************
 *** 4,32 ****
   conditional_include "common"

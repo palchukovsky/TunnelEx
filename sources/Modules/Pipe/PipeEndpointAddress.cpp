@@ -13,26 +13,23 @@
 #include "PipeEndpointAddress.hpp"
 #include "PipeConnectionAcceptor.hpp"
 #include "OutcomingPipeConnection.hpp"
-#include <TunnelEx/Server.hpp>
+#include "Core/Server.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::algorithm;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Pipe;
 
 PipeEndpointAddress::PipeEndpointAddress(const WString &pathIn) {
-	wstring path(pathIn.GetCStr());
+	std::wstring path(pathIn.GetCStr());
 	//! @todo: make one expression
 	if (
-			!regex_match(path, wregex(L"([ \\d\\W_A-Za-z]*/+)*[ \\d\\W_A-Za-z]+"))
-			|| find_first(path, L"\\")
-			|| regex_match(path, wregex(L"[/\\\\]+"))) {
+			!boost::regex_match(path, boost::wregex(L"([ \\d\\W_A-Za-z]*/+)*[ \\d\\W_A-Za-z]+"))
+			|| boost::find_first(path, L"\\")
+			|| boost::regex_match(path, boost::wregex(L"[/\\\\]+"))) {
 		throw InvalidLinkException(
 			(WFormat(L"Could not parse pipe resource identifier \"%1%\".")
 				% path).str().c_str());
 	}
-	replace_all(path, L"/", L"\\");
+	boost::replace_all(path, L"/", L"\\");
 	m_impl.set(path.c_str());
 }
 
@@ -40,8 +37,8 @@ const WString & PipeEndpointAddress::GetResourceIdentifier() const {
 	if (m_identifier.IsEmpty()) {
 		if (m_impl.get_path_name()[0] != 0) {
 			WString identifier = L"pipe://";
-			BOOST_ASSERT(starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\"));
-			identifier += starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\")
+			BOOST_ASSERT(boost::starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\"));
+			identifier += boost::starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\")
 				?	m_impl.get_path_name() + 9
 				:	m_impl.get_path_name();
 			const WString::SizeType length = identifier.GetLength();

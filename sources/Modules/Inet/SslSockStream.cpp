@@ -11,11 +11,10 @@
 
 #include "Prec.h"
 #include "SslSockStream.hpp"
-#include <TunnelEx/Error.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Log.hpp>
+#include "Core/Error.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Log.hpp"
 
-using namespace std;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Inet;
 using namespace TunnelEx::Helpers::Crypto;
@@ -131,7 +130,7 @@ int TunnelExModsInetSslBioPuts(BIO *bio, const char *str) {
 
 //////////////////////////////////////////////////////////////////////////
 
-wstring SslSockStream::Exception::GetLastError() {
+std::wstring SslSockStream::Exception::GetLastError() {
 	
 	const Error sysError(errno);
 	const OpenSslError openSslError(OpenSslError::GetLast(true));
@@ -315,7 +314,7 @@ void SslSockStream::Decrypt(MessageBlock &messageBlock) const {
 			GetBuffers().out.resize(0);
 			WFormat message(L"Error at SSL data receiving: \"%1% (%2%)\"");
 			if (!error.CheckError() && OpenSslError::CheckError(error.GetErrorNo())) {
-				const string errorStr
+				const std::string errorStr
 					= OpenSslError::ErrorNoToString(error.GetErrorNo());
 				message % ConvertString<WString>(errorStr.c_str()).GetCStr();
 			} else {
@@ -370,7 +369,7 @@ void SslSockStream::Encrypt(MessageBlock &messageBlock) const {
 			GetBuffers().out.resize(0);
 			WFormat message(L"Error at SSL data sending: \"%1% (%2%)\"");
 			if (!error.CheckError() && OpenSslError::CheckError(error.GetErrorNo())) {
-				const string errorStr
+				const std::string errorStr
 					= OpenSslError::ErrorNoToString(error.GetErrorNo());
 				message % ConvertString<WString>(errorStr.c_str()).GetCStr();
 			} else {
@@ -419,7 +418,7 @@ int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 		return -1;
 	}
 
-	const size_t dataLen = min(
+	const size_t dataLen = std::min(
 		GetBuffers().encryptedMessage->GetUnreadedDataSize() - GetBuffers().encryptedMessageReadPos,
 		len);
 	if (dataLen == 0) {

@@ -1,0 +1,367 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\TunnelEx SOAP client">
+      <UniqueIdentifier>{90a7438f-7f79-4de5-b2fd-163cbfadd9bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Templates">
+      <UniqueIdentifier>{806a1f89-e2bb-4e36-bf5c-771fb0c1bc59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Icons">
+      <UniqueIdentifier>{b5e135f5-34af-4e15-aa39-a0c01c7f1c58}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Assert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Auto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EndpointDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LicenseDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LicenseEnterDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LicenseRestrictionDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LicenseStartDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LogDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NewVersionDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Prec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProxyDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RuleDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RuleListCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RuleUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceAdapter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceRuleDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceStateCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SslCertificateDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SslCertificateListDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SslEndpointSettingsDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SslGenerationResultDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Theme.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TunnelRuleDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TunnelRuleShortDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdateChecker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Validators.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SoapServiceInterface\soapC.cpp">
+      <Filter>Source Files\TunnelEx SOAP client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SoapServiceInterface\soapClient.cpp">
+      <Filter>Source Files\TunnelEx SOAP client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\externals\gSOAP\stdsoap2.cpp">
+      <Filter>Source Files\TunnelEx SOAP client</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Application.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Auto.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EndpointDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LicenseDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LicenseEnterDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LicensePolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LicenseRestrictionDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LicenseStartDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MainFrame.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NewVersionDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Prec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProxyDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rule.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RuleDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RuleListCtrl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RuleUtils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceAdapter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceRuleDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceState.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceStateCtrl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceWindow.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SslCertificateDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SslCertificateListDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SslEndpointSettingsDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SslGenerationResultDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Theme.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TunnelRuleDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TunnelRuleShortDlg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UpdateChecker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Validators.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Front-end.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Templates\ServiceState.html">
+      <Filter>Templates</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddItemButton.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddItemButtonDisabled.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddItemIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddRuleIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\AddRuleIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowDownButton.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowDownButtonDisabled.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowUpButton.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\ArrowUpButtonDisabled.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\BloggerIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\BugIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\BugIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CopyIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CopyIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CutIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\CutIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditItemButton.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditItemButtonDisabled.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditItemIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditRuleDisabledIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditRuleIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\EditRuleIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoProIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoProIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoRuleIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\GoRuleIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\HelpIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\HelpIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\KeyIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\LogIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\LogIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PasteIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PasteIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PlayIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\PlayIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveItemButton.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveItemButtonDisabled.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveItemIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveRuleIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RemoveRuleIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RuleIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\RuleIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\StopIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\StopIconBig.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Icons\WarningRuleIcon.png">
+      <Filter>Icons</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

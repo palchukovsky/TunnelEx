@@ -15,8 +15,8 @@
 
 #include "Api.h"
 
-#include <TunnelEx/EndpointAddress.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/EndpointAddress.hpp"
+#include "Core/String.hpp"
 
 class ACE_DEV_Addr;
 

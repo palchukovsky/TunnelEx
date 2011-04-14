@@ -15,7 +15,7 @@
 #include "Modules/Inet/InetEndpointAddress.hpp"
 #include "Exceptions.hpp"
 
-#include <TunnelEx/String.hpp>
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Pathfinder {
 
@@ -34,13 +34,13 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 	public:
 
 		//! Returns proxy list for endpoint. Result is true, if list from online service.
+		/** @throw TunnelEx::Mods::Pathfinder::ServiceException
+		  * @throw TunnelEx::Mods::Pathfinder::LicensingException
+		  */
 		bool GetProxy(
 					const Mods::Inet::TcpEndpointAddress &target,
 					Mods::Inet::ProxyList &result)
-				const
-				throw(
-					TunnelEx::Mods::Pathfinder::ServiceException,
-					TunnelEx::Mods::Pathfinder::LicensingException) {
+				const {
 			return RequestProxy(target, result);
 		}
 
@@ -70,13 +70,13 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 
 	private:
 
+		/** @throw TunnelEx::Mods::Pathfinder::ServiceException,
+		  * @throw TunnelEx::Mods::Pathfinder::LicensingException
+		  */
 		bool RequestProxy(
 					const Mods::Inet::TcpEndpointAddress &,
 					Mods::Inet::ProxyList &)
-				const
-				throw(
-					TunnelEx::Mods::Pathfinder::ServiceException,
-					TunnelEx::Mods::Pathfinder::LicensingException);
+				const;
 
 		void Report(
 					const wchar_t *const,
@@ -86,9 +86,9 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 				const
 				throw();
 
-		void InitConnection(
-					const Mods::Inet::TcpEndpointAddress &)
-				throw(TunnelEx::Mods::Pathfinder::ServiceException);
+		/** @throw TunnelEx::Mods::Pathfinder::ServiceException
+		  */
+		void InitConnection(const Mods::Inet::TcpEndpointAddress &);
 
 	private:
 

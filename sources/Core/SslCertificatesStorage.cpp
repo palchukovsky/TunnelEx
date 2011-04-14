@@ -16,16 +16,14 @@
 #include "String.hpp"
 #include "Log.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Helpers::Crypto;
 
 //////////////////////////////////////////////////////////////////////////
 
-class SslCertificatesStorage::Implementation : private noncopyable {
+class SslCertificatesStorage::Implementation : private boost::noncopyable {
 
 private:
 
@@ -39,11 +37,11 @@ private:
 
 	struct CertificateInfo {
 		WString id;
-		wpath path;
-		shared_ptr<X509Shared> certificate;
+		fs::wpath path;
+		boost::shared_ptr<X509Shared> certificate;
 	};
 
-	typedef unordered_map<
+	typedef boost::unordered_map<
 			WString,
 			CertificateInfo,
 			Helpers::StringHasher<WString> >
@@ -67,10 +65,10 @@ protected:
 	void Reload() {
 		try {
 			Storage storage;
-			const wdirectory_iterator end;
+			const fs::wdirectory_iterator end;
 			const time_t modificationTime
 				= last_write_time(m_dbModificationFilePath);
-			for (wdirectory_iterator i(m_dbPath); i != end; ++i) {
+			for (fs::wdirectory_iterator i(m_dbPath); i != end; ++i) {
 				if (	!is_directory(i->status())
 						&& Helpers::StringUtil::IsUuid(i->path().stem())) {
 					LoadCertificate(i->path(), storage);
@@ -87,14 +85,14 @@ protected:
 		}
 	}
 
-	void LoadCertificate(const wpath &file, Storage &storage) const {
+	void LoadCertificate(const fs::wpath &file, Storage &storage) const {
 		BOOST_ASSERT(storage.find(file.stem().c_str()) == storage.end());
 		try {
-			if (iequals(file.extension(), L".p12")) {
+			if (boost::iequals(file.extension(), L".p12")) {
 				LoadPrivateCertificate(file, storage);
 			} else if (
-					iequals(file.extension(), L".cer")
-					|| iequals(file.extension(), L".crt")) {
+					boost::iequals(file.extension(), L".cer")
+					|| boost::iequals(file.extension(), L".crt")) {
 				LoadSharedCertificate(file, storage);
 			}
 		} catch (const LocalException &ex) {
@@ -108,7 +106,7 @@ protected:
 			message % ex.what();
 			Log::GetInstance().AppendError(message.str());
 			try {
-				const wpath newName = file.string() + L".error";
+				const fs::wpath newName = file.string() + L".error";
 				if (exists(newName)) {
 					Format message("Removing %1% to backup %2%...");
 					message % ConvertString<String>(newName.string().c_str()).GetCStr();
@@ -123,7 +121,7 @@ protected:
 		}
 	}
 
-	void LoadPrivateCertificate(const wpath &file, Storage &storage) const {
+	void LoadPrivateCertificate(const fs::wpath &file, Storage &storage) const {
 		
 		Log::GetInstance().AppendDebug(
 			"Opening private SSL certificate file \"%1%\"...",
@@ -131,14 +129,14 @@ protected:
 
 		ifstream f(
 			ConvertString<String>(file.string().c_str()).GetCStr(),
-			ios::binary);
+			std::ios::binary);
 		if (!f) {
 			throw LocalException(L"Failed to open file");
 		}
 
-		f.seekg(0, ios::end);
-		vector<unsigned char> buffer(f.tellg());
-		f.seekg(0, ios::beg);
+		f.seekg(0, std::ios::end);
+		std::vector<unsigned char> buffer(unsigned int(f.tellg()));
+		f.seekg(0, std::ios::beg);
 		f.read(reinterpret_cast<char *>(&buffer[0]), buffer.size());
 		f.close();
 
@@ -152,7 +150,7 @@ protected:
 
 	}
 
-	void LoadSharedCertificate(const wpath &file, Storage &storage) const {
+	void LoadSharedCertificate(const fs::wpath &file, Storage &storage) const {
 
 		Log::GetInstance().AppendDebug(
 			"Opening SSL certificate file \"%1%\"...",
@@ -160,14 +158,14 @@ protected:
 
 		ifstream f(
 			ConvertString<String>(file.string().c_str()).GetCStr(),
-			ios::binary);
+			std::ios::binary);
 		if (!f) {
 			throw LocalException(L"Failed to open file");
 		}
 
-		f.seekg(0, ios::end);
-		vector<unsigned char> buffer(f.tellg());
-		f.seekg(0, ios::beg);
+		f.seekg(0, std::ios::end);
+		std::vector<unsigned char> buffer(unsigned int(f.tellg()));
+		f.seekg(0, std::ios::beg);
 		f.read(reinterpret_cast<char *>(&buffer[0]), buffer.size());
 		f.close();
 
@@ -180,7 +178,7 @@ protected:
 
 	}
 
-	string GetKey() const {
+	std::string GetKey() const {
 
 		{
 			KeyReadLock lock(m_keyMutex);
@@ -198,7 +196,7 @@ protected:
 
 			length: 101
 		 */
-		vector<unsigned char> key;
+		std::vector<unsigned char> key;
 		key.resize(44); key[43] = 'Y'; key[2] = 'L'; key[10] = 'u';
 		key.resize(58); key[57] = 'l'; key.resize(96); key[95] = 'S';
 		key[21] = '\''; key[34] = ','; key[31] = '='; key[52] = 'q';
@@ -228,14 +226,14 @@ protected:
 		key[68] = '"'; key[51] = 'A'; key[65] = '&';
 
 		size_t token = 0;
-		vector<unsigned char>::iterator i = key.begin();
+		std::vector<unsigned char>::iterator i = key.begin();
 		foreach (char ch, key) {
 			ch ^= m_subKey[token++ % m_subKey.size()];
 			*i = ch;
 			++i;
 		}
 		BOOST_ASSERT(i == key.end());
-		string result(key.begin(), key.end());
+		std::string result(key.begin(), key.end());
 		result.swap(const_cast<Implementation *>(this)->m_key);
 		
 		return m_key;
@@ -274,9 +272,10 @@ protected:
 				create_directories(m_dbPath);
 			}
 			if (!exists(m_dbModificationFilePath)) {
-				ofstream(m_dbModificationFilePath.string().c_str(), ios::trunc);
+				String pathStr;
+				ConvertString(m_dbModificationFilePath.string().c_str(), pathStr);
+				ofstream(pathStr.GetCStr(), std::ios::trunc);
 				last_write_time(m_dbModificationFilePath, 0);
-				
 			}
 		} catch (const boost::system::system_error &ex) {
 			Format message("Failed to create SSL certificates storage: %1%.");
@@ -362,13 +361,13 @@ public:
 
 	void Insert(const X509Shared &certificate) {
 		CheckDbExists();
-		const wstring fileName = Helpers::Uuid().GetAsString() + L".cer";
-		const wpath filePath = m_dbPath / fileName;
+		const std::wstring fileName = Helpers::Uuid().GetAsString() + L".cer";
+		const fs::wpath filePath = m_dbPath / fileName;
 		try {
 			StorageWriteLock lock(m_storageMutex);
-			ofstream f(
+			std::ofstream f(
 				ConvertString<String>(filePath.string().c_str()).GetCStr(),
-				ios::trunc | ios::binary);
+				std::ios::trunc | std::ios::binary);
 			if (!f) {
 				Format message("Failed to save SSL certificate into %1%.");
 				message % ConvertString<String>(filePath.string().c_str()).GetCStr();
@@ -396,14 +395,14 @@ public:
 
 	void Insert(const X509Private &certificate) {
 		CheckDbExists();
-		const wstring fileName = Helpers::Uuid().GetAsString() + L".p12";
-		const wpath filePath = m_dbPath / fileName;
+		const std::wstring fileName = Helpers::Uuid().GetAsString() + L".p12";
+		const fs::wpath filePath = m_dbPath / fileName;
 		try {
 			StorageWriteLock lock(m_storageMutex);
 			Pkcs12 pkcs12(certificate, "", GetKey());
 			ofstream f(
 				ConvertString<String>(filePath.string().c_str()).GetCStr(),
-				ios::trunc | ios::binary);
+				std::ios::trunc | std::ios::binary);
 			if (!f) {
 				Format message("Failed to save SSL certificate into %1%.");
 				message % ConvertString<String>(filePath.string().c_str()).GetCStr();
@@ -481,12 +480,12 @@ private:
 
 	mutable StorageMutex m_storageMutex;
 	Storage m_storage;
-	const wpath m_dbPath;
-	const wpath m_dbModificationFilePath;
+	const fs::wpath m_dbPath;
+	const fs::wpath m_dbModificationFilePath;
 	time_t m_dbModificationTime;
 	mutable StorageMutex m_keyMutex;
-	vector<unsigned char> m_subKey;
-	string m_key;
+	std::vector<unsigned char> m_subKey;
+	std::string m_key;
 
 };
 

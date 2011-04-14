@@ -15,7 +15,6 @@
 
 #include "Modules/Inet/InetEndpointAddress.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods;
 using namespace TunnelEx::Mods::Upnp;
@@ -35,9 +34,9 @@ TcpConnectionAcceptor::TcpConnectionAcceptor(
 	service.param = UpnpcService::CreateParam(
 		Client::PROTO_TCP,
 		externalPort,
-		polymorphic_downcast<Inet::InetEndpointAddress *>(
+		boost::polymorphic_downcast<Inet::InetEndpointAddress *>(
 			openedAddress.Get())->GetHostName(),
-		polymorphic_downcast<Inet::InetEndpointAddress *>(
+		boost::polymorphic_downcast<Inet::InetEndpointAddress *>(
 			openedAddress.Get())->GetPort(),
 		true, // @todo: see TEX-610
 		false);

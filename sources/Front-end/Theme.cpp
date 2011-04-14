@@ -13,11 +13,10 @@
 
 #include "Theme.hpp"
 
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 using namespace TunnelEx::Helpers;
 
-class Theme::Implementation : private noncopyable {
+class Theme::Implementation : private boost::noncopyable {
 public:
 	Implementation()
 			: m_repositoryPath(GetModuleFilePath().branch_path()),
@@ -30,12 +29,12 @@ public:
 	}
 public:
 	void LoadPngFile(const wchar_t *const file, wxBitmap &buffer) const {
-		wpath path(m_repositoryPath);
+		fs::wpath path(m_repositoryPath);
 		path /= file;
 		buffer.LoadFile(path.string(), wxBITMAP_TYPE_PNG);
 	}
 private:
-	wpath m_repositoryPath;
+	fs::wpath m_repositoryPath;
 public:
 	const wxColour m_evenLineColor;
 	const wxColour m_notEvenLineColor;

@@ -12,15 +12,9 @@
 #ifndef INCLUDED_FILE__TUNNELEX__Dll_hpp__0806121823
 #define INCLUDED_FILE__TUNNELEX__Dll_hpp__0806121823
 
-#ifdef TUNNELEX_CORE
-#	include "Exceptions.hpp"
-#	include "String.hpp"
-#	include "Error.hpp"
-#else // #ifdef TUNNELEX_CORE
-#	include <TunnelEx/Exceptions.hpp>
-#	include <TunnelEx/String.hpp>
-#	include <TunnelEx/Error.hpp>
-#endif // #ifdef TUNNELEX_CORE
+#include "Core/Exceptions.hpp"
+#include "Core/String.hpp"
+#include "Core/Error.hpp"
 #include "Format.hpp"
 #include <boost/noncopyable.hpp>
 #include <Windows.h>

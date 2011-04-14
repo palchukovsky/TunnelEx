@@ -16,12 +16,10 @@
 #include "ServiceWindow.hpp"
 #include "Application.hpp"
 
-#include <TunnelEx/Log.hpp>
+#include "Core/Log.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::posix_time;
 using namespace TunnelEx;
+namespace pt = boost::posix_time;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +76,7 @@ LogDlg::LogDlg(wxWindow *parent, wxWindowID id)
 		m_buttonSize(75, 25),
 		m_borderWidth(10),
 		m_logSize(
-			polymorphic_downcast<ServiceWindow *>(GetParent())
+			boost::polymorphic_downcast<ServiceWindow *>(GetParent())
 				->GetService()
 				.GetLogSize()),
 		m_logLevel(::LOG_LEVEL_INFO) {
@@ -126,7 +124,7 @@ LogDlg::LogDlg(wxWindow *parent, wxWindowID id)
 		logLevel.SetPosition(GetLogLevelPosition());
 		try {
 			SetLogLevel(
-				polymorphic_downcast<ServiceWindow *>(GetParent())
+				boost::polymorphic_downcast<ServiceWindow *>(GetParent())
 					->GetService()
 					.GetLogLevel(),
 				true);
@@ -176,23 +174,23 @@ LogDlg::~LogDlg() {
 void LogDlg::RefreshData() {
 
 	wxListCtrl &listCtrl
-		= *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+		= *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 
 	listCtrl.DeleteAllItems();
 
-	list<texs__LogRecord> log;
+	std::list<texs__LogRecord> log;
 	texs__LogLevel logLevel = m_logLevel;
-	polymorphic_downcast<ServiceWindow *>(GetParent())
+	boost::polymorphic_downcast<ServiceWindow *>(GetParent())
 		->GetService()
 		.GetLogRecords(100, log);
 	//! @todo: reimplement, by service configure update event [2010/04/03 23:06]
-	logLevel = polymorphic_downcast<ServiceWindow *>(GetParent())
+	logLevel = boost::polymorphic_downcast<ServiceWindow *>(GetParent())
 		->GetService()
 		.GetLogLevel();
 	SetLogLevel(logLevel);
 
-	const list<texs__LogRecord>::const_iterator logEnd = log.end();
-	for (list<texs__LogRecord>::const_iterator i = log.begin(); i != logEnd; ++i) {
+	const std::list<texs__LogRecord>::const_iterator logEnd = log.end();
+	for (std::list<texs__LogRecord>::const_iterator i = log.begin(); i != logEnd; ++i) {
 		AppendRecord(*i);
 	}
 
@@ -201,12 +199,12 @@ void LogDlg::RefreshData() {
 }
 
 void LogDlg::AddData(unsigned int recordsCount) {
-	list<texs__LogRecord> log;
-	polymorphic_downcast<ServiceWindow *>(GetParent())
+	std::list<texs__LogRecord> log;
+	boost::polymorphic_downcast<ServiceWindow *>(GetParent())
 		->GetService()
 		.GetLogRecords(recordsCount, log);
-	const list<texs__LogRecord>::const_iterator logEnd = log.end();
-	for (list<texs__LogRecord>::const_iterator i = log.begin(); i != logEnd; ++i) {
+	const std::list<texs__LogRecord>::const_iterator logEnd = log.end();
+	for (std::list<texs__LogRecord>::const_iterator i = log.begin(); i != logEnd; ++i) {
 		AppendRecord(*i);
 	}
 	ShowLastRecord();
@@ -241,7 +239,7 @@ void LogDlg::AppendRecord(const texs__LogRecord &record) {
 	}
 
 	wxListCtrl &listCtrl
-		= *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+		= *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 	wxListItem item;
 	item.SetId(listCtrl.GetItemCount());
 	wxFont itemFont(item.GetFont());
@@ -277,7 +275,7 @@ void LogDlg::AppendRecord(const texs__LogRecord &record) {
 	item.SetFont(itemFont);
 	item.SetData(record.level);
 	const long index = listCtrl.InsertItem(item);
-	tm tm(to_tm(time_from_string(record.time)));
+	tm tm(pt::to_tm(pt::time_from_string(record.time)));
 	listCtrl.SetItem(
 		index,
 		COLUMN_TIME,
@@ -310,18 +308,18 @@ void LogDlg::OnClose() {
 }
 
 void LogDlg::OnSize(wxSizeEvent &event) {
-	wxListCtrl &list = *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+	wxListCtrl &list = *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 	list.SetPosition(GetListPosition());
 	list.SetSize(GetListSize());
-	wxButton &copyToClipboardButton = *polymorphic_downcast<wxButton *>(FindWindow(CONTROL_COPY));
+	wxButton &copyToClipboardButton = *boost::polymorphic_downcast<wxButton *>(FindWindow(CONTROL_COPY));
 	copyToClipboardButton.SetPosition(GetCopyButtonPosition());
-	wxButton &saveToFileButton = *polymorphic_downcast<wxButton *>(FindWindow(CONTROL_SAVE));
+	wxButton &saveToFileButton = *boost::polymorphic_downcast<wxButton *>(FindWindow(CONTROL_SAVE));
 	saveToFileButton.SetPosition(GetSaveButtonPosition());
-	polymorphic_downcast<wxStaticText *>(FindWindow(CONTROL_LOGLEVEL_LABEL))
+	boost::polymorphic_downcast<wxStaticText *>(FindWindow(CONTROL_LOGLEVEL_LABEL))
 		->SetPosition(GetLogLevelLabelPosition());
-	polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL))
+	boost::polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL))
 		->SetPosition(GetLogLevelPosition());
-	wxButton &closeButton = *polymorphic_downcast<wxButton *>(FindWindow(wxID_CANCEL));
+	wxButton &closeButton = *boost::polymorphic_downcast<wxButton *>(FindWindow(wxID_CANCEL));
 	closeButton.SetPosition(GetCloseButtonPosition());
 	event.Skip();
 }
@@ -330,7 +328,7 @@ void LogDlg::DoContextMenu(bool save, bool copy) {
 	
 	BOOST_ASSERT(save || copy);
 	
-	wxListCtrl &list = *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+	wxListCtrl &list = *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 	wxMenu menu;
 	
 	if (copy) {
@@ -379,9 +377,9 @@ void LogDlg::Copy(bool onlySelected) {
 
 wxString LogDlg::GetListContentAsText(bool onlySelected) const {
 	
-	const wxListCtrl &list = *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+	const wxListCtrl &list = *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 
-	wostringstream textDataStream;
+	std::wostringstream textDataStream;
 	wxListItem item;
 	item.SetMask(wxLIST_MASK_TEXT);
 	for (long itemId = -1; ; ) {
@@ -402,7 +400,7 @@ wxString LogDlg::GetListContentAsText(bool onlySelected) const {
 
 		item.SetColumn(COLUMN_LEVEL);
 		list.GetItem(item);
-		textDataStream << setw(12) << item.GetText().c_str() << L": ";
+		textDataStream << std::setw(12) << item.GetText().c_str() << L": ";
 
 		item.SetColumn(COLUMN_MESSAGE);
 		list.GetItem(item);
@@ -468,9 +466,9 @@ wxPoint LogDlg::GetSaveButtonPosition() const {
 
 wxPoint LogDlg::GetLogLevelPosition() const {
 	wxStaticText &logLevelLabel
-		= *polymorphic_downcast<wxStaticText *>(FindWindow(CONTROL_LOGLEVEL_LABEL));
+		= *boost::polymorphic_downcast<wxStaticText *>(FindWindow(CONTROL_LOGLEVEL_LABEL));
 	wxChoice &logLevel
-		= *polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL));
+		= *boost::polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL));
 	return wxPoint(
 		logLevelLabel.GetSize().GetWidth() + logLevelLabel.GetPosition().x,
 		GetSaveButtonPosition().y
@@ -479,7 +477,7 @@ wxPoint LogDlg::GetLogLevelPosition() const {
 
 wxPoint LogDlg::GetLogLevelLabelPosition() const {
 	wxStaticText &logLevelLabel
-		= *polymorphic_downcast<wxStaticText *>(FindWindow(CONTROL_LOGLEVEL_LABEL));
+		= *boost::polymorphic_downcast<wxStaticText *>(FindWindow(CONTROL_LOGLEVEL_LABEL));
 	const wxPoint saveButtonPosition = GetSaveButtonPosition();
 	return wxPoint(
 		saveButtonPosition.x + m_borderWidth + GetSaveButtonSize().GetWidth(),
@@ -504,7 +502,7 @@ wxSize LogDlg::GetListSize() const {
 
 void LogDlg::ShowLastRecord() {
 	wxListCtrl &list
-		= *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+		= *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 	int pxOffset = 0;
 	const int itemCount = list.GetItemCount();
 	BOOST_ASSERT(itemCount >= list.GetTopItem());
@@ -531,7 +529,7 @@ void LogDlg::OnKeyDown(wxKeyEvent &event) {
 void LogDlg::OnServiceNewLogRecord(ServiceAdapter::Event &) {
 	const unsigned long long prevLogSize = m_logSize;
 	m_logSize
-		= polymorphic_downcast<ServiceWindow *>(GetParent())->GetService().GetLogSize();
+		= boost::polymorphic_downcast<ServiceWindow *>(GetParent())->GetService().GetLogSize();
 	if (prevLogSize >= m_logSize) {
 		RefreshData();
 	} else {
@@ -564,14 +562,14 @@ void LogDlg::SetLogLevel(texs__LogLevel logLevel, bool force /*= false*/) {
 			str = wxT("full");
 	}
 	wxChoice &choise
-		= *polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL));
+		= *boost::polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL));
 	choise.Select(choise.FindString(str));
 	m_logLevel = logLevel;
 }
 
 void LogDlg::OnLogLevelChange(wxCommandEvent &) {
 	const wxString str
-		= polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL))
+		= boost::polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_LOGLEVEL))
 			->GetStringSelection();
 	texs__LogLevel level = ::LOG_LEVEL_INFO;
 	if (str == wxT("debugging")) {
@@ -591,7 +589,7 @@ void LogDlg::OnLogLevelChange(wxCommandEvent &) {
 		BOOST_ASSERT(false);
 	}
 	m_logLevel = level;
-	polymorphic_downcast<ServiceWindow *>(GetParent())
+	boost::polymorphic_downcast<ServiceWindow *>(GetParent())
 		->GetService()
 		.SetLogLevel(level);
 	RefreshData();
@@ -605,7 +603,7 @@ void LogDlg::OnRecordActivated(wxListEvent &) {
 	unsigned int levelCode = 0;
 	{
 		const wxListCtrl &list
-			= *polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
+			= *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 		wxListItem item;
 		item.SetMask(wxLIST_MASK_TEXT | wxLIST_MASK_DATA);
 		const long itemId = list.GetNextItem(
@@ -644,10 +642,10 @@ void LogDlg::OnRecordActivated(wxListEvent &) {
 			.Expand()
 			.Border(wxLEFT | wxRIGHT, theme.GetDlgBorder() / 2);
 
-	auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
 
 	{
-		auto_ptr<wxBoxSizer> timeBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> timeBox(new wxBoxSizer(wxHORIZONTAL));
 		timeBox->Add(
 			new wxStaticText(&dlg, wxID_ANY, wxT("Time:")),
 			wxSizerFlags(0).Center());

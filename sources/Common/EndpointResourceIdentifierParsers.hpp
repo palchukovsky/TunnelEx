@@ -12,8 +12,8 @@
 #ifndef INCLUDED_FILE__TUNNELEX__EndpointResourceIdentifierParsers_hpp__1001020637
 #define INCLUDED_FILE__TUNNELEX__EndpointResourceIdentifierParsers_hpp__1001020637
 
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/SslCertificatesStorage.hpp>
+#include "Core/Exceptions.hpp"
+#include "Core/SslCertificatesStorage.hpp"
 
 /* include in precompile header:
 	#include "StringUtil.hpp"
@@ -39,11 +39,11 @@ namespace TunnelEx { namespace Helpers {
 					const wchar_t *const requiredParamName,
 					boost::function<void(UrlSplitConstIterator)> parser,
 					bool isArray) {
-			using namespace boost;
 			using namespace TunnelEx;
 			for ( ; !source.eof(); ++source) {
-				UrlSplitConstIterator paramIt
-					= make_split_iterator(*source, first_finder(L"=", is_equal()));
+				UrlSplitConstIterator paramIt = boost::make_split_iterator(
+					*source,
+					boost::first_finder(L"=", boost::is_equal()));
 				if (paramIt == source) {
 					throw InvalidLinkException(L"Wrong parameter format");
 				}
@@ -51,7 +51,7 @@ namespace TunnelEx { namespace Helpers {
 				const UrlSplitConstIterator paramVal = ++paramIt;
 				if (!paramVal.eof()) {
 					if (iequals(*paramName, requiredParamName)) {
-						if (begin(*paramVal) == end(*paramVal)) {
+						if (boost::begin(*paramVal) == boost::end(*paramVal)) {
 							throw TunnelEx::InvalidLinkException(
 								L"Could not get parameter value");
 						}
@@ -69,9 +69,9 @@ namespace TunnelEx { namespace Helpers {
 
 		template<class T>
 		static void ParseUrlParamValue(UrlSplitConstIterator source, T &result) {
-			using namespace boost;
 			try {
-				result = lexical_cast<T>(copy_range<std::wstring>(*source));
+				result = boost::lexical_cast<T>(
+					boost::copy_range<std::wstring>(*source));
 			} catch (const boost::bad_lexical_cast &) {
 				throw TunnelEx::InvalidLinkException(
 					L"Could not get typed parameter value");
@@ -132,20 +132,18 @@ namespace TunnelEx { namespace Helpers {
 					unsigned short &portResult,
 					bool hostCanBeAny,
 					bool portCanBeAny) {
-			using namespace std;
-			using namespace boost;
-			wregex exp(L"([^:]*):(\\d+|\\*)");
-			wsmatch what;
-			if (!regex_match(begin(*source), end(*source), what, exp)) {
+			boost::wregex exp(L"([^:]*):(\\d+|\\*)");
+			boost::wsmatch what;
+			if (!boost::regex_match(boost::begin(*source), boost::end(*source), what, exp)) {
 				throw TunnelEx::InvalidLinkException(L"Format is invalid");
 			}
-			wstring host = what[1];
+			std::wstring host = what[1];
 			unsigned short port = 0;
 			if (what[2].str()[0] != L'*') {
 				try {
-					port = lexical_cast<unsigned short>(what[2].str());
+					port = boost::lexical_cast<unsigned short>(what[2].str());
 				} catch (const boost::bad_lexical_cast &) {
-					port = numeric_limits<unsigned short>::max();
+					port = std::numeric_limits<unsigned short>::max();
 				}
 			}
 			if ((port == 0 && !portCanBeAny) || (host == L"*" && !hostCanBeAny)) {
@@ -160,25 +158,24 @@ namespace TunnelEx { namespace Helpers {
 					UrlSplitConstIterator source,
 					SslCertificateId &certificate,
 					SslCertificateIdCollection &remoteCertificates) {
-			using namespace boost;
 			SslCertificateId certificateTmp;
 			ParseUrlParam(
 				source,
 				L"certificate",
-				bind(
+				boost::bind(
 					&ParseUrlParamValue<SslCertificateId>,
 					_1,
-					ref(certificateTmp)),
+					boost::ref(certificateTmp)),
 				false);
 			if (!certificateTmp.IsEmpty()) {
 				SslCertificateIdCollection remoteCertificatesTmp;
 				ParseUrlParam(
 					source,
 					L"remote_certificate",
-					bind(
+					boost::bind(
 						&ParseUrlParamValue<SslCertificateIdCollection>,
 						_1,
-						ref(remoteCertificatesTmp)),
+						boost::ref(remoteCertificatesTmp)),
 					true);
 #				if defined(_DEBUG) && defined(TEST)
 					for (size_t i = 0; i < remoteCertificates.GetSize(); ++i) {
@@ -196,7 +193,7 @@ namespace TunnelEx { namespace Helpers {
 						boost::bind(
 							&ParseUrlParamValue<SslCertificateIdCollection>,
 							_1,
-							ref(remoteCertificates)),
+							boost::ref(remoteCertificates)),
 						false);
 					BOOST_ASSERT(remoteCertificates.GetSize() == 0);
 				}

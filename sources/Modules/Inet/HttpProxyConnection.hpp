@@ -15,9 +15,9 @@
 #include "OutcomingTcpConnection.hpp"
 #include "ProxyExceptions.hpp"
 
-#include <TunnelEx/MessageBlock.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/MessageBlock.hpp"
+#include "Core/Log.hpp"
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 
@@ -67,29 +67,28 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual void ReadRemote(MessageBlock &messageBlock) {
 			
-			using namespace std;
-			using namespace boost;
-
 			if (m_isSetupComplited) {
 				Base::ReadRemote(messageBlock);
 				return;
 			}
 			
 			m_currentProxyAnswer
-				+= string(messageBlock.GetData(), messageBlock.GetUnreadedDataSize());
-			if (!contains(m_currentProxyAnswer, "\r\n\r\n")) {
+				+= std::string(messageBlock.GetData(), messageBlock.GetUnreadedDataSize());
+			if (!boost::contains(m_currentProxyAnswer, "\r\n\r\n")) {
 				return;
 			}
 			
-			string proxyAnswer;
+			std::string proxyAnswer;
 			proxyAnswer.swap(m_currentProxyAnswer);
 #			if defined(_DEBUG) || defined(TEST)
 			{
-				filesystem::path dumpPath
+				boost::filesystem::path dumpPath
 					= Helpers::GetModuleFilePathA().branch_path();
 				dumpPath /= "HttpProxyAnswer.html";
-				ofstream f(dumpPath.string().c_str(), ios::trunc | ios::binary);
-				f.write(&proxyAnswer[0], streamsize(proxyAnswer.size()));
+				std::ofstream f(
+					dumpPath.string().c_str(),
+					std::ios::trunc | std::ios::binary);
+				f.write(&proxyAnswer[0], std::streamsize(proxyAnswer.size()));
 			}
 #			endif
 			
@@ -145,8 +144,6 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const std::wstring &targetHost,
 					const NetworkPort targetPort) {
 
-			using namespace std;
-
 			if (Log::GetInstance().IsDebugRegistrationOn()) {
 				Log::GetInstance().AppendDebug(
 					"Setup proxy server %1%:%2% for %3%...",
@@ -158,7 +155,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			String targetHostA;
 			ConvertString(targetHost.c_str(), targetHostA);
 
-			ostringstream cmd;
+			std::ostringstream cmd;
 			cmd
 				<< "CONNECT "
 					<< targetHostA.GetCStr() << ":" << targetPort
@@ -178,7 +175,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			}
 			cmd << "\r\n";
 
-			const string &cmdStr = cmd.str();
+			const std::string &cmdStr = cmd.str();
 			SendToRemote(cmdStr.c_str(), cmdStr.size());
 		
 		}
@@ -186,11 +183,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	private:
 
 		static void ExtractHeaderInfo(const std::string &headers) {
-			using namespace std;
-			using namespace boost;
 			bool isAnswerChecked = false;
-			typedef split_iterator<string::const_iterator> It;
-			for (	It i = make_split_iterator(headers, first_finder("\r\n", is_equal()));
+			typedef boost::split_iterator<std::string::const_iterator> It;
+			for (	It i = boost::make_split_iterator(
+						headers,
+						boost::first_finder("\r\n", boost::is_equal()));
 					i != It();
 					++i) {
 				if (!isAnswerChecked) {
@@ -208,10 +205,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		template<class Range>
 		static void CheckAnswer(const Range &line) {
-			using namespace boost;
-			smatch what;
-			const regex expr("HTTP/\\d\\.\\d\\s+(\\d+)\\s+(.+)", regex_constants::icase);
-			if (!regex_match(begin(line), end(line), what, expr)) {
+			boost::smatch what;
+			const boost::regex expr(
+				"HTTP/\\d\\.\\d\\s+(\\d+)\\s+(.+)",
+				boost::regex_constants::icase);
+			if (!boost::regex_match(boost::begin(line), boost::end(line), what, expr)) {
 				throw ProxyWorkingException(L"Failed to parse proxy server HTTP-headers");
 			} else if (what[1] != "200") {
 				Format format("%1% (error code: %2%)");

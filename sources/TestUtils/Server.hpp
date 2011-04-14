@@ -68,26 +68,19 @@ namespace Test {
 
 	public:
 
-		virtual void Send(
-				std::size_t connectionIndex,
-				const std::string &)
-			throw(SendError)
-			= 0;
-		virtual void Send(
-				std::size_t connectionIndex,
-				const Buffer &)
-			throw(SendError)
-			= 0;
+		/** @throw SendError 
+		  */
+		virtual void Send(std::size_t connectionIndex, const std::string &) = 0;
+		/** @throw SendError 
+		  */
+		virtual void Send(std::size_t connectionIndex, const Buffer &) = 0;
 
-		virtual Buffer GetReceived(
-				std::size_t connectionIndex)
-			const
-			throw(ReceiveError)
-			= 0;
-		std::string GetReceivedAsString(
-					std::size_t connectionIndex)
-				const
-				throw(ReceiveError) {
+		/** @throw ReceiveError
+		  */
+		virtual Buffer GetReceived(std::size_t connectionIndex) const = 0;
+		/** @throw ReceiveError
+		  */
+		std::string GetReceivedAsString(std::size_t connectionIndex) const {
 			const Buffer data = GetReceived(connectionIndex);
 			std::string result(data.begin(), data.end());
 			if (result.size() && result[result.size() - 1] == 0) {
@@ -119,11 +112,19 @@ namespace Test {
 
 	public:
 
-		virtual void Send(const std::string &) throw(SendError) = 0;
-		virtual void Send(const Buffer &) throw(SendError) = 0;
+		/** @throw SendError
+		  */
+		virtual void Send(const std::string &) = 0;
+		/** @throw SendError
+		  */
+		virtual void Send(const Buffer &) = 0;
 
-		virtual Buffer Receive() throw(ReceiveError) = 0;
-		std::string ReceiveAsString() throw(ReceiveError) {
+		/** @throw ReceiveError
+		  */
+		virtual Buffer Receive() = 0;
+		/** @throw ReceiveError
+		  */
+		std::string ReceiveAsString() {
 			const Buffer data = Receive();
 			std::string result(data.begin(), data.end());
 			if (result.size() && result[result.size() - 1] == 0) {

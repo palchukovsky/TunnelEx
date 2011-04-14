@@ -26,11 +26,9 @@
 #include "Log.hpp"
 #include "Error.hpp"
 #include "Exceptions.hpp"
-#include "Licensing/FsLocalStorage.hpp"
+#include "Licensing.hpp"
 
 
-using namespace std;
-using namespace boost;
 namespace mi = boost::multi_index;
 using namespace TunnelEx;
 
@@ -108,7 +106,7 @@ public:
 			new ConnectionOpeningExceptionImpl<Base>(*this));
 	}
 private:
-	const wstring & GetWhatImpl() const {
+	const std::wstring & GetWhatImpl() const {
 		if (m_what.empty()) {
 			WFormat what(
 				L"Opening new %3% connection to the %1%"
@@ -123,13 +121,13 @@ private:
 private:
 	SharedPtr<const EndpointAddress> m_address;
 	UniquePtr<LocalException> m_error;
-	mutable wstring m_what;
+	mutable std::wstring m_what;
 	const wchar_t *m_connectionType;
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-class ServerWorker::RuleInfo : private noncopyable {
+class ServerWorker::RuleInfo : private boost::noncopyable {
 public:
 	RuleInfo()
 			: acceptedConnectionNumb(0) {
@@ -138,7 +136,7 @@ public:
 public:
 	SharedPtr<TunnelRule> rule;
 	SharedPtr<RecursiveMutex> mutex;
-	vector<SharedPtr<Filter> > filters;
+	std::vector<SharedPtr<Filter> > filters;
 	unsigned long long acceptedConnectionNumb;
 };
 
@@ -171,7 +169,7 @@ namespace TunnelEx { namespace Helpers {
 
 //////////////////////////////////////////////////////////////////////////
 
-class ServerWorker::Implementation : private noncopyable {
+class ServerWorker::Implementation : private boost::noncopyable {
 
 private:
 
@@ -190,19 +188,19 @@ private:
 		//...//
 	};
 
-	typedef TunnelEx::AcceptHandler<shared_ptr<RuleInfo> > AcceptHandler;
+	typedef TunnelEx::AcceptHandler<boost::shared_ptr<RuleInfo> > AcceptHandler;
 	struct EndpointAcceptorHandler {
 		explicit EndpointAcceptorHandler(
 					const WString &enpointUuidIn,
-					shared_ptr<AcceptHandler> handlerIn)
+					boost::shared_ptr<AcceptHandler> handlerIn)
 				: enpointUuid(enpointUuidIn),
 				handler(handlerIn) {
 			//...//
 		}
 		WString enpointUuid;
-		shared_ptr<AcceptHandler> handler;
+		boost::shared_ptr<AcceptHandler> handler;
 	};
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			EndpointAcceptorHandler,
 			mi::indexed_by<
 				mi::hashed_unique<
@@ -226,7 +224,7 @@ private:
 		EndpointAcceptorHandlers acceptHandlers;
 		bool isTunnel;
 	};
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			ActiveRule,
 			mi::indexed_by<
 				mi::hashed_unique<
@@ -240,7 +238,7 @@ private:
 	typedef ActiveRules::index<ByUuid>::type RuleByUuid;
 	
 	struct ActiveTunnel {
-		explicit ActiveTunnel(shared_ptr<Tunnel> tunnel)
+		explicit ActiveTunnel(boost::shared_ptr<Tunnel> tunnel)
 				: tunnel(tunnel) {
 			//...//
 		}
@@ -250,9 +248,9 @@ private:
 		const WString & GetRuleUuid() const {
 			return tunnel->GetRule().GetUuid();
 		}
-		shared_ptr<Tunnel> tunnel;
+		boost::shared_ptr<Tunnel> tunnel;
 	};
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			ActiveTunnel,
 			mi::indexed_by<
 				mi::ordered_unique<
@@ -272,7 +270,7 @@ private:
 	typedef ActiveTunnels::index<ByInstance>::type ActiveTunnelByInstance;
 	typedef ActiveTunnels::index<ByRule>::type ActiveTunnelByRule;
 
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			TunnelRule,
 			mi::indexed_by<
 				mi::hashed_unique<
@@ -286,7 +284,7 @@ private:
 	typedef IndexedTunnelRuleSet::index<ByUuid>::type TunnelRuleByUuid;
 
 	struct ActiveService {
-		explicit ActiveService(shared_ptr<Service> service)
+		explicit ActiveService(boost::shared_ptr<Service> service)
 				: service(service) {
 			//...//
 		}
@@ -296,9 +294,9 @@ private:
 		const WString & GetRuleUuid() const {
 			return service->GetRule().GetUuid();
 		}
-		shared_ptr<Service> service;
+		boost::shared_ptr<Service> service;
 	};
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			ActiveService,
 			mi::indexed_by<
 				mi::ordered_unique<
@@ -334,7 +332,7 @@ private:
 	typedef ACE_Guard<ServerStopMutex> ServerStopLock;
 	typedef ACE_Condition<ServerStopMutex> ServerStopCondition;
 
-	struct RuleUpdatingState : private noncopyable {
+	struct RuleUpdatingState : private boost::noncopyable {
 
 		typedef ACE_Recursive_Thread_Mutex Mutex;
 		typedef ACE_Guard<Mutex> Lock;
@@ -359,7 +357,7 @@ private:
 
 	};
 
-	struct TunnelOpeningState : private noncopyable {
+	struct TunnelOpeningState : private boost::noncopyable {
 
 		typedef ACE_Thread_Mutex Mutex;
 		typedef ACE_Guard<Mutex> Lock;
@@ -377,10 +375,10 @@ private:
 
 		ACE_Barrier startBarrier;
 
-		shared_ptr<RuleInfo> ruleInfo;
+		boost::shared_ptr<RuleInfo> ruleInfo;
 		UniquePtr<Connection> inConnection;
 	
-		shared_ptr<Tunnel> tunnel;
+		boost::shared_ptr<Tunnel> tunnel;
 
 	};
 
@@ -477,8 +475,7 @@ public:
 	UniquePtr<EndpointAddress> GetRealOpenedEndpointAddress(
 				const WString &ruleUuid,
 				const WString &endpointUuid)
-			const
-			throw(LogicalException, ConnectionOpeningException) {
+			const {
 		RulesReadLock lock(m_rulesMutex);
 		const RuleByUuid &ruleIndex = m_activeRules.get<ByUuid>();
 		const RuleByUuid::const_iterator ruleInputsPos
@@ -551,9 +548,9 @@ public:
 			}
 		}
 
-		auto_ptr<ActiveServicesWriteLock> activeServicesLock;
-		auto_ptr<ActiveServices> activeServices;
-		shared_ptr<Service> service;
+		std::auto_ptr<ActiveServicesWriteLock> activeServicesLock;
+		std::auto_ptr<ActiveServices> activeServices;
+		boost::shared_ptr<Service> service;
 		if (wasDeletedFromActive && !isTunnel) {
 			activeServicesLock.reset(new ActiveServicesWriteLock(m_activeServicesMutex));
 			activeServices.reset(new ActiveServices(m_activeServices));
@@ -566,7 +563,7 @@ public:
 			}
 		}
 
-		auto_ptr<IndexedTunnelRuleSet> tunnelRulesToCheck;
+		std::auto_ptr<IndexedTunnelRuleSet> tunnelRulesToCheck;
 		if (	m_tunnelRulesToCheck.get<ByUuid>().find(uuid)
 				!= m_tunnelRulesToCheck.get<ByUuid>().end()) {
 			BOOST_ASSERT(isTunnel);
@@ -610,7 +607,7 @@ public:
 		return index.find(uuid) != index.end();
 	}
 
-	void OpenTunnel(shared_ptr<RuleInfo> ruleInfo, Acceptor &acceptor) {
+	void OpenTunnel(boost::shared_ptr<RuleInfo> ruleInfo, Acceptor &acceptor) {
 		if (!acceptor.TryToAttach()) {
 			Log::GetInstance().AppendDebug(
 				"Incoming connection detected, initializing tunnel...");
@@ -642,7 +639,9 @@ public:
 		}
 	}
 
-	void OpenTunnel(shared_ptr<RuleInfo> ruleInfo, UniquePtr<Connection> inConnection) {
+	void OpenTunnel(
+				boost::shared_ptr<RuleInfo> ruleInfo,
+				UniquePtr<Connection> inConnection) {
 		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
 		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
 		m_tunnelOpeningState.ruleInfo = ruleInfo;
@@ -670,8 +669,7 @@ public:
 				const RuleEndpoint &endpoint,
 				SharedPtr<const EndpointAddress> address,
 				const wchar_t *const type)
-			const
-			throw(SourceConnectionOpeningException) {
+			const {
 		try {
 			UniquePtr<Connection> result
 				= address->CreateLocalConnection(endpoint, address);
@@ -688,7 +686,7 @@ public:
 		if (m_isDestructionMode) {
 			return;
 		}
-		shared_ptr<Tunnel> tunnel;
+		boost::shared_ptr<Tunnel> tunnel;
 		{
 			ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
 			ActiveTunnelByInstance &index
@@ -756,7 +754,7 @@ private:
 				if (!servicePtr->IsStarted()) {
 					servicePtr->Start();
 				}
-				shared_ptr<Service> service(servicePtr.Get());
+				boost::shared_ptr<Service> service(servicePtr.Get());
 				servicePtr.Release();
 				servicesTmp.insert(ActiveService(service));
 			} else {
@@ -773,11 +771,11 @@ private:
 				const TunnelRule &rule,
 				ActiveRule &activeRule,
 				ActiveTunnels &tunnels,
-				vector<shared_ptr<Tunnel> > &newTunnels,
+				std::vector<boost::shared_ptr<Tunnel> > &newTunnels,
 				IndexedTunnelRuleSet &ruleToCheck)
 			const {
 	
-		const shared_ptr<RuleInfo> ruleInfo(new RuleInfo);
+		const boost::shared_ptr<RuleInfo> ruleInfo(new RuleInfo);
 		ruleInfo->rule.Reset(new TunnelRule(rule));
 		ruleInfo->mutex.Reset(new RecursiveMutex);
 		ModulesFactory::GetInstance().CreateFilters(
@@ -824,7 +822,7 @@ private:
 				tunnels.size());
 			if (acceptorAddress) {
 				try {
-					const shared_ptr<AcceptHandler> handler(
+					const boost::shared_ptr<AcceptHandler> handler(
 						AcceptHandler::CreateInstance(
 							m_myInterface,
 							ruleInfo,
@@ -864,7 +862,7 @@ private:
 					SharedPtr<Connection> writer = readerAddress == writerAddress
 						?	reader
 						:	CreateConnection(endpoint, writerAddress, L"write");
-					shared_ptr<Tunnel> tunnel(
+					boost::shared_ptr<Tunnel> tunnel(
 						new Tunnel(true, m_myInterface, ruleInfo->rule, reader, writer));
 					BOOST_ASSERT(
 						tunnels.get<ByInstance>().find(tunnel->GetInstanceId())
@@ -943,7 +941,7 @@ private:
 		size_t openedTunnelsNumb = 0;
 		ActiveRule newRule(rule.GetUuid(), true);
 		const size_t allowedActiveRulesCheckNumber = m_activeRules.size() + 1;
-		vector<shared_ptr<Tunnel> > newTunnels;
+		std::vector<boost::shared_ptr<Tunnel> > newTunnels;
 		if (	rule.IsEnabled()
 				&&	m_ruleSetLicense.IsFeatureAvailable(allowedActiveRulesCheckNumber)) {
 			// locking, so Close method now will be wait until new tunnels
@@ -981,7 +979,7 @@ private:
 			throw LicenseException(
 				L"Failed to activate one or more rules, License Upgrade required");
 		}
-		foreach (const shared_ptr<Tunnel> &tunnel, newTunnels) {
+		foreach (const boost::shared_ptr<Tunnel> &tunnel, newTunnels) {
 			try {
 				tunnel->StartSetup();
 			} catch (...) {
@@ -1074,13 +1072,13 @@ private:
 				if (dynamic_cast<const TunnelRule *>(instance.m_ruleUpdatingState.rule)) {
 					instance.m_ruleUpdatingState.lastResult
 						= instance.UpdateImplementation(
-							*polymorphic_downcast<const TunnelRule *>(
+							*boost::polymorphic_downcast<const TunnelRule *>(
 								instance.m_ruleUpdatingState.rule));
 				} else {
 					BOOST_ASSERT(dynamic_cast<const ServiceRule *>(instance.m_ruleUpdatingState.rule));
 					instance.m_ruleUpdatingState.lastResult
 						= instance.UpdateImplementation(
-							*polymorphic_downcast<const ServiceRule *>(
+							*boost::polymorphic_downcast<const ServiceRule *>(
 								instance.m_ruleUpdatingState.rule));
 				}
 			} catch (const TunnelEx::LocalException &ex) {
@@ -1102,7 +1100,7 @@ private:
 		
 		Log::GetInstance().AppendDebug("Started services thread.");
 		Implementation &instance = *static_cast<Implementation *>(param);
-		auto_ptr<ServerStopLock> lock(
+		std::auto_ptr<ServerStopLock> lock(
 			new ServerStopLock(instance.m_serverStopMutex));
 
 		for ( ; !instance.m_isDestructionMode; ) {
@@ -1177,7 +1175,7 @@ private:
 	static ACE_THR_FUNC_RETURN RulesCheckThread(void *param) {
 		Log::GetInstance().AppendDebug("Started rules checking thread.");
 		Implementation &instance = *static_cast<Implementation *>(param);
-		auto_ptr<ServerStopLock> lock(
+		std::auto_ptr<ServerStopLock> lock(
 			new ServerStopLock(instance.m_serverStopMutex));
 		for ( ; !instance.m_isDestructionMode; ) {
 			//! @todo: hardcoded sleep time, move to options or config
@@ -1239,7 +1237,7 @@ private:
 		return m_tunnelRulesToCheck.size() > 0;
 	}
 
-	void SwitchTunnel(shared_ptr<Tunnel> tunnel) {
+	void SwitchTunnel(boost::shared_ptr<Tunnel> tunnel) {
 		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
 		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
 		BOOST_ASSERT(!m_tunnelOpeningState.ruleInfo);
@@ -1263,9 +1261,9 @@ private:
 	}
 
 	void OpenTunnelImplementation(
-				shared_ptr<RuleInfo> ruleInfo,
+				boost::shared_ptr<RuleInfo> ruleInfo,
 				UniquePtr<Connection> inConnection) {
-		shared_ptr<Tunnel> tunnel;
+		boost::shared_ptr<Tunnel> tunnel;
 		{
 			SharedPtr<Connection> reader;
 			SharedPtr<Connection> writer;
@@ -1309,12 +1307,12 @@ private:
 		OpenTunnelImplementation(tunnel);
 	}
 
-	void SwitchTunnelImplementation(shared_ptr<Tunnel> tunnel) {
+	void SwitchTunnelImplementation(boost::shared_ptr<Tunnel> tunnel) {
 
 		for ( ; ; ) {
 		
-			optional<SharedPtr<Connection> > reader;
-			optional<SharedPtr<Connection> > writer;
+			boost::optional<SharedPtr<Connection> > reader;
+			boost::optional<SharedPtr<Connection> > writer;
 			
 			bool reopenRead = false;
 			bool reopenWrite = false;
@@ -1408,7 +1406,7 @@ private:
 
 	}
 
-	bool OpenTunnelImplementation(shared_ptr<Tunnel> tunnel) {
+	bool OpenTunnelImplementation(boost::shared_ptr<Tunnel> tunnel) {
 		Log::GetInstance().AppendDebug(
 			"Number of currently open tunnels: %1%.",
 			m_activeTunnels.size());
@@ -1470,9 +1468,9 @@ private:
 		Log::GetInstance().AppendDebug("Started tunnel opening thread.");
 		Implementation &instance = *static_cast<Implementation *>(param);
 		for ( ; ; ) {
-			shared_ptr<RuleInfo> ruleInfo;
+			boost::shared_ptr<RuleInfo> ruleInfo;
 			UniquePtr<Connection> inConnection;
-			shared_ptr<Tunnel> tunnel;
+			boost::shared_ptr<Tunnel> tunnel;
 			for ( ; ; ) {
 				TunnelOpeningState::Lock conditionLock(
 					instance.m_tunnelOpeningState.operationMutex);
@@ -1597,7 +1595,7 @@ private:
 
 	void ScheduleProactorStopping() throw() {
 		try {
-			auto_ptr<Helpers::ProactorLoopStopper> handler(
+			std::auto_ptr<Helpers::ProactorLoopStopper> handler(
 				new Helpers::ProactorLoopStopper(m_proactor));
 			// timer will hit after timers for connections handlers d-ion
 			m_proactor.schedule_timer(*handler, 0, ACE_Time_Value(0, 1));
@@ -1668,13 +1666,12 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 
-ServerWorker::ServerWorker(Server::Ref server)
-		: m_pimpl(new Implementation(*this, server)) {
-	//...//
+ServerWorker::ServerWorker(Server::Ref server) {
+	m_pimpl = new Implementation(*this, server);
 }
 
 ServerWorker::~ServerWorker() {
-	//...//
+	delete m_pimpl;
 }
 
 size_t ServerWorker::GetOpenedEndpointsNumber() const {
@@ -1688,8 +1685,7 @@ size_t ServerWorker::GetTunnelsNumber() const {
 UniquePtr<EndpointAddress> ServerWorker::GetRealOpenedEndpointAddress(
 			const WString &ruleUuid,
 			const WString &endpointUuid)
-		const
-		throw(LogicalException, ConnectionOpeningException) {
+		const {
 	return m_pimpl->GetRealOpenedEndpointAddress(ruleUuid, endpointUuid);
 }
 
@@ -1737,7 +1733,7 @@ bool ServerWorker::DeleteRule(const WString &ruleUuid) {
 }
 
 void ServerWorker::OpenTunnel(
-			shared_ptr<RuleInfo> ruleInfo,
+			boost::shared_ptr<RuleInfo> ruleInfo,
 			Acceptor &incomingConnectionAcceptor) {
 	m_pimpl->OpenTunnel(ruleInfo, incomingConnectionAcceptor);
 }

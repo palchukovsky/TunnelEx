@@ -12,7 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__RuleMap_h__0802182132
 #define INCLUDED_FILE__TUNNELEX__RuleMap_h__0802182132
 
-#include <TunnelEx/Rule.hpp>
+#include "Core/Rule.hpp"
 
 typedef boost::ptr_map<std::wstring, TunnelEx::Rule> RulesMap;
 typedef std::set<std::wstring> RulesUuids;
@@ -46,25 +46,22 @@ inline bool IsService(const TunnelEx::Rule &rule) {
 }
 
 inline void Append(const TunnelEx::Rule *const rule, TunnelEx::RuleSet &ruleSet) {
-	using namespace boost;
 	using namespace TunnelEx;
 	if (IsTunnel(rule)) {
-		ruleSet.Append(*polymorphic_downcast<const TunnelRule *>(rule));
+		ruleSet.Append(*boost::polymorphic_downcast<const TunnelRule *>(rule));
 	} else {
-		ruleSet.Append(*polymorphic_downcast<const ServiceRule *>(rule));
+		ruleSet.Append(*boost::polymorphic_downcast<const ServiceRule *>(rule));
 	}
 }
 
 inline std::auto_ptr<TunnelEx::Rule> Clone(const TunnelEx::Rule *const source) {
-	using namespace std;
-	using namespace boost;
 	using namespace TunnelEx;
 	if (IsTunnel(source)) {
-		return auto_ptr<Rule>(
-			new TunnelRule(*polymorphic_downcast<const TunnelRule *>(source)));
+		return std::auto_ptr<Rule>(
+			new TunnelRule(*boost::polymorphic_downcast<const TunnelRule *>(source)));
 	} else {
-		return auto_ptr<Rule>(
-			new ServiceRule(*polymorphic_downcast<const ServiceRule *>(source)));
+		return std::auto_ptr<Rule>(
+			new ServiceRule(*boost::polymorphic_downcast<const ServiceRule *>(source)));
 	}
 }
 

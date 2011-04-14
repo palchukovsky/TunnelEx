@@ -22,11 +22,8 @@
 
 #include "Legacy/LegacySupporter.hpp"
 
-
-using namespace std;
-using namespace boost;
-using namespace boost::posix_time;
 using namespace TunnelEx;
+namespace pt = boost::posix_time;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(MainFrame::CMD_EXIT, MainFrame::OnCmdExit)
@@ -107,7 +104,7 @@ MainFrame::MainFrame()
 
 MainFrame::~MainFrame() {
 	{
-		const auto_ptr<const UpdateChecker> updateChecker = m_updateChecker;
+		const std::auto_ptr<const UpdateChecker> updateChecker = m_updateChecker;
 	}
 	if (!IsMaximized()) {
 		Config &config = wxGetApp().GetConfig();
@@ -235,12 +232,12 @@ void MainFrame::CreateToolBar(bool goPro) {
 
 void MainFrame::CreateMenu(bool goPro) {
     
-	auto_ptr<wxMenu> file(new wxMenu);
+	std::auto_ptr<wxMenu> file(new wxMenu);
 	wxBitmap icon;
 
 	wxMenuItem *item;
 	{
-		auto_ptr<wxMenu> subMenu(new wxMenu);
+		std::auto_ptr<wxMenu> subMenu(new wxMenu);
 		item = new wxMenuItem(
 			subMenu.get(),
 			CMD_RULE_ADD_CUSTOM,
@@ -266,8 +263,8 @@ void MainFrame::CreateMenu(bool goPro) {
 	}
 	file->AppendSeparator();
 	{
-		auto_ptr<wxMenu> subMenu(new wxMenu);
-		subMenu->Append(CMD_RULE_BACKUP_ALL, wxT("Backup &rule set..."));
+		std::auto_ptr<wxMenu> subMenu(new wxMenu);
+		subMenu->Append(CMD_RULE_BACKUP_ALL, wxT("Backup &rule std::set..."));
 		subMenu->Enable(CMD_RULE_BACKUP_ALL, false);
 		subMenu->Append(CMD_RULE_BACKUP_SELECTED, wxT("Backup &selected rules..."));
 		subMenu->Enable(CMD_RULE_BACKUP_SELECTED, false);
@@ -279,7 +276,7 @@ void MainFrame::CreateMenu(bool goPro) {
     file->AppendSeparator();
     file->Append(CMD_EXIT, wxT("E&xit"));
 
-	auto_ptr<wxMenu> edit(new wxMenu);
+	std::auto_ptr<wxMenu> edit(new wxMenu);
 	item = new wxMenuItem(
 		edit.get(),
 		CMD_RULE_CUT,
@@ -330,13 +327,13 @@ void MainFrame::CreateMenu(bool goPro) {
 	edit->Append(CMD_RULE_CHANGES_CANCEL, wxT("Cancel &Rule(s) Changes"));
 	edit->Enable(CMD_RULE_CHANGES_CANCEL, false);
 
-	auto_ptr<wxMenu> view(new wxMenu);
+	std::auto_ptr<wxMenu> view(new wxMenu);
     view->Append(CMD_SORT_BY_NAME, wxT("Sort Rules by &Name"));
 	view->Append(CMD_SORT_BY_INPUTS, wxT("Sort Rules by &Inputs"));
 	view->Append(CMD_SORT_BY_DESTINATIONS, wxT("Sort Rules by &Destintation"));
 	view->Append(CMD_SORT_BY_STATE, wxT("Sort Rules by &State"));
 
-	auto_ptr<wxMenu> service(new wxMenu);
+	std::auto_ptr<wxMenu> service(new wxMenu);
 	item = new wxMenuItem(service.get(), CMD_SERVICE_LOG_OPEN_CLOSE, wxT("Show/Hide &Log...\tF2"));
 	wxGetApp().GetTheme().GetLogIcon(icon, false);
 	item->SetBitmap(icon);
@@ -362,7 +359,7 @@ void MainFrame::CreateMenu(bool goPro) {
 	service->Append(CMD_SERVICE_SSL_SERTIFICATE_LIST, wxT("&Manage SSL Certificates..."));
 	service->Enable(CMD_SERVICE_SSL_SERTIFICATE_LIST, false);
  
-	auto_ptr<wxMenu> help(new wxMenu);
+	std::auto_ptr<wxMenu> help(new wxMenu);
 	item = new wxMenuItem(help.get(), CMD_HELP_CONTENTS, wxT("&Help Topics"));
 	wxGetApp().GetTheme().GetHelpIcon(icon, false);
 	item->SetBitmap(icon);
@@ -389,7 +386,7 @@ void MainFrame::CreateMenu(bool goPro) {
 	help->AppendSeparator();
 	help->Append(CMD_ABOUT, wxT("&About..."));
 
-	auto_ptr<wxMenuBar> menubar(new wxMenuBar);
+	std::auto_ptr<wxMenuBar> menubar(new wxMenuBar);
 	menubar->Append(file.release(), wxT("&File"));
 	menubar->Append(edit.release(), wxT("&Edit"));
 	menubar->Append(view.release(), wxT("&View"));
@@ -525,7 +522,7 @@ void MainFrame::OnCmdRuleRestore(wxCommandEvent &) {
 		wxZipInputStream zip(in);
 		BOOST_ASSERT(zip.IsOk());
 		if (zip.IsOk()) {
-			auto_ptr<wxZipEntry> entry;
+			std::auto_ptr<wxZipEntry> entry;
 			const wxString entryName = wxZipEntry::GetInternalName(wxT("RuleSet.xml"));
 			do {
 				entry.reset(zip.GetNextEntry());
@@ -720,7 +717,7 @@ void MainFrame::OnCmdAbout(wxCommandEvent &) {
 	info.SetIcon(wxICON(ICON));
 	//! @todo: replace product name after CC will be independent product, and remove edition name from here
 	{
-		string productName = TUNNELEX_NAME;
+		std::string productName = TUNNELEX_NAME;
 		if (GetMenuBar()->IsEnabled(CMD_LICENSE_INFO_VIEW)) {
 			productName += " " + Licensing::InfoLicense(LicenseState(m_window->GetService())).GetEditionName();
 		}
@@ -736,7 +733,7 @@ void MainFrame::OnCmdAbout(wxCommandEvent &) {
 }
 
 void MainFrame::OnCmdHandleReleaseInfo(UpdateChecker::Event &) {
-	const auto_ptr<const UpdateChecker> updateChecker = m_updateChecker;
+	const std::auto_ptr<const UpdateChecker> updateChecker = m_updateChecker;
 	if (	!updateChecker.get()
 			|| !updateChecker->IsReleaseNew()
 			|| !wxGetApp().GetConfig().Read(wxT("/CheckNewVersion"), true)) {
@@ -890,14 +887,14 @@ void MainFrame::CheckRuleSetStatus() {
 }
 
 template<typename License>
-void MainFrame::Check(auto_ptr<License> &license) {
+void MainFrame::Check(std::auto_ptr<License> &license) {
 
 	using namespace Licensing;
 
-	const optional<ptime> updateTo = license->GetUpdateTimeTo();
-	const string licenseStr = license->GetLicense();
+	const boost::optional<pt::ptime> updateTo = license->GetUpdateTimeTo();
+	const std::string licenseStr = license->GetLicense();
 
-	if (updateTo && *updateTo < second_clock::universal_time() + hours(24 * 6)) {
+	if (updateTo && *updateTo < pt::second_clock::universal_time() + pt::hours(24 * 6)) {
 		OnlineKeyRequest request(licenseStr, LicenseState(m_window->GetService()));
 		request.Send();
 		if (request.TestKey<InfoDlgLicense>()) {
@@ -978,7 +975,7 @@ void MainFrame::OnConnectionToServiceStateChanged(ServiceWindow::Event &event) {
 
 	if (isConnected) {
 		using namespace Licensing;
-		auto_ptr<ExeLicense> license(new ExeLicense(LicenseState(m_window->GetService())));
+		std::auto_ptr<ExeLicense> license(new ExeLicense(LicenseState(m_window->GetService())));
 		while (!license->IsFeatureAvailable(true)) {
 			if (LicenseStartDlg(*m_window, this).ShowModal() != wxID_OK) {
 				if (!wxGetApp().IsUnlimitedModeActive()) {

@@ -26,10 +26,8 @@
 #include "LicensePolicies.hpp"
 #include "Auto.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::posix_time;
 using namespace TunnelEx;
+namespace pt = boost::posix_time;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -141,8 +139,8 @@ wxPoint ServiceWindow::GetServiceStateCtrlPosition() const {
 	return wxPoint(m_borderWidth, m_borderWidth);
 }
 
-auto_ptr<ServiceAdapter> ServiceWindow::InitService(const wxString &endpoint) {
-	return auto_ptr<ServiceAdapter>(
+std::auto_ptr<ServiceAdapter> ServiceWindow::InitService(const wxString &endpoint) {
+	return std::auto_ptr<ServiceAdapter>(
 		new ServiceAdapter(
 			*this,
 			endpoint,
@@ -206,7 +204,7 @@ void ServiceWindow::CheckService() {
 
 void ServiceWindow::OnServiceRuleSetModified(ServiceAdapter::Event &) {
 	const ServiceState currentState
-		= polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
+		= boost::polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
 			->GetStateCode();
 	if (currentState == TEX_SERVICE_STATE_CHANGED) {
 		ChooseActualServiceState();
@@ -229,8 +227,8 @@ namespace {
 		const size_t serviceRulesNumb = serviceRuleSet.GetSize();
 		for (size_t i = 0; i < serviceRulesNumb; ++i) {
 			const typename RuleSet::ItemType &serviceRule = serviceRuleSet[i];
-			auto_ptr<RuleSet::ItemType> insertRule;
-			const wstring id = serviceRule.GetUuid().GetCStr();
+			std::auto_ptr<RuleSet::ItemType> insertRule;
+			const std::wstring id = serviceRule.GetUuid().GetCStr();
 			const NotAppliedRulesUuids::iterator posInNotAppliedRules
 				= notAppliedRules.find(id);
 			if (posInNotAppliedRules == notAppliedRules.end()) {
@@ -243,7 +241,7 @@ namespace {
 						&& IsRule<RuleSet::ItemType>(pos->second)) {
 					insertRule.reset(
 						new typename RuleSet::ItemType(
-							*polymorphic_downcast<const RuleSet::ItemType *>(pos->second)));
+							*boost::polymorphic_downcast<const RuleSet::ItemType *>(pos->second)));
 					insertRule->Enable(serviceRule.IsEnabled());
 				} else {
 					insertRule.reset(new typename RuleSet::ItemType(serviceRule));
@@ -271,7 +269,7 @@ void ServiceWindow::RefreshRuleSet() {
 		const RulesMap::const_iterator pos = m_rules.find(r.first);
 		BOOST_ASSERT(pos != m_rules.end());
 		if (pos != m_rules.end()) {
-			auto_ptr<Rule> rule = Clone(pos->second);
+			std::auto_ptr<Rule> rule = Clone(pos->second);
 			newRuleSet.insert(r.first, rule);
 		}
 	}
@@ -285,7 +283,7 @@ void ServiceWindow::RefreshRuleSet() {
 
 void ServiceWindow::RepaintRuleSet(bool generateRulesListChangeEvent) {
 	RuleListCtrl &ruleListCtrl
-		= *polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
+		= *boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
 	ruleListCtrl.RefreshList(GetService().IsStarted());
 	if (generateRulesListChangeEvent) {
 		ServiceWindow::Event event(
@@ -303,7 +301,7 @@ void ServiceWindow::OnSelectionChanged(wxListEvent &) {
 }
 
 void ServiceWindow::AddCustomRule() {
-	auto_ptr<TunnelRule> newRule;
+	std::auto_ptr<TunnelRule> newRule;
 	TunnelRuleShortDlg simpleDlg(*this, this);
 	if (simpleDlg.ShowModal() == wxID_OK) {
 		newRule.reset(
@@ -311,7 +309,7 @@ void ServiceWindow::AddCustomRule() {
 				const_cast<const TunnelRuleShortDlg &>(simpleDlg).GetRule()));
 	}
 	if (simpleDlg.IsAdvancdeMode()) {
-		auto_ptr<TunnelRuleDlg> fullDlg(!newRule.get()
+		std::auto_ptr<TunnelRuleDlg> fullDlg(!newRule.get()
 			?	new TunnelRuleDlg(*this, this, false)
 			:	new TunnelRuleDlg(*this, this, *newRule));
 		if (fullDlg->ShowModal() == wxID_OK) {
@@ -347,7 +345,7 @@ void ServiceWindow::AddFtpTunnelRule() {
 }
 
 void ServiceWindow::AddRule(const Rule &rule) {
-	auto_ptr<Rule> newRule = Clone(rule);
+	std::auto_ptr<Rule> newRule = Clone(rule);
 	if (	!GetLicenses().ruleSet.IsFeatureAvailable(GetEnabledRulesCount() + 1)
 			&& !wxGetApp().IsUnlimitedModeActive()) {
 		newRule->Enable(false);
@@ -359,17 +357,17 @@ void ServiceWindow::AddRule(const Rule &rule) {
 void ServiceWindow::EditSelectedRule() {
 	
 	 RuleListCtrl &ruleListCtrl
-		 = *polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
+		 = *boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
 
 	const Rule *const selectedRule = ruleListCtrl.GetFirstSelectedRule();
 	if (!selectedRule) {
 		return;
 	}
 	
-	auto_ptr<Rule> selectedRuleCopy = Clone(selectedRule);
+	std::auto_ptr<Rule> selectedRuleCopy = Clone(selectedRule);
 	if (IsTunnel(selectedRuleCopy.get())) {
 		const TunnelRule *rule
-			= polymorphic_downcast<TunnelRule *>(selectedRuleCopy.get());
+			= boost::polymorphic_downcast<TunnelRule *>(selectedRuleCopy.get());
 		if (!TunnelRuleShortDlg::CheckRule(*rule)) {
 			TunnelRuleDlg ruleDlg(*this, this, *rule);
 			if (ruleDlg.ShowModal() != wxID_OK) {
@@ -385,7 +383,7 @@ void ServiceWindow::EditSelectedRule() {
 				selectedRuleCopy.reset(
 					new TunnelRule(
 						const_cast<const TunnelRuleShortDlg &>(simpleDlg).GetRule()));
-				rule = polymorphic_downcast<TunnelRule *>(selectedRuleCopy.get());
+				rule = boost::polymorphic_downcast<TunnelRule *>(selectedRuleCopy.get());
 			}
 			if (simpleDlg.IsAdvancdeMode()) {
 				TunnelRuleDlg fullDlg(*this, this, *rule);
@@ -403,7 +401,7 @@ void ServiceWindow::EditSelectedRule() {
 		selectedRuleCopy = ServiceRuleDlg::EditRule(
 			*this,
 			*this,
-			*polymorphic_downcast<ServiceRule *>(selectedRuleCopy.get()));
+			*boost::polymorphic_downcast<ServiceRule *>(selectedRuleCopy.get()));
 		if (!selectedRuleCopy.get()) {
 			return;
 		}
@@ -433,12 +431,12 @@ void ServiceWindow::EditSelectedRule() {
 void ServiceWindow::EnableSelectedRules() {
 
 	RulesUuids selectedUuids;
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelected(selectedUuids);
 	
 	{
 		size_t rulesCountToEnable = 0;
-		foreach (const wstring &ruleUuid, selectedUuids) {
+		foreach (const std::wstring &ruleUuid, selectedUuids) {
 			if (!IsRuleEnabled(ruleUuid)) {
 				++rulesCountToEnable;
 			}
@@ -457,7 +455,7 @@ void ServiceWindow::EnableSelectedRules() {
 
 void ServiceWindow::DisableSelectedRules() {
 	RulesUuids selectedUuids;
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelected(selectedUuids);
 	GetService().DisableRules(selectedUuids);
 }
@@ -475,7 +473,7 @@ void ServiceWindow::DeleteSelectedRules() {
 	RulesUuids selectedUuids;
 	NotAppliedRulesUuids tmpNotAppliedRules(m_notAppliedRules);
 	RulesUuids deleteRules;
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelected(selectedUuids);
 	foreach (const RulesUuids::value_type &id, selectedUuids) {
 		const NotAppliedRulesUuids::iterator notAppliedPos
@@ -499,7 +497,7 @@ void ServiceWindow::DeleteSelectedRules() {
 
 void ServiceWindow::DeleteAllRules() {
 	const int answer = wxMessageBox(
-		wxT("Delete ALL rules in the rule set?"),
+		wxT("Delete ALL rules in the rule std::set?"),
 		wxT("Confirm delete"),
 		wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_WARNING,
 		this);
@@ -509,7 +507,7 @@ void ServiceWindow::DeleteAllRules() {
 	NotAppliedRulesUuids tmpNotAppliedRules(m_notAppliedRules);
 	RulesUuids deleteRules;
 	foreach (const RulesMap::value_type &r, m_rules) {
-		const wstring &id = r.first;
+		const std::wstring &id = r.first;
 		const NotAppliedRulesUuids::iterator notAppliedPos
 			= tmpNotAppliedRules.find(id);
 		const bool isModified = notAppliedPos != tmpNotAppliedRules.end();
@@ -530,27 +528,27 @@ void ServiceWindow::DeleteAllRules() {
 }
 
 void ServiceWindow::SelectAllRules() {
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->SelectAll();
 }
 
 void ServiceWindow::SortRuleListViewByName() {
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->SortByName();
 }
 
 void ServiceWindow::SortRuleListViewByInputs() {
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->SortByInputs();
 }
 
 void ServiceWindow::SortRuleListViewByDestinations() 	{
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->SortByDestinations();
 }
 
 void ServiceWindow::SortRuleListViewByState() 	{
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->SortByState();
 }
 
@@ -592,7 +590,7 @@ void ServiceWindow::SetServiceState(ServiceState state) {
 			description = wxT("Connection lost, ") TUNNELEX_NAME_W wxT(" status is unknown");
 			break;
 	}
-	polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
+	boost::polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
 			->SetState(state, description);
 }
 
@@ -629,7 +627,7 @@ void ServiceWindow::OnServiceNewErrors(ServiceAdapter::Event &) {
 	m_hasNewWarns = false;
 	m_hasNewErrors = true;
 	const ServiceState currentState
-		= polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
+		= boost::polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
 			->GetStateCode();
 	switch (currentState) {
 		case TEX_SERVICE_STATE_CONNECTING:
@@ -638,7 +636,7 @@ void ServiceWindow::OnServiceNewErrors(ServiceAdapter::Event &) {
 			return;
 	}
 	SetServiceState(TEX_SERVICE_STATE_ERROR);
-	polymorphic_cast<wxFrame *>(GetParent())
+	boost::polymorphic_cast<wxFrame *>(GetParent())
 		->RequestUserAttention(wxUSER_ATTENTION_ERROR);
 }
 
@@ -650,7 +648,7 @@ void ServiceWindow::OnServiceNewWarnings(ServiceAdapter::Event &) {
 		m_hasNewWarns = true;
 	}
 	const ServiceState currentState
-		= polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
+		= boost::polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
 			->GetStateCode();
 	switch (currentState) {
 		case TEX_SERVICE_STATE_CONNECTING:
@@ -660,7 +658,7 @@ void ServiceWindow::OnServiceNewWarnings(ServiceAdapter::Event &) {
 			return;
 	}
 	SetServiceState(TEX_SERVICE_STATE_WARNING);
-	polymorphic_cast<wxFrame *>(GetParent())
+	boost::polymorphic_cast<wxFrame *>(GetParent())
 		->RequestUserAttention(wxUSER_ATTENTION_ERROR);
 }
 
@@ -672,7 +670,7 @@ void ServiceWindow::OnServiceNewLogRecord(ServiceAdapter::Event &event) {
 
 void ServiceWindow::OnServiceAdapterConnect(ServiceAdapter::Event &) {
 	ChooseActualServiceState();
-	list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
+	std::list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
 	GetService().GetNetworkAdapters(true, serviceNetworkAdapters);
 	ServiceWindow::Event event(
 		EVT_SERVICE_WINDOW_ACTION,
@@ -686,13 +684,13 @@ void ServiceWindow::OnServiceAdapterDisconnect(ServiceAdapter::Event &) {
 		EVT_SERVICE_WINDOW_ACTION,
 		Event::ID_CONNECTION_TO_SERVICE_STATE_CHANGED);
 	wxPostEvent(GetParent(), event);
-	polymorphic_cast<wxFrame *>(GetParent())
+	boost::polymorphic_cast<wxFrame *>(GetParent())
 		->RequestUserAttention(wxUSER_ATTENTION_ERROR);
 }
 
 void ServiceWindow::OnServiceAdapterConnectionFailed(ServiceAdapter::Event &) {
 	const ServiceState currentState
-		= polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
+		= boost::polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
 			->GetStateCode();
 	if (currentState == TEX_SERVICE_STATE_CONNECTING) {
 		ChooseActualServiceState();
@@ -703,7 +701,7 @@ void ServiceWindow::OnServiceAdapterConnectionFailed(ServiceAdapter::Event &) {
 
 void ServiceWindow::OnServiceRunningStateChanged(ServiceAdapter::Event &) {
 	{
-		list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
+		std::list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
 		GetService().GetNetworkAdapters(true, serviceNetworkAdapters);
 	}
 	RepaintRuleSet(false);
@@ -712,7 +710,7 @@ void ServiceWindow::OnServiceRunningStateChanged(ServiceAdapter::Event &) {
 		Event::ID_SERVICE_RUNING_STATE_CHANGED);
 	wxPostEvent(GetParent(), myEvent);
 	const ServiceState currentState
-		= polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
+		= boost::polymorphic_downcast<ServiceStateCtrl *>(FindWindow(CTRL_ID_SERVER_STATE))
 			->GetStateCode();
 	switch (currentState) {
 		case TEX_SERVICE_STATE_CONNECTING:
@@ -785,7 +783,7 @@ void ServiceWindow::ApplyChangesForSelectedRules() {
 
 	NotAppliedRulesUuids tmpNotAppliedRules(m_notAppliedRules);
 	RulesUuids selectedUuids;
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelected(selectedUuids);
 	RuleSet changedRules;
 	RulesUuids deletedRules;
@@ -825,7 +823,7 @@ void ServiceWindow::ApplyChangesForSelectedRules() {
 void ServiceWindow::CancelChangesForSelectedRules() {
 	NotAppliedRulesUuids tmpNotAppliedRules(m_notAppliedRules);
 	RulesUuids selectedUuids;
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelected(selectedUuids);
 	const RulesUuids::const_iterator end = selectedUuids.end();
 	for (RulesUuids::const_iterator i = selectedUuids.begin(); i != end; ++i) {
@@ -921,7 +919,7 @@ namespace {
 			const RulesMap::iterator pos
 				= rules.find(importedRules[i].GetUuid().GetCStr());
 			if (pos == rules.end()) {
-				auto_ptr<RuleSet::ItemType> rule(
+				std::auto_ptr<RuleSet::ItemType> rule(
 					new typename RuleSet::ItemType(importedRules[i]));
 				CheckImportName(*rule, rules, L"%1% (%2%)");
 				rules.insert(rule->GetUuid().GetCStr(), rule);
@@ -939,7 +937,7 @@ namespace {
 				RulesMap &rules,
 				NotAppliedRulesUuids &notAppliedRules) {
 		for (size_t i = 0; i < importedRules.GetSize(); ++i) {
-			auto_ptr<RuleSet::ItemType> rule(
+			std::auto_ptr<RuleSet::ItemType> rule(
 				new typename RuleSet::ItemType(importedRules[i].MakeCopy()));
 			CheckImportName(*rule, rules, L"%1% (%2%)");
 			const WString id = rule->GetUuid();
@@ -989,7 +987,7 @@ wxString ServiceWindow::ExportRules() const {
 
 wxString ServiceWindow::ExportSelectedRules() const {
 	RulesUuids selectedUuids;
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelected(selectedUuids);
 	RuleSet rulesToExport;
 	foreach (const RulesUuids::value_type &id, selectedUuids) {
@@ -1006,7 +1004,7 @@ wxString ServiceWindow::ExportSelectedRules() const {
 }
 
 size_t ServiceWindow::GetSelectedRulesCount() const {
-	return polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	return boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->GetSelectedItemCount();
 }
 
@@ -1024,9 +1022,9 @@ size_t ServiceWindow::GetEnabledSelectedRulesCount() const {
 	size_t result = 0;
 	RulesUuids selectedUuids;
 	RuleListCtrl &ctrl
-		= *polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
+		= *boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
 	ctrl.GetSelected(selectedUuids);
-	foreach (const wstring &selectedRuleUuid, selectedUuids) {
+	foreach (const std::wstring &selectedRuleUuid, selectedUuids) {
 		if (IsRuleEnabled(selectedRuleUuid)) {
 			++result;
 		}
@@ -1034,7 +1032,7 @@ size_t ServiceWindow::GetEnabledSelectedRulesCount() const {
 	return result;
 }
 
-bool ServiceWindow::IsRuleEnabled(const wstring &ruleUuid) const {
+bool ServiceWindow::IsRuleEnabled(const std::wstring &ruleUuid) const {
 	const RulesMap::const_iterator rule = m_rules.find(ruleUuid);
 	BOOST_ASSERT(rule != m_rules.end());
 	if (rule != m_rules.end() && rule->second->IsEnabled()) {
@@ -1052,7 +1050,7 @@ size_t ServiceWindow::GetDisabledSelectedRulesCount() const {
 	size_t result = 0;
 	RulesUuids selectedUuids;
 	RuleListCtrl &ctrl
-		= *polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
+		= *boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
 	ctrl.GetSelected(selectedUuids);
 	const NotAppliedRulesUuids::const_iterator notAppliedEnd = m_notAppliedRules.end();
 	foreach (const RulesUuids::value_type &id, selectedUuids) {
@@ -1074,7 +1072,7 @@ size_t ServiceWindow::GetEditableSelectedRulesCount() const {
 	size_t result = 0;
 	RulesUuids selectedUuids;
 	RuleListCtrl &ctrl
-		= *polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
+		= *boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
 	ctrl.GetSelected(selectedUuids);
 	const NotAppliedRulesUuids::const_iterator notAppliedEnd = m_notAppliedRules.end();
 	foreach (const RulesUuids::value_type id, selectedUuids) {
@@ -1091,7 +1089,7 @@ size_t ServiceWindow::GetModifiedSelectedRulesCount() const {
 	size_t result = 0;
 	RulesUuids selectedUuids;
 	RuleListCtrl &ctrl
-		= *polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
+		= *boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST));
 	ctrl.GetSelected(selectedUuids);
 	const NotAppliedRulesUuids::const_iterator notAppliedEnd = m_notAppliedRules.end();
 	foreach (const RulesUuids::value_type &id, selectedUuids) {
@@ -1125,7 +1123,7 @@ size_t ServiceWindow::GetDeletedRulesCount() const {
 }
 
 void ServiceWindow::EnableList(const bool flag) {
-	polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
+	boost::polymorphic_downcast<RuleListCtrl *>(FindWindow(CTRL_ID_RULES_LIST))
 		->Enable(flag);
 }
 
@@ -1175,7 +1173,7 @@ namespace {
 
 	public:
 
-		const string & GetLicense() const {
+		const std::string & GetLicense() const {
 			return m_license;
 		}
 
@@ -1242,9 +1240,9 @@ namespace {
 				return 0;
 			}
 			
-			ostringstream postData;
+			std::ostringstream postData;
 			{
-				string key = m_currentLicense.GetKey();
+				std::string key = m_currentLicense.GetKey();
 				if (key.empty()) {
 					key = (Format("%1%%1%%2%%1%%2%%1%%2%%1%%2%%1%%1%%1%") % "0000" % "-").str();
 				}
@@ -1266,10 +1264,10 @@ namespace {
 				return 0;
 			}
 
-			string licenseTmp;
+			std::string licenseTmp;
 			size_t periodTmp = 0;
 			{
-				vector<char> answer;
+				std::vector<char> answer;
 				answer.resize(256);
 				size_t realAnswerSize = 0;
 				for ( ; ; ) {
@@ -1295,18 +1293,18 @@ namespace {
 				answer[realAnswerSize] = 0;
 #				if defined(_DEBUG) || defined(TEST)
 				{
-					ofstream f("TrialRequestResult.txt", ios::trunc);
+					std::ofstream f("TrialRequestResult.txt", std::ios::trunc);
 					f << &answer[0];
 				}
 #				endif
-				typedef split_iterator<vector<char>::const_iterator> Iterator;
-				for (	Iterator i = make_split_iterator(
-							const_cast<const vector<char> &>(answer),
-							first_finder("\n", is_iequal()));
+				typedef boost::split_iterator<std::vector<char>::const_iterator> Iterator;
+				for (	Iterator i = boost::make_split_iterator(
+							const_cast<const std::vector<char> &>(answer),
+							boost::first_finder("\n", boost::is_iequal()));
 						i != Iterator();
 						++i) {
-					string line = copy_range<string>(*i);
-					trim_if(line, is_space() || is_cntrl());
+					std::string line = boost::copy_range<std::string>(*i);
+					boost::trim_if(line, boost::is_space() || boost::is_cntrl());
 					BOOST_ASSERT(!line.empty());
 					if (line.empty()) {
 						continue;
@@ -1314,8 +1312,8 @@ namespace {
 						line.swap(licenseTmp);
 					} else {
 						try {
-							periodTmp = lexical_cast<size_t>(line);
-						} catch (const bad_cast &) {
+							periodTmp = boost::lexical_cast<size_t>(line);
+						} catch (const std::bad_cast &) {
 							BOOST_ASSERT(false);
 						}
 						break;
@@ -1335,7 +1333,7 @@ namespace {
 	private:
 
 		const License &m_currentLicense;
-		string m_license;
+		std::string m_license;
 		size_t m_period;
 
 	};
@@ -1376,11 +1374,11 @@ bool ServiceWindow::ActivateTrial() {
 
 	BOOST_ASSERT(m_trialLicenseCache.empty() || !m_trialLicenseCacheTime.is_not_a_date_time());
 	if (	m_trialLicenseCache.empty()
-			||  second_clock::universal_time() - m_trialLicenseCacheTime >= hours(24)) {
+			||  pt::second_clock::universal_time() - m_trialLicenseCacheTime >= pt::hours(24)) {
 
 		using namespace Licensing;
 
-		auto_ptr<ExeLicense> currentLicense(new ExeLicense(LicenseState(GetService())));
+		std::auto_ptr<ExeLicense> currentLicense(new ExeLicense(LicenseState(GetService())));
 		BOOST_ASSERT(!currentLicense->IsTrial());
 		if (currentLicense->IsTrial()) {
 			wxMessageBox(
@@ -1401,7 +1399,7 @@ bool ServiceWindow::ActivateTrial() {
 			NULL,
 			wxPD_APP_MODAL | wxPD_SMOOTH);
 		for ( ; requesting.IsRunning(); progress.Pulse(), wxMilliSleep(25));
-		string license = requesting.GetLicense();
+		std::string license = requesting.GetLicense();
 		const size_t period = requesting.GetPeriod();
 		if (license.empty() || !period) {
 			wxLogError(
@@ -1413,7 +1411,7 @@ bool ServiceWindow::ActivateTrial() {
 		}
 
 		license.swap(m_trialLicenseCache);
-		m_trialLicenseCacheTime = second_clock::universal_time();
+		m_trialLicenseCacheTime = pt::second_clock::universal_time();
 		m_trialLicensePeriodCache = period;
 
 	} else {
@@ -1450,19 +1448,19 @@ bool ServiceWindow::ActivateTrial() {
 
 	{
 		using namespace Licensing;
-		auto_ptr<ExeLicense> license(new ExeLicense(LicenseState(GetService())));
+		std::auto_ptr<ExeLicense> license(new ExeLicense(LicenseState(GetService())));
 		if (	!license->IsFeatureAvailable(true)
 				&& license->IsTrial()
 				&& license->GetUnactivityReason() == UR_TIME) {
-			wstringstream ss;
+			std::wstringstream ss;
 			ss << L"Time use of your free trial has come to an end";
-			const optional<posix_time::ptime> timeToLimit
+			const boost::optional<pt::ptime> timeToLimit
 				= license->GetLimitationTimeTo();
 			license.reset();
 			if (timeToLimit) {
 				ss << L" on ";
-				auto_ptr<wtime_facet> facet(new wtime_facet(L"%B, %d %Y"));
-				locale locTo(cout.getloc(), facet.get());
+				std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%B, %d %Y"));
+				std::locale locTo(std::cout.getloc(), facet.get());
 				facet.release();
 				ss.imbue(locTo);
 				ss << *timeToLimit;

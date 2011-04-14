@@ -13,7 +13,7 @@
 
 #include "Config.h"
 
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 
 Config::Config()
 		: wxFileConfig(
@@ -43,7 +43,7 @@ Config::~Config() {
 
 		std::vector<wxChar> buffer(MAX_PATH, 0);
 		if (SHGetSpecialFolderPath(NULL, &buffer[0], CSIDL_APPDATA, TRUE)) {
-			wpath path(&buffer[0]);
+			fs::wpath path(&buffer[0]);
 			path /= TUNNELEX_NAME_W;
 			path /= L"TexCC.ini";
 			try {

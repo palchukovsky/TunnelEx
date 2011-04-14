@@ -15,9 +15,9 @@
 #include "CompileConfig.h"
 #include "Constants.h"
 
+#define BOOST_FILESYSTEM_VERSION 2
+
 #include "Licensing/Prec.h"
-#include "Licensing/License.hpp"
-#include "Licensing/LocalComunicationPolicy.hpp"
 
 #include "Format.hpp"
 #include "ModulePath.hpp"

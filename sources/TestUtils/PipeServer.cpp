@@ -13,15 +13,13 @@
 
 #include "PipeServer.hpp"
  
-using namespace std;
-using namespace boost;
 using namespace Test;
 
 //////////////////////////////////////////////////////////////////////////
 
 namespace Test {
 
-	void Receive(HANDLE handle, Buffer &receivedBuffer) throw(ReceiveError) {
+	void Receive(HANDLE handle, Buffer &receivedBuffer) {
 		Buffer operationBuffer(255);
 		DWORD received = 0;
 		if (!ReadFile(handle, &operationBuffer[0], DWORD(operationBuffer.size()), &received, NULL)) {
@@ -42,19 +40,19 @@ class PipeServer::Implementation : private boost::noncopyable {
 
 private:
 
-	class Connection : private noncopyable {
+	class Connection : private boost::noncopyable {
 	
 	public:
 	
-		explicit Connection(wstring pipeName) {
-			algorithm::replace_all(pipeName, L"/", L"\\");
-			pipeName = (wformat(L"\\\\.\\pipe\\%1%") % pipeName).str();
+		explicit Connection(std::wstring pipeName) {
+			boost::replace_all(pipeName, L"/", L"\\");
+			pipeName = (boost::wformat(L"\\\\.\\pipe\\%1%") % pipeName).str();
 			m_overlap.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 			if (m_overlap.hEvent == NULL) {
 				throw std::exception("Create pipe event failed.");
 			}
 			const size_t bufferSize = 4096;
-			m_handle = CreateNamedPipe( 
+			m_handle = CreateNamedPipeW( 
 				pipeName.c_str(),
 				PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
 				PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -92,7 +90,7 @@ private:
 			return m_overlap.hEvent;
 		}
 
-		void Send(const char *data, size_t size) throw(SendError) {
+		void Send(const char *data, size_t size) {
 			DWORD sent = 0;
 			if (!WriteFile(m_handle, data, DWORD(size), &sent, NULL)) {
 				throw SendError(
@@ -103,7 +101,7 @@ private:
 			}
 		}
 
-		Buffer GetReceived() throw(ReceiveError) {
+		Buffer GetReceived() {
 			Test::Receive(m_handle, m_received);
 			return m_received;
 		}
@@ -155,7 +153,7 @@ private:
 
 	};
 	
-	typedef vector<shared_ptr<Connection> > Connections;
+	typedef std::vector<boost::shared_ptr<Connection> > Connections;
 	
 	enum ACCEPT_RESULT {
 		ACCEPT_ERROR,
@@ -165,11 +163,13 @@ private:
 
  public:
  
-	explicit Implementation(const wstring &pipeName)
+	explicit Implementation(const std::wstring &pipeName)
 			: m_pipeName(pipeName),
 			m_activeConnection(new Connection(m_pipeName)),
 			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)) {
-		m_acceptThread.reset(new thread(bind(&Implementation::AcceptingThreadMain, this)));
+		m_acceptThread.reset(
+			new boost::thread(
+				boost::bind(&Implementation::AcceptingThreadMain, this)));
 	}
 	
 	~Implementation() {
@@ -189,7 +189,7 @@ public:
 	}
 
 	void CloseConnection(size_t connectionIndex) {
-		mutex::scoped_lock lock(m_clientsMutex);
+		boost::mutex::scoped_lock lock(m_clientsMutex);
 		if (connectionIndex < m_connections.size()) {
 			Connections tmpConnnections(m_connections);
 			tmpConnnections.erase(tmpConnnections.begin() + connectionIndex);
@@ -199,23 +199,17 @@ public:
 
 public:
 
-	void Send(
-				size_t connectionIndex,
-				const string &message)
-			throw(SendError) {
-		mutex::scoped_lock lock(m_clientsMutex);
+	void Send(size_t connectionIndex, const std::string &message) {
+		boost::mutex::scoped_lock lock(m_clientsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw SendError("Could not send data to pipe: connection diesn't exist.");
 		}
 		m_connections[connectionIndex]
-			->Send(message.c_str(), (message.size() + 1) * sizeof(string::value_type));
+			->Send(message.c_str(), (message.size() + 1) * sizeof(std::string::value_type));
 	}
 
-	void Send(
-				size_t connectionIndex,
-				const Buffer &buffer)
-			throw(SendError) {
-		mutex::scoped_lock lock(m_clientsMutex);
+	void Send(size_t connectionIndex, const Buffer &buffer) {
+		boost::mutex::scoped_lock lock(m_clientsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw SendError("Could not send data to pipe: connection diesn't exist.");
 		}
@@ -223,8 +217,8 @@ public:
 			->Send(&buffer[0], buffer.size() * sizeof(Buffer::value_type));
 	}
 
-	Buffer GetReceived(size_t connectionIndex) const throw(ReceiveError) {
-		mutex::scoped_lock lock(m_clientsMutex);
+	Buffer GetReceived(size_t connectionIndex) const {
+		boost::mutex::scoped_lock lock(m_clientsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw ReceiveError("Could not receive data from pipe: connection diesn't exist.");
 		}
@@ -232,7 +226,7 @@ public:
 	}
 
 	void ClearReceived(size_t connectionIndex) {
-		mutex::scoped_lock lock(m_clientsMutex);
+		boost::mutex::scoped_lock lock(m_clientsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw ReceiveError("Could not clear data from pipe: connection diesn't exist.");
 		}
@@ -255,9 +249,9 @@ private:
 					stop = true;
 					break;
 				} else if (object == (WAIT_OBJECT_0 + 1) && m_activeConnection->HandleEvent()) {
-					shared_ptr<Connection> activeConnection = m_activeConnection;
+					boost::shared_ptr<Connection> activeConnection = m_activeConnection;
 					m_activeConnection.reset();
-					mutex::scoped_lock lock(m_clientsMutex);
+					boost::mutex::scoped_lock lock(m_clientsMutex);
 					m_connections.push_back(activeConnection);
 					break;
 				} else {
@@ -275,17 +269,17 @@ private:
 
 private:
 
-	const wstring m_pipeName;
-	shared_ptr<Connection> m_activeConnection;
+	const std::wstring m_pipeName;
+	boost::shared_ptr<Connection> m_activeConnection;
 	HANDLE m_serverHandle;
-	mutable mutex m_clientsMutex;
+	mutable boost::mutex m_clientsMutex;
 	Connections m_connections;
 	HANDLE m_stopEvent;
-	shared_ptr<thread> m_acceptThread;
+	boost::shared_ptr<boost::thread> m_acceptThread;
 
 };
 
-PipeServer::PipeServer(const wstring &pipeName)
+PipeServer::PipeServer(const std::wstring &pipeName)
 		: m_pimpl(new Implementation(pipeName)) {
 	//...//
 }
@@ -306,24 +300,15 @@ void PipeServer::CloseConnection(size_t connectionIndex) {
 	m_pimpl->CloseConnection(connectionIndex);
 }
 
-void PipeServer::Send(
-			size_t connectionIndex,
-			const string &message)
-		throw(SendError) {
+void PipeServer::Send(size_t connectionIndex, const std::string &message) {
 	m_pimpl->Send(connectionIndex, message);
 }
 
-void PipeServer::Send(
-			size_t connectionIndex,
-			const Buffer &buffer)
-		throw(SendError) {
+void PipeServer::Send(size_t connectionIndex, const Buffer &buffer) {
 	m_pimpl->Send(connectionIndex, buffer);
 }
 
-Buffer PipeServer::GetReceived(
-			size_t connectionIndex)
-		const
-		throw(ReceiveError) {
+Buffer PipeServer::GetReceived(size_t connectionIndex) const {
 	return m_pimpl->GetReceived(connectionIndex);
 }
 
@@ -337,14 +322,14 @@ class PipeClient::Implementation : private boost::noncopyable {
 
 public:
 
-	explicit Implementation(wstring pipeName)
+	explicit Implementation(std::wstring pipeName)
 			: m_handle(INVALID_HANDLE_VALUE) {
-		algorithm::replace_all(pipeName, L"/", L"\\");
-		pipeName = (wformat(L"\\\\.\\pipe\\%1%") % pipeName).str();
+		boost::replace_all(pipeName, L"/", L"\\");
+		pipeName = (boost::wformat(L"\\\\.\\pipe\\%1%") % pipeName).str();
 		for (	size_t attemtsNumb = 0;
 				m_handle == INVALID_HANDLE_VALUE && attemtsNumb < 5;
 				++attemtsNumb) {
-			m_handle = CreateFile( 
+			m_handle = CreateFileW( 
 				pipeName.c_str(),   // pipe name 
 				GENERIC_READ | GENERIC_WRITE, // read and write access 
 				0,              // no sharing 
@@ -353,7 +338,7 @@ public:
 				0,              // default attributes 
 				NULL);          // no template file 
 			if (m_handle == INVALID_HANDLE_VALUE) {
-				if (GetLastError() != ERROR_PIPE_BUSY || !WaitNamedPipe(pipeName.c_str(), 300000)) {
+				if (GetLastError() != ERROR_PIPE_BUSY || !WaitNamedPipeW(pipeName.c_str(), 300000)) {
 					throw std::exception("Could not open pipe.");
 				}
 			}
@@ -375,31 +360,29 @@ public:
 
 };
 
-PipeClient::PipeClient(const wstring &pipeName)
+PipeClient::PipeClient(const std::wstring &pipeName)
 		: m_pimpl(new Implementation(pipeName)) {
 	//...//
 }
 
-void PipeClient::Send(const std::string &data) throw(SendError) {
+void PipeClient::Send(const std::string &data) {
 	Send(data.c_str(), data.size() + 1);
 }
 
-void PipeClient::Send(const Buffer &buffer) throw(SendError) {
+void PipeClient::Send(const Buffer &buffer) {
 	Send(&buffer[0], buffer.size());
 }
 
-void PipeClient::Send(const char *data, size_t size) throw(SendError) {
+void PipeClient::Send(const char *data, size_t size) {
 	DWORD sent = 0;
 	if (!WriteFile(m_pimpl->m_handle, data, DWORD(size), &sent, NULL)) {
-		throw SendError(
-			"Could not send data to pipe: WriteFile returns FALSE.");
+		throw SendError("Could not send data to pipe: WriteFile returns FALSE.");
 	} else if (sent != size) {
-		throw SendError(
-			"Could not send data to pipe: sent not equal size");
+		throw SendError("Could not send data to pipe: sent not equal size");
 	}
 }
 
-Buffer PipeClient::Receive() throw(ReceiveError) {
+Buffer PipeClient::Receive() {
 	Buffer result;
 	Test::Receive(m_pimpl->m_handle, result);
 	return result;

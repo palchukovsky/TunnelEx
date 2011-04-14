@@ -48,27 +48,29 @@ namespace TunnelEx { namespace Licensing {
 	
 		static std::string SendRequest(const std::string &request) {
 		
-			using namespace std;
-			using namespace boost;
-			
 			Handles handles;
 			
-			handles.inet = InternetOpenA(TUNNELEX_NAME, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, 0);
+			handles.inet = InternetOpenA(
+				TUNNELEX_FAKE_HTTP_CLIENT,
+				INTERNET_OPEN_TYPE_PRECONFIG,
+				0,
+				0,
+				0);
 			BOOST_ASSERT(handles.inet);
 			if (!handles.inet) {
-				return string();
+				return std::string();
 			}
 			
-			format host("%1%%3%%2%");
+			boost::format host("%1%%3%%2%");
 			host % TUNNELEX_LICENSE_SERVICE_SUBDOMAIN % TUNNELEX_DOMAIN % ".";
 			handles.connect = InternetConnectA(
 				handles.inet, host.str().c_str(), 80, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
 			BOOST_ASSERT(handles.connect);
 			if (!handles.connect) {
-				return string();
+				return std::string();
 			}
 
-			format action("%2%/%1%");
+			boost::format action("%2%/%1%");
 			action % "request" %  "key";
 			handles.request = HttpOpenRequestA(
 				handles.connect,
@@ -83,10 +85,10 @@ namespace TunnelEx { namespace Licensing {
 				0);
 			BOOST_ASSERT(handles.request);
 			if (!handles.request) {
-				return string();
+				return std::string();
 			}
 
-			ostringstream postData;
+			std::ostringstream postData;
 			postData << "keyRequest=" << Helpers::StringUtil::EncodeUrl(request);
 
 			{
@@ -99,11 +101,11 @@ namespace TunnelEx { namespace Licensing {
 					const_cast<char *>(postData.str().c_str()),
 					DWORD(postData.str().size()));
 				if (!sendResult) {
-					return string();
+					return std::string();
 				}
 			}
 		
-			vector<char> answer;
+			std::vector<char> answer;
 			{
 #				ifdef _DEBUG
 					answer.resize(256);
@@ -120,7 +122,7 @@ namespace TunnelEx { namespace Licensing {
 						&bytesRead);
 					BOOST_ASSERT(readResult);
 					if (!readResult) {
-						return string();
+						return std::string();
 					} if (bytesRead == 0) {
 						break;
 					}

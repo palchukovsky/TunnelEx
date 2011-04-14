@@ -13,9 +13,9 @@
 #ifndef INCLUDED_FILE__TUNNELEX__DestinationPingFilter_h__0801201639
 #define INCLUDED_FILE__TUNNELEX__DestinationPingFilter_h__0801201639
 
-#include <TunnelEx/Locking.hpp>
-#include <TunnelEx/Filter.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/Locking.hpp"
+#include "Core/Filter.hpp"
+#include "Core/String.hpp"
 
 namespace TunnelEx {
 	class RuleEndpoint;
@@ -43,7 +43,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		Endpoints m_endpoints;
 
-		//! \todo: Maybe search be UUID (not by string) will be faster? [2008/01/22 12:08]
+		//! \todo: Maybe search be UUID (not by std::string) will be faster? [2008/01/22 12:08]
 		typedef std::map<WString, Endpoints::iterator> EndpointUuids;
 		EndpointUuids m_endpointUuids;
 

@@ -14,9 +14,9 @@
 
 #include "Api.h"
 
-#include <TunnelEx/EndpointAddress.hpp>
-#include <TunnelEx/SslCertificatesStorage.hpp>
-#include <TunnelEx/Server.hpp>
+#include "Core/EndpointAddress.hpp"
+#include "Core/SslCertificatesStorage.hpp"
+#include "Core/Server.hpp"
 
 class ACE_INET_Addr;
 class ACE_SSL_Context;
@@ -77,7 +77,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	public:
 
-		//! Returns a host address in string, without port.
+		//! Returns a host address in std::string, without port.
 		const std::wstring & GetHostName() const;
 
 		/** If address is "any" returns "*" (not resolved) or host name for
@@ -199,7 +199,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				const TunnelEx::SslCertificateId &,
 				const TunnelEx::SslCertificateIdCollection &);
 
-		//! Creates string resource identifier.
+		//! Creates std::string resource identifier.
 		/** @param adapter		adapter name
 		  * @param port			network port
 		  * @param allowedHost	allowed host, IP address or * (if none)
@@ -319,7 +319,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				const std::wstring &host,
 				NetworkPort port);
 
-		//! Creates string resource identifier.
+		//! Creates std::string resource identifier.
 		/** @param adapter		adapter name
 		  * @param port			network port
 		  * @param allowedHost	allowed host, IP address or * (if none)

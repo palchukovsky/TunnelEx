@@ -13,12 +13,11 @@
 
 #include "Locking.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-class RecursiveMutex::Implementation : private noncopyable {
+class RecursiveMutex::Implementation : private boost::noncopyable {
 
 public:
 
@@ -37,7 +36,7 @@ RecursiveMutex::~RecursiveMutex() {
 
 //////////////////////////////////////////////////////////////////////////
 
-class Lock::Implementation : private noncopyable {
+class Lock::Implementation : private boost::noncopyable {
 
 public:
 

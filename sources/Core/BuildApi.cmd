@@ -9,86 +9,110 @@ set attempts=0
 
 set attempts+=1
 
-Call ClearApi.cmd
-
 if not exist "%TexCoreApiOutDir%" mkdir "%TexCoreApiOutDir%"
 
-copy /Y Api.h "%TexCoreApiOutDir%"
+echo N | comp "Api.h" "%TexCoreApiOutDir%Api.h" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Api.h" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Connection.hpp "%TexCoreApiOutDir%"
+echo N | comp "Connection.hpp" "%TexCoreApiOutDir%Connection.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Connection.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Singleton.hpp "%TexCoreApiOutDir%"
+echo N | comp "Singleton.hpp" "%TexCoreApiOutDir%Singleton.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Singleton.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Collection.hpp "%TexCoreApiOutDir%"
+echo N | comp "Collection.hpp" "%TexCoreApiOutDir%Collection.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Collection.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Server.hpp "%TexCoreApiOutDir%"
+echo N | comp "Server.hpp" "%TexCoreApiOutDir%Server.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Server.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Rule.hpp "%TexCoreApiOutDir%"
+echo N | comp "Rule.hpp" "%TexCoreApiOutDir%Rule.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Rule.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Endpoint.hpp "%TexCoreApiOutDir%"
+echo N | comp "Endpoint.hpp" "%TexCoreApiOutDir%Endpoint.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Endpoint.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y EndpointAddress.hpp "%TexCoreApiOutDir%"
+echo N | comp "EndpointAddress.hpp" "%TexCoreApiOutDir%EndpointAddress.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "EndpointAddress.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Service.hpp "%TexCoreApiOutDir%"
+echo N | comp "Service.hpp" "%TexCoreApiOutDir%Service.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Service.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Exceptions.hpp "%TexCoreApiOutDir%"
+echo N | comp "Exceptions.hpp" "%TexCoreApiOutDir%Exceptions.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Exceptions.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y String.hpp "%TexCoreApiOutDir%"
+echo N | comp "String.hpp" "%TexCoreApiOutDir%String.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "String.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y UniquePtr.hpp "%TexCoreApiOutDir%"
+echo N | comp "UniquePtr.hpp" "%TexCoreApiOutDir%UniquePtr.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "UniquePtr.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y SharedPtr.hpp "%TexCoreApiOutDir%"
+echo N | comp "SharedPtr.hpp" "%TexCoreApiOutDir%SharedPtr.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "SharedPtr.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Log.hpp "%TexCoreApiOutDir%"
+echo N | comp "Log.hpp" "%TexCoreApiOutDir%Log.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Log.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Locking.hpp "%TexCoreApiOutDir%"
+echo N | comp "Locking.hpp" "%TexCoreApiOutDir%Locking.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Locking.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Filter.hpp "%TexCoreApiOutDir%"
+echo N | comp "Filter.hpp" "%TexCoreApiOutDir%Filter.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Filter.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Listener.hpp "%TexCoreApiOutDir%"
+echo N | comp "Listener.hpp" "%TexCoreApiOutDir%Listener.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Listener.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Acceptor.hpp "%TexCoreApiOutDir%"
+echo N | comp "Acceptor.hpp" "%TexCoreApiOutDir%Acceptor.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Acceptor.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Instance.hpp "%TexCoreApiOutDir%"
+echo N | comp "Instance.hpp" "%TexCoreApiOutDir%Instance.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Instance.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y IoHandle.h "%TexCoreApiOutDir%"
+echo N | comp "IoHandle.hpp" "%TexCoreApiOutDir%IoHandle.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "IoHandle.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y ConnectionSignal.hpp "%TexCoreApiOutDir%"
+echo N | comp "ConnectionSignal.hpp" "%TexCoreApiOutDir%ConnectionSignal.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "ConnectionSignal.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y MessageBlock.hpp "%TexCoreApiOutDir%"
+echo N | comp "MessageBlock.hpp" "%TexCoreApiOutDir%MessageBlock.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "MessageBlock.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y DataTransferCommand.hpp "%TexCoreApiOutDir%"
+echo N | comp "DataTransferCommand.hpp" "%TexCoreApiOutDir%DataTransferCommand.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "DataTransferCommand.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Error.hpp "%TexCoreApiOutDir%"
+echo N | comp "Error.hpp" "%TexCoreApiOutDir%Error.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Error.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y Time.h "%TexCoreApiOutDir%"
+echo N | comp "Time.h" "%TexCoreApiOutDir%Time.h" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "Time.h" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
-copy /Y SslCertificatesStorage.hpp "%TexCoreApiOutDir%"
+echo N | comp "SslCertificatesStorage.hpp" "%TexCoreApiOutDir%SslCertificatesStorage.hpp" | find "Files compare OK"
+if errorlevel 1 echo copy /Y "SslCertificatesStorage.hpp" "%TexCoreApiOutDir%"
 @if errorlevel 1 goto BuildApiError
 
 @if "%TexCoreApiOutDir%"=="\" (

@@ -23,11 +23,8 @@
 #include "Listener.hpp"
 #include "EndpointAddress.hpp"
 #include "String.hpp"
-#include "Licensing/FsLocalStorage.hpp"
+#include "Licensing.hpp"
 
-
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -57,6 +54,25 @@ namespace {
 
 //////////////////////////////////////////////////////////////////////////
 
+Tunnel::ReadWriteConnections::ReadWriteConnections() {
+	//...//
+}
+
+Tunnel::ReadWriteConnections::ReadWriteConnections(
+			SharedPtr<Connection> read,
+			SharedPtr<Connection> write)
+		: read(read),
+		write(write) {
+	//...//
+}
+
+void Tunnel::ReadWriteConnections::Swap(Tunnel::ReadWriteConnections &rhs) throw() {
+	rhs.read.Swap(read);
+	rhs.write.Swap(write);
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 struct Tunnel::Licenses : private boost::noncopyable {
 
 	typedef ACE_Thread_Mutex Mutex;
@@ -75,22 +91,22 @@ struct Tunnel::Licenses : private boost::noncopyable {
 
 //////////////////////////////////////////////////////////////////////////
 
-class Tunnel::ListenerBinder : private noncopyable {
+class Tunnel::ListenerBinder : private boost::noncopyable {
 public:
 	class ListenerBinder(
-					list<SharedPtr<const Listener> >  &collection,
+					std::list<SharedPtr<const Listener> >  &collection,
 					TunnelConnectionSignal &signal)
 				: m_collection(collection),
 			m_signal(&signal) {
 		//...//
 	}
 	void Bind(SharedPtr<Listener> listener) {
-		// I don't want to copy vector here before connect signal as it
+		// I don't want to copy std::vector here before connect signal as it
 		// can be to slow for each tunnel and each connection.
 		m_collection.push_back(listener);
 		try {
 			m_signal->ConnectToOnNewMessageBlockSignal(
-				bind(&Listener::OnNewMessageBlock, listener.Get(), _1));
+				boost::bind(&Listener::OnNewMessageBlock, listener.Get(), _1));
 		} catch (...) {
 			m_collection.pop_back();
 			throw;
@@ -100,7 +116,7 @@ public:
 		m_signal = &signal;
 	}
 private:
-	list<SharedPtr<const Listener> >  &m_collection;
+	std::list<SharedPtr<const Listener> >  &m_collection;
 	TunnelConnectionSignal *m_signal;
 };
 
@@ -152,7 +168,7 @@ public:
 			new ConnectionOpeningExceptionImpl<Base>(*this));
 	}
 private:
-	const wstring & GetWhatImpl() const {
+	const std::wstring & GetWhatImpl() const {
 		if (m_what.empty()) {
 			WFormat what(
 				L"Opening new %4% connection for tunnel %1% to the %2%"
@@ -169,7 +185,7 @@ private:
 	Instance::Id m_tunnelInstanceId;
 	SharedPtr<const EndpointAddress> m_address;
 	UniquePtr<LocalException> m_error;
-	mutable wstring m_what;
+	mutable std::wstring m_what;
 	const wchar_t *m_connectionType;
 };
 
@@ -187,7 +203,7 @@ Tunnel::Tunnel(
 		m_connectionsToClose(0),
 		m_setupComplitedConnections(0),
 		m_buffer(new TunnelBuffer),
-		m_source(make_pair(sourceRead, sourceWrite)),
+		m_source(sourceRead, sourceWrite),
 		m_destinationIndex(0),
 		m_closedConnections(0),
 		m_closingNow(false) {
@@ -198,47 +214,50 @@ Tunnel::Tunnel(
 
 void Tunnel::Init() {
 
+	using boost::bind;
+	using boost::function;
+
 	SharedPtr<TunnelConnectionSignal> sourceDataTransferSignal(
 		new TunnelConnectionSignal(*const_cast<Tunnel *>(this)));
 	SharedPtr<TunnelConnectionSignal> destinationDataTransferSignal(
 		new TunnelConnectionSignal(*const_cast<Tunnel *>(this)));
 
-	list<Connection *> connectionsToSetup;
-	list<SharedPtr<const Listener> > listeners;
+	std::list<Connection *> connectionsToSetup;
+	std::list<SharedPtr<const Listener> > listeners;
 
 	try {
 
 		{
 			const TunnelConnectionSignal::OnAllConnectionsSetupCompletedSlot slot
-				= bind(&Tunnel::OnConnectionSetup, const_cast<Tunnel *>(this), _1);
+				= boost::bind(&Tunnel::OnConnectionSetup, const_cast<Tunnel *>(this), _1);
 			sourceDataTransferSignal->ConnectToOnConnectionSetupCompleted(slot);
 			destinationDataTransferSignal->ConnectToOnConnectionSetupCompleted(slot);
 		}
 
 		{
 			const TunnelConnectionSignal::OnConnectionCloseSlot slot
-				= bind(&Tunnel::OnConnectionClose, this, _1);
+				= boost::bind(&Tunnel::OnConnectionClose, this, _1);
 			sourceDataTransferSignal->ConnectToOnConnectionCloseSignal(slot);
 			destinationDataTransferSignal->ConnectToOnConnectionCloseSignal(slot);
 		}
 
 		{
 			const TunnelConnectionSignal::OnConnectionClosedSlot slot
-				= bind(&Tunnel::OnConnectionClosed, this, _1);
+				= boost::bind(&Tunnel::OnConnectionClosed, this, _1);
 			sourceDataTransferSignal->ConnectToOnConnectionClosedSignal(slot);
 			destinationDataTransferSignal->ConnectToOnConnectionClosedSignal(slot);
 		}
 
 		sourceDataTransferSignal->ConnectToOnMessageBlockSentSignal(
-			bind(&Connection::OnMessageBlockSent, &GetOutcomingReadConnection(), _1));
+			boost::bind(&Connection::OnMessageBlockSent, &GetOutcomingReadConnection(), _1));
 		destinationDataTransferSignal->ConnectToOnMessageBlockSentSignal(
-			bind(&Connection::OnMessageBlockSent, &GetIncomingReadConnection(), _1));
+			boost::bind(&Connection::OnMessageBlockSent, &GetIncomingReadConnection(), _1));
 
 		ModulesFactory::Ref factory = ModulesFactory::GetInstance();
 
 		ListenerBinder listenerBinderServer(listeners, *sourceDataTransferSignal);
-		function<void(SharedPtr<Listener>)> listenerBinder(
-			bind(&ListenerBinder::Bind, &listenerBinderServer, _1));
+		boost::function<void(SharedPtr<Listener>)> listenerBinder(
+			boost::bind(&ListenerBinder::Bind, &listenerBinderServer, _1));
 		factory.CreatePostListeners(
 			m_server.GetServer(),
 			*m_rule,
@@ -252,7 +271,7 @@ void Tunnel::Init() {
 			GetIncomingWriteConnection(),
 			listenerBinder);
 		sourceDataTransferSignal->ConnectToOnNewMessageBlockSignal(
-			bind(&Connection::SendToRemote, &GetOutcomingWriteConnection(), _1));
+			boost::bind(&Connection::SendToRemote, &GetOutcomingWriteConnection(), _1));
 
 		listenerBinderServer.SetSignal(*destinationDataTransferSignal);
 		factory.CreatePostListeners(
@@ -268,7 +287,7 @@ void Tunnel::Init() {
 			GetOutcomingWriteConnection(),
 			listenerBinder);
 		destinationDataTransferSignal->ConnectToOnNewMessageBlockSignal(
-			bind(&Connection::SendToRemote, &GetIncomingWriteConnection(), _1));
+			boost::bind(&Connection::SendToRemote, &GetIncomingWriteConnection(), _1));
 
 		if (&GetIncomingReadConnection() == &GetIncomingWriteConnection()) {
 			GetIncomingReadConnection().Open(
@@ -359,8 +378,8 @@ Tunnel::~Tunnel() throw() {
 			ACE_Time_Value proactorWaitTime(0, 1);
 			while (GetProactor().handle_events(proactorWaitTime) == 1);
 		}
-		ReadWriteConnections().swap(m_source);
-		ReadWriteConnections().swap(m_destination);
+		ReadWriteConnections().Swap(m_source);
+		ReadWriteConnections().Swap(m_destination);
 		BOOST_ASSERT(m_closedConnections <= m_connectionsToClose);
 		while (m_closedConnections < m_connectionsToClose) {
 			ACE_Time_Value proactorWaitTime(0, 1);
@@ -395,7 +414,7 @@ Tunnel::ReadWriteConnections Tunnel::CreateDestinationConnections(
 				SharedPtr<Connection> connection(
 					address->CreateRemoteConnection(endpoint, address).Release());
 				destinationIndex = i;
-				return make_pair(connection, connection);
+				return ReadWriteConnections(connection, connection);
 			} catch (const TunnelEx::ConnectionOpeningException &ex) {
 				if (!((i + 1) >= destinationsNumber)) {
 					ReportOpenError(*this, *address, ex);
@@ -439,7 +458,7 @@ Tunnel::ReadWriteConnections Tunnel::CreateDestinationConnections(
 							writeAddress)
 						.Release());
 				destinationIndex = i;
-				return make_pair(readConnection, writeConnection);
+				return ReadWriteConnections(readConnection, writeConnection);
 			} catch (const TunnelEx::ConnectionOpeningException &ex) {
 				const SharedPtr<const EndpointAddress> errorAddress = readConnection
 					?	readAddress
@@ -468,9 +487,9 @@ void Tunnel::ReportOpened() const {
 		return;
 	}
 
-	struct Appender : private noncopyable {
+	struct Appender : private boost::noncopyable {
 
-		explicit Appender(ostringstream &streamIn)
+		explicit Appender(std::ostringstream &streamIn)
 				: stream(streamIn) {
 			//...//
 		}
@@ -499,12 +518,12 @@ void Tunnel::ReportOpened() const {
 			stream << ConvertString(identifier, buffer).GetCStr();
 		}
 
-		ostringstream &stream;
+		std::ostringstream &stream;
 		String buffer;
 
 	};
 
-	ostringstream message;
+	std::ostringstream message;
 	Appender appender(message);
 
 	message << "Created tunnel";
@@ -637,6 +656,7 @@ void Tunnel::OnConnectionClose(Instance::Id instanceId) {
 	if (closingNow) {
 		// object can be deleted here!
 	}
+	// FIXME: is it correct?
 	m_server.CloseTunnel(GetInstanceId(), false);
 }
 
@@ -669,8 +689,8 @@ void Tunnel::SetForceClosingMode() {
 }
 
 bool Tunnel::Switch(
-			const optional<SharedPtr<Connection> > &sourceRead,
-			const optional<SharedPtr<Connection> > &sourceWrite) {
+			const boost::optional<SharedPtr<Connection> > &sourceRead,
+			const boost::optional<SharedPtr<Connection> > &sourceWrite) {
 
 	Log::GetInstance().AppendDebug("Switching tunnel %1%...", GetInstanceId());
 
@@ -688,36 +708,37 @@ bool Tunnel::Switch(
 	}
 
 	ReadWriteConnections source;
-	source.swap(m_source);
+	source.Swap(m_source);
 
 	if (sourceRead) {
-		source.first = *sourceRead;
+		source.read = *sourceRead;
 	}
 	if (sourceWrite) {
-		source.second = *sourceWrite;
+		source.write = *sourceWrite;
 	}
 
 	ReadWriteConnections destination;
-	destination.swap(m_destination);
+	destination.Swap(m_destination);
 	unsigned int destinationIndex = m_destinationIndex;
 
 	if (isDestinationSetupFailed) {
 		bool isReopened = false;
 		bool isReopenedFailed = false;
-		if (destination.first->IsSetupFailed()) {
+		if (destination.read->IsSetupFailed()) {
 			const SharedPtr<const EndpointAddress> address
-				= destination.first->GetRuleEndpointAddress();
+				= destination.read->GetRuleEndpointAddress();
 			if (address->IsReadyToRecreateRemoteConnection()) {
 				Log::GetInstance().AppendDebug(
 					"Reopening outcoming first connection for tunnel %1%...",
 					GetInstanceId());
 				try {
-					const RuleEndpoint &endpoint = destination.first->GetRuleEndpoint();
-					destination.first.Reset(
+					const RuleEndpoint &endpoint
+						= destination.read->GetRuleEndpoint();
+					destination.read.Reset(
 							address->CreateRemoteConnection(endpoint, address)
 						.Release());
 					if (endpoint.IsCombined()) {
-						destination.second = destination.first;
+						destination.write = destination.read;
 					}
 					isReopened = true;
 				} catch (const TunnelEx::ConnectionOpeningException &ex) {
@@ -734,18 +755,18 @@ bool Tunnel::Switch(
 			}
 		}
 		if (	!isReopenedFailed
-				&& !destination.second->GetRuleEndpoint().IsCombined()
-				&& destination.second->IsSetupFailed()) {
+				&& !destination.write->GetRuleEndpoint().IsCombined()
+				&& destination.write->IsSetupFailed()) {
 			const SharedPtr<const EndpointAddress> address
-				= destination.second->GetRuleEndpointAddress();
+				= destination.write->GetRuleEndpointAddress();
 			if (address->IsReadyToRecreateRemoteConnection()) {
 				Log::GetInstance().AppendDebug(
 					"Reopening outcoming second connection for tunnel %1%...",
 					GetInstanceId());
 				try {
-					destination.second.Reset(
+					destination.write.Reset(
 							address->CreateRemoteConnection(
-								destination.second->GetRuleEndpoint(),
+								destination.write->GetRuleEndpoint(),
 								address)
 						.Release());
 					isReopened = true;
@@ -763,7 +784,7 @@ bool Tunnel::Switch(
 			}
 		}
 		if (!isReopened || isReopenedFailed) {
-			ReadWriteConnections().swap(destination);
+			ReadWriteConnections().Swap(destination);
 			Log::GetInstance().AppendDebug(
 				"Trying next destination endpoint for tunnel %1%...",
 				GetInstanceId());
@@ -780,8 +801,8 @@ bool Tunnel::Switch(
 	} else {
 		BOOST_ASSERT(sourceRead || sourceRead);
 	}
-	source.swap(m_source);
-	destination.swap(m_destination);
+	source.Swap(m_source);
+	destination.Swap(m_destination);
 	m_destinationIndex = destinationIndex;
 
 	Log::GetInstance().AppendDebug("Outcoming connection created for %1%.", GetInstanceId());

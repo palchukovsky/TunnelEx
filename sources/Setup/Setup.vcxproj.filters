@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Compilation">
+      <UniqueIdentifier>{8dd54285-dca0-42a0-8d36-f4f3aad5d584}</UniqueIdentifier>
+      <Extensions>cmd</Extensions>
+    </Filter>
+    <Filter Include="WiX">
+      <UniqueIdentifier>{c7713184-f273-4093-9305-d988c7c6edf7}</UniqueIdentifier>
+      <Extensions>wxs</Extensions>
+    </Filter>
+    <Filter Include="WiX\Localization">
+      <UniqueIdentifier>{fb8fd3a3-01a3-4e0e-b113-6e25cd6a56f9}</UniqueIdentifier>
+      <Extensions>wxl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Candle.cmd">
+      <Filter>Compilation</Filter>
+    </None>
+    <None Include="Compile.cmd">
+      <Filter>Compilation</Filter>
+    </None>
+    <None Include="Link.cmd">
+      <Filter>Compilation</Filter>
+    </None>
+    <None Include="SetVars.cmd">
+      <Filter>Compilation</Filter>
+    </None>
+    <None Include="Localization\en-us.wxl">
+      <Filter>WiX\Localization</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Actions.wxs">
+      <Filter>WiX</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Components.wxs">
+      <Filter>WiX</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Product.wxs">
+      <Filter>WiX</Filter>
+    </CustomBuild>
+    <CustomBuild Include="UI.wxs">
+      <Filter>WiX</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

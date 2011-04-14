@@ -14,7 +14,10 @@
 #define INCLUDED_FILE__TUNNELEX__LicensePolicies_hpp__0912060624
 
 #include "ServiceAdapter.hpp"
+
 #include "Licensing/WinInetCommPolicy.hpp"
+#include "Licensing/License.hpp"
+#include "Licensing/LocalComunicationPolicy.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +45,7 @@ struct LicenseState {
 				const License &license,
 				const wxString &noActivationText) {
 
-		using namespace std;
-		using namespace boost;
-		using namespace boost::posix_time;
+		namespace pt = boost::posix_time;
 
 		const wxString ownerName = license.IsTrial()
 			?	wxT("Trail license")
@@ -65,24 +66,24 @@ struct LicenseState {
 
 		{
 		
-			const optional<posix_time::ptime> timeFromLimit
+			const boost::optional<pt::ptime> timeFromLimit
 				= license.GetLimitationTimeFrom();
-			const optional<posix_time::ptime> timeToLimit
+			const boost::optional<pt::ptime> timeToLimit
 				= license.GetLimitationTimeTo();
 
 			if (timeFromLimit || timeToLimit) {
 	
-				const time_duration zoneDiff
-					= second_clock::local_time() - second_clock::universal_time();
+				const pt::time_duration zoneDiff
+					= pt::second_clock::local_time() - pt::second_clock::universal_time();
 
-				auto_ptr<wtime_facet> facet(new wtime_facet(L"%d %B %Y"));
-				locale locFrom(cout.getloc(), facet.get());
+				std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%d %B %Y"));
+				std::locale locFrom(std::cout.getloc(), facet.get());
 				facet.release();
-				facet.reset(new wtime_facet(L"%B, %d %Y"));
-				locale locTo(cout.getloc(), facet.get());
+				facet.reset(new pt::wtime_facet(L"%B, %d %Y"));
+				std::locale locTo(std::cout.getloc(), facet.get());
 				facet.release();
 
-				wstringstream ss;
+				std::wstringstream ss;
 				ss << L"\nCurrent activation is valid ";
 				if (timeFromLimit && !timeToLimit) {
 					ss.imbue(locFrom);
@@ -290,16 +291,14 @@ namespace TunnelEx { namespace Licensing {
 	struct LocalStoragePolicy {
 
 		inline static std::string GetLicenseKey(const boost::any &clientParam) {
-			using namespace boost;
-			return any_cast<LicenseState>(clientParam)
+			return boost::any_cast<LicenseState>(clientParam)
 				.service
 				->GetLicenseKey();
 		}
 
 		inline static std::string GetLocalAsymmetricPrivateKey(
 					const boost::any &clientParam) {
-			using namespace boost;
-			return any_cast<LicenseState>(clientParam)
+			return boost::any_cast<LicenseState>(clientParam)
 				.service
 				->GetLicenseKeyLocalAsymmetricPrivateKey();
 		}
@@ -308,8 +307,7 @@ namespace TunnelEx { namespace Licensing {
 					const std::string &licenseKey,
 					const std::string &privateKey,
 					const boost::any &clientParam) {
-			using namespace boost;
-			any_cast<LicenseState>(clientParam)
+			boost::any_cast<LicenseState>(clientParam)
 				.service
 				->SetLicenseKey(
 					licenseKey,
@@ -357,8 +355,7 @@ namespace TunnelEx { namespace Licensing {
 					std::string &requestResult,
 					std::string &privateKeyResult,
 					const boost::any &clientParam) {
-			using namespace boost;
-			any_cast<LicenseState>(clientParam)
+			boost::any_cast<LicenseState>(clientParam)
 				.service
 				->GenerateLicenseKeyRequest(
 					license,

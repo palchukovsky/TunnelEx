@@ -17,10 +17,8 @@
 #include "ServiceWindow.hpp"
 #include "ServiceAdapter.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
 using namespace TunnelEx;
+namespace fs = boost::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +27,7 @@ TAG_HANDLER_PROC(tag) {
 
 	tag;
 
-	ServiceStateCtrl &parentCtrl = *polymorphic_downcast<ServiceStateCtrl *>(
+	ServiceStateCtrl &parentCtrl = *boost::polymorphic_downcast<ServiceStateCtrl *>(
 		m_WParser->GetWindowInterface()->GetHTMLWindow());
 
 	wxStaticText *const descriptionCtrl
@@ -75,7 +73,7 @@ TAG_HANDLER_PROC(tag) {
 	}
 	const wxString passedStateName(tag.GetParam(wxT("NAME")));
 
-	ServiceStateCtrl &ctrl = *polymorphic_downcast<ServiceStateCtrl *>(
+	ServiceStateCtrl &ctrl = *boost::polymorphic_downcast<ServiceStateCtrl *>(
 		m_WParser->GetWindowInterface()->GetHTMLWindow());
 	wxString currentStateName;
 	switch (ctrl.GetStateCode()) {
@@ -142,7 +140,7 @@ ServiceStateCtrl::~ServiceStateCtrl() {
 void ServiceStateCtrl::SetState(ServiceState state, const wxString& description) {
 	m_state = state;
 	m_description = description;
-	wpath pageFile = Helpers::GetModuleFilePath().branch_path();
+	fs::wpath pageFile = Helpers::GetModuleFilePath().branch_path();
 	pageFile /= L"Templates";
 	pageFile /= L"ServiceState.html";
 	wxWindowUpdateLocker noUpdates(this);
@@ -150,31 +148,31 @@ void ServiceStateCtrl::SetState(ServiceState state, const wxString& description)
 }
 
 void ServiceStateCtrl::StartTexService() {
-	polymorphic_downcast<ServiceWindow *>(GetParent())->GetService().Start();
+	boost::polymorphic_downcast<ServiceWindow *>(GetParent())->GetService().Start();
 }
 
 void ServiceStateCtrl::StopTexService() {
-	polymorphic_downcast<ServiceWindow *>(GetParent())->GetService().Stop();
+	boost::polymorphic_downcast<ServiceWindow *>(GetParent())->GetService().Stop();
 }
 
 void ServiceStateCtrl::FillLinkClickHandlersMap(LinkClickHandlersMap &map) {
-	ServiceWindow &wnd = *polymorphic_downcast<ServiceWindow *>(GetParent());
-	map.insert(make_pair<wxString, LinkClickHandlerFunc>(wxT("serviceStart"), boost::bind(&ServiceStateCtrl::StartTexService, this)));
-	map.insert(make_pair<wxString, LinkClickHandlerFunc>(wxT("serviceStop"), boost::bind(&ServiceStateCtrl::StopTexService, this)));
-	map.insert(make_pair<wxString, LinkClickHandlerFunc>(wxT("serviceLogShow"), boost::bind(&ServiceWindow::OpenServiceLog, &wnd)));
-	map.insert(make_pair<wxString, LinkClickHandlerFunc>(wxT("applyChanges"), boost::bind(&ServiceWindow::ApplyChanges, &wnd)));
-	map.insert(make_pair<wxString, LinkClickHandlerFunc>(wxT("cancelChanges"), boost::bind(&ServiceWindow::CancelChanges, &wnd)));
-	map.insert(make_pair<wxString, LinkClickHandlerFunc>(wxT("clearState"), boost::bind(&ServiceWindow::ClearState, &wnd)));
+	ServiceWindow &wnd = *boost::polymorphic_downcast<ServiceWindow *>(GetParent());
+	map.insert(std::make_pair<wxString, LinkClickHandlerFunc>(wxT("serviceStart"), boost::bind(&ServiceStateCtrl::StartTexService, this)));
+	map.insert(std::make_pair<wxString, LinkClickHandlerFunc>(wxT("serviceStop"), boost::bind(&ServiceStateCtrl::StopTexService, this)));
+	map.insert(std::make_pair<wxString, LinkClickHandlerFunc>(wxT("serviceLogShow"), boost::bind(&ServiceWindow::OpenServiceLog, &wnd)));
+	map.insert(std::make_pair<wxString, LinkClickHandlerFunc>(wxT("applyChanges"), boost::bind(&ServiceWindow::ApplyChanges, &wnd)));
+	map.insert(std::make_pair<wxString, LinkClickHandlerFunc>(wxT("cancelChanges"), boost::bind(&ServiceWindow::CancelChanges, &wnd)));
+	map.insert(std::make_pair<wxString, LinkClickHandlerFunc>(wxT("clearState"), boost::bind(&ServiceWindow::ClearState, &wnd)));
 }
 
 void ServiceStateCtrl::OnLinkClicked(wxHtmlLinkEvent &linkEvent) {
 	if (!m_linkClickHandlers.size()) {
 		FillLinkClickHandlersMap(m_linkClickHandlers);
 	}
-	const basic_string<wxChar> href = linkEvent.GetLinkInfo().GetHref();
-	typedef vector<basic_string<wxChar> > Cmds;
+	const std::basic_string<wxChar> href = linkEvent.GetLinkInfo().GetHref();
+	typedef std::vector<std::basic_string<wxChar> > Cmds;
 	Cmds cmds;
-	split(cmds, href, is_any_of(wxT("_")));
+	split(cmds, href, boost::is_any_of(wxT("_")));
 	const Cmds::const_iterator cmdEnd = cmds.end();
 	const LinkClickHandlersMap::const_iterator handlersEnd = m_linkClickHandlers.end();
 	for (Cmds::const_iterator i = cmds.begin(); i != cmdEnd; ++i) {

@@ -15,9 +15,6 @@
 #include "MainFrame.hpp"
 #include "ServiceAdapter.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
 using namespace TunnelEx;
 
 IMPLEMENT_APP(Application)
@@ -43,11 +40,11 @@ bool Application::OnInit() {
 	SetVendorName(TUNNELEX_VENDOR_W);
 
 	if (argc > 1) {
-		typedef map<wstring, function<bool(void)> > Commands;
+		typedef std::map<std::wstring, boost::function<bool(void)> > Commands;
 		Commands commands;
-		commands[L"--migrateLocalService"] = bind(&Application::Migrate, this);
+		commands[L"--migrateLocalService"] = boost::bind(&Application::Migrate, this);
 #		if defined(_DEBUG) || defined(TEST)
-			commands[L"--unlim"] = bind(&Application::ActivateUnlimitedEditionMode, this);
+			commands[L"--unlim"] = boost::bind(&Application::ActivateUnlimitedEditionMode, this);
 #		endif // #if defined(_DEBUG) || defined(TEST)
 		for (int i = 0; i < argc; ++i) {
 			const Commands::const_iterator commandPos = commands.find(argv[i]);
@@ -60,7 +57,7 @@ bool Application::OnInit() {
 		}
 	}
 
-	auto_ptr<MainFrame> frame(new MainFrame);
+	std::auto_ptr<MainFrame> frame(new MainFrame);
 	frame->Show(true);
 	SetTopWindow(frame.release());
 
@@ -129,7 +126,7 @@ void Application::OpenOrderPage() const {
 
 
 void Application::OpenTrialRequestPage(bool isError /*= false*/) const {
-	ostringstream url;
+	std::ostringstream url;
 	url << "http://" TUNNELEX_DOMAIN "/order/trial?" << (isError ? "error" : "about");
 	ShellExecuteA(
 		NULL,

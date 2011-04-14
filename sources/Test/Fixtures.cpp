@@ -13,12 +13,10 @@
 
 #include "Fixtures.hpp"
 
-#include <TunnelEx/Server.hpp>
-#include <TunnelEx/Log.hpp>
+#include "Core/Server.hpp"
+#include "Core/Log.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::unit_test;
+namespace ut = boost::unit_test;
 using namespace Test;
 using namespace TunnelEx;
 

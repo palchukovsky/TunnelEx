@@ -10,21 +10,14 @@
  **************************************************************************/
 
 #include "Prec.h"
+#include "Core/String.hpp"
 
-#ifdef TUNNELEX_CORE
-#	include "Core/String.hpp"
-#else // #ifdef TUNNELEX_CORE
-#	include <TunnelEx/String.hpp>
-#endif // #ifdef TUNNELEX_CORE
-
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers::Xml;
 
 //////////////////////////////////////////////////////////////////////////
 
-void Document::Dump(wstring &buffer) const {
+void Document::Dump(std::wstring &buffer) const {
 	WString wbuffer;
 	Dump(wbuffer);
 	buffer = wbuffer.GetCStr();
@@ -34,7 +27,7 @@ void Document::Dump(UString &buffer) const {
 	xmlChar *strPtr;
 	int size;
 	xmlDocDumpMemory(m_handler->Get(), &strPtr, &size);
-	shared_ptr<xmlChar> str(strPtr, &Free);
+	boost::shared_ptr<xmlChar> str(strPtr, &Free);
 	buffer = strPtr;
 }
 
@@ -42,11 +35,11 @@ void Document::Dump(WString &buffer) const {
 	xmlChar *strPtr;
 	int size;
 	xmlDocDumpMemory(m_handler->Get(), &strPtr, &size);
-	shared_ptr<xmlChar> str(strPtr, &Free);
+	boost::shared_ptr<xmlChar> str(strPtr, &Free);
 	ConvertString(strPtr, buffer);
 }
 
-shared_ptr<Document> Document::LoadFromFile(const string &xmlFile) {
+boost::shared_ptr<Document> Document::LoadFromFile(const std::string &xmlFile) {
 	xmlDocPtr docPtr = xmlReadFile(xmlFile.c_str(), NULL, 0);
 	if (docPtr == NULL) {
 		TunnelEx::Format exceptionWhat(
@@ -59,18 +52,18 @@ shared_ptr<Document> Document::LoadFromFile(const string &xmlFile) {
 	return boost::shared_ptr<Document>(new Document(handler));
 }
 
-shared_ptr<Document> Document::LoadFromFile(const wstring &xmlFile) {
+boost::shared_ptr<Document> Document::LoadFromFile(const std::wstring &xmlFile) {
 	return LoadFromFile(ConvertString<String>(xmlFile.c_str()).GetCStr());
 }
 
-bool Document::Save(const string &fileName) const {
-	shared_ptr<xmlSaveCtxt> saveCtxt(
+bool Document::Save(const std::string &fileName) const {
+	boost::shared_ptr<xmlSaveCtxt> saveCtxt(
 		xmlSaveToFilename(fileName.c_str(), "utf-8", XML_SAVE_FORMAT),
 		&xmlSaveClose);
 	return saveCtxt.get() && xmlSaveDoc(saveCtxt.get(), m_handler->Get()) >= 0;
 }
 
-bool Document::Save(const wstring &fileName) const {
+bool Document::Save(const std::wstring &fileName) const {
 	return Save(ConvertString<String>(fileName.c_str()).GetCStr());
 }
 
@@ -96,11 +89,11 @@ void Node::SetContent(const wchar_t *value) {
 	SetContent(WString(value));
 }
 
-void Node::SetContent(const string &value) {
+void Node::SetContent(const std::string &value) {
 	SetContent(String(value.c_str()));
 }
 
-void Node::SetContent(const wstring &value) {
+void Node::SetContent(const std::wstring &value) {
 	SetContent(WString(value.c_str()));
 }
 
@@ -111,7 +104,7 @@ WString & Node::GetName(WString &destinationBuffer) const {
 }
 
 template<>
-wstring & Node::GetName(wstring &destinationBuffer) const {
+std::wstring & Node::GetName(std::wstring &destinationBuffer) const {
 	UString utf8buffer;
 	WString wideBuffer;
 	destinationBuffer = ConvertString(GetName(utf8buffer), wideBuffer).GetCStr();
@@ -125,7 +118,7 @@ WString & Node::GetContent(WString &destinationBuffer) const {
 }
 
 template<>
-wstring & Node::GetContent(wstring &destinationBuffer) const {
+std::wstring & Node::GetContent(std::wstring &destinationBuffer) const {
 	UString utf8buffer;
 	WString wideBuffer;
 	destinationBuffer = ConvertString(GetContent(utf8buffer), wideBuffer).GetCStr();
@@ -142,9 +135,9 @@ WString & Node::GetAttribute(
 }
 
 template<>
-wstring & Node::GetAttribute(
+std::wstring & Node::GetAttribute(
 			const char *attributeName,
-			wstring &destinationBuffer)
+			std::wstring &destinationBuffer)
 		const {
 	UString utf8buffer;
 	WString wideBuffer;
@@ -161,7 +154,7 @@ void Node::SetAttribute(const char *attributeName, const UString &value) {
 }
 
 template<>
-void Node::SetAttribute(const char *attributeName, const wstring &value) {
+void Node::SetAttribute(const char *attributeName, const std::wstring &value) {
 	UString utf8Value;
 	SetAttribute(attributeName, ConvertString(value.c_str(), utf8Value));
 }
@@ -181,13 +174,13 @@ void Node::SetAttribute(const char *attributeName, const WString &value) {
 		}
 		void MakeTemplateInstantiation() {
 			MakeTemplatePtr(&Node::GetName<WString>);
-			MakeTemplatePtr(&Node::GetName<wstring>);
+			MakeTemplatePtr(&Node::GetName<std::wstring>);
 			MakeTemplatePtr(&Node::GetContent<WString>);
-			MakeTemplatePtr(&Node::GetContent<wstring>);
+			MakeTemplatePtr(&Node::GetContent<std::wstring>);
 			MakeTemplatePtr(&Node::GetAttribute<WString>);
-			MakeTemplatePtr(&Node::GetAttribute<wstring>);
+			MakeTemplatePtr(&Node::GetAttribute<std::wstring>);
 			MakeTemplatePtr(&Node::SetAttribute<UString>);
-			MakeTemplatePtr(&Node::SetAttribute<wstring>);
+			MakeTemplatePtr(&Node::SetAttribute<std::wstring>);
 			MakeTemplatePtr(&Node::SetAttribute<WString>);
 		}
 	}

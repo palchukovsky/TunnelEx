@@ -14,10 +14,10 @@
 
 #include "TcpConnection.hpp"
 #include "ConnectionsTraits.hpp"
-#include <TunnelEx/Endpoint.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Endpoint.hpp"
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Error.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

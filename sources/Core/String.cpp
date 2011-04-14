@@ -11,70 +11,120 @@
 
 #include "Prec.h"
 #include "String.hpp"
+#include "Error.hpp"
+#include "Exceptions.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 namespace tex = TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-template<class Element>
-class TunnelEx::BasicString<Element>::Implementation : private noncopyable {
+namespace {
 
-public:
-
-	typedef basic_string<typename Element> MyString;
-
-	Implementation()
-		: noncopyable()
-		, m_string() {
-		/*...*/
-	}
-
-	Implementation(const Element *cString)
-		: noncopyable()
-		, m_string(cString) {
-		/*...*/
-	}
-
-	Implementation(const MyString &rhs)
-		: noncopyable()
-		, m_string(rhs) {
-		/*...*/
-	}
-
-	template<class Destination>
-	void WideCharToMultiByte(const unsigned int codePage, Destination &destination) {
-		if (!m_string.size()) {
+	template<typename Destination>
+	void WideCharToMultiByte(
+				const unsigned int codePage,
+				const wchar_t *const source,
+				const size_t sourceLen,
+				Destination &destination) {
+		if (sourceLen == 0) {
 			destination.clear();
 			return;
 		}
-		const int sourceLen = int(m_string.size());
 		const int destintationLen = ::WideCharToMultiByte(
-			codePage, 0, m_string.c_str(), sourceLen, NULL, 0, 0, 0);
-		vector<typename Destination::value_type> destinationBuf(destintationLen, 0);
+			codePage,
+			0,
+			source,
+			sourceLen,
+			NULL,
+			0,
+			0,
+			0);
+		if (destintationLen == 0) {
+			const Error error(GetLastError());
+			throw SystemException(error.GetString().GetCStr());
+		}
+		std::vector<typename Destination::value_type> destinationBuf(destintationLen, 0);
 		::WideCharToMultiByte(
-			codePage, 0, m_string.c_str(), sourceLen,
-			reinterpret_cast<char *>(&destinationBuf[0]), destintationLen, 0, 0);
+			codePage,
+			0,
+			source,
+			sourceLen,
+			reinterpret_cast<char *>(&destinationBuf[0]),
+			destintationLen,
+			0,
+			0);
 		typename Destination(destinationBuf.begin(), destinationBuf.end()).swap(destination);
 	}
 
-	template<class Destination>
-	void MultiByteToWideChar(const unsigned int codePage, Destination &destination) {
-		if (!m_string.size()) {
+	template<class Source, class Destination>
+	void MultiByteToWideChar(
+				const unsigned int codePage,
+				const Source *const source,
+				const unsigned int sourceLen,
+				Destination &destination) {
+		std::vector<wchar_t> buffer;
+		MultiByteToWideCharBuffer(codePage, source, sourceLen, buffer);
+		Destination(buffer.begin(), buffer.end()).swap(destination);
+	}
+
+	template<class Source>
+	void MultiByteToWideCharBuffer(
+				const unsigned int codePage,
+				const Source *const source,
+				const unsigned int sourceLen,
+				std::vector<wchar_t> &destination) {
+		if (!sourceLen) {
 			destination.clear();
 			return;
 		}
-		const int sourceLen = int(m_string.size());
 		const int destinationLen = ::MultiByteToWideChar(
-			codePage, 0, reinterpret_cast<const char *>(m_string.c_str()), sourceLen, NULL, 0);
-		vector<wchar_t> destinationBuf(destinationLen, 0);
+			codePage,
+			0,
+			reinterpret_cast<const char *>(source),
+			sourceLen,
+			NULL,
+			0);
+		if (destinationLen == 0) {
+			const Error error(GetLastError());
+			throw SystemException(error.GetString().GetCStr());
+		}
+		std::vector<wchar_t> destinationTmp(destinationLen, 0);
 		::MultiByteToWideChar(
-			codePage, 0, reinterpret_cast<const char *>(m_string.c_str()), sourceLen,
-			&destinationBuf[0], destinationLen);
-		Destination(destinationBuf.begin(), destinationBuf.end()).swap(destination);
+			codePage,
+			0,
+			reinterpret_cast<const char *>(source),
+			sourceLen,
+			&destinationTmp[0],
+			destinationLen);
+		destinationTmp.swap(destination);
+	}
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+template<class Element>
+class TunnelEx::BasicString<Element>::Implementation : private boost::noncopyable {
+
+public:
+
+	typedef std::basic_string<typename Element> MyString;
+
+	Implementation()
+			: m_string() {
+		//...//
+	}
+
+	Implementation(const Element *cString)
+			: m_string(cString) {
+		//...//
+	}
+
+	Implementation(const MyString &rhs)
+			: m_string(rhs) {
+		//...//
 	}
 
 public:
@@ -215,7 +265,10 @@ void BasicString<Element>::SubStr(
 			SizeType offset,
 			SizeType count)
 		const {
-	destination.m_pimpl->m_string = m_pimpl->m_string.substr(offset, count == 0 ? Implementation::MyString::npos : count);
+	destination.m_pimpl->m_string
+		= m_pimpl->m_string.substr(
+			offset,
+			count == 0 ? Implementation::MyString::npos : count);
 }
 
 template<class Element>
@@ -230,7 +283,7 @@ typename BasicString<Element>::MyType BasicString<Element>::SubStr(
 
 template<class Element>
 size_t BasicString<Element>::GetHash() const {
-	return hash_value(m_pimpl->m_string);
+	return boost::hash_value(m_pimpl->m_string);
 }
 
 template<class Element>
@@ -280,35 +333,95 @@ typename BasicString<Element>::MyType BasicString<Element>::EncodeUrlClone() con
 //////////////////////////////////////////////////////////////////////////
 
 UString & tex::ConvertString(const WString &source, UString &destination) {
-	source.m_pimpl->WideCharToMultiByte(CP_UTF8, destination.m_pimpl->m_string);
+	WideCharToMultiByte(
+		CP_UTF8,
+		source.m_pimpl->m_string.c_str(),
+		source.m_pimpl->m_string.size(),
+		destination.m_pimpl->m_string);
+	return destination;
+}
+
+UString & tex::ConvertString(const WString::ValueType *source, UString &destination) {
+	WideCharToMultiByte(CP_UTF8, source, wcslen(source), destination.m_pimpl->m_string);
 	return destination;
 }
 
 String & tex::ConvertString(const UString &source, String &destination) {
-	//! \todo: reimplement:
-	WString wideString;
-	return ConvertString(ConvertString(source, wideString), destination);
+	std::vector<wchar_t> buffer;
+	MultiByteToWideCharBuffer(
+		CP_UTF8,
+		source.m_pimpl->m_string.c_str(),
+		source.m_pimpl->m_string.size(),
+		buffer);
+	WideCharToMultiByte(CP_ACP, &buffer[0], buffer.size(), destination.m_pimpl->m_string);
+	return destination;
+}
+
+String & tex::ConvertString(const UString::ValueType *source, String &destination) {
+	std::vector<wchar_t> buffer;
+	MultiByteToWideCharBuffer(CP_UTF8, source, _mbslen(source), buffer);
+	WideCharToMultiByte(CP_ACP, &buffer[0], buffer.size(), destination.m_pimpl->m_string);
+	return destination;
 }
 
 WString & tex::ConvertString(const String &source, WString &destination) {
-	source.m_pimpl->MultiByteToWideChar(CP_ACP, destination.m_pimpl->m_string);
+	MultiByteToWideChar(
+		CP_ACP,
+		source.m_pimpl->m_string.c_str(),
+		source.m_pimpl->m_string.size(),
+		destination.m_pimpl->m_string);
+	return destination;
+}
+
+WString & tex::ConvertString(const String::ValueType *source, WString &destination) {
+	MultiByteToWideChar(CP_ACP, source, strlen(source), destination.m_pimpl->m_string);
 	return destination;
 }
 
 WString & tex::ConvertString(const UString &source, WString &destination) {
-	source.m_pimpl->MultiByteToWideChar(CP_UTF8, destination.m_pimpl->m_string);
+	MultiByteToWideChar(
+		CP_UTF8,
+		source.m_pimpl->m_string.c_str(),
+		source.m_pimpl->m_string.size(),
+		destination.m_pimpl->m_string);
+	return destination;
+}
+
+WString & tex::ConvertString(const UString::ValueType *source, WString &destination) {
+	MultiByteToWideChar(CP_UTF8, source, _mbslen(source), destination.m_pimpl->m_string);
 	return destination;
 }
 
 String & tex::ConvertString(const WString &source, String &destination) {
-	source.m_pimpl->WideCharToMultiByte(CP_ACP, destination.m_pimpl->m_string);
+	WideCharToMultiByte(
+		CP_ACP,
+		source.m_pimpl->m_string.c_str(),
+		source.m_pimpl->m_string.size(),
+		destination.m_pimpl->m_string);
+	return destination;
+}
+
+String & tex::ConvertString(const WString::ValueType *source, String &destination) {
+	WideCharToMultiByte(CP_ACP, source, wcslen(source), destination.m_pimpl->m_string);
 	return destination;
 }
 
 UString & tex::ConvertString(const String &source, UString &destination) {
-	//! \todo: reimplement:
-	WString wideString;
-	return ConvertString(ConvertString(source, wideString), destination);
+	std::vector<wchar_t> buffer;
+	MultiByteToWideCharBuffer(
+ 		CP_ACP,
+ 		source.m_pimpl->m_string.c_str(),
+ 		source.m_pimpl->m_string.size(),
+ 		buffer);
+	WideCharToMultiByte(CP_UTF8, &buffer[0], buffer.size(), destination.m_pimpl->m_string);
+	return destination;
+}
+
+UString & tex::ConvertString(const String::ValueType *source, UString &destination) {
+	std::vector<wchar_t> buffer;
+	MultiByteToWideChar(CP_ACP, source, strlen(source), buffer);
+	WideCharToMultiByte(CP_UTF8, &buffer[0], buffer.size(), destination.m_pimpl->m_string);
+	return destination;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -363,6 +476,5 @@ UString & tex::ConvertString(const String &source, UString &destination) {
 		}
 	}
 #endif // TEMPLATES_REQUIRE_SOURCE
-
 
 //////////////////////////////////////////////////////////////////////////

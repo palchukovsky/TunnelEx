@@ -25,8 +25,6 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -52,7 +50,7 @@ enum RuleListCtrl::Column {
 
 //////////////////////////////////////////////////////////////////////////
 
-class RuleListCtrl::Implementation : private noncopyable {
+class RuleListCtrl::Implementation : private boost::noncopyable {
 
 	friend class RuleListCtrl;
 
@@ -86,7 +84,7 @@ public:
 			m_notAppliedRules(notAppliedRules),
 			m_fistTimeRulesSet(true) {
 
-		auto_ptr<wxImageList> imageList(new wxImageList(16, 16, true));
+		std::auto_ptr<wxImageList> imageList(new wxImageList(16, 16, true));
 		wxBitmap icon;
 		wxGetApp().GetTheme().GetSortAscIcon(icon);
 		imageList->Add(icon);
@@ -140,7 +138,7 @@ public:
 		m_myInterface.InsertColumn(COLUMN_STATE, itemCol);
 
 		BOOST_ASSERT(m_controlsMap.find(m_controlIndex) == m_controlsMap.end());
-		m_controlsMap.insert(make_pair(m_controlIndex, this));
+		m_controlsMap.insert(std::make_pair(m_controlIndex, this));
 
 	}
 
@@ -197,29 +195,29 @@ private:
 
 	RuleListCtrl &m_myInterface;
 
-	bitset<COLUMNS_NUMB> m_columnSortDirection;
+	std::bitset<COLUMNS_NUMB> m_columnSortDirection;
 	Column m_lastSortedBy;
-	bitset<COLUMNS_NUMB> m_columnHasBeenResized;
+	std::bitset<COLUMNS_NUMB> m_columnHasBeenResized;
 
 	const RulesMap& m_rules;
 	const NotAppliedRulesUuids &m_notAppliedRules;
-	typedef vector<RulesMap::const_iterator> RulesBind;
+	typedef std::vector<RulesMap::const_iterator> RulesBind;
 	RulesBind m_rulesBind;
 
 	bool m_fistTimeRulesSet;
 
 private:
 
-	wstring SearchNetworkAdapter(const wstring &wId) const {
+	std::wstring SearchNetworkAdapter(const std::wstring &wId) const {
 		if (wId == L"all") {
 			return L"*";
 		} else if (wId == L"loopback") {
 			return L"127.0.0.1";
 		}
-		wstring result;
-		const string id = wxString(wId).ToAscii();
-		list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
-		polymorphic_downcast<ServiceWindow *>(m_myInterface.GetParent())
+		std::wstring result;
+		const std::string id = wxString(wId).ToAscii();
+		std::list<texs__NetworkAdapterInfo> serviceNetworkAdapters;
+		boost::polymorphic_downcast<ServiceWindow *>(m_myInterface.GetParent())
 			->GetService()
 			.GetNetworkAdapters(false, serviceNetworkAdapters);
 		foreach (const texs__NetworkAdapterInfo &info, serviceNetworkAdapters) {
@@ -303,7 +301,7 @@ public:
 				static wxString Join(
 							const RuleEndpointCollection &endpoints,
 							bool isInput,
-							function<wstring(const wstring &)> adapterSearcher,
+							boost::function<std::wstring(const std::wstring &)> adapterSearcher,
 							const ServiceAdapter &service) {
 					wxString result;
 					const size_t size = endpoints.GetSize();
@@ -406,7 +404,7 @@ public:
 					}
 					return result;
 				}
-				static wstring GetExternalIp(const ServiceAdapter &service)  {
+				static std::wstring GetExternalIp(const ServiceAdapter &service)  {
 					if (!service.GetCachedUpnpDeviceExternalIp()) {
 						wxString local;
 						wxString external;
@@ -421,17 +419,17 @@ public:
 			};
 
 			const ServiceAdapter &service =
-				polymorphic_downcast<ServiceWindow *>(m_myInterface.GetParent())
+				boost::polymorphic_downcast<ServiceWindow *>(m_myInterface.GetParent())
 					->GetService();
 
 			if (IsTunnel(rule)) {
-				function<wstring(const wstring &)> adapterSearcher
-					= bind(&Implementation::SearchNetworkAdapter, this, _1);
+				boost::function<std::wstring(const std::wstring &)> adapterSearcher
+					= boost::bind(&Implementation::SearchNetworkAdapter, this, _1);
 				m_myInterface.SetItem(
 					index,
 					1,
 					EndpointsJoiner::Join(
-						polymorphic_downcast<const TunnelRule *>(&rule)->GetInputs(),
+						boost::polymorphic_downcast<const TunnelRule *>(&rule)->GetInputs(),
 						true,
 						adapterSearcher,
 						service));
@@ -439,7 +437,7 @@ public:
 					index,
 					2,
 					EndpointsJoiner::Join(
-						polymorphic_downcast<const TunnelRule *>(&rule)->GetDestinations(),
+						boost::polymorphic_downcast<const TunnelRule *>(&rule)->GetDestinations(),
 						false,
 						adapterSearcher,
 						service));
@@ -449,14 +447,14 @@ public:
 					index,
 					1,
 					EndpointsJoiner::Join(
-						polymorphic_downcast<const ServiceRule *>(&rule)->GetServices(),
+						boost::polymorphic_downcast<const ServiceRule *>(&rule)->GetServices(),
 						service,
 						true));
 				m_myInterface.SetItem(
 					index,
 					2,
 					EndpointsJoiner::Join(
-						polymorphic_downcast<const ServiceRule *>(&rule)->GetServices(),
+						boost::polymorphic_downcast<const ServiceRule *>(&rule)->GetServices(),
 						service,
 						false));
 			}
@@ -632,7 +630,7 @@ public:
 		wxBitmap icon;
 		
 		const ServiceWindow &serviceWindow
-			= *polymorphic_downcast<ServiceWindow *>(m_myInterface.GetParent());
+			= *boost::polymorphic_downcast<ServiceWindow *>(m_myInterface.GetParent());
 		const size_t selected = serviceWindow.GetSelectedRulesCount();
 		const bool isConnected = serviceWindow.GetService().IsConnected();
 		const size_t editableSelected 
@@ -669,7 +667,7 @@ public:
 		menu.Append(item);
 		menu.Enable(
 			MainFrame::CMD_RULE_PASTE,
-			!polymorphic_downcast<MainFrame *>(wxGetApp().GetTopWindow())
+			!boost::polymorphic_downcast<MainFrame *>(wxGetApp().GetTopWindow())
 				->GetInternalClipboardContent()
 				.IsEmpty());
 		
@@ -825,27 +823,27 @@ int SortByEndpoints(
 
 		static void Get(
 				const ServiceRule::ServiceSet &services,
-				wstring &buffer) {
+				std::wstring &buffer) {
 			const size_t size = services.GetSize();
-			set<wstring> ris;
+			std::set<std::wstring> ris;
 			ris.insert(wxT("A"));
 			for (unsigned int i = 0; i < size; ++i) {
 				ris.insert(services[i].name.GetCStr());
 			}
-			buffer = join(ris, " ");
+			buffer = boost::join(ris, " ");
 		}
 
 		static void Get(
 					const RuleEndpointCollection &endpoints,
-					wstring &buffer,
+					std::wstring &buffer,
 					bool isInput) {
 			const size_t size = endpoints.GetSize();
-			set<wstring> ris;
+			std::set<std::wstring> ris;
 			ris.insert(wxT("B"));
-			wregex exp(L"^[^/:]+://");
+			boost::wregex exp(L"^[^/:]+://");
 			for (unsigned int i = 0; i < size; ++i) {
 				const RuleEndpoint &ep = endpoints[i];
-				wstring ri = ep.IsCombined()
+				std::wstring ri = ep.IsCombined()
 					?	ep.GetCombinedResourceIdentifier().GetCStr()
 					:	!isInput || ep.GetReadWriteAcceptor() == Endpoint::ACCEPTOR_WRITER
 						?	ep.GetWriteResourceIdentifier().GetCStr()
@@ -853,37 +851,37 @@ int SortByEndpoints(
 				erase_regex(ri, exp);
 				ris.insert(ri);
 			}
-			buffer = join(ris, " ");
+			buffer = boost::join(ris, " ");
 		}
 
 	};
 
-	wstring buffer1;
+	std::wstring buffer1;
 	if (IsTunnel(rule1)) {
 		ToString::Get(
 			isInput
-				?	polymorphic_downcast<const TunnelRule *>(&rule1)->GetInputs()
-				:	polymorphic_downcast<const TunnelRule *>(&rule1)->GetDestinations(),
+				?	boost::polymorphic_downcast<const TunnelRule *>(&rule1)->GetInputs()
+				:	boost::polymorphic_downcast<const TunnelRule *>(&rule1)->GetDestinations(),
 			buffer1,
 			isInput);
 	} else if (isInput) {
 		BOOST_ASSERT(IsService(rule1));
 		ToString::Get(
-			polymorphic_downcast<const ServiceRule *>(&rule1)->GetServices(),
+			boost::polymorphic_downcast<const ServiceRule *>(&rule1)->GetServices(),
 			buffer1);
 	}
-	wstring buffer2;
+	std::wstring buffer2;
 	if (IsTunnel(rule2)) {
 		ToString::Get(
 			isInput
-				?	polymorphic_downcast<const TunnelRule *>(&rule2)->GetInputs()
-				:	polymorphic_downcast<const TunnelRule *>(&rule2)->GetDestinations(),
+				?	boost::polymorphic_downcast<const TunnelRule *>(&rule2)->GetInputs()
+				:	boost::polymorphic_downcast<const TunnelRule *>(&rule2)->GetDestinations(),
 			buffer2,
 			isInput);
 	} else if (isInput) {
 		BOOST_ASSERT(IsService(rule2));
 		ToString::Get(
-			polymorphic_downcast<const ServiceRule *>(&rule2)->GetServices(),
+			boost::polymorphic_downcast<const ServiceRule *>(&rule2)->GetServices(),
 			buffer2);
 	}
 	

@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Implementations">
+      <UniqueIdentifier>{cc9ff326-dad9-4aaa-832d-dcd6ce2d4fc0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CastingPolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckPolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyRetrievePolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="License.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Prec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QueryPolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Request.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestGenPolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StoragePolicies.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Traits.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FsLocalStorage.hpp">
+      <Filter>Header Files\Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="IpHelperWorkstationPropertiesQueryPolicy.hpp">
+      <Filter>Header Files\Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalComunicationPolicy.hpp">
+      <Filter>Header Files\Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="OfflineCommPolicy.hpp">
+      <Filter>Header Files\Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="WinInetCommPolicy.hpp">
+      <Filter>Header Files\Implementations</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

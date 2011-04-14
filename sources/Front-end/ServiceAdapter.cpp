@@ -11,15 +11,14 @@
 
 #include "Prec.h"
 #include "ServiceAdapter.hpp"
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/Exceptions.hpp"
+#include "LicensePolicies.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-class ServiceAdapter::Implementation : public noncopyable {
+class ServiceAdapter::Implementation : public boost::noncopyable {
 
 private:
 
@@ -122,7 +121,7 @@ private:
 	class RequestThread : public wxThread {
 	public:
 		explicit RequestThread(
-					const function<Result(void)> requestFunc,
+					const boost::function<Result(void)> requestFunc,
 					const Result &defaultResult)
 				: wxThread(wxTHREAD_JOINABLE),
 				m_requestFunc(requestFunc),
@@ -146,7 +145,7 @@ private:
 			return 0;
 		}
 	private:
-		const function<Result(void)> m_requestFunc;
+		const boost::function<Result(void)> m_requestFunc;
 		Result m_requestResult;
 		const Result &m_defaultResult;
 		UniquePtr<LocalException> m_exeption;
@@ -156,7 +155,7 @@ private:
 	class RequestThread<void> : public wxThread {
 	public:
 		explicit RequestThread(
-					const function<void(void)> requestFunc)
+					const boost::function<void(void)> requestFunc)
 				: wxThread(wxTHREAD_JOINABLE),
 				m_requestFunc(requestFunc) {
 			//...//
@@ -176,7 +175,7 @@ private:
 			return 0;
 		}
 	private:
-		const function<void(void)> m_requestFunc;
+		const boost::function<void(void)> m_requestFunc;
 		UniquePtr<LocalException> m_exeption;
 	};
 
@@ -266,9 +265,9 @@ private:
 	}
 
 	template<>
-	const list<texs__NetworkAdapterInfo> * const & GetDefaultRequestResult() {
-		static list<texs__NetworkAdapterInfo> emptyVal;
-		static list<texs__NetworkAdapterInfo> *ptr = &emptyVal;
+	const std::list<texs__NetworkAdapterInfo> * const & GetDefaultRequestResult() {
+		static std::list<texs__NetworkAdapterInfo> emptyVal;
+		static std::list<texs__NetworkAdapterInfo> *ptr = &emptyVal;
 		return ptr;
 	}
 
@@ -276,7 +275,7 @@ public:
 
 	template<typename Result>
 	typename Result RequestWithProgressBar(
-			const function<Result(void)> requestFunc,
+			const boost::function<Result(void)> requestFunc,
 			const wxString &progressBarMessage) {
 		RequestThread<Result> request(requestFunc, GetDefaultRequestResult<Result>());
 		DoRequestWithProgressBar(request, progressBarMessage);
@@ -285,7 +284,7 @@ public:
 
 	template<>
 	void RequestWithProgressBar<void>(
-				const function<void(void)> requestFunc,
+				const boost::function<void(void)> requestFunc,
 				const wxString &progressBarMessage) {
 		RequestThread<void> request(requestFunc);
 		DoRequestWithProgressBar(request, progressBarMessage);
@@ -330,7 +329,7 @@ public:
 
 	void GetRuleSet(RuleSet &result) const {
 		for (int attempts = 0; ; ) {
-			string rulesXml;
+			std::string rulesXml;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode = m_service.texs__GetRuleSet(rulesXml);
 			++attempts;
@@ -372,7 +371,7 @@ public:
 	}
 
 	void DeleteRules(const RulesUuids &uuids) {
-		list<wstring> transportContainer(uuids.begin(), uuids.end());
+		std::list<std::wstring> transportContainer(uuids.begin(), uuids.end());
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
@@ -389,7 +388,7 @@ public:
 	}
 
 	void EnableRules(const RulesUuids &uuids) {
-		list<wstring> transportContainer(uuids.begin(), uuids.end());
+		std::list<std::wstring> transportContainer(uuids.begin(), uuids.end());
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
@@ -406,7 +405,7 @@ public:
 	}
 
 	void DisableRules(const RulesUuids &uuids) {
-		list<wstring> transportContainer(uuids.begin(), uuids.end());
+		std::list<std::wstring> transportContainer(uuids.begin(), uuids.end());
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
@@ -424,7 +423,7 @@ public:
 
 	void GetLogRecords(
 				unsigned int recordsNumber,
-				list<texs__LogRecord> &records)
+				std::list<texs__LogRecord> &records)
 			const {
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
@@ -471,13 +470,13 @@ public:
 
 	void GetNetworkAdapters(
 				bool resetCache,
-				list<texs__NetworkAdapterInfo> &result)
+				std::list<texs__NetworkAdapterInfo> &result)
 			const {
-		list<texs__NetworkAdapterInfo> adapters;
+		std::list<texs__NetworkAdapterInfo> adapters;
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			if (m_networkAdaptersCache.size() && !resetCache) {
-				list<texs__NetworkAdapterInfo>(m_networkAdaptersCache).swap(result);
+				std::list<texs__NetworkAdapterInfo>(m_networkAdaptersCache).swap(result);
 				return;
 			}
 			const int resultCode
@@ -490,13 +489,13 @@ public:
 					adapters.swap(
 						const_cast<Implementation *>(this)->m_networkAdaptersCache);
 				}
-				list<texs__NetworkAdapterInfo>(m_networkAdaptersCache).swap(result);
+				std::list<texs__NetworkAdapterInfo>(m_networkAdaptersCache).swap(result);
 				return;
 			}
 		}
 	}
 
-	void GetSslCertificates(list<texs__SslCertificateShortInfo> &result) const {
+	void GetSslCertificates(std::list<texs__SslCertificateShortInfo> &result) const {
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode = m_service.texs__GetSslCertificates(result);
@@ -511,7 +510,7 @@ public:
 	}
 
 	void GetSslCertificate(
-				const wstring &id,
+				const std::wstring &id,
 				texs__SslCertificateInfo &result)
 			const {
 		for (int attempts = 0; ; ) {
@@ -528,10 +527,10 @@ public:
 	}
 
 	void ImportSslCertificatex509(
-				const vector<unsigned char> &certificate,
-				const string &password) {
+				const std::vector<unsigned char> &certificate,
+				const std::string &password) {
 		for (int attempts = 0; ; ) {
-			wstring error;
+			std::wstring error;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
 				= m_service.texs__ImportSslCertificateX509(certificate, password, error);
@@ -548,10 +547,10 @@ public:
 	}
 
 	void ImportSslCertificatePkcs12(
-				const vector<unsigned char> &certificate,
-				const string &privateKey) {
+				const std::vector<unsigned char> &certificate,
+				const std::string &privateKey) {
 		for (int attempts = 0; ; ) {
-			wstring error;
+			std::wstring error;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
 				= m_service.texs__ImportSslCertificatePkcs12(certificate, privateKey, error);
@@ -568,9 +567,9 @@ public:
 	}
 
 	// see TEX-642
-	/* string ExportSslCertificate(const wstring &id) const {
+	/* std::string ExportSslCertificate(const std::wstring &id) const {
 		for (int attempts = 0; ; ) {
-			string result;
+			std::string result;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
 				= m_service.texs__ExportSslCertificate(id, result);
@@ -584,9 +583,9 @@ public:
 		}
 	} */
 
-	void DeleteSslCertificates(const list<wstring> &ids) {
+	void DeleteSslCertificates(const std::list<std::wstring> &ids) {
 		for (int attempts = 0; ; ) {
-			wstring error;
+			std::wstring error;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
 				= m_service.texs__DeleteSslCertificates(ids, NULL);
@@ -616,9 +615,9 @@ public:
 	}
 
 	void GenerateLicenseKeyRequest(
-				const string &license,
-				string &request,
-				string &privateKey) {
+				const std::string &license,
+				std::string &request,
+				std::string &privateKey) {
 		for (int attempts = 0; ; ) {
 			texs__LicenseKeyRequest result;
 			wxMutexLocker serviceLock(m_serviceMutex);
@@ -637,9 +636,9 @@ public:
 		}
 	}
 
-	string GetTrialLicense() const {
+	std::string GetTrialLicense() const {
 		for (int attempts = 0; ; ) {
-			string result;
+			std::string result;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode = m_service.texs__GetTrialLicense(result);
 			++attempts;
@@ -652,9 +651,9 @@ public:
 		}
 	}
 
-	string GetLicenseKey() const {
+	std::string GetLicenseKey() const {
 		for (int attempts = 0; ; ) {
-			string result;
+			std::string result;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode = m_service.texs__GetLicenseKey(result);
 			++attempts;
@@ -667,7 +666,7 @@ public:
 		}
 	}
 
-	string GetLicenseKeyLocalAsymmetricPrivateKey() const {
+	std::string GetLicenseKeyLocalAsymmetricPrivateKey() const {
 		for (int attempts = 0; ; ) {
 			texs__LicenseKeyInfo info;
 			wxMutexLocker serviceLock(m_serviceMutex);
@@ -682,7 +681,7 @@ public:
 		}
 	}
 
-	void SetLicenseKey(const string &key, const string &privateKey) {
+	void SetLicenseKey(const std::string &key, const std::string &privateKey) {
 		for (int attempts = 0; ; ) {
 			texs__SetLicenseKeyResult result;
 			wxMutexLocker serviceLock(m_serviceMutex);
@@ -711,7 +710,7 @@ public:
 				return true;
 			}
 
-			vector<unsigned char> encryptedBuffer;
+			std::vector<unsigned char> encryptedBuffer;
 			const int resultCode = m_service.texs__GetProperties(encryptedBuffer);
 			++attempts;
 
@@ -722,11 +721,11 @@ public:
 					return false;
 				}
 
-				vector<char> decryptedBuffer(encryptedBuffer.size());
-				vector<unsigned char> key;
+				std::vector<char> decryptedBuffer(encryptedBuffer.size());
+				std::vector<unsigned char> key;
 				LocalComunicationPolicy::GetEncryptingKey(key);
 				size_t token = 0;
-				vector<char>::iterator pos = decryptedBuffer.begin();
+				std::vector<char>::iterator pos = decryptedBuffer.begin();
 				foreach (char ch, encryptedBuffer) {
 					ch ^= key[token++ % key.size()];
 					*pos = ch;
@@ -742,7 +741,7 @@ public:
 				typedef int32_t Id;
 				typedef int32_t ValSize;
 
-				auto_ptr<WorkstationPropertyValues> properties(
+				std::auto_ptr<WorkstationPropertyValues> properties(
 					new WorkstationPropertyValues);
 				for (size_t i = sizeof(Result); ; ) {
 					const size_t bufferSize = decryptedBuffer.size() - i;
@@ -757,7 +756,7 @@ public:
 					properties->insert(
 						make_pair(
 							WorkstationProperty(id),
-							string(
+							std::string(
 								&decryptedBuffer[valBeginOffset],
 								&decryptedBuffer[0] + valEndOffset)));
 					i += sizeof(Id) + sizeof(ValSize) + valSize;
@@ -779,7 +778,7 @@ public:
 		for (int attempts = 0; ; ) {
 			texs__UpnpStatus result;
 			wxMutexLocker serviceLock(m_serviceMutex);
-			const_cast<Implementation *>(this)->m_cachedUpnpDeviceExternalIp = wstring();
+			const_cast<Implementation *>(this)->m_cachedUpnpDeviceExternalIp = std::wstring();
 			const int resultCode = m_service.texs__GetUpnpStatus(result);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
@@ -798,7 +797,7 @@ public:
 		}
 	}
 
-	optional<wxString> GetCachedUpnpDeviceExternalIp() const {
+	boost::optional<wxString> GetCachedUpnpDeviceExternalIp() const {
 		wxMutexLocker serviceLock(m_serviceMutex);
 		return m_cachedUpnpDeviceExternalIp;
 	}
@@ -844,7 +843,7 @@ private:
 	}
 
 	void HandleSoapError(int errorCode) const {
-		wstring errorMessage;
+		std::wstring errorMessage;
 		if (errorCode == SOAP_TCP_ERROR || errorCode == SOAP_UDP_ERROR) {
 			WFormat format(
 				L"Could not connect to " TUNNELEX_NAME_W L" service (%1%).\n"
@@ -858,11 +857,15 @@ private:
 			format % errorCode;
 			errorMessage = format.str();
 		} else {
-			ostringstream oss;
+			std::ostringstream oss;
 			soap_stream_fault(m_service.soap, oss);
-			string soapError(
-				regex_replace(oss.str(), regex("[\n\t\r]"), " " , match_default | format_all));
-			trim_if(soapError, is_any_of("\n\t\r "));
+			std::string soapError(
+				boost::regex_replace(
+					oss.str(),
+					boost::regex("[\n\t\r]"),
+					" ",
+					boost::match_default | boost::format_all));
+			boost::trim_if(soapError, boost::is_any_of("\n\t\r "));
 			WFormat format(L"Server communication error: \"%1%\" (code: %2%).");
 			format % ConvertString<WString>(soapError.c_str()).GetCStr();
 			format % errorCode;
@@ -939,8 +942,8 @@ private:
 	const wxString m_originalEndpoint;
 
 	//! @todo: replace with unique_ptr
-	shared_ptr<void> m_stateCheckingStopEvent;
-	shared_ptr<void> m_stateCheckingUpdateEvent;
+	boost::shared_ptr<void> m_stateCheckingStopEvent;
+	boost::shared_ptr<void> m_stateCheckingUpdateEvent;
 
 	time_t m_lastErrorTime;
 	time_t m_lastWarningTime;
@@ -953,10 +956,10 @@ private:
 
 	bool m_isConnected;
 
-	list<texs__NetworkAdapterInfo> m_networkAdaptersCache;
-	optional<wxString> m_cachedUpnpDeviceExternalIp;
+	std::list<texs__NetworkAdapterInfo> m_networkAdaptersCache;
+	boost::optional<wxString> m_cachedUpnpDeviceExternalIp;
 
-	auto_ptr<Licensing::WorkstationPropertyValues> m_properties;
+	std::auto_ptr<Licensing::WorkstationPropertyValues> m_properties;
 
 };
 
@@ -1017,13 +1020,13 @@ void ServiceAdapter::Reconnect(
 
 bool ServiceAdapter::Start() {
 	return m_pimpl->RequestWithProgressBar<bool>(
-		bind(&Implementation::Start, m_pimpl.get()),
+		boost::bind(&Implementation::Start, m_pimpl.get()),
 		wxT("Starting ") TUNNELEX_NAME_W wxT(", please wait..."));
 }
 
 bool ServiceAdapter::Stop() {
 	return m_pimpl->RequestWithProgressBar<bool>(
-		bind(&Implementation::Stop, m_pimpl.get()),
+		boost::bind(&Implementation::Stop, m_pimpl.get()),
 		wxT("Stopping ") TUNNELEX_NAME_W wxT(", please wait..."));
 }
 
@@ -1033,19 +1036,19 @@ bool ServiceAdapter::IsStarted() const {
 
 void ServiceAdapter::UpdateRules(const RuleSet &rules) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::UpdateRules, m_pimpl.get(), cref(rules)),
+		boost::bind(&Implementation::UpdateRules, m_pimpl.get(), boost::cref(rules)),
 		wxT("Applying rule set changes, please wait..."));
 }
 
 void ServiceAdapter::GetRuleSet(RuleSet &ruleSet) const {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::GetRuleSet, m_pimpl.get(), ref(ruleSet)),
-		wxT("Refreshing rule set, please wait..."));
+		boost::bind(&Implementation::GetRuleSet, m_pimpl.get(), boost::ref(ruleSet)),
+		wxT("Refreshing rule std::set, please wait..."));
 }
 
 void ServiceAdapter::DeleteRules(const RulesUuids &uuids) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::DeleteRules, m_pimpl.get(), cref(uuids)),
+		boost::bind(&Implementation::DeleteRules, m_pimpl.get(), boost::cref(uuids)),
 		wxT("Deleting selected rules, please wait..."));
 }
 
@@ -1055,31 +1058,31 @@ const wxString & ServiceAdapter::GetEndpoint() const {
 
 void ServiceAdapter::GetLogRecords(
 			unsigned int recordsNumber,
-			list<texs__LogRecord> &records)
+			std::list<texs__LogRecord> &records)
 		const {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::GetLogRecords, m_pimpl.get(), recordsNumber, ref(records)),
+		boost::bind(&Implementation::GetLogRecords, m_pimpl.get(), recordsNumber, boost::ref(records)),
 		wxT("Requesting service log, please wait..."));
 }
 
 void ServiceAdapter::SetLogLevel(texs__LogLevel logLevel) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::SetLogLevel, m_pimpl.get(), logLevel),
+		boost::bind(&Implementation::SetLogLevel, m_pimpl.get(), logLevel),
 		wxEmptyString);
 }
 
 texs__LogLevel ServiceAdapter::GetLogLevel() const {
 	return m_pimpl->RequestWithProgressBar<texs__LogLevel>(
-		bind(&Implementation::GetLogLevel, m_pimpl.get()),
+		boost::bind(&Implementation::GetLogLevel, m_pimpl.get()),
 		wxEmptyString);
 }
 
 void ServiceAdapter::GetNetworkAdapters(
 			bool resetCache,
-			list<texs__NetworkAdapterInfo> &result)
+			std::list<texs__NetworkAdapterInfo> &result)
 		const {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::GetNetworkAdapters, m_pimpl.get(), resetCache, ref(result)),
+		boost::bind(&Implementation::GetNetworkAdapters, m_pimpl.get(), resetCache, boost::ref(result)),
 		wxEmptyString);
 }
 
@@ -1139,51 +1142,51 @@ unsigned long long ServiceAdapter::GetLogSize() const {
 
 void ServiceAdapter::EnableRules(const RulesUuids &uuids) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::EnableRules, m_pimpl.get(), cref(uuids)),
+		boost::bind(&Implementation::EnableRules, m_pimpl.get(), boost::cref(uuids)),
 		wxT("Enabling selected rules, please wait..."));
 }
 
 void ServiceAdapter::DisableRules(const RulesUuids &uuids) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::DisableRules, m_pimpl.get(), cref(uuids)),
+		boost::bind(&Implementation::DisableRules, m_pimpl.get(), boost::cref(uuids)),
 		wxT("Disabling selected rules, please wait..."));
 }
 
 void ServiceAdapter::GenerateLicenseKeyRequest(
-			const string &license,
-			string &request,
-			string &privateKey) {
+			const std::string &license,
+			std::string &request,
+			std::string &privateKey) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(
+		boost::bind(
 			&Implementation::GenerateLicenseKeyRequest,
 			m_pimpl.get(),
-			cref(license),
-			ref(request),
-			ref(privateKey)),
+			boost::cref(license),
+			boost::ref(request),
+			boost::ref(privateKey)),
 		wxEmptyString);
 }
 
-string ServiceAdapter::GetTrialLicense() const {
-	return m_pimpl->RequestWithProgressBar<string>(
-		bind(&Implementation::GetTrialLicense, m_pimpl.get()),
+std::string ServiceAdapter::GetTrialLicense() const {
+	return m_pimpl->RequestWithProgressBar<std::string>(
+		boost::bind(&Implementation::GetTrialLicense, m_pimpl.get()),
 		wxEmptyString);
 }
 
-string ServiceAdapter::GetLicenseKey() const {
-	return m_pimpl->RequestWithProgressBar<string>(
-		bind(&Implementation::GetLicenseKey, m_pimpl.get()),
+std::string ServiceAdapter::GetLicenseKey() const {
+	return m_pimpl->RequestWithProgressBar<std::string>(
+		boost::bind(&Implementation::GetLicenseKey, m_pimpl.get()),
 		wxEmptyString);
 }
 
 void ServiceAdapter::SetLicenseKey(
-			const string &key,
-			const string &privateKey) {
+			const std::string &key,
+			const std::string &privateKey) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(
+		boost::bind(
 			&Implementation::SetLicenseKey,
 			m_pimpl.get(),
-			cref(key),
-			cref(privateKey)),
+			boost::cref(key),
+			boost::cref(privateKey)),
 		wxEmptyString);
 }
 
@@ -1196,30 +1199,30 @@ bool ServiceAdapter::GetProperties(Licensing::WorkstationPropertyValues &result)
 	}
 }
 
-string ServiceAdapter::GetLicenseKeyLocalAsymmetricPrivateKey() const {
-	return m_pimpl->RequestWithProgressBar<string>(
-		bind(&Implementation::GetLicenseKeyLocalAsymmetricPrivateKey, m_pimpl.get()),
+std::string ServiceAdapter::GetLicenseKeyLocalAsymmetricPrivateKey() const {
+	return m_pimpl->RequestWithProgressBar<std::string>(
+		boost::bind(&Implementation::GetLicenseKeyLocalAsymmetricPrivateKey, m_pimpl.get()),
 		wxEmptyString);
 }
 
 bool ServiceAdapter::GetUpnpStatus(wxString &externalIp, wxString &localIp) const {
 	return m_pimpl->RequestWithProgressBar<bool>(
-		bind(&Implementation::GetUpnpStatus, m_pimpl.get(), ref(externalIp), ref(localIp)),
+		boost::bind(&Implementation::GetUpnpStatus, m_pimpl.get(), boost::ref(externalIp), boost::ref(localIp)),
 		wxT("Getting information about UPnP device, please wait..."));
 }
 
-optional<wxString> ServiceAdapter::GetCachedUpnpDeviceExternalIp() const {
+boost::optional<wxString> ServiceAdapter::GetCachedUpnpDeviceExternalIp() const {
 	try {
 		return m_pimpl->GetCachedUpnpDeviceExternalIp();
 	} catch (const LocalException &ex) {
 		wxLogError(ex.GetWhat());
-		return optional<wxString>();
+		return boost::optional<wxString>();
 	}
 }
 
-void ServiceAdapter::GetSslCertificates(list<texs__SslCertificateShortInfo> &result) const {
+void ServiceAdapter::GetSslCertificates(std::list<texs__SslCertificateShortInfo> &result) const {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::GetSslCertificates, m_pimpl.get(), ref(result)),
+		boost::bind(&Implementation::GetSslCertificates, m_pimpl.get(), boost::ref(result)),
 		wxT("Getting installed SSL certificates list, please wait..."));
 }
 
@@ -1228,35 +1231,35 @@ void ServiceAdapter::GetSslCertificate(
 			texs__SslCertificateInfo &result)
 		const {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::GetSslCertificate, m_pimpl.get(), cref(id), ref(result)),
+		boost::bind(&Implementation::GetSslCertificate, m_pimpl.get(), boost::cref(id), boost::ref(result)),
 		wxT("Getting SSL certificate, please wait..."));
 }
 
-void ServiceAdapter::DeleteSslCertificates(const list<wstring> &ids) {
+void ServiceAdapter::DeleteSslCertificates(const std::list<std::wstring> &ids) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::DeleteSslCertificates, m_pimpl.get(), cref(ids)),
+		boost::bind(&Implementation::DeleteSslCertificates, m_pimpl.get(), boost::cref(ids)),
 		wxT("Deleting certificates, please wait..."));
 }
 
 void ServiceAdapter::ImportSslCertificateX509(
-			const vector<unsigned char> &certificate,
-			const string &password) {
+			const std::vector<unsigned char> &certificate,
+			const std::string &password) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::ImportSslCertificatex509, m_pimpl.get(), cref(certificate), cref(password)),
+		boost::bind(&Implementation::ImportSslCertificatex509, m_pimpl.get(), boost::cref(certificate), boost::cref(password)),
 		wxT("Importing and installing SSL certificate, please wait..."));
 }
 
 void ServiceAdapter::ImportSslCertificatePkcs12(
-			const vector<unsigned char> &certificate,
-			const string &privateKey) {
+			const std::vector<unsigned char> &certificate,
+			const std::string &privateKey) {
 	m_pimpl->RequestWithProgressBar<void>(
-		bind(&Implementation::ImportSslCertificatePkcs12, m_pimpl.get(), cref(certificate), cref(privateKey)),
+		boost::bind(&Implementation::ImportSslCertificatePkcs12, m_pimpl.get(), boost::cref(certificate), boost::cref(privateKey)),
 		wxT("Importing and installing SSL certificate, please wait..."));
 }
 
 // see TEX-642
-/* wstring ServiceAdapter::ExportSslCertificate(const wstring &id) const {
-	return m_pimpl->RequestWithProgressBar<string>(
-		bind(&Implementation::ExportSslCertificate, m_pimpl.get(), cref(id)),
+/* std::wstring ServiceAdapter::ExportSslCertificate(const std::wstring &id) const {
+	return m_pimpl->RequestWithProgressBar<std::string>(
+		boost::bind(&Implementation::ExportSslCertificate, m_pimpl.get(), boost::cref(id)),
 		wxT("Exporting certificates, please wait..."));
 } */

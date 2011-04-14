@@ -14,7 +14,7 @@
 
 #include "TcpConnection.hpp"
 #include "ConnectionsTraits.hpp"
-#include <TunnelEx/Endpoint.hpp>
+#include "Core/Endpoint.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

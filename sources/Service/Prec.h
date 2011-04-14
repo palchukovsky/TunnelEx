@@ -15,10 +15,9 @@
 #include "CompileConfig.h"
 #include "Constants.h"
 
+#define BOOST_FILESYSTEM_VERSION 2
+
 #include "Licensing/Prec.h"
-#include "Licensing/FsLocalStorage.hpp"
-#include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
-#include "Licensing/LocalComunicationPolicy.hpp"
 
 #include "Crypto.hpp"
 #include "ModulePath.hpp"

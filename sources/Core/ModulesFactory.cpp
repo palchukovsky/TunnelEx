@@ -21,8 +21,6 @@
 #include "Locking.hpp"
 #include "Dll.hpp"
 
-using namespace std;
-using namespace boost;
 namespace mi = boost::multi_index;
 using namespace TunnelEx;
 using namespace TunnelEx::Singletons;
@@ -70,7 +68,7 @@ namespace {
 
 //////////////////////////////////////////////////////////////////////////
 
-class ModulesFactoryPolicy::Implementation : private noncopyable {
+class ModulesFactoryPolicy::Implementation : private boost::noncopyable {
 
 private:
 
@@ -80,20 +78,20 @@ private:
 			const TunnelRule &,
 			const Connection &currentConnection,
 			const Connection &oppositeConnection);
-	typedef function<ListenerFabricPrototype> ListenerFabric;
+	typedef boost::function<ListenerFabricPrototype> ListenerFabric;
 	//! \todo: search with hash [2008/06/21 1:27]
-	typedef map<wstring, ListenerFabric> ListenerFabricCollection;
+	typedef std::map<std::wstring, ListenerFabric> ListenerFabricCollection;
 
 	typedef SharedPtr<Filter> (DestinationPingFilterFabricPrototype)(
 		SharedPtr<TunnelRule>, SharedPtr<RecursiveMutex>);
-	typedef function<DestinationPingFilterFabricPrototype>
+	typedef boost::function<DestinationPingFilterFabricPrototype>
 		DestinationPingFilterFabric;
 
 	typedef UniquePtr<EndpointAddress>(
 			EndpointAddressFabricPrototype)(
 				Server::ConstRef,
 				const WString &);
-	typedef function<EndpointAddressFabricPrototype>
+	typedef boost::function<EndpointAddressFabricPrototype>
 		EndpointAddressFabricFunc;
 
 	struct EndpointAddressFabric {
@@ -104,14 +102,14 @@ private:
 				func(func) {
 			//...//
 		}
-		wstring proto;
+		std::wstring proto;
 		EndpointAddressFabricFunc func;
 	};
 
 	typedef UniquePtr<Service>(ServiceFabricPrototype)(
 		SharedPtr<const ServiceRule>,
 		const ServiceRule::Service &);
-	typedef function<ServiceFabricPrototype> ServiceFabricFunc;
+	typedef boost::function<ServiceFabricPrototype> ServiceFabricFunc;
 
 	struct ServiceFabric {
 		explicit ServiceFabric(const wchar_t *name, const ServiceFabricFunc &func)
@@ -131,19 +129,19 @@ private:
 		//...//
 	};
 
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			EndpointAddressFabric,
 			mi::indexed_by<
 				mi::hashed_unique<
 					mi::tag<ByProto>,
 					mi::member<
 						EndpointAddressFabric,
-						wstring,
+						std::wstring,
 						&EndpointAddressFabric::proto> > > >
 		EndpointAddressFabrics;
 	typedef EndpointAddressFabrics::index<ByProto>::type EndpointAddressFabricByProto;
 
-	typedef multi_index_container<
+	typedef boost::multi_index_container<
 			ServiceFabric,
 			mi::indexed_by<
 				mi::hashed_unique<
@@ -162,7 +160,9 @@ public:
 			: m_enpointAddrTypeExp(L"([^:/]+):/{2,}([^/].*)") {
 
 		m_listenerFabricCollection.insert(
-			make_pair(L"TrafficLogger/File", CreateListenerModule<TrafficLogger>));
+			std::make_pair<std::wstring, ListenerFabric>(
+				L"TrafficLogger/File",
+				ListenerFabric(&CreateListenerModule<TrafficLogger>)));
 
 		try {
 
@@ -180,11 +180,11 @@ public:
 					m_modInetDll->GetFunction<EndpointAddressFabricPrototype>("CreateUdpEndpointAddress")));
 
 			m_listenerFabricCollection.insert(
-				make_pair(
+				std::make_pair(
 					L"Tunnel/Ftp/Active",
 					m_modInetDll->GetFunction<ListenerFabricPrototype>("CreateActiveFtpListener")));
 			m_listenerFabricCollection.insert(
-				make_pair(
+				std::make_pair(
 					L"Tunnel/Ftp/Passive",
 					m_modInetDll->GetFunction<ListenerFabricPrototype>("CreatePassiveFtpListener")));
 
@@ -264,7 +264,7 @@ public:
 	void CreateFilters(
 				SharedPtr<TunnelRule> rule,
 				SharedPtr<RecursiveMutex> ruleChangingMutex,
-				vector<SharedPtr<Filter> > &filters) {
+				std::vector<SharedPtr<Filter> > &filters) {
 		const TunnelRule::Filters &filtersNames(rule->GetFilters());
 		const size_t filtersNumber = filtersNames.GetSize();
 		filters.reserve(filtersNumber);
@@ -286,7 +286,7 @@ public:
 				const TunnelRule &rule,
 				const Connection &currentConnection,
 				const Connection &oppositeConnection,
-				function<void(SharedPtr<PreListener>)> preListenersReceiveCallback) {
+				boost::function<void(SharedPtr<PreListener>)> preListenersReceiveCallback) {
 		
 		const bool isDebugAvailable = Log::GetInstance().IsDebugRegistrationOn();
 		const RuleEndpoint::Listeners &listeners
@@ -326,7 +326,7 @@ public:
 				const TunnelRule &,
 				const Connection &currentConnection,
 				const Connection &,
-				function<void(SharedPtr<PostListener>)>) {
+				boost::function<void(SharedPtr<PostListener>)>) {
 		const RuleEndpoint::Listeners &listeners
 			= currentConnection.GetRuleEndpoint().GetPostListeners();
 		const size_t size = listeners.GetSize();
@@ -342,9 +342,9 @@ public:
 
 	UniquePtr<EndpointAddress> CreateEndpointAddress(
 				const WString &resourceIdentifier) {
-		wcmatch what;
-		BOOST_ASSERT(regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp));
-		if (regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp)) {
+		boost::wcmatch what;
+		BOOST_ASSERT(boost::regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp));
+		if (boost::regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp)) {
 			EndpointAddressFabricByProto &index
 				= m_endpointAddressFabrics.get<ByProto>();
 			EndpointAddressFabricByProto::const_iterator fabricPos
@@ -382,13 +382,13 @@ private:
 
 	ListenerFabricCollection m_listenerFabricCollection;
 
-	wregex m_enpointAddrTypeExp;
+	boost::wregex m_enpointAddrTypeExp;
 
-	auto_ptr<Helpers::Dll> m_modInetDll;
-	auto_ptr<Helpers::Dll> m_modPathfinderDll;
-	auto_ptr<Helpers::Dll> m_modPipeDll;
-	auto_ptr<Helpers::Dll> m_modSerialDll;
-	auto_ptr<Helpers::Dll> m_modUpnpDll;
+	std::auto_ptr<Helpers::Dll> m_modInetDll;
+	std::auto_ptr<Helpers::Dll> m_modPathfinderDll;
+	std::auto_ptr<Helpers::Dll> m_modPipeDll;
+	std::auto_ptr<Helpers::Dll> m_modSerialDll;
+	std::auto_ptr<Helpers::Dll> m_modUpnpDll;
 
 	EndpointAddressFabrics m_endpointAddressFabrics;
 	ServiceFabrics m_serviceFabrics;
@@ -420,7 +420,7 @@ void ModulesFactoryPolicy::CreatePreListeners(
 			const TunnelRule &rule,
 			const Connection &currentConnection,
 			const Connection &oppositeConnection,
-			function<void(SharedPtr<PreListener>)> preListenersReceiveCallback) {
+			boost::function<void(SharedPtr<PreListener>)> preListenersReceiveCallback) {
 	m_pimpl->CreatePreListeners(
 		server,
 		rule,
@@ -434,7 +434,7 @@ void ModulesFactoryPolicy::CreatePostListeners(
 			const TunnelRule &rule,
 			const Connection &currentConnection,
 			const Connection &oppositeConnection,
-			function<void(SharedPtr<PostListener>)> postListenersReceiveCallback) {
+			boost::function<void(SharedPtr<PostListener>)> postListenersReceiveCallback) {
 	m_pimpl->CreatePostListeners(
 		server,
 		rule,

@@ -113,8 +113,6 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool CheckWorkstationPropetyChange(
 					const std::string &control,
 					const std::string &local) {
-			using namespace std;
-			using namespace boost;
 			const size_t hashSize = 40;
 			BOOST_ASSERT(!(control.size() % hashSize));
 			BOOST_ASSERT(!(local.size() % hashSize));
@@ -123,14 +121,14 @@ namespace TunnelEx { namespace Licensing {
 					&& !control.empty()) {
 				const size_t subsCount = local.size() / hashSize;
 				for (size_t i = 0; i < subsCount; ++i) {
-					const string sub = string(
+					const std::string sub = std::string(
 						local.begin() + (i * hashSize),
 						local.begin() + ((i + 1) * hashSize));
-					const iterator_range<string::const_iterator> searchResult
-						= find_first(control, sub);
+					const boost::iterator_range<std::string::const_iterator> searchResult
+						= boost::find_first(control, sub);
 					if (	searchResult
-							&& !(distance(control.begin(), searchResult.begin()) % hashSize)) {
-						BOOST_ASSERT(!(distance(end(searchResult), control.end()) % hashSize));
+							&& !(std::distance(control.begin(), searchResult.begin()) % hashSize)) {
+						BOOST_ASSERT(!(std::distance(boost::end(searchResult), control.end()) % hashSize));
 						return true;
 					}
 				}

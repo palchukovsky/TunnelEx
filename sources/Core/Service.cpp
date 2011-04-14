@@ -14,12 +14,11 @@
 #include "Service.hpp"
 #include "Log.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-class Service::Implementation : private noncopyable {
+class Service::Implementation : private boost::noncopyable {
 
 public:
 

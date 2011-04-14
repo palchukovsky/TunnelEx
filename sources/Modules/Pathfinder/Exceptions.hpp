@@ -12,7 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__Exceptions_hpp__1003282108
 #define INCLUDED_FILE__TUNNELEX__Exceptions_hpp__1003282108
 
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/Exceptions.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Pathfinder {
 

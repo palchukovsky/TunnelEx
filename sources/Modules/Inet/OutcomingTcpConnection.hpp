@@ -15,10 +15,10 @@
 #include "TcpConnection.hpp"
 #include "InetEndpointAddress.hpp"
 #include "ConnectionsTraits.hpp"
-#include <TunnelEx/Endpoint.hpp>
-#include <TunnelEx/Exceptions.hpp>
-#include <TunnelEx/Error.hpp>
-#include <TunnelEx/Log.hpp>
+#include "Core/Endpoint.hpp"
+#include "Core/Exceptions.hpp"
+#include "Core/Error.hpp"
+#include "Core/Log.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 
@@ -116,7 +116,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			} else if (GetDataStream().IsConnected()) {
 				BOOST_ASSERT(
 					SSL_get_peer_certificate(GetDataStream().ssl()) != 0
-					|| polymorphic_downcast<const TcpEndpointAddress *>(
+					|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
 							GetRuleEndpointAddress().Get())
 						->GetRemoteCertificates().GetSize() == 0);
 				BOOST_ASSERT(
@@ -222,7 +222,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			std::auto_ptr<DataStream> codeStream(
 				new DataStream(
 					GetSslContext(
-						*polymorphic_downcast<const TcpEndpointAddress *>(&ruleEndpointAddress))));
+						*boost::polymorphic_downcast<const TcpEndpointAddress *>(&ruleEndpointAddress))));
 			SetDataStream(codeStream);
 	
 		}

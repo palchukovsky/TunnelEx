@@ -16,12 +16,11 @@
 #include "Locking.hpp"
 #include "Rule.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-class Filter::Implementation : private noncopyable {
+class Filter::Implementation : private boost::noncopyable {
 
 public:
 

@@ -13,11 +13,7 @@
 
 #include "InetServer.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::asio;
-using boost::asio::ip::udp;
-using boost::asio::ip::tcp;
+namespace io = boost::asio;
 using namespace Test;
 
 //////////////////////////////////////////////////////////////////////////
@@ -26,15 +22,15 @@ class TcpServer::Implementation {
 
 private:
 
-	class Connection : public enable_shared_from_this<Connection> {
+	class Connection : public boost::enable_shared_from_this<Connection> {
 	
 	public:
 		
-		static auto_ptr<Connection> Create(asio::io_service &ioService) {
-			return auto_ptr<Connection>(new Connection(ioService));
+		static std::auto_ptr<Connection> Create(io::io_service &ioService) {
+			return std::auto_ptr<Connection>(new Connection(ioService));
 		}
 
-		tcp::socket & socket() {
+		io::ip::tcp::socket & socket() {
 			return m_socket;
 		}
 
@@ -48,31 +44,31 @@ private:
 		void Send(const T &data) {
 			async_write(
 				m_socket,
-				buffer(data),
-				bind(
+				io::buffer(data),
+				boost::bind(
 					&Connection::HandleWrite,
 					shared_from_this(),
-					asio::placeholders::error,
-					asio::placeholders::bytes_transferred));
+					io::placeholders::error,
+					io::placeholders::bytes_transferred));
 		}
 
 		Buffer GetReceived() const {
 			Buffer result;
 			{
-				mutex::scoped_lock lock(m_bufferMutex);
+				boost::mutex::scoped_lock lock(m_bufferMutex);
 				result = m_dataBuffer;
 			}
 			return result;
 		}
 
 		void ClearReceived() {
-			mutex::scoped_lock lock(m_bufferMutex);
+			boost::mutex::scoped_lock lock(m_bufferMutex);
 			m_dataBuffer.clear();
 		}
 
 	private:
 
-		explicit Connection(io_service &ioService)
+		explicit Connection(io::io_service &ioService)
 				: m_socket(ioService) {
 			//...//
 		}
@@ -80,49 +76,49 @@ private:
 	private:
 
 		void StartRead() {
-			async_read_until(
+			io::async_read_until(
 				m_socket,
 				m_inStreamBuffer,
-				regex(".+"),
-				bind(
+				boost::regex(".+"),
+				boost::bind(
 					&Connection::HandleRead,
 					shared_from_this(),
-					placeholders::error,
-					placeholders::bytes_transferred));
+					io::placeholders::error,
+					io::placeholders::bytes_transferred));
 		}
 
-		void HandleWrite(const system::error_code &, size_t) {
+		void HandleWrite(const boost::system::error_code &, size_t) {
 			//...//
 		}
 
-		void HandleRead(const system::error_code &error, size_t) {
+		void HandleRead(const boost::system::error_code &error, size_t) {
 			if (!error) {
-				mutex::scoped_lock lock(m_bufferMutex);
-				istream is(&m_inStreamBuffer);
-				is.unsetf(ios_base::skipws);
-				copy(
-					istream_iterator<char>(is), 
-					istream_iterator<char>(), 
-					back_inserter(m_dataBuffer));
+				boost::mutex::scoped_lock lock(m_bufferMutex);
+				std::istream is(&m_inStreamBuffer);
+				is.unsetf(std::ios::skipws);
+				std::copy(
+					std::istream_iterator<char>(is), 
+					std::istream_iterator<char>(), 
+					std::back_inserter(m_dataBuffer));
 			}
 			StartRead();
 		}
 
 	private:
 
-		tcp::socket m_socket;
+		io::ip::tcp::socket m_socket;
 		Buffer m_dataBuffer;
-		asio::streambuf m_inStreamBuffer;
-		mutable mutex m_bufferMutex;
+		io::streambuf m_inStreamBuffer;
+		mutable boost::mutex m_bufferMutex;
 	
 	};
 
-	typedef vector<shared_ptr<Connection> > Connections;
+	typedef std::vector<boost::shared_ptr<Connection> > Connections;
 
 public:
 
 	Implementation(const unsigned short port)
-			: m_acceptor(m_ioService, tcp::endpoint(tcp::v4(), port)) {
+			: m_acceptor(m_ioService, io::ip::tcp::endpoint(io::ip::tcp::v4(), port)) {
 		StartAccept();
 		m_thread.reset(
 			new boost::thread(
@@ -147,55 +143,55 @@ public:
 	}
 
 	void CloseConnection(size_t connectionIndex) {
-		mutex::scoped_lock lock(m_connectionsMutex);
+		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		if (connectionIndex >= m_connections.size()) {
-			throw logic_error("Could not find connection by index");
+			throw std::logic_error("Could not find connection by index");
 		}
 		m_connections.erase(m_connections.begin() + connectionIndex);
 	}
 
-	void Send(size_t connectionIndex, const string &message) throw(SendError) {
+	void Send(size_t connectionIndex, const std::string &message) {
 		BOOST_ASSERT(message.size());
-		mutex::scoped_lock lock(m_connectionsMutex);
+		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		GetConnection(connectionIndex, lock).Send(message);
 	}
 
-	void Send(size_t connectionIndex, const Buffer &data) throw(SendError) {
+	void Send(size_t connectionIndex, const Buffer &data) {
 		BOOST_ASSERT(data.size());
-		mutex::scoped_lock lock(m_connectionsMutex);
+		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		GetConnection(connectionIndex, lock).Send(data);
 	}
 
-	Buffer GetReceived(size_t connectionIndex) const throw(ReceiveError) {
-		mutex::scoped_lock lock(m_connectionsMutex);
+	Buffer GetReceived(size_t connectionIndex) const {
+		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		return GetConnection(connectionIndex, lock).GetReceived();
 	}
 
 	void ClearReceived(size_t connectionIndex) {
-		mutex::scoped_lock lock(m_connectionsMutex);
+		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		return GetConnection(connectionIndex, lock).ClearReceived();
 	}
 
 private:
 
 	void StartAccept() {
-		shared_ptr<Connection> newConnection(
+		boost::shared_ptr<Connection> newConnection(
 			Connection::Create(m_acceptor.io_service()).release());
 		m_acceptor.async_accept(
 			newConnection->socket(),
-			bind(
+			boost::bind(
 				&Implementation::HandleAccept,
 				this,
-				shared_ptr<Connection>(newConnection),
-				placeholders::error));
+				boost::shared_ptr<Connection>(newConnection),
+				io::placeholders::error));
 	}
 
 	void HandleAccept(
-				shared_ptr<Connection> newConnection,
-				const system::error_code &error) {
+				boost::shared_ptr<Connection> newConnection,
+				const boost::system::error_code &error) {
 		if (!error) {
 			{
-				mutex::scoped_lock lock(m_connectionsMutex);
+				boost::mutex::scoped_lock lock(m_connectionsMutex);
 				newConnection->Start();
 				m_connections.push_back(newConnection);
 			}
@@ -203,16 +199,16 @@ private:
 		}
 	}
 
-	Connection & GetConnection(size_t connectionIndex, mutex::scoped_lock &) {
+	Connection & GetConnection(size_t connectionIndex, boost::mutex::scoped_lock &) {
 		if (connectionIndex >= m_connections.size()) {
-			throw logic_error("Could not find connection by index");
+			throw std::logic_error("Could not find connection by index");
 		}
 		return *m_connections[connectionIndex];
 	}
 
 	const Connection & GetConnection(
 				size_t connectionIndex,
-				mutex::scoped_lock &lock)
+				boost::mutex::scoped_lock &lock)
 			const {
 		return const_cast<Implementation *>(this)
 			->GetConnection(connectionIndex, lock);
@@ -228,11 +224,11 @@ private:
 
 private:
 
-	io_service m_ioService;
-	tcp::acceptor m_acceptor;
+	io::io_service m_ioService;
+	io::ip::tcp::acceptor m_acceptor;
 	Connections m_connections;
-	shared_ptr<boost::thread> m_thread;
-	mutable mutex m_connectionsMutex;
+	boost::shared_ptr<boost::thread> m_thread;
+	mutable boost::mutex m_connectionsMutex;
 
 };
 
@@ -259,18 +255,15 @@ void TcpServer::CloseConnection(size_t connectionIndex) {
 	m_pimpl->CloseConnection(connectionIndex);
 }
 
-void TcpServer::Send(size_t connectionIndex, const string &message) throw(SendError) {
+void TcpServer::Send(size_t connectionIndex, const std::string &message)  {
 	m_pimpl->Send(connectionIndex, message);
 }
 
-void TcpServer::Send(size_t connectionIndex, const Buffer &data) throw(SendError) {
+void TcpServer::Send(size_t connectionIndex, const Buffer &data) {
 	m_pimpl->Send(connectionIndex, data);
 }
 
-Buffer TcpServer::GetReceived(
-			size_t connectionIndex)
-		const
-		throw(ReceiveError) {
+Buffer TcpServer::GetReceived(size_t connectionIndex) const {
 	return m_pimpl->GetReceived(connectionIndex);
 }
 
@@ -286,11 +279,11 @@ public:
 
 	Implementation(unsigned short port)
 			: m_resolver(m_ioService),
-			m_query(tcp::v4(), "localhost", lexical_cast<string>(port)),
+			m_query(io::ip::tcp::v4(), "localhost", boost::lexical_cast<std::string>(port)),
 			m_endpointIterator(m_resolver.resolve(m_query)),
-			m_socket(m_ioService, tcp::endpoint(tcp::v4(), 0)) {
-		system::error_code error = asio::error::host_not_found;
-		tcp::resolver::iterator end;
+			m_socket(m_ioService, io::ip::tcp::endpoint(io::ip::tcp::v4(), 0)) {
+		boost::system::error_code error = io::error::host_not_found;
+		io::ip::tcp::resolver::iterator end;
 		while (error && m_endpointIterator != end) {
 			m_socket.close();
 			m_socket.connect(*m_endpointIterator++, error);
@@ -311,11 +304,11 @@ private:
 
 public:
 
-	void Send(const string &message) throw(SendError) {
+	void Send(const std::string &message) {
 		BOOST_ASSERT(message.size());
 		try {
-			const size_t toSend = (message.size() + 1) * sizeof(string::value_type);
-			const size_t sent = m_socket.send(buffer(message.c_str(), toSend));
+			const size_t toSend = (message.size() + 1) * sizeof(std::string::value_type);
+			const size_t sent = m_socket.send(io::buffer(message.c_str(), toSend));
 			if (sent != toSend) {
 				throw SendError("Could not send data to TCP: sent not equal toSend.");
 			}
@@ -324,10 +317,10 @@ public:
 		}
 	}
 
-	void Send(const Buffer &data) throw(SendError) {
+	void Send(const Buffer &data) {
 		BOOST_ASSERT(data.size());
 		try {
-			const size_t sent = m_socket.send(buffer(data));
+			const size_t sent = m_socket.send(io::buffer(data));
 			if (sent != data.size() * sizeof(Buffer::value_type)) {
 				throw SendError("Could not send data to TCP: sent not equal buffer size.");
 			}
@@ -336,10 +329,10 @@ public:
 		}
 	}
 
-	Buffer Receive() throw(ReceiveError) {
+	Buffer Receive() {
 		Buffer result(255);
 		try {
-			const size_t received = m_socket.receive(buffer(result));
+			const size_t received = m_socket.receive(io::buffer(result));
 			result.resize(received);
 		} catch (const std::exception &ex) {
 			throw ReceiveError(ex.what());
@@ -349,12 +342,12 @@ public:
 
 private:
 
-	io_service m_ioService;
-	tcp::resolver m_resolver;
-	mutable tcp::socket m_socket;
-	tcp::resolver::query m_query;
-	tcp::resolver::iterator m_endpointIterator;
-	tcp::resolver::iterator end;
+	io::io_service m_ioService;
+	io::ip::tcp::resolver m_resolver;
+	mutable io::ip::tcp::socket m_socket;
+	io::ip::tcp::resolver::query m_query;
+	io::ip::tcp::resolver::iterator m_endpointIterator;
+	io::ip::tcp::resolver::iterator end;
 
 
 };
@@ -371,15 +364,15 @@ TcpClient::~TcpClient() {
 	//...//
 }
 
-Buffer TcpClient::Receive() throw(ReceiveError) {
+Buffer TcpClient::Receive() {
 	return m_pimpl->Receive();
 }
 
-void TcpClient::Send(const string &message) throw(SendError) {
+void TcpClient::Send(const std::string &message) {
 	m_pimpl->Send(message);
 }
 
-void TcpClient::Send(const Buffer &beffer) throw(SendError) {
+void TcpClient::Send(const Buffer &beffer) {
 	m_pimpl->Send(beffer);
 }
 
@@ -390,9 +383,9 @@ class UdpClient::Implementation {
 public:
 
 	Implementation(unsigned short port)
-			: m_socket(m_ioService, udp::endpoint(udp::v4(), 0)),
+			: m_socket(m_ioService, io::ip::udp::endpoint(io::ip::udp::v4(), 0)),
 			m_resolver(m_ioService),
-			m_query(udp::v4(), "localhost", lexical_cast<string>(port)),
+			m_query(io::ip::udp::v4(), "localhost", boost::lexical_cast<std::string>(port)),
 			m_resolverIterator(m_resolver.resolve(m_query)) {
 		//...//
 	}
@@ -408,12 +401,12 @@ private:
 
 public:
 
-	void Send(const string &message) throw(SendError) {
+	void Send(const std::string &message) {
 		BOOST_ASSERT(message.size());
 		try {
-			const size_t toSend = (message.size() + 1) * sizeof(string::value_type);
+			const size_t toSend = (message.size() + 1) * sizeof(std::string::value_type);
 			const size_t sent = m_socket.send_to(
-				buffer(message.c_str(), toSend),
+				io::buffer(message.c_str(), toSend),
 				*m_resolverIterator);
 			if (sent != toSend) {
 				throw SendError("Could not send data to UDP: sent not equal toSend.");
@@ -423,10 +416,10 @@ public:
 		}
 	}
 
-	void Send(const Buffer &data) throw(SendError) {
+	void Send(const Buffer &data) {
 		BOOST_ASSERT(data.size());
 		try {
-			const size_t sent = m_socket.send_to(buffer(data), *m_resolverIterator);
+			const size_t sent = m_socket.send_to(io::buffer(data), *m_resolverIterator);
 			if (sent != data.size() * sizeof(Buffer::value_type)) {
 				throw SendError("Could not send data to UDP: sent not equal buffer size.");
 			}
@@ -435,12 +428,12 @@ public:
 		}
 	}
 
-	Buffer Receive() throw(ReceiveError) {
+	Buffer Receive() {
 		Buffer result(255);
 		try {
-			udp::endpoint senderEndpoint;
+			io::ip::udp::endpoint senderEndpoint;
 			const size_t received
-				= m_socket.receive_from(buffer(result), senderEndpoint);
+				= m_socket.receive_from(io::buffer(result), senderEndpoint);
 			result.resize(received);
 		} catch (const std::exception &ex) {
 			throw ReceiveError(ex.what());
@@ -450,11 +443,11 @@ public:
 
 private:
 
-	io_service m_ioService;
-	mutable udp::socket m_socket;
-	udp::resolver m_resolver;
-	udp::resolver::query m_query;
-	udp::resolver::iterator m_resolverIterator;
+	io::io_service m_ioService;
+	mutable io::ip::udp::socket m_socket;
+	io::ip::udp::resolver m_resolver;
+	io::ip::udp::resolver::query m_query;
+	io::ip::udp::resolver::iterator m_resolverIterator;
 
 };
 
@@ -467,15 +460,15 @@ UdpClient::~UdpClient() {
 	//...//
 }
 
-void UdpClient::Send(const string &message) throw(SendError) {
+void UdpClient::Send(const std::string &message) {
 	m_pimpl->Send(message);
 }
 
-void UdpClient::Send(const Buffer &buffer) throw(SendError) {
+void UdpClient::Send(const Buffer &buffer) {
 	m_pimpl->Send(buffer);
 }
 
-Buffer UdpClient::Receive() throw(ReceiveError) {
+Buffer UdpClient::Receive() {
 	return m_pimpl->Receive();
 }
 

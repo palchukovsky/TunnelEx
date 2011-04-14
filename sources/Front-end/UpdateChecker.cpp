@@ -13,8 +13,6 @@
 
 #include "UpdateChecker.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -96,7 +94,7 @@ protected:
 			% m_stat.licenseKey
 			% (m_stat.isTrialMode ? L'1' : L'0');
 
-		wstring versionStr;
+		std::wstring versionStr;
 		if (GetLastReleaseInfo(url.str().c_str(), versionStr)) {
 			UpdateChecker::Version version;
 			if (ResolveVersion(versionStr, version)) {
@@ -107,20 +105,20 @@ protected:
 
 	}
 
-	bool ResolveVersion(const wstring &version, UpdateChecker::Version &result) const {
-		vector<wstring> versionNumbers;
+	bool ResolveVersion(const std::wstring &version, UpdateChecker::Version &result) const {
+		std::vector<std::wstring> versionNumbers;
 		versionNumbers.reserve(4);
-		split(versionNumbers, version, is_any_of(L"."));
+		split(versionNumbers, version, boost::is_any_of(L"."));
 		BOOST_ASSERT(versionNumbers.size() == 4);
 		if (versionNumbers.size() != 4) {
 			return false;
 		}
 		UpdateChecker::Version parsed;
 		try {
-			parsed.majorHigh = lexical_cast<unsigned long>(versionNumbers[0]);
-			parsed.majorLow = lexical_cast<unsigned long>(versionNumbers[1]);
-			parsed.minorHigh = lexical_cast<unsigned long>(versionNumbers[2]);
-			parsed.minorLow = lexical_cast<unsigned long>(versionNumbers[3]);
+			parsed.majorHigh = boost::lexical_cast<unsigned long>(versionNumbers[0]);
+			parsed.majorLow = boost::lexical_cast<unsigned long>(versionNumbers[1]);
+			parsed.minorHigh = boost::lexical_cast<unsigned long>(versionNumbers[2]);
+			parsed.minorLow = boost::lexical_cast<unsigned long>(versionNumbers[3]);
 		} catch (const boost::bad_lexical_cast &) {
 			BOOST_ASSERT(false);
 			return false;
@@ -129,9 +127,9 @@ protected:
 		return true;
 	}
 
-	bool GetLastReleaseInfo(const wchar_t *const url, wstring &version) const {
+	bool GetLastReleaseInfo(const wchar_t *const url, std::wstring &version) const {
 		
-		struct CoInitializer : private noncopyable {
+		struct CoInitializer : private boost::noncopyable {
 			CoInitializer() {
 				CoInitialize(NULL);	
 			}
@@ -174,7 +172,7 @@ protected:
 					} else if (parseError->get_errorCode(&parseErrorCode) != S_FALSE) {
 						return false;
 					}
-					wstring resultVersion;
+					std::wstring resultVersion;
 					const bool result = ParseVersion(doc, resultVersion);
 					if (result) {
 						swap(resultVersion, version);
@@ -191,7 +189,7 @@ protected:
 	
 	}
 
-	bool ParseVersion(CComPtr<IXMLDOMDocument> doc, wstring &version) const {
+	bool ParseVersion(CComPtr<IXMLDOMDocument> doc, std::wstring &version) const {
 		version.clear();
 		CComPtr<IXMLDOMNode> node;
 		if (doc->selectSingleNode(_bstr_t("VersionInfo/Release/@Version"), &node) == S_OK) {

@@ -12,11 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__PosixTime_hpp__0709092339
 #define INCLUDED_FILE__TUNNELEX__PosixTime_hpp__0709092339
 
-#ifdef TUNNELEX_CORE
-#	include "Time.h"
-#else // #ifdef TUNNELEX_CORE
-#	include <TunnelEx/Time.h>
-#endif // #ifdef TUNNELEX_CORE
+#include "Core/Time.h"
 
 #include "CompileWarningsBoost.h"
 #	include <boost/date_time/posix_time/posix_time.hpp>
@@ -34,14 +30,14 @@ namespace TunnelEx { namespace Helpers {
 	//! @todo: check function in new version of boost
 	inline TunnelEx::TimeT ConvertPosixTimeToTimeT(
 				const boost::posix_time::ptime &posixTime) {
-		using namespace boost::posix_time;
+		namespace pt = boost::posix_time;
 		BOOST_ASSERT(!posixTime.is_special());
-		static const ptime timeTEpoch(boost::gregorian::date(1970, 1, 1));
+		static const pt::ptime timeTEpoch(boost::gregorian::date(1970, 1, 1));
 		BOOST_ASSERT(!(posixTime < timeTEpoch));
 		if (posixTime < timeTEpoch) {
 			return 0;
 		}
-		const time_duration durationFromTEpoch(posixTime - timeTEpoch);
+		const pt::time_duration durationFromTEpoch(posixTime - timeTEpoch);
 		return static_cast<TimeT>(durationFromTEpoch.total_seconds());
 	}
 

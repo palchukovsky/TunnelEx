@@ -14,15 +14,13 @@
 #include "ServiceControl/Configuration.hpp"
 #include "Legacy/LegacySupporter.hpp"
 
-#include <TunnelEx/Endpoint.hpp>
-#include <TunnelEx/EndpointAddress.hpp>
-#include <TunnelEx/Rule.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/Endpoint.hpp"
+#include "Core/EndpointAddress.hpp"
+#include "Core/Rule.hpp"
+#include "Core/String.hpp"
 
-using namespace std;
 namespace ut = boost::unit_test;
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 namespace tex = TunnelEx;
 namespace xml = tex::Helpers::Xml;
 
@@ -468,13 +466,15 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Migration)
 		ServiceConfiguration::GetDefault()->Save();
 
 		{
-			wpath ruleSetPath = L"Resource";
+			fs::wpath ruleSetPath = L"Resource";
 			ruleSetPath /= L"RuleSet_1_3.xml";
-			ifstream orig(ruleSetPath.string().c_str());
+			std::ifstream orig(ruleSetPath.string().c_str());
 			BOOST_REQUIRE(orig);
-			ofstream test(ServiceConfiguration().GetRulesPath().c_str(), ios::trunc);
+			std::ofstream test(ServiceConfiguration().GetRulesPath().c_str(), std::ios::trunc);
 			BOOST_REQUIRE(test);
-			test << string(istreambuf_iterator<char>(orig), istreambuf_iterator<char>());
+			test << std::string(
+				std::istreambuf_iterator<char>(orig),
+				std::istreambuf_iterator<char>());
 		}
 
 		tex::RuleSet ruleSet;
@@ -585,7 +585,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Migration)
 		xml::Document::LoadFromString(serviceConfigurationXmlVer_1_0)
 			->Save(ServiceConfiguration::GetConfigurationFilePath());
 
-		const shared_ptr<const ServiceConfiguration> migrated(
+		const boost::shared_ptr<const ServiceConfiguration> migrated(
 			new ServiceConfiguration(
 				LegacySupporter().MigrateCurrentServiceConfiguration().Get()));
 
@@ -614,7 +614,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Migration)
 		xml::Document::LoadFromString(serviceConfigurationXmlVer_1_1)
 			->Save(ServiceConfiguration::GetConfigurationFilePath());
 
-		const shared_ptr<const ServiceConfiguration> migrated(
+		const boost::shared_ptr<const ServiceConfiguration> migrated(
 			new ServiceConfiguration(
 				LegacySupporter().MigrateCurrentServiceConfiguration().Get()));
 

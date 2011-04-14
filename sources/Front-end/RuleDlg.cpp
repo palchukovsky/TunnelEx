@@ -17,8 +17,6 @@
 
 #include "Rule.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 BEGIN_EVENT_TABLE(RuleDlg, wxDialog)
@@ -83,7 +81,7 @@ void RuleDlg::SaveTemplate() const {
 	if (IsNewRule()) {
 		config.Write(
 			wxT("/Rule/Template/IsEnabled"),
-			polymorphic_downcast<wxCheckBox *>(
+			boost::polymorphic_downcast<wxCheckBox *>(
 					FindWindow(CONTROL_ID_IS_ENABLED))
 				->GetValue());
 	}
@@ -91,7 +89,7 @@ void RuleDlg::SaveTemplate() const {
 	if (FindWindow(CONTROL_ID_ERROS_TREATMENT)) {
 		config.Write(
 			wxT("/Rule/Template/ErrorTreatment"),
-			polymorphic_downcast<wxChoice *>(
+			boost::polymorphic_downcast<wxChoice *>(
 					FindWindow(CONTROL_ID_ERROS_TREATMENT))
 				->GetStringSelection());
 	}
@@ -112,34 +110,34 @@ void RuleDlg::Init() {
 
 	SetExtraStyle(wxWS_EX_VALIDATE_RECURSIVELY);
 
-	auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
 
 	m_generalSettingsPanel = &CreateControlGeneralSettings();
 	topSizer->Add(m_generalSettingsPanel, theme.GetTopSizerFlags());
 
-	auto_ptr<wxSizer> content = CreateControlContent();
+	std::auto_ptr<wxSizer> content = CreateControlContent();
 	topSizer->Add(content.get(), theme.GetTopSizerFlags());
 	content.release();
-	auto_ptr<wxSizer> options = CreateControlOptions();
+	std::auto_ptr<wxSizer> options = CreateControlOptions();
 	if (options.get()) {
 		topSizer->Add(options.get(), theme.GetTopSizerFlags());
 		options.release();
 	}
 	topSizer->Add(new wxStaticLine(this, wxID_ANY), theme.GetTopSizerFlags());
 
-	auto_ptr<wxSizer> ruleInfoBox = CreateControlRuleInfo();
+	std::auto_ptr<wxSizer> ruleInfoBox = CreateControlRuleInfo();
 	if (ruleInfoBox.get()) {
-		auto_ptr<wxBoxSizer> buttonsBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> buttonsBox(new wxBoxSizer(wxHORIZONTAL));
 		buttonsBox->Add(ruleInfoBox.get(), wxSizerFlags(0).Expand());
 		ruleInfoBox.release();
 		buttonsBox->AddSpacer(theme.GetDlgBorder() * 2);
-		auto_ptr<wxSizer> buttons = CreateButtons();
+		std::auto_ptr<wxSizer> buttons = CreateButtons();
 		buttonsBox->Add(buttons.get(), wxSizerFlags(1).Expand().Right());
 		buttons.release();
 		topSizer->Add(buttonsBox.get(), theme.GetTopSizerFlags());
 		buttonsBox.release();
 	} else {
-		auto_ptr<wxSizer> buttons = CreateButtons();
+		std::auto_ptr<wxSizer> buttons = CreateButtons();
 		topSizer->Add(buttons.get(), theme.GetTopSizerFlags().Right());
 		buttons.release();
 	}
@@ -155,23 +153,23 @@ void RuleDlg::Init() {
 
 }
 
-auto_ptr<wxSizer> RuleDlg::CreateButtons() {
-	auto_ptr<wxSizer> result(CreateButtonSizer(wxOK | wxCANCEL | wxHELP));
+std::auto_ptr<wxSizer> RuleDlg::CreateButtons() {
+	std::auto_ptr<wxSizer> result(CreateButtonSizer(wxOK | wxCANCEL | wxHELP));
 	if (!IsLicenseValid()) {
 		FindWindow(wxID_OK)->Enable(false);
 	}
 	return result;
 }
 
-auto_ptr<wxSizer> RuleDlg::CreateControlRuleInfo() {
-	return auto_ptr<wxSizer>();
+std::auto_ptr<wxSizer> RuleDlg::CreateControlRuleInfo() {
+	return std::auto_ptr<wxSizer>();
 }
 
 wxPanel & RuleDlg::CreateControlGeneralSettings() {
 	
 	wxPanel &panel =
 		*new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 
 	wxCheckBox &enabled = *new wxCheckBox(
 		&panel,
@@ -193,7 +191,7 @@ wxPanel & RuleDlg::CreateControlGeneralSettings() {
 
 	topBox->AddSpacer(wxGetApp().GetTheme().GetDlgBorder());
 
-	auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 	box->Add(
 		new wxStaticText(&panel, wxID_ANY, wxT("Name:")),
 		wxSizerFlags(0).Center());
@@ -220,9 +218,9 @@ wxPanel & RuleDlg::CreateControlGeneralSettings() {
 
 }
 
-auto_ptr<wxSizer> RuleDlg::CreateControlOptions() {
+std::auto_ptr<wxSizer> RuleDlg::CreateControlOptions() {
 		
-	auto_ptr<wxBoxSizer> treatBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> treatBox(new wxBoxSizer(wxHORIZONTAL));
 	treatBox->Add(
 		new wxStaticText(this, wxID_ANY, wxT("Treat errors as:")),
 		wxSizerFlags(0).Center());
@@ -268,8 +266,8 @@ auto_ptr<wxSizer> RuleDlg::CreateControlOptions() {
 			wxT("will be added if outcomig connection failed."));
 	treatBox->Add(&treatInput, wxSizerFlags(0).Center());
 	
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
-	auto_ptr<wxSizer> additionalOptions = CreateControlAdditionalOptions();
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxSizer> additionalOptions = CreateControlAdditionalOptions();
 	
 	topBox->Add(treatBox.get(), wxSizerFlags(0).Expand());
 	treatBox.release();
@@ -284,14 +282,14 @@ auto_ptr<wxSizer> RuleDlg::CreateControlOptions() {
 	group.Add(topBox.get(), wxGetApp().GetTheme().GetStaticBoxFlags());
 	topBox.release();
 
-	auto_ptr<wxSizer> result(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxSizer> result(new wxBoxSizer(wxHORIZONTAL));
 	result->Add(&group, wxSizerFlags(1).Expand());
 	return result;
 
 }
 
-auto_ptr<wxSizer> RuleDlg::CreateControlAdditionalOptions() {
-	return auto_ptr<wxSizer>();
+std::auto_ptr<wxSizer> RuleDlg::CreateControlAdditionalOptions() {
+	return std::auto_ptr<wxSizer>();
 }
 
 void RuleDlg::OnOk(wxCommandEvent &) {
@@ -300,12 +298,12 @@ void RuleDlg::OnOk(wxCommandEvent &) {
 		return;
 	}
 
-	auto_ptr<Rule> newRule = Clone(*m_rule);
+	std::auto_ptr<Rule> newRule = Clone(*m_rule);
 	bool isChanged = IsChanged();
 
 	{
 		const wxTextCtrl &ctrl
-			=  *polymorphic_downcast<wxTextCtrl *>(FindWindow(CONTROL_ID_RULE_NAME));
+			=  *boost::polymorphic_downcast<wxTextCtrl *>(FindWindow(CONTROL_ID_RULE_NAME));
 		if (newRule->GetName() != ctrl.GetValue().c_str()) {
 			newRule->SetName(ctrl.GetValue().c_str());
 			isChanged = true;
@@ -314,7 +312,7 @@ void RuleDlg::OnOk(wxCommandEvent &) {
 
 	{
 		const wxCheckBox &ctrl
-			=  *polymorphic_downcast<wxCheckBox *>(FindWindow(CONTROL_ID_IS_ENABLED));
+			=  *boost::polymorphic_downcast<wxCheckBox *>(FindWindow(CONTROL_ID_IS_ENABLED));
 		if (newRule->IsEnabled() != ctrl.GetValue()) {
 			newRule->Enable(ctrl.GetValue());
 			isChanged = true;
@@ -323,7 +321,7 @@ void RuleDlg::OnOk(wxCommandEvent &) {
 	
 	{
 		const wxChoice &ctrl
-			= *polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_ID_ERROS_TREATMENT));
+			= *boost::polymorphic_downcast<wxChoice *>(FindWindow(CONTROL_ID_ERROS_TREATMENT));
 		Rule::ErrorsTreatment newErrorsTreatment
 			= TunnelRule::ERRORS_TREATMENT_ERROR;
 		if (FindWindow(CONTROL_ID_ERROS_TREATMENT)) {

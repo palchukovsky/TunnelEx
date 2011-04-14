@@ -12,7 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__CertificateListDlg_hpp__1010161641
 #define INCLUDED_FILE__TUNNELEX__CertificateListDlg_hpp__1010161641
 
-#include <TunnelEx/SslCertificatesStorage.hpp>
+#include "Core/SslCertificatesStorage.hpp"
 
 class ServiceWindow;
 

@@ -12,8 +12,8 @@
 #ifndef INCLUDED_FILE__AceConnection_h__0703010143
 #define INCLUDED_FILE__AceConnection_h__0703010143
 
-#include <TunnelEx/Connection.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Connection.hpp"
+#include "Core/Error.hpp"
 
 class ACE_SOCK;
 

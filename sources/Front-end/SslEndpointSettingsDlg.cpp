@@ -18,8 +18,6 @@
 
 #include "Modules/Inet/InetEndpointAddress.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using TunnelEx::Mods::Inet::TcpEndpointAddress;
 
@@ -77,11 +75,11 @@ void SslEndpointSettingsDlg::CreateControls(bool isServer) {
 	const Theme &theme = wxGetApp().GetTheme();
 	const wxSizerFlags center(wxSizerFlags(0).Center());
 
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 
 	{
 
-		auto_ptr<wxBoxSizer> groupBox(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> groupBox(new wxBoxSizer(wxVERTICAL));
 
 		m_useAnonymousCertificateToggle = new wxCheckBox(
 			this,
@@ -95,7 +93,7 @@ void SslEndpointSettingsDlg::CreateControls(bool isServer) {
 		m_useAnonymousCertificateToggle->Enable(!m_readOnly);
 		groupBox->Add(m_useAnonymousCertificateToggle, wxSizerFlags(0).Expand());
 
-		auto_ptr<wxBoxSizer> selectCertBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> selectCertBox(new wxBoxSizer(wxHORIZONTAL));
 		m_certificateLabel
 			= new wxStaticText(this, wxID_ANY, wxT("Use certificate:"));
 		m_certificateLabel->Enable(!m_readOnly);
@@ -125,7 +123,7 @@ void SslEndpointSettingsDlg::CreateControls(bool isServer) {
 
 	{
 
-		auto_ptr<wxBoxSizer> groupBox(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> groupBox(new wxBoxSizer(wxVERTICAL));
 
 		m_verifyRemoteCertificatesToggle = new wxCheckBox(
 			this,
@@ -137,7 +135,7 @@ void SslEndpointSettingsDlg::CreateControls(bool isServer) {
 		m_verifyRemoteCertificatesToggle->Enable(!m_readOnly);
 		groupBox->Add(m_verifyRemoteCertificatesToggle, wxSizerFlags(0).Expand());
 
-		auto_ptr<wxBoxSizer> selectCertBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> selectCertBox(new wxBoxSizer(wxHORIZONTAL));
 		m_remoteCertificatesLabel
 			= new wxStaticText(this, wxID_ANY, wxT("Verify with certificates:"));
 		m_remoteCertificatesLabel->Enable(!m_readOnly);
@@ -271,7 +269,7 @@ void SslEndpointSettingsDlg::UpdateState() {
 	}
 
 	if (m_remoteCertificates.GetSize() > 0) {
-		list<wxString> strInfos;
+		std::list<wxString> strInfos;
 		const size_t remoteCertificatesNumb = m_remoteCertificates.GetSize();
 		for (size_t i = 0; i < remoteCertificatesNumb; ++i) {
 			texs__SslCertificateInfo info;
@@ -286,7 +284,7 @@ void SslEndpointSettingsDlg::UpdateState() {
 			}
 		}
 		m_verifyRemoteCertificatesToggle->SetValue(true);
-		m_remoteCertificatesInfo->SetValue(join(strInfos, wxT("; ")));
+		m_remoteCertificatesInfo->SetValue(boost::join(strInfos, wxT("; ")));
 	} else {
 		m_verifyRemoteCertificatesToggle->SetValue(false);
 		m_remoteCertificatesInfo->SetValue(wxEmptyString);

@@ -14,13 +14,11 @@
 #include "DestinationPingFilter.hpp"
 #include "InetEndpointAddress.hpp"
 
-#include <TunnelEx/Endpoint.hpp>
-#include <TunnelEx/Rule.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Endpoint.hpp"
+#include "Core/Rule.hpp"
+#include "Core/Log.hpp"
+#include "Core/Error.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Inet;
 
@@ -71,7 +69,7 @@ public:
 	}
 
 	void Ping(ACE_Ping_Socket &ping) {
-		typedef vector<ACE_INET_Addr> Addrs;
+		typedef std::vector<ACE_INET_Addr> Addrs;
 		Addrs addrs;
 		if (m_endpoint.IsCombined()) {
 			BOOST_ASSERT(m_endpoint.CheckCombinedAddressType<InetEndpointAddress>());
@@ -104,7 +102,7 @@ public:
 						m_pingTime);
 				}
 			} else {
-				m_pingTime = numeric_limits<PingTime>::max();
+				m_pingTime = std::numeric_limits<PingTime>::max();
 				if (errno == ETIME) {
 					if (Log::GetInstance().IsDebugRegistrationOn()) {
 						Log::GetInstance().AppendDebug(
@@ -113,7 +111,7 @@ public:
 					}
 				} else {
 					const Error error(errno);
-					ostringstream oss;
+					std::ostringstream oss;
 					String errorStr;
 					oss << "Ping failed with the system error \""
 						<< ConvertString(error.GetString(), errorStr).GetCStr()
@@ -143,7 +141,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 
-class DestinationPingFilter::Thread : private noncopyable {
+class DestinationPingFilter::Thread : private boost::noncopyable {
 
 public:
 
@@ -195,7 +193,7 @@ public:
 
 private:
 
-	typedef map<
+	typedef std::map<
 			DestinationPingFilter::Endpoints *,
 			DestinationPingFilter *>
 		EndpointCollections;
@@ -389,7 +387,7 @@ void DestinationPingFilter::ChangeRule(TunnelRule &rule) {
 	Endpoints newEndpoints(m_endpoints);
 	
 	// searching for new endpoints in rule
-	typedef set<WString> RuleEndpointUuids;
+	typedef std::set<WString> RuleEndpointUuids;
 	RuleEndpointUuids ruleEndpointUuids;
 	for (unsigned int i = 0; i < size; ++i) {
 		const RuleEndpoint& endpoint(endpoints[i]);
@@ -446,13 +444,14 @@ void DestinationPingFilter::ChangeRule(TunnelRule &rule) {
 	}
 
 	if (orderChanged && log.IsDebugRegistrationOn()) {
-		vector<wstring> endpointsOrder;
+		std::vector<std::wstring> endpointsOrder;
 		endpointsOrder.reserve(size);
 		for (unsigned int i = 0; i < size ; ++i) {
 			endpointsOrder.push_back(endpoints[i].GetUuid().GetCStr());
 		}
 		const WString message(
-				(WFormat(L"Destinations order has been changed, new order: %1%.") % join(endpointsOrder, ", "))
+				(WFormat(L"Destinations order has been changed, new order: %1%.")
+					% boost::join(endpointsOrder, ", "))
 			.str().c_str());
 		log.AppendDebug(ConvertString<String>(message).GetCStr());
 	}

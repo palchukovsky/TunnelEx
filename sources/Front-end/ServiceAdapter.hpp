@@ -13,6 +13,7 @@
 #define INCLUDED_FILE__TUNNELEX__TexService_h__0802162102
 
 #include "Rule.hpp"
+#include "Licensing/Types.hpp"
 
 class wxString;
 

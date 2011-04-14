@@ -34,17 +34,6 @@ Call "%BuilderDir%\do_build_workspace_wxwidgets.cmd"
 @if "%BuildWhat%" neq "all" goto End
 
 
-:Boost
-@echo ***********************************************************
-@echo *                                                         *
-@echo * Building Boost C++ libraries...                         *
-@echo *                                                         *
-@echo ***********************************************************
-Call "%BuilderDir%\do_build_workspace_boost.cmd"
-@if %errorlevel% neq 0 goto Error
-@if "%BuildWhat%" neq "all" goto End
-
-
 :Libxml
 @echo ***********************************************************
 @echo *                                                         *

@@ -19,15 +19,13 @@
 #include "ModulesFactory.hpp"
 #include "EndpointAddress.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Singletons;
 
 //////////////////////////////////////////////////////////////////////////
 
 //! Server implementation class.
-class TunnelEx::Singletons::ServerPolicy::Implementation : private noncopyable {
+class TunnelEx::Singletons::ServerPolicy::Implementation : private boost::noncopyable {
 
 private:
 
@@ -64,7 +62,7 @@ public:
 			throw LogicalException(message);
 		}
 
-		auto_ptr<ServerWorker> worker(new ServerWorker(m_server));
+		std::auto_ptr<ServerWorker> worker(new ServerWorker(m_server));
 		bool rulesOpenResult = true;
 		log.AppendDebug(
 			"Rule set size: %1% service(s), %2% tunnel(s).",
@@ -175,7 +173,7 @@ public:
 
 private:
 
-	auto_ptr<ServerWorker> m_worker;
+	std::auto_ptr<ServerWorker> m_worker;
 	mutable CtrlMutex m_ctrlMutex;
 	Server::Ref m_server;
 	const SslCertificatesStorage *m_certificatesStorage;

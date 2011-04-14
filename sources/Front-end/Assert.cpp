@@ -12,7 +12,7 @@
 
 #include "Prec.h"
 
-#include <TunnelEx/String.hpp>
+#include "Core/String.hpp"
 #if !defined(__cplusplus) || !defined(__WXDEBUG__)
 #	include <assert.h>
 #endif // !defined(__cplusplus) || !defined(__WXDEBUG__)

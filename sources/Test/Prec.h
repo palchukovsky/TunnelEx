@@ -15,12 +15,11 @@
 #include "CompileConfig.h"
 #include "Constants.h"
 
+#define BOOST_FILESYSTEM_VERSION 2
 #define BOOST_TEST_MODULE TunnelEx General Tests
 #define BOOST_TEST_MAIN
 
 #include "Licensing/Prec.h"
-#include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
-#include "Licensing/License.hpp"
 
 #include <Winsock2.h>
 

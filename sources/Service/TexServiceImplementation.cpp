@@ -11,28 +11,26 @@
 
 #include "Prec.h"
 #include "TexServiceImplementation.hpp"
+#include "Licensing.hpp"
 #include "ServiceControl/Configuration.hpp"
 #include "Legacy/LegacySupporter.hpp"
 #include "Modules/Upnp/Client.hpp"
-#include "Licensing/RequestGenPolicies.hpp"
 #include "ServiceFilesSecurity.hpp"
-#include <TunnelEx/Server.hpp>
-#include <TunnelEx/SslCertificatesStorage.hpp>
-#include <TunnelEx/Rule.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Exceptions.hpp>
+#include "Core/Server.hpp"
+#include "Core/SslCertificatesStorage.hpp"
+#include "Core/Rule.hpp"
+#include "Core/Log.hpp"
+#include "Core/Exceptions.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
-using namespace boost::posix_time;
+namespace fs = boost::filesystem;
+namespace ps = boost::posix_time;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Helpers::Crypto;
 
 //////////////////////////////////////////////////////////////////////////
 
-class TexServiceImplementation::Implementation : private noncopyable {
+class TexServiceImplementation::Implementation : private boost::noncopyable {
 
 public:
 
@@ -47,39 +45,39 @@ public:
 	}
 
 	void  LoadRules() {
-		wifstream rulesFile(m_rulesFilePath.c_str(), ios::binary | ios::in);
+		std::wifstream rulesFile(m_rulesFilePath.c_str(), std::ios::binary | std::ios::in);
 		if (!rulesFile) {
 			Log::GetInstance().AppendDebug(
 				"Could not find rule set file \"%1%\".",
 				ConvertString<String>(m_rulesFilePath.c_str()).GetCStr());
-			SetRuleSet(auto_ptr<RuleSet>(new RuleSet));
+			SetRuleSet(std::auto_ptr<RuleSet>(new RuleSet));
 			return;
 		}
-		wostringstream rulesXml;
+		std::wostringstream rulesXml;
 		rulesXml << rulesFile.rdbuf();
 		if (!rulesXml.str().empty()) {
 			try {
 				SetRuleSet(
-					auto_ptr<RuleSet>(new RuleSet(rulesXml.str().c_str())));
+					std::auto_ptr<RuleSet>(new RuleSet(rulesXml.str().c_str())));
 			} catch (const TunnelEx::XmlDoesNotMatchException &) {
 				// rules xml file has wrong version
-				auto_ptr<RuleSet> ruleSet(new RuleSet);
+				std::auto_ptr<RuleSet> ruleSet(new RuleSet);
 				LegacySupporter().MigrateCurrentRuleSet(*ruleSet);
 				SetRuleSet(ruleSet);
 			}
 		} else {
-			SetRuleSet(auto_ptr<RuleSet>(new RuleSet));
+			SetRuleSet(std::auto_ptr<RuleSet>(new RuleSet));
 		}
 	}
 
 	void SaveRules() const {
 		try {
-			const wpath rulesFilePath(m_rulesFilePath);
-			create_directories(rulesFilePath.branch_path());
+			const fs::wpath rulesFilePath(m_rulesFilePath);
+			fs::create_directories(rulesFilePath.branch_path());
 			{
-				wofstream rulesFile(
+				std::wofstream rulesFile(
 					rulesFilePath.string().c_str(),
-					ios::binary | ios::out | ios::trunc);
+					std::ios::binary | std::ios::out | std::ios::trunc);
 				if (rulesFile) {
 					WString rulesXml;
 					m_ruleSet->GetXml(rulesXml);
@@ -109,7 +107,7 @@ public:
 
 	SslCertificatesStorage & GetSslCertificatesStorage() {
 		if (!m_sslCertificatesStorage.get()) {
-			vector<unsigned char> key;
+			std::vector<unsigned char> key;
 			GetSslStorageKey(key);
 			m_sslCertificatesStorage.reset(
 				new SslCertificatesStorage(
@@ -120,8 +118,8 @@ public:
 		return *m_sslCertificatesStorage;
 	}
 
-	auto_ptr<ServiceConfiguration> LoadConfiguration() {
-		auto_ptr<ServiceConfiguration> result;
+	std::auto_ptr<ServiceConfiguration> LoadConfiguration() {
+		std::auto_ptr<ServiceConfiguration> result;
 		try {
 			result.reset(new ServiceConfiguration);
 		} catch (const ServiceConfiguration::ConfigurationNotFoundException &) {
@@ -147,17 +145,17 @@ public:
 				const ServiceConfiguration &configuration,
 				uintmax_t &previousLogSize)
 			const {
-		const wstring logPath = configuration.GetLogPath();
+		const std::wstring logPath = configuration.GetLogPath();
 		previousLogSize = 0;
 		try {
-			if (exists(logPath)) {
-				previousLogSize = file_size(logPath);
+			if (fs::exists(logPath)) {
+				previousLogSize = fs::file_size(logPath);
 				if (previousLogSize > configuration.GetMaxLogSize()) {
-					ofstream f(logPath.c_str(), ios::trunc);
+					std::ofstream f(logPath.c_str(), std::ios::trunc);
 					return true;
 				}
 			}
-		} catch (const filesystem_error&) {
+		} catch (const fs::filesystem_error&) {
 			//...//
 		}
 		return false;
@@ -181,7 +179,7 @@ public:
 
 	//! Normally this operation required only be the active rules license restriction.
 	void UpdateRulesState() {
-		auto_ptr<RuleSet> rulesPtr(new RuleSet(*m_ruleSet));
+		std::auto_ptr<RuleSet> rulesPtr(new RuleSet(*m_ruleSet));
 		bool hasChanges = false;
 		if (UpdateRulesState(rulesPtr->GetServices())) {
 			hasChanges = true;
@@ -195,7 +193,7 @@ public:
 		}
 	}
 
-	void SetRuleSet(auto_ptr<RuleSet> newRuleSet) throw() {
+	void SetRuleSet(std::auto_ptr<RuleSet> newRuleSet) throw() {
 		m_ruleSet = newRuleSet;
 		UpdateLastRuleSetModificationTime();
 	}
@@ -212,7 +210,7 @@ public:
 	template<class RuleSet>
 	bool EnableRule(
 				RuleSet &ruleSet,
-				const wstring &uuid,
+				const std::wstring &uuid,
 				bool wasEnabled,
 				bool &changed)
 			const {
@@ -241,7 +239,7 @@ public:
 	}
 
 	template<class RuleSet>
-	bool DeleteRule(RuleSet &ruleSet, const wstring &uuid) const {
+	bool DeleteRule(RuleSet &ruleSet, const std::wstring &uuid) const {
 		const size_t size = ruleSet.GetSize();
 		for (size_t i = 0; i < size; ++i) {
 			if (ruleSet[i].GetUuid() == uuid.c_str()) {
@@ -280,12 +278,12 @@ public:
 		}
 	}
 
-	void GetSslStorageKey(vector<unsigned char> &result) {
+	void GetSslStorageKey(std::vector<unsigned char> &result) {
 		/*
 			<)g<D}GhTFXOByZneW8zJA`53u(Ddk6P&Mh!,G8oRra{g]UrGgi%bRl{=P$u,'^@Iln4QkW;vK/
 			length: 75
 		 */
-		vector<unsigned char> key;
+		std::vector<unsigned char> key;
 		key.resize(27); key[26] = '('; key.resize(51); key[50] = 'i';
 		key[0] = '<'; key[22] = '`'; key[18] = '8'; key[32] = '&';
 		key[33] = 'M'; key[17] = 'W'; key[8] = 'T'; key[4] = 'D';
@@ -312,14 +310,14 @@ public:
 
 public:
 
-	auto_ptr<RuleSet> m_ruleSet;
+	std::auto_ptr<RuleSet> m_ruleSet;
 	time_t m_lastRuleSetModificationTime;
 	time_t m_lastLicenseKeyModificationTime;
-	wstring m_rulesFilePath;
-	wstring m_logFilePath;
-	mutex m_mutex;
-	auto_ptr<ServiceConfiguration> m_conf;
-	auto_ptr<SslCertificatesStorage> m_sslCertificatesStorage;
+	std::wstring m_rulesFilePath;
+	std::wstring m_logFilePath;
+	boost::mutex m_mutex;
+	std::auto_ptr<ServiceConfiguration> m_conf;
+	std::auto_ptr<SslCertificatesStorage> m_sslCertificatesStorage;
 
 };
 
@@ -365,7 +363,7 @@ TexServiceImplementation::~TexServiceImplementation() {
 bool TexServiceImplementation::Start() {
 	LogTracking("TexServiceImplementation", "StartServer", __FILE__, __LINE__);
 	if (!Server::GetInstance().IsStarted()) {
-		mutex::scoped_lock lock(m_pimpl->m_mutex);
+		boost::mutex::scoped_lock lock(m_pimpl->m_mutex);
 		if (!Server::GetInstance().IsStarted()) {
 			try {
 				Server::GetInstance().Start(
@@ -388,7 +386,7 @@ bool TexServiceImplementation::Start() {
 bool TexServiceImplementation::Stop() {
 	LogTracking("TexServiceImplementation", "StopServer", __FILE__, __LINE__);
 	if (Server::GetInstance().IsStarted()) {
-		mutex::scoped_lock lock(m_pimpl->m_mutex);
+		boost::mutex::scoped_lock lock(m_pimpl->m_mutex);
 		if (Server::GetInstance().IsStarted()) {
 			try {
 				Server::GetInstance().Stop();
@@ -403,15 +401,13 @@ bool TexServiceImplementation::Stop() {
 }
 
 bool TexServiceImplementation::IsStarted() const {
-	LogTracking("TexServiceImplementation", "IsServerStarted", __FILE__, __LINE__);
 	return Server::GetInstance().IsStarted();
 }
 
-void TexServiceImplementation::GetRuleSet(string &result) const {
-	LogTracking("TexServiceImplementation", "GetRuleList", __FILE__, __LINE__);
+void TexServiceImplementation::GetRuleSet(std::string &result) const {
 	WString buffer;
 	try {
-		mutex::scoped_lock lock(m_pimpl->m_mutex);
+		boost::mutex::scoped_lock lock(m_pimpl->m_mutex);
 		m_pimpl->m_ruleSet->GetXml(buffer);
 	} catch (const TunnelEx::LocalException &ex) {
 		Format message("Could not serialize rules list into XML: \"%1%\".");
@@ -422,10 +418,10 @@ void TexServiceImplementation::GetRuleSet(string &result) const {
 }
 
 //! @todo: make exception-safe
-void TexServiceImplementation::UpdateRules(const wstring &xml) {
+void TexServiceImplementation::UpdateRules(const std::wstring &xml) {
 	try {
 		RuleSet ruleSet(xml.c_str());
-		mutex::scoped_lock lock(m_pimpl->m_mutex);
+		boost::mutex::scoped_lock lock(m_pimpl->m_mutex);
 		m_pimpl->UpdateRules(ruleSet.GetServices(), m_pimpl->m_ruleSet->GetServices());
 		m_pimpl->UpdateRules(ruleSet.GetTunnels(), m_pimpl->m_ruleSet->GetTunnels());
 		m_pimpl->SaveRules();
@@ -444,9 +440,9 @@ void TexServiceImplementation::EnableRules(
 			bool isEnabled) {
 	try {
 		bool wasChanged = false;
-		const list<wstring>::const_iterator end = uuids.end();
-		mutex::scoped_lock lock(m_pimpl->m_mutex);
-		foreach (const wstring &u, uuids) {
+		const std::list<std::wstring>::const_iterator end = uuids.end();
+		boost::mutex::scoped_lock lock(m_pimpl->m_mutex);
+		foreach (const std::wstring &u, uuids) {
 			bool wasChangedNow = false;
 			m_pimpl->EnableRule(m_pimpl->m_ruleSet->GetServices(), u, isEnabled, wasChangedNow)
 				|| m_pimpl->EnableRule(m_pimpl->m_ruleSet->GetTunnels(), u, isEnabled, wasChangedNow);
@@ -468,10 +464,10 @@ void TexServiceImplementation::EnableRules(
 }
 
 //! @todo: make exception-safe
-void TexServiceImplementation::DeleteRules(const list<wstring> &uuids) {
+void TexServiceImplementation::DeleteRules(const std::list<std::wstring> &uuids) {
 	bool wasFound = false;
-	mutex::scoped_lock lock(m_pimpl->m_mutex);
-	foreach (const wstring &u, uuids) {
+	boost::mutex::scoped_lock lock(m_pimpl->m_mutex);
+	foreach (const std::wstring &u, uuids) {
 		if (Server::GetInstance().IsStarted()) {
 			Server::GetInstance().DeleteRule(u.c_str());
 		}
@@ -515,10 +511,10 @@ void TexServiceImplementation::SetLogLevel(LogLevel level) {
 }
 
 void TexServiceImplementation::GetNetworkAdapters(
-			list<texs__NetworkAdapterInfo> &result)
+			std::list<texs__NetworkAdapterInfo> &result)
 		const {
 
-	list<texs__NetworkAdapterInfo> adapters;
+	std::list<texs__NetworkAdapterInfo> adapters;
 
 	{
 		texs__NetworkAdapterInfo all;
@@ -536,7 +532,7 @@ void TexServiceImplementation::GetNetworkAdapters(
 		adapters.push_back(loopback);
 	}
 	
-	vector<unsigned char> adaptersInfo(sizeof(IP_ADAPTER_INFO));
+	std::vector<unsigned char> adaptersInfo(sizeof(IP_ADAPTER_INFO));
 	ULONG adaptersInfoBufferLen = ULONG(adaptersInfo.size());
 	if (	GetAdaptersInfo(
 				reinterpret_cast<PIP_ADAPTER_INFO>(&adaptersInfo[0]),
@@ -551,7 +547,7 @@ void TexServiceImplementation::GetNetworkAdapters(
 			== NO_ERROR) {
 		PIP_ADAPTER_INFO adapter = reinterpret_cast<PIP_ADAPTER_INFO>(&adaptersInfo[0]);
 		while (adapter) {
-			string ipAddress = adapter->IpAddressList.IpAddress.String;
+			std::string ipAddress = adapter->IpAddressList.IpAddress.String;
 			const bool isIpValid = !ipAddress.empty() && ipAddress != "0.0.0.0";
 			switch (adapter->Type) {
 				default:
@@ -585,17 +581,16 @@ void TexServiceImplementation::GetNetworkAdapters(
 
 void TexServiceImplementation::GetLastLogRecords(
 			unsigned int recordsNumber,
-			list<texs__LogRecord> &destination)
+			std::list<texs__LogRecord> &destination)
 		const {
-	LogTracking("TexServiceImplementation", "GetLastLogRecords", __FILE__, __LINE__);
-	ifstream log(m_pimpl->m_logFilePath.c_str(), ios::in | ios::binary);
-	log.seekg(-1, ios::end);
+	std::ifstream log(m_pimpl->m_logFilePath.c_str(), std::ios::in | std::ios::binary);
+	log.seekg(-1, std::ios::end);
 	unsigned int passedLines = 0;
 	bool isContentStarted = false;
-	for (streamsize i = 1; ; log.seekg(-(++i), ios::end)) {
+	for (std::streamsize i = 1; ; log.seekg(-(++i), std::ios::end)) {
 		if (!log) {
 			log.clear();
-			log.seekg(-(i - 1), ios::end);
+			log.seekg(-(i - 1), std::ios::end);
 			break;
 		}
 		char c;
@@ -614,20 +609,20 @@ void TexServiceImplementation::GetLastLogRecords(
 #		else
 			= 512;
 #		endif // _DEBUG
-	vector<char> buffer(bufferStep, 0);
+	std::vector<char> buffer(bufferStep, 0);
 	size_t pos = 0;
-	regex recordExp(
+	boost::regex recordExp(
 		"(\\d{4,4}\\-[a-z]{3,3}\\-\\d{2,2}\\s\\d{2,2}:\\d{2,2}:\\d{2,2}.\\d{6,6})\\s+([a-z]+(\\s[a-z]+)?):\\s([^\\r\\n]*)[\\r\\n\\t\\s]*",
-		regex::perl | regex::icase);
-	while (!log.getline(&buffer[pos], streamsize(buffer.size() - pos)).eof()) {
+		boost::regex::perl | boost::regex::icase);
+	while (!log.getline(&buffer[pos], std::streamsize(buffer.size() - pos)).eof()) {
 		if (log.fail()) {
 			pos = buffer.size() - 1;
 			buffer.resize(buffer.size() + bufferStep);
-			log.clear(log.rdstate() & ~ios::failbit);
+			log.clear(log.rdstate() & ~std::ios::failbit);
 		} else {
 			pos = 0;
-			cmatch what;
-			if (regex_match(&buffer[0], what, recordExp)) {
+			boost::cmatch what;
+			if (boost::regex_match(&buffer[0], what, recordExp)) {
 				texs__LogRecord record;
 				record.time = what[1];
 				record.level = Log::GetInstance().ResolveLevel(what[2].str().c_str());
@@ -655,48 +650,48 @@ void TexServiceImplementation::CheckState(texs__ServiceState &result) const {
 }
 
 void TexServiceImplementation::GenerateLicenseKeyRequest(
-			const string &license,
-			string &request,
-			string &privateKey)
+			const std::string &license,
+			std::string &request,
+			std::string &privateKey)
 		const {
 	Licensing::ServiceKeyRequest::RequestGeneration::Generate(
 		license,
 		request,
 		privateKey,
-		any());
+		boost::any());
 }
 
-string TexServiceImplementation::GetTrialLicense() const {
+std::string TexServiceImplementation::GetTrialLicense() const {
 	return Licensing::ServiceKeyRequest::LocalStorage::GetTrialLicense();
 }
 
-string TexServiceImplementation::GetLicenseKey() const {
+std::string TexServiceImplementation::GetLicenseKey() const {
 	return Licensing::ServiceKeyRequest::LocalStorage::GetLicenseKey();
 }
 
-string TexServiceImplementation::GetLicenseKeyLocalAsymmetricPrivateKey() const {
+std::string TexServiceImplementation::GetLicenseKeyLocalAsymmetricPrivateKey() const {
 	return Licensing::ServiceKeyRequest::LocalStorage::GetLocalAsymmetricPrivateKey();
 }
 
 void TexServiceImplementation::SetLicenseKey(
-			const string &licenseKey,
-			const string &privateKey) {
+			const std::string &licenseKey,
+			const std::string &privateKey) {
 	Licensing::ServiceKeyRequest::LocalStorage::StoreLicenseKey(licenseKey, privateKey);
 	m_pimpl->UpdateLastLicenseKeyModificationTime();
 }
 
-void TexServiceImplementation::GetProperties(vector<unsigned char> &result) {
+void TexServiceImplementation::GetProperties(std::vector<unsigned char> &result) {
 	
 	using namespace Licensing;
-	typedef int8_t Result;
-	typedef int32_t ValSize;
-	typedef int32_t Id;
+	typedef boost::int8_t Result;
+	typedef boost::int32_t ValSize;
+	typedef boost::int32_t Id;
 
-	vector<unsigned char> notEncryptedBuffer;
+	std::vector<unsigned char> notEncryptedBuffer;
 	notEncryptedBuffer.resize(sizeof(Result));
 
 	WorkstationPropertyValues props;
-	if (ExeLicense::WorkstationPropertiesLocal::Get(props, any())) {
+	if (ExeLicense::WorkstationPropertiesLocal::Get(props, boost::any())) {
 		
 		reinterpret_cast<Result &>(*&notEncryptedBuffer[0]) = Result(true);
 
@@ -716,9 +711,9 @@ void TexServiceImplementation::GetProperties(vector<unsigned char> &result) {
 		reinterpret_cast<Result &>(*&notEncryptedBuffer[0]) = Result(false);
 	}
 
-	vector<unsigned char> encryptedBuffer(notEncryptedBuffer.size());
-	vector<unsigned char>::iterator i = encryptedBuffer.begin();
-	vector<unsigned char> key;
+	std::vector<unsigned char> encryptedBuffer(notEncryptedBuffer.size());
+	std::vector<unsigned char>::iterator i = encryptedBuffer.begin();
+	std::vector<unsigned char> key;
 	LocalComunicationPolicy::GetEncryptingKey(key);
 	size_t token = 0;
 	foreach (char ch, notEncryptedBuffer) {
@@ -732,13 +727,13 @@ void TexServiceImplementation::GetProperties(vector<unsigned char> &result) {
 }
 
 bool TexServiceImplementation::GetUpnpStatus(
-			string &externalIp,
-			string &localIp)
+			std::string &externalIp,
+			std::string &localIp)
 		const {
 	try {
 		Mods::Upnp::Client upnpc;
-		string externalIpTmp = upnpc.GetExternalIpAddress();
-		string localIpTmp = upnpc.GetLocalIpAddress();
+		std::string externalIpTmp = upnpc.GetExternalIpAddress();
+		std::string localIpTmp = upnpc.GetLocalIpAddress();
 		externalIpTmp.swap(externalIp);
 		localIpTmp.swap(localIp);
 		return true;
@@ -752,7 +747,7 @@ bool TexServiceImplementation::GetUpnpStatus(
 }
 
 void TexServiceImplementation::GetSslCertificate(
-			const wstring &id,
+			const std::wstring &id,
 			texs__SslCertificateInfo &result)
 		const {
 	try {
@@ -793,14 +788,14 @@ void TexServiceImplementation::GetSslCertificate(
 }
 
 void TexServiceImplementation::GetSslCertificates(
-			list<texs__SslCertificateShortInfo> &result)
+			std::list<texs__SslCertificateShortInfo> &result)
 		const {
 
 	try {
 	
 		for ( ; ; ) {
 
-			list<texs__SslCertificateShortInfo> certificates;
+			std::list<texs__SslCertificateShortInfo> certificates;
 			const UniquePtr<const SslCertificateIdCollection> ids
 				= m_pimpl->GetSslCertificatesStorage().GetInstalledIds();
 		
@@ -845,14 +840,14 @@ void TexServiceImplementation::GetSslCertificates(
 		Format message("Could not get SSL certificates list: %1%.");
 		message % ConvertString<String>(ex.GetWhat()).GetCStr();
 		Log::GetInstance().AppendError(message.str());
-		list<texs__SslCertificateShortInfo>().swap(result);
+		std::list<texs__SslCertificateShortInfo>().swap(result);
 	}
 
 }
 
-void TexServiceImplementation::DeleteSslCertificates(const list<wstring> &ids) {
+void TexServiceImplementation::DeleteSslCertificates(const std::list<std::wstring> &ids) {
 	SslCertificateIdCollection idsForStorage(ids.size());
-	foreach (const wstring &id, ids) {
+	foreach (const std::wstring &id, ids) {
 		idsForStorage.Append(id.c_str());
 	}
 	try {
@@ -865,13 +860,13 @@ void TexServiceImplementation::DeleteSslCertificates(const list<wstring> &ids) {
 }
 
 void TexServiceImplementation::ImportSslCertificateX509(
-			const vector<unsigned char> &certificate,
-			const string &privateKeyStr,
-			wstring &error) {
+			const std::vector<unsigned char> &certificate,
+			const std::string &privateKeyStr,
+			std::wstring &error) {
 	
 	Log::GetInstance().AppendDebug("Importing SSL certificate...");
 
-	auto_ptr<PrivateKey> privateKey;
+	std::auto_ptr<PrivateKey> privateKey;
 	if (!privateKeyStr.empty()) {
 		Log::GetInstance().AppendDebug("Importing SSL certificate private key...");
 		try {
@@ -886,7 +881,7 @@ void TexServiceImplementation::ImportSslCertificateX509(
 		}
 	}
 
-	auto_ptr<X509Shared> x509;
+	std::auto_ptr<X509Shared> x509;
 	Log::GetInstance().AppendDebug("Importing X.509 SSL certificate...");
 	try {
 		if (privateKey.get()) {
@@ -909,7 +904,7 @@ void TexServiceImplementation::ImportSslCertificateX509(
 		Log::GetInstance().AppendDebug("Installing public SSL certificate...");
 		if (privateKey.get()) {
 			m_pimpl->GetSslCertificatesStorage().Insert(
-				*polymorphic_downcast<X509Private *>(x509.get()));
+				*boost::polymorphic_downcast<X509Private *>(x509.get()));
 		} else {
 			m_pimpl->GetSslCertificatesStorage().Insert(*x509);
 		}
@@ -927,13 +922,13 @@ void TexServiceImplementation::ImportSslCertificateX509(
 }
 
 void TexServiceImplementation::ImportSslCertificatePkcs12(
-			const vector<unsigned char> &certificate,
-			const string &password,
-			wstring &error) {
+			const std::vector<unsigned char> &certificate,
+			const std::string &password,
+			std::wstring &error) {
 	
 	Log::GetInstance().AppendDebug("Importing PKCS12...");
 
-	auto_ptr<Pkcs12> pkcs12;
+	std::auto_ptr<Pkcs12> pkcs12;
 	try {
 		pkcs12.reset(new Pkcs12(&certificate[0], certificate.size()));
 	} catch (const TunnelEx::Helpers::Crypto::Exception &ex) {
@@ -944,7 +939,7 @@ void TexServiceImplementation::ImportSslCertificatePkcs12(
 
 	BOOST_ASSERT(pkcs12.get() != 0);
 	
-	auto_ptr<const X509Private> x509;
+	std::auto_ptr<const X509Private> x509;
 	try {
 		Log::GetInstance().AppendDebug("Checking SSL certificate password...");
 		x509 = pkcs12->GetCertificate(password);

@@ -14,18 +14,15 @@
 #include "WinService.hpp"
 #include "TexServiceImplementation.hpp"
 
-using namespace std;
-using namespace boost;
-
 int texs__Start(soap *, bool &result) {
-	shared_ptr<TexServiceImplementation> service(TexWinService::GetTexServiceInstance());
+	boost::shared_ptr<TexServiceImplementation> service(TexWinService::GetTexServiceInstance());
 	result = service->Start();
 	service->SaveRunningState();
 	return SOAP_OK;
 }
 
 int texs__Stop(soap *, bool &result) {
-	shared_ptr<TexServiceImplementation> service(TexWinService::GetTexServiceInstance());
+	boost::shared_ptr<TexServiceImplementation> service(TexWinService::GetTexServiceInstance());
 	result = service->Stop();
 	service->SaveRunningState();
 	return SOAP_OK;
@@ -36,27 +33,27 @@ int texs__IsStarted(soap *, bool &result) {
 	return SOAP_OK;
 }
 
-int texs__GetRuleSet(soap *, string &result) {
+int texs__GetRuleSet(soap *, std::string &result) {
 	TexWinService::GetTexServiceInstance()->GetRuleSet(result);
 	return SOAP_OK;
 }
 
-int texs__UpdateRules(soap *, wstring rulesXml, texs__UpdateRulesResult *) {
+int texs__UpdateRules(soap *, std::wstring rulesXml, texs__UpdateRulesResult *) {
 	TexWinService::GetTexServiceInstance()->UpdateRules(rulesXml);
 	return SOAP_OK;
 }
 
-int texs__EnableRules(soap *, list<wstring> uuidsToEnable, texs__EnableRulesResult *) {
+int texs__EnableRules(soap *, std::list<std::wstring> uuidsToEnable, texs__EnableRulesResult *) {
 	TexWinService::GetTexServiceInstance()->EnableRules(uuidsToEnable, true);
 	return SOAP_OK;
 }
 
-int texs__DisableRules(soap *, list<wstring> uuidsToDisable, texs__DisableRulesResult *) {
+int texs__DisableRules(soap *, std::list<std::wstring> uuidsToDisable, texs__DisableRulesResult *) {
 	TexWinService::GetTexServiceInstance()->EnableRules(uuidsToDisable, false);
 	return SOAP_OK;
 }
 
-int texs__DeleteRules(soap *, list<wstring> uuidsToDelete, texs__DeleteRulesResult *) {
+int texs__DeleteRules(soap *, std::list<std::wstring> uuidsToDelete, texs__DeleteRulesResult *) {
 	TexWinService::GetTexServiceInstance()->DeleteRules(uuidsToDelete);
 	return SOAP_OK;
 }
@@ -64,7 +61,7 @@ int texs__DeleteRules(soap *, list<wstring> uuidsToDelete, texs__DeleteRulesResu
 int texs__GetLogRecords(
 			soap *,
 			unsigned int recordsNumber,
-			list<texs__LogRecord> &result) {
+			std::list<texs__LogRecord> &result) {
 	TexWinService::GetTexServiceInstance()->GetLastLogRecords(recordsNumber, result);
 	return SOAP_OK;
 }
@@ -132,7 +129,7 @@ int texs__CheckState(soap *, texs__ServiceState &result) {
 
 int texs__GenerateLicenseKeyRequest(
 			soap *,
-			string license,
+			std::string license,
 			texs__LicenseKeyRequest &request) {
 	TexWinService::GetTexServiceInstance()->GenerateLicenseKeyRequest(
 		license,
@@ -141,7 +138,7 @@ int texs__GenerateLicenseKeyRequest(
 	return SOAP_OK;
 }
 
-int texs__GetLicenseKey(soap *, string &licenseKey) {
+int texs__GetLicenseKey(soap *, std::string &licenseKey) {
 	licenseKey = TexWinService::GetTexServiceInstance()->GetLicenseKey();
 	return SOAP_OK;
 }
@@ -152,26 +149,26 @@ int texs__GetLicenseKeyInfo(soap *, texs__LicenseKeyInfo &result) {
 	return SOAP_OK;
 }
 
-int texs__GetTrialLicense(soap *, string &licenseKey) {
+int texs__GetTrialLicense(soap *, std::string &licenseKey) {
 	licenseKey = TexWinService::GetTexServiceInstance()->GetTrialLicense();
 	return SOAP_OK;
 }
 
 int texs__SetLicenseKey(
 			soap *, 
-			string licenseKey,
-			string privateKey,
+			std::string licenseKey,
+			std::string privateKey,
 			texs__SetLicenseKeyResult *) {
 	TexWinService::GetTexServiceInstance()->SetLicenseKey(licenseKey, privateKey);
 	return SOAP_OK;
 }
 
-int texs__GetProperties(soap *, vector<unsigned char> &result) {
+int texs__GetProperties(soap *, std::vector<unsigned char> &result) {
 	TexWinService::GetTexServiceInstance()->GetProperties(result);
 	return SOAP_OK;
 }
 
-int texs__GetNetworkAdapters(soap *, list<texs__NetworkAdapterInfo> &result) {
+int texs__GetNetworkAdapters(soap *, std::list<texs__NetworkAdapterInfo> &result) {
 	TexWinService::GetTexServiceInstance()->GetNetworkAdapters(result);
 	return SOAP_OK;
 }
@@ -183,7 +180,7 @@ int texs__GetUpnpStatus(soap *, texs__UpnpStatus &result) {
 	return SOAP_OK;
 }
 
-int texs__GetSslCertificates(soap *, list<texs__SslCertificateShortInfo> &result) {
+int texs__GetSslCertificates(soap *, std::list<texs__SslCertificateShortInfo> &result) {
 	TexWinService::GetTexServiceInstance()->GetSslCertificates(result);
 	return SOAP_OK;
 }
@@ -195,7 +192,7 @@ int texs__GetSslCertificate(soap *, std::wstring id, texs__SslCertificateInfo &r
 
 int texs__DeleteSslCertificates(
 			soap *,
-			list<wstring> ids,
+			std::list<std::wstring> ids,
 			texs__DeleteSslCertificateResult *)  {
 	TexWinService::GetTexServiceInstance()->DeleteSslCertificates(ids);
 	return SOAP_OK;
@@ -203,9 +200,9 @@ int texs__DeleteSslCertificates(
 
 int texs__ImportSslCertificatePkcs12(
 			soap *,
-			vector<unsigned char> certificate,
-			string password,
-			wstring &error) {
+			std::vector<unsigned char> certificate,
+			std::string password,
+			std::wstring &error) {
 	TexWinService::GetTexServiceInstance()->ImportSslCertificatePkcs12(
 		certificate,
 		password,
@@ -215,9 +212,9 @@ int texs__ImportSslCertificatePkcs12(
 
 int texs__ImportSslCertificateX509(
 			soap *,
-			vector<unsigned char> certificate,
-			string privateKey,
-			wstring &error) {
+			std::vector<unsigned char> certificate,
+			std::string privateKey,
+			std::wstring &error) {
 	TexWinService::GetTexServiceInstance()->ImportSslCertificateX509(
 		certificate,
 		privateKey,

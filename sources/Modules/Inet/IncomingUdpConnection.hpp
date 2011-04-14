@@ -15,10 +15,10 @@
 #include "UdpConnection.hpp"
 #include "ConnectionsTraits.hpp"
 
-#include <TunnelEx/Error.hpp>
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/String.hpp>
-#include <TunnelEx/MessageBlock.hpp>
+#include "Core/Error.hpp"
+#include "Core/Log.hpp"
+#include "Core/String.hpp"
+#include "Core/MessageBlock.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 

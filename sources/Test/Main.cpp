@@ -13,6 +13,15 @@
 
 #include "Fixtures.hpp"
 
+namespace {
+	struct CloseStopper {
+		~CloseStopper() {
+			getchar();
+		}
+	};
+	static CloseStopper closeStopper;
+}
+
 namespace Test {
 	BOOST_GLOBAL_FIXTURE(GlobalFixture);
 }

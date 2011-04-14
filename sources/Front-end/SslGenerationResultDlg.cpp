@@ -14,7 +14,6 @@
 #include "SslGenerationResultDlg.hpp"
 #include "Application.hpp"
 
-using namespace std;
 using namespace TunnelEx;
 
 enum SslGenerationResultDlg::Control {
@@ -77,7 +76,7 @@ void SslGenerationResultDlg::OnSavePrivateKey(wxCommandEvent &) {
 	if (fileRequestDlg.ShowModal() != wxID_OK) {
 		return;
 	}
-	ofstream f(fileRequestDlg.GetPath().c_str(), ios::trunc | ios::binary);
+	std::ofstream f(fileRequestDlg.GetPath().c_str(), std::ios::trunc | std::ios::binary);
 	if (!f) {
 		wxLogError(wxT("Could not open \"%s\" to save."), fileRequestDlg.GetPath());
 		return;
@@ -124,7 +123,7 @@ void SslGenerationResultDlg::OnSaveContent(wxCommandEvent &) {
 			&& (lowerName.EndsWith(wxT(".pfx")) || lowerName.EndsWith(wxT(".p12")));
 	
 	if (!isPkcs12) {
-		ofstream f(fileRequestDlg.GetPath().c_str(), ios::trunc | ios::binary);
+		std::ofstream f(fileRequestDlg.GetPath().c_str(), std::ios::trunc | std::ios::binary);
 		if (!f) {
 			wxLogError(wxT("Could not open \"%s\" to save."), fileRequestDlg.GetPath());
 			return;
@@ -133,13 +132,13 @@ void SslGenerationResultDlg::OnSaveContent(wxCommandEvent &) {
 	} else {
 		using namespace TunnelEx::Helpers::Crypto;
 		try {
-			PrivateKey privateKey(string(m_key->GetValue().ToAscii()));
-			const string certificateStr = m_content->GetValue().ToAscii();
+			PrivateKey privateKey(std::string(m_key->GetValue().ToAscii()));
+			const std::string certificateStr = m_content->GetValue().ToAscii();
 			X509Private x509(
 				reinterpret_cast<const unsigned char *>(certificateStr.c_str()),
 				certificateStr.size(),
 				privateKey);
-			ofstream f(fileRequestDlg.GetPath().c_str(), ios::trunc | ios::binary);
+			std::ofstream f(fileRequestDlg.GetPath().c_str(), std::ios::trunc | std::ios::binary);
 			if (!f) {
 				wxLogError(wxT("Could not open \"%s\" to save."), fileRequestDlg.GetPath());
 				return;
@@ -164,7 +163,7 @@ void SslGenerationResultDlg::OnSaveContent(wxCommandEvent &) {
 					return;
 				}
 			}
-			Pkcs12(x509, string(), string(password.ToAscii())).Export(f);
+			Pkcs12(x509, std::string(), std::string(password.ToAscii())).Export(f);
 			f.close();
 			m_isKeySaved = true;
 		} catch (const TunnelEx::Helpers::Crypto::OpenSslException &ex) {
@@ -280,9 +279,9 @@ void SslGenerationResultDlg::CreateControls(
 	const int width = 460;
 	const int keyHeight = 150;
 
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 	{
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
 		wxStaticText &text = *new wxStaticText(this, wxID_ANY, privateKeyHint);
 		text.SetMinSize(wxSize(width, -1));
 		text.Wrap(width);
@@ -300,7 +299,7 @@ void SslGenerationResultDlg::CreateControls(
 		box->Add(m_key, wxSizerFlags(1).Expand());
 		box->AddSpacer(theme.GetDlgBorder());
 		{
-			auto_ptr<wxBoxSizer> buttonsSizer(new wxBoxSizer(wxHORIZONTAL));
+			std::auto_ptr<wxBoxSizer> buttonsSizer(new wxBoxSizer(wxHORIZONTAL));
 			buttonsSizer->AddStretchSpacer(1);
 			buttonsSizer->Add(
 				new wxButton(
@@ -326,7 +325,7 @@ void SslGenerationResultDlg::CreateControls(
 	}
 
 	{
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
 		if (!contentGroupHint.IsEmpty()) {
 			wxStaticText &text = *new wxStaticText(this, wxID_ANY, contentGroupHint);
 			text.SetMinSize(wxSize(width, -1));
@@ -346,7 +345,7 @@ void SslGenerationResultDlg::CreateControls(
 		box->Add(m_content, wxSizerFlags(1).Expand());
 		box->AddSpacer(theme.GetDlgBorder());
 		{
-			auto_ptr<wxBoxSizer> buttonsSizer(new wxBoxSizer(wxHORIZONTAL));
+			std::auto_ptr<wxBoxSizer> buttonsSizer(new wxBoxSizer(wxHORIZONTAL));
 			buttonsSizer->AddStretchSpacer(1);
 			buttonsSizer->Add(
 				new wxButton(

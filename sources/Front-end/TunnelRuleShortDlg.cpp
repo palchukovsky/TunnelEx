@@ -22,8 +22,6 @@
 #include "Modules/Serial/SerialEndpointAddress.hpp"
 #include "Modules/Upnp/UpnpEndpointAddress.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods::Inet;
 using TunnelEx::Mods::Pathfinder::PathfinderEndpointAddress;
@@ -78,7 +76,7 @@ TunnelRuleShortDlg::TunnelRuleShortDlg(
 		m_isLicenseValid(true),
 		m_isUpnpDevChecked(false) {
 	GetService().GetNetworkAdapters(true, m_serviceNetworkAdapters);
-	SetRule(auto_ptr<Rule>(new TunnelRule));
+	SetRule(std::auto_ptr<Rule>(new TunnelRule));
 }
 
 TunnelRuleShortDlg::TunnelRuleShortDlg(
@@ -115,8 +113,8 @@ void TunnelRuleShortDlg::Init() {
 				continue;
 			}
 			maxPanel.Set(
-				max(maxPanel.GetX(), panel->GetSize().GetX()),
-				max(maxPanel.GetY(), panel->GetSize().GetY()));
+				std::max(maxPanel.GetX(), panel->GetSize().GetX()),
+				std::max(maxPanel.GetY(), panel->GetSize().GetY()));
 		}
 		foreach (wxPanel *const panel, m_allPanels) {
 			if (panel != m_ruleEnableBox) {
@@ -179,15 +177,15 @@ void TunnelRuleShortDlg::OnNetworkAdapterChange(wxCommandEvent &) {
 }
 
 void TunnelRuleShortDlg::OnPortChanged(wxTextCtrl &port, wxString &valid) const {
-	wstring checkValue = port.GetValue().c_str();
-	trim(checkValue);
+	std::wstring checkValue = port.GetValue().c_str();
+	boost::trim(checkValue);
 	if (checkValue.empty()) {
 		return;
 	}
-	if (!regex_match(checkValue, wregex(L"\\d+"))) {
-		const long pos = max(long(0), port.GetInsertionPoint() - 1);
+	if (!boost::regex_match(checkValue, boost::wregex(L"\\d+"))) {
+		const long pos = std::max(long(0), port.GetInsertionPoint() - 1);
 		port.ChangeValue(valid);
-		port.SetInsertionPoint(min(port.GetLastPosition(), pos));
+		port.SetInsertionPoint(std::min(port.GetLastPosition(), pos));
 	} else {
 		valid = checkValue;
 	}
@@ -272,12 +270,12 @@ bool TunnelRuleShortDlg::IsLicenseValid() const {
 	return m_isLicenseValid;
 }
 
-auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
+std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 
 	const Theme &theme = wxGetApp().GetTheme();
 	const wxSizerFlags center = wxSizerFlags(0).Center();
 
-	auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
 
 	m_typeBox = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
 	m_ruleEnableBox = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
@@ -296,9 +294,9 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 
 	{
 
-		auto_ptr<wxBoxSizer> typeTopBox(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> typeTopBox(new wxBoxSizer(wxHORIZONTAL));
 
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxVERTICAL));
 		const wxSizerFlags buttonFlags
 			= wxSizerFlags(1).Expand().Border(wxALL, theme.GetDlgBorder());
 		m_typeTcp = new wxRadioButton(
@@ -387,11 +385,11 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 		wxStaticBoxSizer &inputGroup
 			= *new wxStaticBoxSizer(wxHORIZONTAL, m_tcpUdpFtpBox, wxT("Input"));
 		{
-			auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+			std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 			wxStaticText &adapterLabel
 				= *new wxStaticText(m_tcpUdpFtpBox, wxID_ANY, wxT("Adapter:"));
 			{
-				auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
+				std::auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
 				lineBox->Add(&adapterLabel, center);
 				m_inputAdapter = &RuleUtils::CreateAdapterSelector(
 					m_serviceNetworkAdapters,
@@ -415,8 +413,8 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 				lineBox.release();
 			}
 			{
-				auto_ptr<wxBoxSizer> sslBox(new wxBoxSizer(wxVERTICAL));
-				auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
+				std::auto_ptr<wxBoxSizer> sslBox(new wxBoxSizer(wxVERTICAL));
+				std::auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
 				lineBox->Add(adapterLabel.GetSize().GetWidth(), 0);
 				m_inputSslUse = new wxCheckBox(
 					m_sslInputSubPanel,
@@ -449,11 +447,11 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 		wxStaticBoxSizer &destGroup
 			= *new wxStaticBoxSizer(wxHORIZONTAL, m_tcpUdpFtpBox);
 		{
-			auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+			std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 			wxStaticText &hostLabel
 				= *new wxStaticText(m_tcpUdpFtpBox, wxID_ANY, wxT("Host:"));
 			{
-				auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
+				std::auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
 				lineBox->Add(&hostLabel, center);
 				m_destinationHost = new wxTextCtrl(
 					m_tcpUdpFtpBox,
@@ -486,8 +484,8 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 				CONTROL_ID_DESTINATION_SSL_SETTINGS,
 				wxT("Settings..."));
 			{
-				auto_ptr<wxBoxSizer> sslBox(new wxBoxSizer(wxVERTICAL));
-				auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
+				std::auto_ptr<wxBoxSizer> sslBox(new wxBoxSizer(wxVERTICAL));
+				std::auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
 				lineBox->Add(
 					hostLabel.GetSize().GetWidth(),
 					m_destinationSslSettings->GetSize().GetHeight());
@@ -512,10 +510,10 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 			}
 			topBox->Add(m_sslDestinationSubPanel, wxSizerFlags(0).Expand());
 			{
-				auto_ptr<wxBoxSizer> proxyBox(new wxBoxSizer(wxVERTICAL));
+				std::auto_ptr<wxBoxSizer> proxyBox(new wxBoxSizer(wxVERTICAL));
 				wxHyperlinkCtrl *link;
 				{
-					auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
+					std::auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
 					lineBox->Add(
 						hostLabel.GetSize().GetWidth(),
 						m_destinationSslSettings->GetSize().GetHeight());
@@ -555,7 +553,7 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 					lineBox.release();
 				}
 				{
-					auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
+					std::auto_ptr<wxBoxSizer> lineBox(new wxBoxSizer(wxHORIZONTAL));
 					lineBox->Add(
 						hostLabel.GetSize().GetWidth(),
 						m_destinationSslSettings->GetSize().GetHeight());
@@ -593,7 +591,7 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 			destGroup.Add(topBox.get(), theme.GetStaticBoxFlags());
 			topBox.release();
 		}
-		auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 		topBox->Add(&inputGroup, wxSizerFlags(0).Expand());
 		topBox->Add(
 			&destGroup,
@@ -605,7 +603,7 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 	// pipe: ///////////////////////////////////////////////////////
 	{
 
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 		box->Add(
 			new wxStaticText(m_pipeBox, wxID_ANY, wxT("Pipe name:")),
 			center);
@@ -659,9 +657,9 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 	{
 
 		const wxSize localFieldsSize(61, -1);
-		auto_ptr<wxBoxSizer> groupBox(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> groupBox(new wxBoxSizer(wxVERTICAL));
 
-		auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
+		std::auto_ptr<wxBoxSizer> box(new wxBoxSizer(wxHORIZONTAL));
 		box->Add(
 			new wxStaticText(m_serialBox, wxID_ANY, wxT("Serial line:")), center);
 		m_inputSerialLine = new wxTextCtrl(
@@ -828,7 +826,7 @@ auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 		destGroup.Add(groupBox.get(), theme.GetStaticBoxFlags());
 		groupBox.release();
 
-		auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+		std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 		topBox->Add(&inputGroup, wxSizerFlags(1).Expand());
 		topBox->Add(
 			&destGroup,
@@ -860,7 +858,7 @@ const wxChar * TunnelRuleShortDlg::GetHelpPath() const {
 
 bool TunnelRuleShortDlg::Save(TunnelEx::Rule &newAbstractRule) const {
 
-	TunnelRule &newRule = *polymorphic_downcast<TunnelRule *>(&newAbstractRule);
+	TunnelRule &newRule = *boost::polymorphic_downcast<TunnelRule *>(&newAbstractRule);
 	
 	bool hasChanges = false;
 
@@ -923,7 +921,7 @@ bool TunnelRuleShortDlg::Save(TunnelEx::Rule &newAbstractRule) const {
 						m_inputCertificate,
 						m_inputRemoteCertificates);
 		} else {
-			list<texs__NetworkAdapterInfo>::const_iterator adapter
+			std::list<texs__NetworkAdapterInfo>::const_iterator adapter
 				= m_serviceNetworkAdapters.begin();
 			advance(adapter, m_inputAdapter->GetCurrentSelection());
 			const wxString adapterStr = wxString::FromAscii(adapter->id.c_str());
@@ -946,44 +944,44 @@ bool TunnelRuleShortDlg::Save(TunnelEx::Rule &newAbstractRule) const {
 				destPort);
 		} else {
 			
-			typedef function<WString()> SimpleFabric;
-			typedef function<WString(const ProxyList &)> ProxyFabric;
+			typedef boost::function<WString()> SimpleFabric;
+			typedef boost::function<WString(const ProxyList &)> ProxyFabric;
 			SimpleFabric simpleFabric;
 			ProxyFabric proxyFabric;
 			if (!m_destinationPathfinderUse->GetValue()) {
-				simpleFabric = bind(
+				simpleFabric = boost::bind(
 					&TcpEndpointAddress::CreateResourceIdentifier,
-					wstring(m_destinationHost->GetValue().c_str()),
+					std::wstring(m_destinationHost->GetValue().c_str()),
 					destPort,
-					cref(m_destinationCertificate),
-					cref(m_destinationRemoteCertificates));
-				proxyFabric = bind(
+					boost::cref(m_destinationCertificate),
+					boost::cref(m_destinationRemoteCertificates));
+				proxyFabric = boost::bind(
 					static_cast<
 							WString(*)(
-								const wstring &,
+								const std::wstring &,
 								NetworkPort,
 								const SslCertificateId &,
 								const SslCertificateIdCollection &,
 								const ProxyList &)>(
 						&TcpEndpointAddress::CreateResourceIdentifier),
-					wstring(m_destinationHost->GetValue().c_str()),
+					std::wstring(m_destinationHost->GetValue().c_str()),
 					destPort,
-					cref(m_destinationCertificate),
-					cref(m_destinationRemoteCertificates),
+					boost::cref(m_destinationCertificate),
+					boost::cref(m_destinationRemoteCertificates),
 					_1);
 			} else {
-				simpleFabric = bind(
+				simpleFabric = boost::bind(
 					&PathfinderEndpointAddress::CreateResourceIdentifier,
-					wstring(m_destinationHost->GetValue().c_str()),
+					std::wstring(m_destinationHost->GetValue().c_str()),
 					destPort,
-					cref(m_destinationCertificate),
-					cref(m_destinationRemoteCertificates));
-				proxyFabric = bind(
+					boost::cref(m_destinationCertificate),
+					boost::cref(m_destinationRemoteCertificates));
+				proxyFabric = boost::bind(
 					&PathfinderEndpointAddress::CreateResourceIdentifier,
-					wstring(m_destinationHost->GetValue().c_str()),
+					std::wstring(m_destinationHost->GetValue().c_str()),
 					destPort,
-					cref(m_destinationCertificate),
-					cref(m_destinationRemoteCertificates),
+					boost::cref(m_destinationCertificate),
+					boost::cref(m_destinationRemoteCertificates),
 					_1);
 			}
 			if (m_destinationProxyUse->GetValue() && m_proxyCascade.size() > 0) {
@@ -1110,31 +1108,31 @@ bool TunnelRuleShortDlg::CheckRule(const TunnelRule &rule) {
 		return false;
 	}
 
-	wstring resourceIdentifier(
+	std::wstring resourceIdentifier(
 		rule.GetInputs()[0].GetCombinedResourceIdentifier().GetCStr());
-	const wregex exp(L"([^:/]+)://.+");
-	wsmatch what;
-	wstring inputProto;
-	BOOST_ASSERT(regex_match(resourceIdentifier, what, exp));
-	if (regex_match(resourceIdentifier, what, exp)) {	
+	const boost::wregex exp(L"([^:/]+)://.+");
+	boost::wsmatch what;
+	std::wstring inputProto;
+	BOOST_ASSERT(boost::regex_match(resourceIdentifier, what, exp));
+	if (boost::regex_match(resourceIdentifier, what, exp)) {	
 		inputProto = what[1].str();
-		if (iequals(inputProto, L"upnp_tcp")) {
+		if (boost::iequals(inputProto, L"upnp_tcp")) {
 			inputProto = TcpEndpointAddress::GetProto();
-		} else if (iequals(inputProto, L"upnp_udp")) {
+		} else if (boost::iequals(inputProto, L"upnp_udp")) {
 			inputProto = UdpEndpointAddress::GetProto();
 		}
 	}
 	resourceIdentifier
 		= rule.GetDestinations()[0].GetCombinedResourceIdentifier().GetCStr();
-	wstring destProto;
-	BOOST_ASSERT(regex_match(resourceIdentifier, what, exp));
-	if (regex_match(resourceIdentifier, what, exp)) {
+	std::wstring destProto;
+	BOOST_ASSERT(boost::regex_match(resourceIdentifier, what, exp));
+	if (boost::regex_match(resourceIdentifier, what, exp)) {
 		destProto = what[1].str();
-		if (iequals(destProto, L"pathfinder")) {
+		if (boost::iequals(destProto, L"pathfinder")) {
 			destProto = TcpEndpointAddress::GetProto();
 		}
 	}
-	return !inputProto.empty() && iequals(inputProto, destProto);
+	return !inputProto.empty() && boost::iequals(inputProto, destProto);
 
 }
 
@@ -1181,7 +1179,7 @@ void TunnelRuleShortDlg::ReadRule() {
 					*m_inputAdapter,
 					addr.GetAdapter(),
 					m_serviceNetworkAdapters);
-				m_inputPort->SetValue(lexical_cast<wstring>(addr.GetPort()));
+				m_inputPort->SetValue(boost::lexical_cast<std::wstring>(addr.GetPort()));
 				m_inputPortValid = m_inputPort->GetValue();
 				if (GetRule().GetInputs()[0].CheckCombinedAddressType<TcpEndpointAddress>()) {
 					const TcpEndpointAddress &addr
@@ -1206,17 +1204,17 @@ void TunnelRuleShortDlg::ReadRule() {
 				const UpnpEndpointAddress &addr
 					= GetRule().GetInputs()[0].GetCombinedTypedAddress<UpnpEndpointAddress>();
 				RuleUtils::SelectUpnpAdapter(*m_inputAdapter);
-				m_inputPort->SetValue(lexical_cast<wstring>(addr.GetExternalPort()));
+				m_inputPort->SetValue(boost::lexical_cast<std::wstring>(addr.GetExternalPort()));
 				m_inputPortValid = m_inputPort->GetValue();
 			} else if (GetRule().GetInputs()[0].CheckCombinedAddressType<SerialEndpointAddress>()) {
 				m_typeSerial->SetValue(true);
 				const SerialEndpointAddress &addr
 					= GetRule().GetInputs()[0].GetCombinedTypedAddress<SerialEndpointAddress>();
 				m_inputSerialLine->SetValue(addr.GetLine());
-				m_inputSerialBaudRate->SetValue(lexical_cast<wstring>(addr.GetBaudRate()));
-				m_inputSerialDataBits->SetValue(lexical_cast<wstring>(addr.GetDataBits()));
-				m_inputSerialStopBits->SetValue(lexical_cast<wstring>(addr.GetStopBits()));
-				typedef map<wxString, SerialEndpointAddress::Parity> ParityMap;
+				m_inputSerialBaudRate->SetValue(boost::lexical_cast<std::wstring>(addr.GetBaudRate()));
+				m_inputSerialDataBits->SetValue(boost::lexical_cast<std::wstring>(addr.GetDataBits()));
+				m_inputSerialStopBits->SetValue(boost::lexical_cast<std::wstring>(addr.GetStopBits()));
+				typedef std::map<wxString, SerialEndpointAddress::Parity> ParityMap;
 				ParityMap parityMap;
 				RuleUtils::GetSerialParityValsMap(parityMap);
 				foreach (const ParityMap::value_type &val, parityMap) {
@@ -1225,7 +1223,7 @@ void TunnelRuleShortDlg::ReadRule() {
 						break;
 					}
 				}
-				typedef map<wxString, SerialEndpointAddress::FlowControl> FcMap;
+				typedef std::map<wxString, SerialEndpointAddress::FlowControl> FcMap;
 				FcMap fcMap;
 				RuleUtils::GetSerialFlowControlValsMap(fcMap);
 				foreach (const FcMap::value_type &val, fcMap) {
@@ -1235,11 +1233,11 @@ void TunnelRuleShortDlg::ReadRule() {
 					}
 				}
 			} else {
-				const wstring resourceIdentifier(
+				const std::wstring resourceIdentifier(
 					GetRule().GetInputs()[0].GetCombinedResourceIdentifier().GetCStr());
-				const wregex exp(L"([^:/]+)://(.+)");
-				wsmatch what;
-				if (	regex_match(resourceIdentifier, what, exp)
+				const boost::wregex exp(L"([^:/]+)://(.+)");
+				boost::wsmatch what;
+				if (	boost::regex_match(resourceIdentifier, what, exp)
 						&& !wxString(what[1].str()).CompareTo(wxT("pipe"), wxString::ignoreCase)) {
 					m_typePipe->SetValue(true);
 					m_inputPipe->SetValue(what[2].str());
@@ -1260,7 +1258,7 @@ void TunnelRuleShortDlg::ReadRule() {
 					const InetEndpointAddress &addr
 						= GetRule().GetDestinations()[0].GetCombinedTypedAddress<InetEndpointAddress>();
 					m_destinationHost->SetValue(addr.GetHostName());
-					m_destinationPort->SetValue(lexical_cast<wstring>(addr.GetPort()));
+					m_destinationPort->SetValue(boost::lexical_cast<std::wstring>(addr.GetPort()));
 					m_destinationPortValid = m_destinationPort->GetValue();
 					if (GetRule().GetDestinations()[0].CheckCombinedAddressType<TcpEndpointAddress>()) {
 						const TcpEndpointAddress &addr
@@ -1284,7 +1282,7 @@ void TunnelRuleShortDlg::ReadRule() {
 						foreach (const Proxy &proxy, addr.GetProxyList()) {
 							ProxyDlg::Info proxyInfo;
 							proxyInfo.host = proxy.host;
-							proxyInfo.port = lexical_cast<wstring>(proxy.port);
+							proxyInfo.port = boost::lexical_cast<std::wstring>(proxy.port);
 							proxyInfo.isAuthInUse = !proxy.user.empty();
 							proxyInfo.user = proxy.user;
 							proxyInfo.password = proxy.password;
@@ -1293,11 +1291,11 @@ void TunnelRuleShortDlg::ReadRule() {
 					}
 				}
 			} else if (m_typePipe->GetValue()) {
-				const wstring resourceIdentifier(
+				const std::wstring resourceIdentifier(
 					GetRule().GetDestinations()[0].GetCombinedResourceIdentifier().GetCStr());
-				const wregex exp(L"([^:/]+)://(.+)");
-				wsmatch what;
-				if (	regex_match(resourceIdentifier, what, exp)
+				const boost::wregex exp(L"([^:/]+)://(.+)");
+				boost::wsmatch what;
+				if (	boost::regex_match(resourceIdentifier, what, exp)
 						&& !wxString(what[1].str()).CompareTo(wxT("pipe"), wxString::ignoreCase)) {
 					m_destinationPipe->SetValue(what[2].str());
 				} else {
@@ -1309,10 +1307,10 @@ void TunnelRuleShortDlg::ReadRule() {
 					const SerialEndpointAddress &addr
 						= GetRule().GetDestinations()[0].GetCombinedTypedAddress<SerialEndpointAddress>();
 					m_destinationSerialLine->SetValue(addr.GetLine());
-					m_destinationSerialBaudRate->SetValue(lexical_cast<wstring>(addr.GetBaudRate()));
-					m_destinationSerialDataBits->SetValue(lexical_cast<wstring>(addr.GetDataBits()));
-					m_destinationSerialStopBits->SetValue(lexical_cast<wstring>(addr.GetStopBits()));
-					typedef map<wxString, SerialEndpointAddress::Parity> ParityMap;
+					m_destinationSerialBaudRate->SetValue(boost::lexical_cast<std::wstring>(addr.GetBaudRate()));
+					m_destinationSerialDataBits->SetValue(boost::lexical_cast<std::wstring>(addr.GetDataBits()));
+					m_destinationSerialStopBits->SetValue(boost::lexical_cast<std::wstring>(addr.GetStopBits()));
+					typedef std::map<wxString, SerialEndpointAddress::Parity> ParityMap;
 					ParityMap parityMap;
 					RuleUtils::GetSerialParityValsMap(parityMap);
 					foreach (const ParityMap::value_type &val, parityMap) {
@@ -1321,7 +1319,7 @@ void TunnelRuleShortDlg::ReadRule() {
 							break;
 						}
 					}
-					typedef map<wxString, SerialEndpointAddress::FlowControl> FcMap;
+					typedef std::map<wxString, SerialEndpointAddress::FlowControl> FcMap;
 					FcMap fcMap;
 					RuleUtils::GetSerialFlowControlValsMap(fcMap);
 					foreach (const FcMap::value_type &val, fcMap) {
@@ -1535,20 +1533,20 @@ void TunnelRuleShortDlg::OnPrevStep(wxCommandEvent &) {
 	UpdateVisible();
 }
 
-auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlOptions() {
-	return auto_ptr<wxSizer>();
+std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlOptions() {
+	return std::auto_ptr<wxSizer>();
 }
 
-auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlRuleInfo() {
+std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlRuleInfo() {
 	wxButton &ctrl
 		= *new wxButton(this, CONTROL_ID_ADVANCED_MODE, wxT("Advanced mode..."));
-	auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> result(new wxBoxSizer(wxHORIZONTAL));
 	result->Add(&ctrl, wxSizerFlags(0).Center().Expand());
 	return result;
 }
 
-auto_ptr<wxSizer> TunnelRuleShortDlg::CreateButtons() {
-	auto_ptr<wxStdDialogButtonSizer> box(new wxStdDialogButtonSizer);
+std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateButtons() {
+	std::auto_ptr<wxStdDialogButtonSizer> box(new wxStdDialogButtonSizer);
 	m_prevStepButton = new wxButton(this, CONTROL_ID_PREV_STEP, wxT("< Previous"));
 	box->Add(m_prevStepButton);
 	m_okButton = new wxButton(this, wxID_OK);

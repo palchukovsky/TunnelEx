@@ -15,8 +15,8 @@
 #include "EndpointAddress.hpp"
 #include "Log.hpp"
 
-using namespace std;
 using namespace TunnelEx;
+namespace fs = boost::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -180,7 +180,7 @@ const ServiceRule & ServiceRule::operator =(const ServiceRule &rhs) {
 
 void ServiceRule::Swap(ServiceRule &rhs) throw() {
 	Rule::Swap(rhs);
-	swap(m_pimpl, rhs.m_pimpl);
+	std::swap(m_pimpl, rhs.m_pimpl);
 }
 
 ServiceRule ServiceRule::MakeCopy() const {
@@ -284,7 +284,7 @@ const TunnelRule & TunnelRule::operator =(const TunnelRule &rhs) {
 
 void TunnelRule::Swap(TunnelRule &rhs) throw() {
 	Rule::Swap(rhs);
-	swap(m_pimpl, rhs.m_pimpl);
+	std::swap(m_pimpl, rhs.m_pimpl);
 }
 
 const RuleEndpointCollection & TunnelRule::GetInputs() const {
@@ -352,9 +352,7 @@ TunnelRule TunnelRule::MakeCopy() const {
 }
 
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Helpers::Xml;
@@ -380,21 +378,21 @@ namespace TunnelEx {
 					XmlString &result)
 				const {
 
-			shared_ptr<Document> doc(Document::CreateNew("RuleSet"));
-			shared_ptr<Node> root = doc->GetRoot();
+			boost::shared_ptr<Document> doc(Document::CreateNew("RuleSet"));
+			boost::shared_ptr<Node> root = doc->GetRoot();
 			root->SetAttribute("Version", "2.1");
 
 			SaveServiceRuleSet(serviceRuleSet, *root);
 			SaveTunnelRuleSet(tunnelRuleSet, *root);
 			
 			try {
-				path schemaFile(GetModuleFilePathA().branch_path());
+				fs::path schemaFile(GetModuleFilePathA().branch_path());
 				schemaFile /= "RuleSet.xsd";
-				string validateErrors;
+				std::string validateErrors;
 				Schema schema(schemaFile.string());
 				if (!schema.Validate(*doc, &validateErrors)) {
 					WFormat message(
-						L"Could not save rule set, internal error with XML (\"%1%\").");
+						L"Could not save rule std::set, internal error with XML (\"%1%\").");
 					message % ConvertString<WString>(validateErrors.c_str()).GetCStr();
 					throw LogicalException(message.str().c_str());
 				}
@@ -431,12 +429,12 @@ namespace TunnelEx {
 			node.SetAttribute("ErrorsTreatment", treatment);
 		}
 
-		shared_ptr<Node> CreateEntity(
+		boost::shared_ptr<Node> CreateEntity(
 					Node &list,
 					const Rule &source,
 					const char *const tagName)
 				const {
-			shared_ptr<Node> node = list.CreateNewChild(tagName);
+			boost::shared_ptr<Node> node = list.CreateNewChild(tagName);
 			node->SetAttribute("Name", source.GetName());
 			node->SetAttribute("IsEnabled", source.IsEnabled() ? "true" : "false");
 			SaveRuleErrorsTreatment(source, *node);
@@ -451,7 +449,7 @@ namespace TunnelEx {
 				const {
 			const size_t listenersNumb = listeners.GetSize();
 			for (size_t i = 0; i < listenersNumb; ++i) {
-				shared_ptr<Node> listenerNode = endpointNode.CreateNewChild(tagName);
+				boost::shared_ptr<Node> listenerNode = endpointNode.CreateNewChild(tagName);
 				listenerNode->SetAttribute("Name", listeners[i].name);
 				listenerNode->SetContent(listeners[i].param);
 			}
@@ -461,14 +459,14 @@ namespace TunnelEx {
 					const RuleEndpointCollection &endpoints,
 					Node &ruleNode)
 				const {
-			shared_ptr<Node> endpointsNode = ruleNode.CreateNewChild("InputSet");
+			boost::shared_ptr<Node> endpointsNode = ruleNode.CreateNewChild("InputSet");
 			const size_t size = endpoints.GetSize();
 			for (size_t i = 0; i < size; ++i) {
-				shared_ptr<Node> endpointNode = endpointsNode->CreateNewChild("Endpoint");
+				boost::shared_ptr<Node> endpointNode = endpointsNode->CreateNewChild("Endpoint");
 				SaveListeners(endpoints[i].GetPreListeners(), *endpointNode, "PreListener");
 				SaveListeners(endpoints[i].GetPostListeners(), *endpointNode, "PostListener");
 				if (endpoints[i].IsCombined()) {
-					shared_ptr<Node> addressNode = endpointNode->CreateNewChild("CombinedAddress");
+					boost::shared_ptr<Node> addressNode = endpointNode->CreateNewChild("CombinedAddress");
 					addressNode->SetAttribute(
 						"ResourceIdentifier",
 						endpoints[i].GetCombinedResourceIdentifier());
@@ -476,7 +474,7 @@ namespace TunnelEx {
 						"IsAcceptor",
 						endpoints[i].IsCombinedAcceptor() ? "true" : "false");
 				} else {
-					shared_ptr<Node> addressNode = endpointNode->CreateNewChild("SplitAddress");
+					boost::shared_ptr<Node> addressNode = endpointNode->CreateNewChild("SplitAddress");
 					addressNode->SetAttribute(
 						"ReadResourceIdentifier",
 						endpoints[i].GetReadResourceIdentifier());
@@ -507,19 +505,19 @@ namespace TunnelEx {
 					const RuleEndpointCollection &endpoints,
 					Node &node)
 				const {
-			shared_ptr<Node> endpointsNode = node.CreateNewChild("DestinationSet");
+			boost::shared_ptr<Node> endpointsNode = node.CreateNewChild("DestinationSet");
 			const size_t size = endpoints.GetSize();
 			for (size_t i = 0; i < size; ++i) {
-				shared_ptr<Node> endpointNode = endpointsNode->CreateNewChild("Endpoint");
+				boost::shared_ptr<Node> endpointNode = endpointsNode->CreateNewChild("Endpoint");
 				SaveListeners(endpoints[i].GetPreListeners(), *endpointNode, "PreListener");
 				SaveListeners(endpoints[i].GetPostListeners(), *endpointNode, "PostListener");
 				if (endpoints[i].IsCombined()) {
-					shared_ptr<Node> addressNode = endpointNode->CreateNewChild("CombinedAddress");
+					boost::shared_ptr<Node> addressNode = endpointNode->CreateNewChild("CombinedAddress");
 					addressNode->SetAttribute(
 						"ResourceIdentifier",
 						endpoints[i].GetCombinedResourceIdentifier());
 				} else {
-					shared_ptr<Node> addressNode = endpointNode->CreateNewChild("SplitAddress");
+					boost::shared_ptr<Node> addressNode = endpointNode->CreateNewChild("SplitAddress");
 					addressNode->SetAttribute(
 						"ReadResourceIdentifier",
 						endpoints[i].GetReadResourceIdentifier());
@@ -534,9 +532,9 @@ namespace TunnelEx {
 		void SaveTunnelRuleSet(const TunnelRuleSet &set, Node &root) const {
 			for (unsigned int i = 0; i < set.GetSize(); ++i) {
 				const TunnelRule &rule = set[i];
-				shared_ptr<Node> ruleNode = CreateEntity(root, rule, "TunnelRule");
+				boost::shared_ptr<Node> ruleNode = CreateEntity(root, rule, "TunnelRule");
 				{
-					shared_ptr<Node> filtersNode
+					boost::shared_ptr<Node> filtersNode
 						= ruleNode->CreateNewChild("FilterSet");
 					for (	unsigned int filterIndex = 0;
 							filterIndex < rule.GetFilters().GetSize();
@@ -554,7 +552,7 @@ namespace TunnelEx {
 		void SaveServices(const ServiceRule::ServiceSet &set, Node &root) const {
 			for (unsigned int i = 0; i < set.GetSize(); ++i) {
 				const ServiceRule::Service &service = set[i];
-				shared_ptr<Node> node = root.CreateNewChild("Service");
+				boost::shared_ptr<Node> node = root.CreateNewChild("Service");
 				node->SetAttribute("Name", service.name);
 				node->SetAttribute("Uuid", service.uuid);
 				node->SetContent(service.param);
@@ -564,7 +562,7 @@ namespace TunnelEx {
 		void SaveServiceRuleSet(const ServiceRuleSet &set, Node &root) const {
 			for (unsigned int i = 0; i < set.GetSize(); ++i) {
 				const ServiceRule &rule = set[i];
-				shared_ptr<Node> ruleNode = CreateEntity(root, rule, "ServiceRule");
+				boost::shared_ptr<Node> ruleNode = CreateEntity(root, rule, "ServiceRule");
 				SaveServices(rule.GetServices(), *ruleNode);
 			}
 		}
@@ -574,14 +572,14 @@ namespace TunnelEx {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	class RuleEntitySetXmlParser : private noncopyable {
+	class RuleEntitySetXmlParser : private boost::noncopyable {
 
 	protected:
 
 		Rule::ErrorsTreatment ParseErrorsTreatment(
-					shared_ptr<const Node> node)
+					boost::shared_ptr<const Node> node)
 				const {
-			string errorsTreatment;
+			std::string errorsTreatment;
 			node->GetAttribute("ErrorsTreatment", errorsTreatment);
 			if (errorsTreatment == "information") {
 				return Rule::ERRORS_TREATMENT_INFO;
@@ -594,9 +592,9 @@ namespace TunnelEx {
 		}
 
 		template<class Entity>
-		shared_ptr<Entity> ParseEntity(shared_ptr<const Node> node) const {
+		boost::shared_ptr<Entity> ParseEntity(boost::shared_ptr<const Node> node) const {
 			WString buffer;
-			shared_ptr<Entity> entity(new Entity(node->GetAttribute("Uuid", buffer)));
+			boost::shared_ptr<Entity> entity(new Entity(node->GetAttribute("Uuid", buffer)));
 			entity->SetName(node->GetAttribute("Name", buffer));
 			entity->SetErrorsTreatment(ParseErrorsTreatment(node));
 			entity->Enable(node->GetAttribute("IsEnabled", buffer) == L"true");
@@ -606,15 +604,15 @@ namespace TunnelEx {
 		template<class RuleSet>
 		void Parse(
 					const Document &doc,
-					const string &tagName,
-					function<shared_ptr<typename RuleSet::ItemType>(shared_ptr<const Node>)> entityParser,
+					const std::string &tagName,
+					boost::function<boost::shared_ptr<typename RuleSet::ItemType>(boost::shared_ptr<const Node>)> entityParser,
 					RuleSet &result)
 				const {
 			ConstNodeCollection nodes;
-			const string path = "/RuleSet/" + tagName;
+			const std::string path = "/RuleSet/" + tagName;
 			doc.GetXPath()->Query(path.c_str(), nodes);
 			typename RuleSet set(nodes.size());
-			foreach (shared_ptr<const Node> &node, nodes) {
+			foreach (boost::shared_ptr<const Node> &node, nodes) {
 				set.Append(*entityParser(node));
 			}
 			result.Swap(set);
@@ -638,7 +636,7 @@ namespace TunnelEx {
 			RuleEntitySetXmlParser::Parse(
 				doc,
 				"TunnelRule",
-				bind(&TunnelRuleSetXmlParser::ParseRule, this, _1),
+				boost::bind(&TunnelRuleSetXmlParser::ParseRule, this, _1),
 				result);
 		}
 
@@ -656,7 +654,7 @@ namespace TunnelEx {
 			WString wbuffer;
 			WString wbuffer2;
 			RuleEndpoint endpoint(&endpointNode.GetAttribute("Uuid", wbuffer2));
-			for (	shared_ptr<const Node> node = endpointNode.GetChildElement();
+			for (	boost::shared_ptr<const Node> node = endpointNode.GetChildElement();
 					node;
 					node = node->GetNextElement()) {
 				node->GetName(wbuffer);
@@ -689,7 +687,7 @@ namespace TunnelEx {
 			WString wbuffer;
 			WString wbuffer2;
 			RuleEndpoint endpoint(&endpointNode.GetAttribute("Uuid", wbuffer2));
-			for (	shared_ptr<const Node> node = endpointNode.GetChildElement();
+			for (	boost::shared_ptr<const Node> node = endpointNode.GetChildElement();
 					node;
 					node = node->GetNextElement()) {
 				node->GetName(wbuffer);
@@ -712,7 +710,7 @@ namespace TunnelEx {
 		}
 
 		void ParseInputEnpoints(
-					shared_ptr<const Node> node,
+					boost::shared_ptr<const Node> node,
 					RuleEndpointCollection &result)
 				const {
 			RuleEndpointCollection set;
@@ -723,7 +721,7 @@ namespace TunnelEx {
 		}
 
 		void ParseDestinationEndpoints(
-					shared_ptr<const Node> node,
+					boost::shared_ptr<const Node> node,
 					RuleEndpointCollection &result)
 				const {
 			RuleEndpointCollection set;
@@ -734,19 +732,19 @@ namespace TunnelEx {
 		}
 
 		void ParseFilters(
-					shared_ptr<const Node> node,
+					boost::shared_ptr<const Node> node,
 					TunnelRule::Filters &result)
 				const {
 			TunnelRule::Filters set;
-			wstring buffer;
+			std::wstring buffer;
 			for (node = node->GetChildElement(); node; node = node->GetNextElement()) {
 				set.Append(node->GetAttribute("Name", buffer).c_str());
 			}
 			set.Swap(result);
 		}
 
-		shared_ptr<TunnelRule> ParseRule(shared_ptr<const Node> node) const {
-			shared_ptr<TunnelRule> rule = ParseEntity<TunnelRule>(node);
+		boost::shared_ptr<TunnelRule> ParseRule(boost::shared_ptr<const Node> node) const {
+			boost::shared_ptr<TunnelRule> rule = ParseEntity<TunnelRule>(node);
 			node = node->GetChildElement();
 			{
 				TunnelRule::Filters filters;
@@ -781,14 +779,14 @@ namespace TunnelEx {
 			RuleEntitySetXmlParser::Parse(
 				doc,
 				"ServiceRule",
-				bind(&ServiceRuleSetXmlParser::ParseRule, this, _1),
+				boost::bind(&ServiceRuleSetXmlParser::ParseRule, this, _1),
 				result);
 		}
 
 	protected:
 
-		shared_ptr<ServiceRule> ParseRule(shared_ptr<const Node> node) const {
-			shared_ptr<ServiceRule> rule = ParseEntity<ServiceRule>(node);
+		boost::shared_ptr<ServiceRule> ParseRule(boost::shared_ptr<const Node> node) const {
+			boost::shared_ptr<ServiceRule> rule = ParseEntity<ServiceRule>(node);
 			ServiceRule::ServiceSet services;
 			for (node = node->GetChildElement(); node; node = node->GetNextElement()) {
 				services.Append(ParseService(*node));
@@ -821,30 +819,26 @@ public:
 		//...//
 	}
 
-	explicit Implementation(
-				const WString &xml)
-			throw(
-				InvalidXmlException,
-				XmlDoesNotMatchException) {
+	explicit Implementation(const WString &xml) {
 		
 		try {
 		
-			shared_ptr<Document> doc(Document::LoadFromString(xml));
-			path schemaFile(Helpers::GetModuleFilePathA().branch_path());
+			boost::shared_ptr<Document> doc(Document::LoadFromString(xml));
+			fs::path schemaFile(Helpers::GetModuleFilePathA().branch_path());
 			schemaFile /= "RuleSet.xsd";
 			Schema schema(schemaFile.string());
-			string validateErrors;
+			std::string validateErrors;
 
 			if (schema.Validate(*doc, &validateErrors)) {
 			
 				{
 					ConstNodeCollection uuids;
 					doc->GetXPath()->Query("//*/@Uuid", uuids);
-					typedef set<string> Collection;
+					typedef std::set<std::string> Collection;
 					Collection collection;
-					string buffer;
+					std::string buffer;
 					const ConstNodeCollection::const_iterator end(uuids.end());
-					foreach (shared_ptr<const Node> &node, uuids) {
+					foreach (boost::shared_ptr<const Node> &node, uuids) {
 						if (!collection.insert(node->GetContent(buffer)).second) {
 							Log::GetInstance().AppendWarn(
 								(Format("Rule set UUID \"%1%\" is not unique.") % buffer).str());
@@ -868,8 +862,8 @@ public:
 			throw SystemException(message.str().c_str());
 		} catch (const Document::ParseException &) {
 			const wchar_t *const message
-				=	L"Could not parse XML-string with rule set,"
-						L" string has invalid format, invalid text encoding or empty.";
+				=	L"Could not parse XML-string with rule std::set,"
+						L" std::string has invalid format, invalid text encoding or empty.";
 			throw InvalidXmlException(message);
 		}
 
@@ -895,9 +889,7 @@ RuleSet::RuleSet()
 	//...//
 }
 
-RuleSet::RuleSet(
-			const WString &xml)
-		throw(InvalidXmlException, XmlDoesNotMatchException)
+RuleSet::RuleSet(const WString &xml)
 		: m_pimpl(new Implementation(xml)) {
 	//...//
 }
@@ -925,7 +917,7 @@ const RuleSet & RuleSet::operator =(const RuleSet &rhs) {
 }
 
 void RuleSet::Swap(RuleSet &rhs) throw() {
-	swap(rhs.m_pimpl, m_pimpl);
+	std::swap(rhs.m_pimpl, m_pimpl);
 }
 
 void RuleSet::GetXml(UString &destinationBuffer) const {

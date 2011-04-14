@@ -12,7 +12,8 @@
 1.1. Требование к ПО
 --------------------
     * ОС Microsoft Windows 2000 или выше;
-    * Microsoft Visual С++ 2005 SP1;
+    * Git;
+    * Microsoft Visual С++ 2005 SP1 или Microsoft Visual С++ 2010 SP1;
     * WiX 3.0.2925.0 (http://wix.sourceforge.net);
     * RAR 3.42 (http://rarlab.com/rar_archiver.htm);
     * doxygen 1.6.2 (http://www.doxygen.org);
@@ -22,7 +23,8 @@
     * NASM 2.06.01 (http://www.nasm.us, минимальная установка);
     * Patch for Windows 2.5.9
       (http://gnuwin32.sourceforge.net/packages/diffutils.htm, готовая к запуску
-      сборка: http://tunnelex.net/download/gnuutils.7z).
+      сборка: http://tunnelex.net/download/gnuutils.7z);
+
 
 
 1.2. Требование к настройке
@@ -46,14 +48,17 @@
     * ACE 5.8.0 (http://download.dre.vanderbilt.edu/) - архив 
       "sources only"-дистрибутива должен быть запакован с помощью TAR+BZ2
       и иметь имя ACE-src-5.8.0.tar.bz2;
-    * Boost 1.40.0 (http://boost.org) - архив дистрибутива должен быть
-      запакован с помощью 7-Zip и иметь имя boost_1_40_0.7z;
+    * Boost 1.46.1 (http://boost.org, http://www.boostpro.com/download), все
+      компоненты (static-библиотеки, для многопоточной runtime-библиотеки)
+      - файлы заголовков (ссылки на них) должны быть расположены в директории
+      IDE include, файлы библиотек (ссылки на них) в  директории lib (примеры:
+      ...\VC\include\boost\1_46_1\ и ...VC\lib\boost\1_46_1\);
     * Libxml2 2.7.2 (http://xmlsoft.org) - архив дистрибутива должен быть
       запакован с помощью TAR+ZIP и иметь имя libxml2-sources-2.7.2.tar.gz;
     * wxWidgets 2.8.10 (http://wxwidgets.org) - архив дистрибутива должен быть
       запакован с помощью TAR+BZ2 и иметь имя wxWidgets-2.8.10.tar.bz2;
-    * OpenSSL 1.0.0a (http://openssl.org) - архив дистрибутива должен быть
-      запакован с помощью TAR+ZIP и иметь имя openssl-1.0.0a.tar.gz;
+    * OpenSSL 1.0.0d (http://openssl.org) - архив дистрибутива должен быть
+      запакован с помощью TAR+ZIP и иметь имя openssl-1.0.0d.tar.gz;
     * MiniUPnP client (http://miniupnp.free.fr) - дистрибутив должен состоять
       из двух частей: TAR+ZIP архива miniupnpc-1.4.20100418.tar.gz с исходными
       кодами и ZIP архива upnpc-exe-win32-20100418.zip с бинарными файлам;
@@ -63,7 +68,7 @@
 2. Получение исходных файлов
 ============================
 
-Для корректного выполнения сборки необходимо сделать checkout из репозитория.
+git clone git@palchukovsky.com:TunnelEx
 
 
 

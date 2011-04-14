@@ -12,11 +12,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
 #define INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
 
-#ifdef TUNNELEX_CORE
-#	include "String.hpp"
-#else // #ifdef TUNNELEX_CORE
-#	include <TunnelEx/String.hpp>
-#endif // #ifdef TUNNELEX_CORE
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Licensing {
 
@@ -29,32 +25,32 @@ namespace TunnelEx { namespace Licensing {
 					std::string &privateKeyResult,
 					const boost::any &clientParam) {
 		
-			using namespace std;
-			using namespace boost;
+			namespace pt = boost::posix_time;
 			using namespace TunnelEx::Helpers::Crypto;
 			using namespace TunnelEx::Helpers::Xml;
 			
 			typedef ClientTrait::ConstantStorage ConstantStorage;
 			typedef ClientTrait::LocalStorage LocalStorage;
 			
-			shared_ptr<Document> doc = Document::CreateNew("LicenseKeyRequest");
+			boost::shared_ptr<Document> doc = Document::CreateNew("LicenseKeyRequest");
 			doc->GetRoot()->SetAttribute("Version", "1.1");
 			
-			doc->GetRoot()->CreateNewChild("License")->SetContent(to_upper_copy(license));
+			doc->GetRoot()->CreateNewChild("License")->SetContent(boost::to_upper_copy(license));
 			
-			shared_ptr<Node> release = doc->GetRoot()->CreateNewChild("Release");
+			boost::shared_ptr<Node> release = doc->GetRoot()->CreateNewChild("Release");
 			{
-				string now = to_iso_extended_string(posix_time::second_clock::universal_time());
+				std::string now
+					= pt::to_iso_extended_string(pt::second_clock::universal_time());
 				BOOST_ASSERT(now[10] == 'T');
 				now[10] = ' ';
 				release->CreateNewChild("Time")->SetContent(now);
 			}
 			
 			{
-				shared_ptr<Node> product = release->CreateNewChild("Product");
+				boost::shared_ptr<Node> product = release->CreateNewChild("Product");
 				product->SetAttribute("Name", ProductTrait<PRODUCT_TUNNELEX>::GetUuid());
 				product->SetAttribute("Edition", EditionTrait<EDITION_STANDARD>::GetUuid());
-				product->SetAttribute("Version", wstring(TUNNELEX_VERSION_FULL_W));
+				product->SetAttribute("Version", std::wstring(TUNNELEX_VERSION_FULL_W));
 			}
 			
 			{
@@ -62,11 +58,12 @@ namespace TunnelEx { namespace Licensing {
 				typedef ClientTrait::WorkstationPropertiesLocal WorkstationPropertiesLocal;
 				WorkstationPropertyValues localProps;
 				WorkstationPropertiesLocal::Get(localProps, clientParam);
-				shared_ptr<Node> worstation = doc->GetRoot()->CreateNewChild("Workstation");
+				boost::shared_ptr<Node> worstation
+					= doc->GetRoot()->CreateNewChild("Workstation");
 				BOOST_FOREACH (
 						const WorkstationPropertyValues::value_type &prop,
 						localProps) {
-					shared_ptr<Node> node = worstation->CreateNewChild("WorkstationProperty");
+					boost::shared_ptr<Node> node = worstation->CreateNewChild("WorkstationProperty");
 					node->SetAttribute(
 						"Name",
 						WorkstationPropertiesQuery::CastPropertyToString(prop.first));
@@ -74,7 +71,7 @@ namespace TunnelEx { namespace Licensing {
 				}
 			}
 
-			const auto_ptr<const Rsa> rsa(Rsa::Generate(Key::SIZE_512));
+			const std::auto_ptr<const Rsa> rsa(Rsa::Generate(Key::SIZE_512));
 			doc->GetRoot()
 				->CreateNewChild("PublicKey")
 				->SetContent(rsa->GetPublicKey().Export());
@@ -82,7 +79,7 @@ namespace TunnelEx { namespace Licensing {
 			TunnelEx::UString xml;
 			doc->Dump(xml);
 			
-			vector<unsigned char> serverPubKeyStr;
+			std::vector<unsigned char> serverPubKeyStr;
 			ConstantStorage::GetLicenseServerAsymmetricPublicKey(serverPubKeyStr);
 			PublicKey serverPubKey(serverPubKeyStr);
 			Seale seale(xml.GetCStr(), xml.GetLength(), serverPubKey);
@@ -93,13 +90,13 @@ namespace TunnelEx { namespace Licensing {
 				<< seale.GetEnvKey()
 				<< unsigned short(seale.GetEnvKey().size());
 			
-			string request = "-----BEGIN TUNNELEX LICENSE KEY REQUEST-----\r\n";
+			std::string request = "-----BEGIN TUNNELEX LICENSE KEY REQUEST-----\r\n";
 			request += base64.GetString();
 			request += "-----END TUNNELEX LICENSE KEY REQUEST-----\r\n";
 			
 			rsa->GetPrivateKey().Export().swap(privateKeyResult);
 			requestResult.swap(request);
-			
+
 		}
 		
 	};

@@ -14,12 +14,10 @@
 #include "Configuration.hpp"
 #include "Legacy/LegacySupporter.hpp"
 
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/Log.hpp"
+#include "Core/String.hpp"
 
-using namespace std;
-using namespace boost;
-using namespace boost::filesystem;
+namespace fs = boost::filesystem;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 using namespace TunnelEx::Helpers::Xml;
@@ -30,17 +28,17 @@ class ServiceConfiguration::Implementation {
 
 public:
 
-	explicit Implementation(shared_ptr<const Document> doc)
+	explicit Implementation(boost::shared_ptr<const Document> doc)
 			: m_isChanged(true) {
-		Init(shared_ptr<Document>(new Document(*doc)));
+		Init(boost::shared_ptr<Document>(new Document(*doc)));
 	}
 
-	explicit Implementation(const wstring &configurationFilePath)
+	explicit Implementation(const std::wstring &configurationFilePath)
 			: m_isChanged(false) {
-		if (!exists(configurationFilePath)) {
+		if (!fs::exists(configurationFilePath)) {
 			throw ConfigurationNotFoundException();
 		}
-		shared_ptr<Document> doc;
+		boost::shared_ptr<Document> doc;
 		try {
 			doc = Document::LoadFromFile(configurationFilePath);
 		} catch (const Document::ParseException &ex) {
@@ -75,10 +73,10 @@ private:
 
 protected:
 
-	void Init(shared_ptr<Document> doc) {
+	void Init(boost::shared_ptr<Document> doc) {
 		try {
 			Schema schema(GetSchemaFilePath());
-			string validateErrors;
+			std::string validateErrors;
 			if (!schema.Validate(*doc, &validateErrors)) {
 				const char *const message
 					= "Passed XML-string has invalid format "
@@ -98,24 +96,24 @@ protected:
 
 private:
 
-	shared_ptr<Document> m_doc;
+	boost::shared_ptr<Document> m_doc;
 	bool m_isChanged;
 
 protected:
 
-	shared_ptr<Node> GetNode(Document &doc, const char *tag) {
-		string query = "//Configuration[@Version = \"1.2\"]/";
+	boost::shared_ptr<Node> GetNode(Document &doc, const char *tag) {
+		std::string query = "//Configuration[@Version = \"1.2\"]/";
 		query += tag;
 		NodeCollection queryResult;
 		doc.GetXPath()->Query(query.c_str(), queryResult);
 		return queryResult[0];
 	}
 
-	shared_ptr<Node> GetNode(const char *tag) const {
+	boost::shared_ptr<Node> GetNode(const char *tag) const {
 		return const_cast<Implementation *>(this)->GetNode(*m_doc, tag);
 	}
 
-	shared_ptr<Node> GetNode(const char *tag) {
+	boost::shared_ptr<Node> GetNode(const char *tag) {
 		return GetNode(*m_doc, tag);
 	}
 
@@ -130,47 +128,47 @@ protected:
 		}
 	}
 
-	void SetNodeContent(const char *tag, const wstring &content) {
-		shared_ptr<Document> newDoc = Document::CreateDuplicate(*m_doc);
+	void SetNodeContent(const char *tag, const std::wstring &content) {
+		boost::shared_ptr<Document> newDoc = Document::CreateDuplicate(*m_doc);
 		GetNode(*newDoc, tag)->SetContent(content);
 		ValidateDocAndThrow(*newDoc);
 		m_doc = newDoc;
 		m_isChanged = true;
 	}
 
-	void SetNodeAttribute(const char *tag, const char *attribute, const wstring &content) {
-		shared_ptr<Document> newDoc = Document::CreateDuplicate(*m_doc);
+	void SetNodeAttribute(const char *tag, const char *attribute, const std::wstring &content) {
+		boost::shared_ptr<Document> newDoc = Document::CreateDuplicate(*m_doc);
 		GetNode(*newDoc, tag)->SetAttribute(attribute, content);
 		ValidateDocAndThrow(*newDoc);
 		m_doc = newDoc;
 		m_isChanged = true;
 	}
 
-	typedef map<wstring, LogLevel> LogLevelsNames;
+	typedef std::map<std::wstring, LogLevel> LogLevelsNames;
 	void Fill(LogLevelsNames &names) const {
 		names.clear();
-		names.insert(make_pair(wstring(L"track"), LOG_LEVEL_TRACK));
-		names.insert(make_pair(wstring(L"debug"), LOG_LEVEL_DEBUG));
-		names.insert(make_pair(wstring(L"information"), LOG_LEVEL_INFO));
-		names.insert(make_pair(wstring(L"warning"), LOG_LEVEL_WARN));
-		names.insert(make_pair(wstring(L"error"), LOG_LEVEL_ERROR));
+		names.insert(make_pair(std::wstring(L"track"), LOG_LEVEL_TRACK));
+		names.insert(make_pair(std::wstring(L"debug"), LOG_LEVEL_DEBUG));
+		names.insert(make_pair(std::wstring(L"information"), LOG_LEVEL_INFO));
+		names.insert(make_pair(std::wstring(L"warning"), LOG_LEVEL_WARN));
+		names.insert(make_pair(std::wstring(L"error"), LOG_LEVEL_ERROR));
 	}
 
 public:
 
-	wstring GetLogPath() const {
-		wstring buffer;
+	std::wstring GetLogPath() const {
+		std::wstring buffer;
 		return GetNode("Log")->GetContent(buffer);
 	}
 	
-	void SetLogPath(const wstring& path) {
+	void SetLogPath(const std::wstring& path) {
 		SetNodeContent("Log", path);
 	}
 
 	LogLevel GetLogLevel() const {
 		LogLevelsNames levels;
 		Fill(levels);
-		wstring buffer;
+		std::wstring buffer;
 		return levels.find(GetNode("Log")->GetAttribute("Level", buffer))->second;
 	}
 
@@ -190,39 +188,39 @@ public:
 		throw ServiceConfiguration::ConfigurationHasInvalidFormatException();
 	}
 
-	wstring GetRulesPath() const {
-		wstring buffer;
+	std::wstring GetRulesPath() const {
+		std::wstring buffer;
 		return GetNode("Rules")->GetContent(buffer);
 	}
 
-	void SetRulesPath(const wstring &path) {
+	void SetRulesPath(const std::wstring &path) {
 		SetNodeContent("Rules", path);
 	}
 
-	wstring GetCertificatesStoragePath() const {
-		wstring buffer;
+	std::wstring GetCertificatesStoragePath() const {
+		std::wstring buffer;
 		return GetNode("CertificatesStorage")->GetContent(buffer);
 	}
 
-	void SetCertificatesStoragePath(const wstring &path) {
+	void SetCertificatesStoragePath(const std::wstring &path) {
 		SetNodeContent("CertificatesStorage", path);
 	}
 
 	unsigned long GetMaxLogSize() const {
-		wstring buffer;
+		std::wstring buffer;
 		try {
-			return lexical_cast<unsigned long>(GetNode("Log")->GetAttribute("MaxSize", buffer));
-		} catch (const bad_lexical_cast &) {
-			return numeric_limits<unsigned long>::max();
+			return boost::lexical_cast<unsigned long>(GetNode("Log")->GetAttribute("MaxSize", buffer));
+		} catch (const boost::bad_lexical_cast &) {
+			return std::numeric_limits<unsigned long>::max();
 		}
 	}
 
 	void SetMaxLogSize(unsigned long size) {
-		SetNodeAttribute("Log", "MaxSize", lexical_cast<wstring>(size));
+		SetNodeAttribute("Log", "MaxSize", boost::lexical_cast<std::wstring>(size));
 	}
 
 	bool IsServerStarted() const {
-		wstring buffer;
+		std::wstring buffer;
 		return GetNode("ServerState")->GetContent(buffer) == L"started";
 	}
 
@@ -230,8 +228,8 @@ public:
 		SetNodeContent("ServerState", val ? L"started" : L"stopped");
 	}
 
-	bool Save(const wstring &confFilePath) {
-		create_directories(wpath(confFilePath).branch_path());
+	bool Save(const std::wstring &confFilePath) {
+		fs::create_directories(fs::wpath(confFilePath).branch_path());
 		return m_doc->Save(confFilePath);
 	}
 
@@ -239,8 +237,8 @@ public:
 		return m_isChanged;
 	}
 
-	static string GetSchemaFilePath() {
-		path file = Helpers::GetModuleFilePathA().branch_path();
+	static std::string GetSchemaFilePath() {
+		fs::path file = Helpers::GetModuleFilePathA().branch_path();
 		file /= "ServiceConfiguration.xsd";
 		return file.string();
 	}
@@ -249,7 +247,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
-ServiceConfiguration::ServiceConfiguration(shared_ptr<const Document> doc)
+ServiceConfiguration::ServiceConfiguration(boost::shared_ptr<const Document> doc)
 		: m_pimpl(new Implementation(doc)) {
 	//...//
 }
@@ -279,7 +277,7 @@ const ServiceConfiguration & ServiceConfiguration::operator =(const ServiceConfi
 }
 
 void ServiceConfiguration::Swap(ServiceConfiguration &rhs) {
-	auto_ptr<Implementation> tmpImpl(m_pimpl);
+	std::auto_ptr<Implementation> tmpImpl(m_pimpl);
 	m_pimpl = rhs.m_pimpl;
 	rhs.m_pimpl = tmpImpl;
 }
@@ -288,11 +286,11 @@ ServiceConfiguration::~ServiceConfiguration() {
 	//...//
 }
 
-wstring ServiceConfiguration::GetLogPath() const {
+std::wstring ServiceConfiguration::GetLogPath() const {
 	return m_pimpl->GetLogPath();
 }
 
-void ServiceConfiguration::SetLogPath(const wstring &path) {
+void ServiceConfiguration::SetLogPath(const std::wstring &path) {
 	m_pimpl->SetLogPath(path);
 }
 
@@ -304,19 +302,19 @@ void ServiceConfiguration::SetLogLevel(LogLevel level) {
 	m_pimpl->SetLogLevel(level);
 }
 	
-wstring ServiceConfiguration::GetRulesPath() const {
+std::wstring ServiceConfiguration::GetRulesPath() const {
 	return m_pimpl->GetRulesPath();
 }
 
-void ServiceConfiguration::SetRulesPath(const wstring &path) {
+void ServiceConfiguration::SetRulesPath(const std::wstring &path) {
 	m_pimpl->SetRulesPath(path);
 }
 
-wstring ServiceConfiguration::GetCertificatesStoragePath() const {
+std::wstring ServiceConfiguration::GetCertificatesStoragePath() const {
 	return m_pimpl->GetCertificatesStoragePath();
 }
 
-void ServiceConfiguration::SetCertificatesStoragePath(const wstring &path) {
+void ServiceConfiguration::SetCertificatesStoragePath(const std::wstring &path) {
 	m_pimpl->SetCertificatesStoragePath(path);
 }
 
@@ -336,24 +334,24 @@ bool ServiceConfiguration::IsChanged() const {
 	return m_pimpl->IsChanged();
 }
 
-wstring ServiceConfiguration::GetConfigurationFileDir() {
+std::wstring ServiceConfiguration::GetConfigurationFileDir() {
 	if (IsTestMode()) {
 		return Helpers::GetModuleFilePath().branch_path().string() + L"/";
 	}
-	vector<wchar_t> buffer(MAX_PATH, 0);
+	std::vector<wchar_t> buffer(MAX_PATH, 0);
 	if (!SHGetSpecialFolderPathW(NULL, &buffer[0], CSIDL_COMMON_APPDATA, TRUE)) {
 		Log::GetInstance().AppendError(
 			(Format("Could not get special folder path (system error is \"%1%\").") % GetLastError())
 				.str().c_str());
-		return wstring();
+		return std::wstring();
 	}
-	wstring result = &buffer[0];
+	std::wstring result = &buffer[0];
 	result += L"\\" TUNNELEX_NAME_W L"\\";
 	return result;
 }
 
-wstring ServiceConfiguration::GetConfigurationFilePath() {
-	wstring result = GetConfigurationFileDir();
+std::wstring ServiceConfiguration::GetConfigurationFilePath() {
+	std::wstring result = GetConfigurationFileDir();
 	result += GetConfigurationFile();
 	return result;
 }
@@ -370,29 +368,29 @@ const wchar_t* ServiceConfiguration::GetConfigurationFile() {
 	return L"ServiceConfiguration.xml";
 }
 
-shared_ptr<Document> ServiceConfiguration::GetDefaultConfigurationDoc() {
-	const wpath configuradionDir(GetConfigurationFileDir());
-	shared_ptr<Document> doc = Document::CreateNew("Configuration");
-	shared_ptr<Node> root = doc->GetRoot();
+boost::shared_ptr<Document> ServiceConfiguration::GetDefaultConfigurationDoc() {
+	const fs::wpath configuradionDir(GetConfigurationFileDir());
+	boost::shared_ptr<Document> doc = Document::CreateNew("Configuration");
+	boost::shared_ptr<Node> root = doc->GetRoot();
 	root->SetAttribute("Version", "1.2");
-	wpath rulesFile(configuradionDir);
+	fs::wpath rulesFile(configuradionDir);
 	rulesFile /= L"RuleSet.xml";
 	root->CreateNewChild("Rules")->SetContent(rulesFile.string());
-	shared_ptr<Node> log = root->CreateNewChild("Log");
-	wpath logFile(configuradionDir);
+	boost::shared_ptr<Node> log = root->CreateNewChild("Log");
+	fs::wpath logFile(configuradionDir);
 	logFile /= L"Service.log";
 	log->SetContent(logFile.string());
 	log->SetAttribute("Level", "information");
-	log->SetAttribute("MaxSize", lexical_cast<wstring>((1024 *  1024) * 1));
+	log->SetAttribute("MaxSize", boost::lexical_cast<std::wstring>((1024 *  1024) * 1));
 	root->CreateNewChild("ServerState")->SetContent("stopped");
-	wpath sslCertificatesDir(configuradionDir);
+	fs::wpath sslCertificatesDir(configuradionDir);
 	sslCertificatesDir /= L"CertificatesStorage";
 	root->CreateNewChild("CertificatesStorage")->SetContent(sslCertificatesDir.string());
 	return doc;
 }
 
-auto_ptr<ServiceConfiguration> ServiceConfiguration::GetDefault() {
-	return auto_ptr<ServiceConfiguration>(
+std::auto_ptr<ServiceConfiguration> ServiceConfiguration::GetDefault() {
+	return std::auto_ptr<ServiceConfiguration>(
 		new ServiceConfiguration(GetDefaultConfigurationDoc()));
 }
 

@@ -14,12 +14,11 @@
 
 #include "Acceptor.hpp"
 
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-class Acceptor::Implementation : private noncopyable {
+class Acceptor::Implementation : private boost::noncopyable {
 
 public:
 

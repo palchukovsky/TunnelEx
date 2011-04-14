@@ -1,5 +1,5 @@
 
-set AceVersion=5.8.0
+set AceVersion=6.0.0
 set AceNameAndVersion=ACE-src-%AceVersion%
 set ACE_ROOT=%ExternalsDir%\ACE_wrappers
 set MPC_ROOT=%ACE_ROOT%\MPC
@@ -20,7 +20,7 @@ cd "%ACE_ROOT%"
 @if %errorlevel% neq 0 goto Error
 if exist "%ACE_ROOT%\ace\config.h" del /S /Q /F "%ACE_ROOT%\ace\config.h"
 @if %errorlevel% neq 0 goto Error
-@rem diff -crBN ACE_wrappers.Original ACE_wrappers.TunnelEx > ACE_wrappers.patch
+@rem diff -crBN ACE_wrappers ACE_wrappers.TunnelEx > ACE_wrappers.patch
 patch -p1 -i "%BuilderDir%\ACE_wrappers.patch"
 @if %errorlevel% neq 0 goto Error
 
@@ -30,7 +30,7 @@ if "%CreateProject%"=="no" goto Finish
 
 cd "%ACE_ROOT%\ace"
 @if %errorlevel% neq 0 goto Error
-%ACE_ROOT%\bin\mwc.pl -type vc8 -expand_vars -use_env -value_template WarnAsError=no -value_template platforms=Win32 ace.mwc
+%ACE_ROOT%\bin\mwc.pl -type %MpcProjectOutTypeName% -expand_vars -use_env -value_template WarnAsError=no -value_template platforms=Win32 ace.mwc
 @if %errorlevel% neq 0 goto Error
 if "%CreateProject%"=="only" goto Finish
 

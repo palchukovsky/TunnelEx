@@ -16,7 +16,6 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers;
 
@@ -85,11 +84,11 @@ public:
 public:
 
 	template<bool isCombined>
-	void CheckType() const throw(EndpointAddressTypeMismatchException) {
+	void CheckType() const {
 		BOOST_ASSERT(x);
 	}
 	template<>
-	void CheckType<false>() const throw(EndpointAddressTypeMismatchException) {
+	void CheckType<false>() const {
 		BOOST_ASSERT(!IsCombined());
 		if (IsCombined()) {
 			throw EndpointAddressTypeMismatchException(
@@ -97,7 +96,7 @@ public:
 		}
 	}
 	template<>
-	void CheckType<true>() const throw(EndpointAddressTypeMismatchException) {
+	void CheckType<true>() const {
 		BOOST_ASSERT(IsCombined());
 		if (!IsCombined()) {
 			throw EndpointAddressTypeMismatchException(
@@ -187,18 +186,11 @@ bool Endpoint::IsCombined() const {
 	return m_pimpl->IsCombined();
 }
 
-SharedPtr<const EndpointAddress> Endpoint::GetCombinedAddress()
-		const
-		throw(
-			InvalidLinkException,
-			EndpointAddressTypeMismatchException) {
+SharedPtr<const EndpointAddress> Endpoint::GetCombinedAddress() const {
 	return (const_cast<Endpoint *>(this))->GetCombinedAddress();
 }
 
-SharedPtr<EndpointAddress> Endpoint::GetCombinedAddress()
-		throw(
-			InvalidLinkException,
-			EndpointAddressTypeMismatchException) {
+SharedPtr<EndpointAddress> Endpoint::GetCombinedAddress() {
 	m_pimpl->CheckType<true>();
 	if (	!m_pimpl->m_combinedOrReadAddress
 			&& !m_pimpl->m_cachedCombinedOrReadResourceIdentifier.IsEmpty()) {
@@ -212,18 +204,11 @@ SharedPtr<EndpointAddress> Endpoint::GetCombinedAddress()
 	return m_pimpl->m_combinedOrReadAddress;
 }
 
-SharedPtr<const EndpointAddress> Endpoint::GetReadAddress()
-		const
-		throw(
-			InvalidLinkException,
-			EndpointAddressTypeMismatchException) {
+SharedPtr<const EndpointAddress> Endpoint::GetReadAddress() const {
 	return (const_cast<Endpoint *>(this))->GetReadAddress();
 }
 
-SharedPtr<EndpointAddress> Endpoint::GetReadAddress()
-		throw(
-			InvalidLinkException,
-			EndpointAddressTypeMismatchException) {
+SharedPtr<EndpointAddress> Endpoint::GetReadAddress() {
 	m_pimpl->CheckType<false>();
 	if (	!m_pimpl->m_combinedOrReadAddress
 			&& !m_pimpl->m_cachedCombinedOrReadResourceIdentifier.IsEmpty()) {
@@ -237,18 +222,11 @@ SharedPtr<EndpointAddress> Endpoint::GetReadAddress()
 	return m_pimpl->m_combinedOrReadAddress;
 }
 
-SharedPtr<const EndpointAddress> Endpoint::GetWriteAddress()
-		const
-		throw(
-			InvalidLinkException,
-			EndpointAddressTypeMismatchException) {
+SharedPtr<const EndpointAddress> Endpoint::GetWriteAddress() const {
 	return (const_cast<Endpoint *>(this))->GetWriteAddress();
 }
 
-SharedPtr<EndpointAddress> Endpoint::GetWriteAddress()
-		throw(
-			InvalidLinkException,
-			EndpointAddressTypeMismatchException) {
+SharedPtr<EndpointAddress> Endpoint::GetWriteAddress() {
 	m_pimpl->CheckType<false>();
 	if (	!m_pimpl->m_writeAddress
 			&& !m_pimpl->m_cachedWriteResourceIdentifier.IsEmpty()) {
@@ -270,27 +248,21 @@ void Endpoint::SetCombinedResourceIdentifier(const WString &ri, bool isAcceptor)
 	Endpoint(ri, isAcceptor).Swap(*this);
 }
 
-const WString & Endpoint::GetCombinedResourceIdentifier()
-		const
-		throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+const WString & Endpoint::GetCombinedResourceIdentifier() const {
 	m_pimpl->CheckType<true>();
 	return m_pimpl->m_combinedOrReadAddress
 		?	m_pimpl->m_combinedOrReadAddress->GetResourceIdentifier()
 		:	m_pimpl->m_cachedCombinedOrReadResourceIdentifier;
 }
 
-const WString & Endpoint::GetReadResourceIdentifier()
-		const
-		throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+const WString & Endpoint::GetReadResourceIdentifier() const {
 	m_pimpl->CheckType<false>();
 	return m_pimpl->m_combinedOrReadAddress
 		?	m_pimpl->m_combinedOrReadAddress->GetResourceIdentifier()
 		:	m_pimpl->m_cachedCombinedOrReadResourceIdentifier;
 }
 
-const WString & Endpoint::GetWriteResourceIdentifier()
-		const
-		throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+const WString & Endpoint::GetWriteResourceIdentifier() const {
 	m_pimpl->CheckType<false>();
 	return m_pimpl->m_writeAddress
 		?	m_pimpl->m_writeAddress->GetResourceIdentifier()
@@ -311,16 +283,12 @@ void Endpoint::SetReadWriteResourceIdentifiers(
 	Endpoint(rri, wri, acceptor).Swap(*this);
 }
 
-bool Endpoint::IsCombinedAcceptor()
-		const
-		throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+bool Endpoint::IsCombinedAcceptor() const {
 	m_pimpl->CheckType<true>();
 	return m_pimpl->m_acceptor != ACCEPTOR_NONE;
 }
 
-Endpoint::Acceptor Endpoint::GetReadWriteAcceptor()
-		const 
-		throw(::TunnelEx::EndpointAddressTypeMismatchException) {
+Endpoint::Acceptor Endpoint::GetReadWriteAcceptor() const {
 	m_pimpl->CheckType<false>();
 	return m_pimpl->m_acceptor;
 }

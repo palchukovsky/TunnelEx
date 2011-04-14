@@ -16,9 +16,14 @@
 
 #include <ace/OS_Errno.h>
 
+// adapters info getting
+#include <IPHlpApi.h>
+#pragma comment(lib, "IPHLPAPI.lib")
+#ifdef X509_EXTENSIONS
+#	undef X509_EXTENSIONS
+#endif
+
 #include "Licensing/Prec.h"
-#include "Licensing/FsLocalStorage.hpp"
-#include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
 
 #include "Format.hpp"
 #include "Foreach.h"
@@ -26,10 +31,6 @@
 #include "ModulePath.hpp"
 #include "StringUtil.hpp"
 #include "Constants.h"
-
-// adapters info getting
-#include <IPHlpApi.h>
-#pragma comment(lib, "IPHLPAPI.lib")
 
 #include "CompileWarningsAce.h"
 #	include <ace/Init_ACE.h>
@@ -40,6 +41,8 @@
 #	include <ace/SOCK.h>
 #	include <ace/SOCK_Stream.h>
 #	include <ace/INET_Addr.h>
+#	include <ace/ssl/SSL_SOCK_Acceptor.h>
+#	include <ace/ssl/SSL_SOCK_Stream.h>
 #	include <ace/Time_Value.h>
 #	include <ace/OS_NS_netdb.h>
 #	include <ace/OS_NS_sys_time.h>
@@ -48,8 +51,6 @@
 #	include <ace/Thread_Mutex.h>
 #	include <ace/Reactor.h>
 #	include <ace/Thread_Manager.h>
-#	include <ace/ssl/SSL_SOCK_Acceptor.h>
-#	include <ace/ssl/SSL_SOCK_Stream.h>
 #	include <ace/Truncate.h>
 #include "CompileWarningsAce.h"
 

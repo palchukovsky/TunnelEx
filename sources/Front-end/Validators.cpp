@@ -12,8 +12,7 @@
 #include "Prec.h"
 #include "Validators.hpp"
 
-using namespace std;
-using namespace boost;
+using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -23,15 +22,15 @@ HostValidator::HostValidator(bool validateIfVisibleOnly)
 }
 
 bool HostValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
 	wxString val = ctrl.GetValue().Trim();
-	const wregex expression(
+	const boost::wregex expression(
 		L"([a-z0-9]([\\-a-z0-9]*[a-z0-9])?\\.?)*[a-z0-9]+",
-		regex_constants::perl | regex_constants::icase);
-	const bool result = regex_match(val.c_str(), expression);
+		boost::regex_constants::perl | boost::regex_constants::icase);
+	const bool result = boost::regex_match(val.c_str(), expression);
 	if (!result) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
@@ -60,13 +59,13 @@ NetworPortValidator::NetworPortValidator(bool validateIfVisibleOnly)
 }
 
 bool NetworPortValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
-	wstring val = ctrl.GetValue().c_str();
-	trim(val);
-	if (!(!val.empty() && regex_match(val, wregex(L"\\d+")))) {
+	std::wstring val = ctrl.GetValue().c_str();
+	boost::trim(val);
+	if (!(!val.empty() && boost::regex_match(val, boost::wregex(L"\\d+")))) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
 		wxLogWarning(wxT("Please, provide a valid network port."));
@@ -93,16 +92,16 @@ PipeValidator::PipeValidator(bool validateIfVisibleOnly)
 }
 
 bool PipeValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
 	wxString val = ctrl.GetValue().Trim();
 	//! @todo: make one expression
 	const bool result
-		= regex_match(val.c_str(), wregex(L"([ \\d\\W_A-Za-z]*/+)*[ \\d\\W_A-Za-z]+"))
+		= boost::regex_match(val.c_str(), boost::wregex(L"([ \\d\\W_A-Za-z]*/+)*[ \\d\\W_A-Za-z]+"))
 			&& val.Find(L"\\") == -1
-			&& !regex_match(val.c_str(), wregex(L"[/\\\\]+"));
+			&& !boost::regex_match(val.c_str(), boost::wregex(L"[/\\\\]+"));
 	if (!result) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
@@ -129,15 +128,15 @@ LicenseUuidValidator::LicenseUuidValidator(bool validateIfVisibleOnly)
 }
 
 bool LicenseUuidValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
 	wxString val = ctrl.GetValue().Trim();
-	const wregex expr(
+	const boost::wregex expr(
 		L"^[\\dA-F]{8,8}-[\\dA-F]{4,4}-[\\dA-F]{4,4}-[\\dA-F]{4,4}-[\\dA-F]{12,12}$",
-		regex_constants::perl | regex_constants::icase);
-	const bool result = regex_match(val.c_str(), expr);
+		boost::regex_constants::perl | boost::regex_constants::icase);
+	const bool result = boost::regex_match(val.c_str(), expr);
 	if (!result) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
@@ -164,7 +163,7 @@ HttpProxyAuthUserNameValidator::HttpProxyAuthUserNameValidator(bool validateIfVi
 }
 
 bool HttpProxyAuthUserNameValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
@@ -197,7 +196,7 @@ HttpProxyAuthPasswordValidator::HttpProxyAuthPasswordValidator(bool validateIfVi
 }
 
 bool HttpProxyAuthPasswordValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
@@ -231,15 +230,15 @@ NumericValidator::NumericValidator(const wxString &fieldName, bool validateIfVis
 }
 
 bool NumericValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
-	const bool result = regex_match(ctrl.GetValue().c_str(), wregex(L"^\\d+$"));
+	const bool result = boost::regex_match(ctrl.GetValue().c_str(), boost::wregex(L"^\\d+$"));
 	if (!result) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
-		wformat message(wxT("Please, provide a valid %1% value (should be numeric)."));
+		WFormat message(wxT("Please, provide a valid %1% value (should be numeric)."));
 		message % m_fieldName.c_str();
 		wxLogWarning(message.str().c_str());
 	}
@@ -263,7 +262,7 @@ NotEmptyValidator::NotEmptyValidator(const wxString &fieldName, bool validateIfV
 }
 
 bool NotEmptyValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
@@ -271,7 +270,7 @@ bool NotEmptyValidator::Validate(wxWindow *) {
 	if (!result) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
-		wformat message(wxT("Please, provide a valid %1% value (cannot be empty)."));
+		WFormat message(wxT("Please, provide a valid %1% value (cannot be empty)."));
 		message % m_fieldName.c_str();
 		wxLogWarning(message.str().c_str());
 	}
@@ -294,18 +293,18 @@ LicenseKeyValidator::LicenseKeyValidator(bool validateIfVisibleOnly)
 }
 
 bool LicenseKeyValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
-	string val = ctrl.GetValue().Trim().ToAscii();
-	trim_if(val, is_any_of("\n\r "));
+	std::string val = ctrl.GetValue().Trim().ToAscii();
+	boost::trim_if(val, boost::is_any_of("\n\r "));
 	bool result = !val.empty();
 	if (result) {
-		vector<string> lines;
-		split(lines, val, is_any_of("\n"));
-		foreach (string &line, lines) {
-			trim_if(line, is_any_of("\r "));
+		std::vector<std::string> lines;
+		split(lines, val, boost::is_any_of("\n"));
+		foreach (std::string &line, lines) {
+			boost::trim_if(line, boost::is_any_of("\r "));
 			if (line.empty()) {
 				result = false;
 				break;
@@ -346,7 +345,7 @@ PasswordConfirmationValidator::PasswordConfirmationValidator(
 }
 
 bool PasswordConfirmationValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	} else if (m_passwordCtrl.GetValue() != ctrl.GetValue()) {

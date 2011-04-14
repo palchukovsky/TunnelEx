@@ -18,8 +18,6 @@
 #include "Application.hpp"
 #include "LicensePolicies.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx::Licensing;
 
 BEGIN_EVENT_TABLE(LicenseDlg, wxDialog)
@@ -38,7 +36,7 @@ LicenseDlg::LicenseDlg(ServiceWindow &service, wxWindow *parent, wxWindowID id)
 			wxCAPTION | wxCLOSE_BOX | wxSYSTEM_MENU),
 		m_service(service) {
 		
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 
 	m_licensedTo = new wxStaticText(this, wxID_ANY, wxEmptyString);
 	m_licensedTo->SetMinSize(wxSize(500, 30));
@@ -48,7 +46,7 @@ LicenseDlg::LicenseDlg(ServiceWindow &service, wxWindow *parent, wxWindowID id)
 
 	wxSizerFlags buttonFlags
 		= wxSizerFlags(0).Border(wxLEFT, wxGetApp().GetTheme().GetDlgBorder());
-	auto_ptr<wxBoxSizer> buttonBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> buttonBox(new wxBoxSizer(wxHORIZONTAL));
 	buttonBox->AddStretchSpacer(1);
 	buttonBox->Add(new wxButton(this, CTRL_ACTIVATE, wxT("Activate")), buttonFlags);
 	buttonBox->Add(new wxButton(this, CTRL_ORDER, wxT("Purchase new")), buttonFlags);

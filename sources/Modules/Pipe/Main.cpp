@@ -12,8 +12,8 @@
 
 #include "Prec.h"
 
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/Error.hpp>
+#include "Core/Log.hpp"
+#include "Core/Error.hpp"
 
 using namespace TunnelEx;
 

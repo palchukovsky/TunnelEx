@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Test|Win32">
+      <Configuration>Test</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C101E5E-9CCB-45BD-8803-70C13801F95C}</ProjectGuid>
+    <RootNamespace>Distributionkit</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>NotSet</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>NotSet</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>NotSet</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Default.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Default.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Default.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\..\output\setups\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..\output\setups\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(ProjectDir)..\..\output\setups\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="Candle.cmd" />
+    <None Include="Compile.cmd" />
+    <None Include="Link.cmd" />
+    <None Include="SetVars.cmd" />
+    <CustomBuild Include="Actions.wxs">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Components.wxs">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Product.wxs">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="UI.wxs">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <None Include="Localization\en-us.wxl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{db90fdfc-2f4c-4f37-9203-a87eec39b4d4}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Front-end\Front-end.vcxproj">
+      <Project>{ec901218-837d-4c0c-b116-6cc02097ed88}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Legacy\Legacy support.vcxproj">
+      <Project>{cdca539c-f37d-4df4-9473-39c561b92ba0}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Inet\Inet.vcxproj">
+      <Project>{bf7a25bf-7f5d-4fd3-bf5c-889361eac5a2}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Pathfinder\Pathfinder.vcxproj">
+      <Project>{c458a337-2bbb-45bd-82ff-fc9cf13931a9}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Pipe\Pipe.vcxproj">
+      <Project>{7d76c72f-a36d-46f6-aee7-87acf19ba606}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Serial\Module Serial.vcxproj">
+      <Project>{487c6572-1ce5-40fc-8a0a-ace48f162f57}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Upnp\Module Upnp.vcxproj">
+      <Project>{c30530f5-b52d-4e6b-aa2c-713c05c263f8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Service\Service.vcxproj">
+      <Project>{413c1a6c-0c3b-4d00-80c2-9a2a49af4b2a}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Version\Version.vcxproj">
+      <Project>{6884dfb9-d84c-4f37-853f-79565671a1e3}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

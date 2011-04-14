@@ -15,12 +15,7 @@
 #include "License.hpp"
 #include "KeyRetrievePolicies.hpp"
 #include "CheckPolicies.hpp"
-#ifdef TUNNELEX_CORE
-#	include "String.hpp"
-#else // #ifdef TUNNELEX_CORE
-#	include <TunnelEx/String.hpp>
-#endif // #ifdef TUNNELEX_CORE
-
+#include "Core/String.hpp"
 
 namespace TunnelEx { namespace Licensing {
 
@@ -62,13 +57,12 @@ namespace TunnelEx { namespace Licensing {
 #		pragma pack(pop)
 
 		static std::string GetDbDir() {
-			using namespace std;
-			vector<char> buffer(MAX_PATH + 1, 0);
+			std::vector<char> buffer(MAX_PATH + 1, 0);
 			if (!SHGetSpecialFolderPathA(NULL, &buffer[0], CSIDL_COMMON_APPDATA, TRUE)) {
 				BOOST_ASSERT(false);
-				return string();
+				return std::string();
 			}
-			string result = &buffer[0];
+			std::string result = &buffer[0];
 			result += "\\" TUNNELEX_NAME "\\";
 			return result;
 		}
@@ -162,11 +156,10 @@ namespace TunnelEx { namespace Licensing {
 		inline static void SetFileContent(
 					const LicenseDbHead &head,
 					const std::vector<unsigned char> &varData) {
-			using namespace std;
 			BOOST_ASSERT(varData.size() == head.licenseKeyLen + head.privateKeyLen);
-			vector<unsigned char> fileKey;
+			std::vector<unsigned char> fileKey;
 			GetFileEncryptingKey(fileKey);
-			ofstream f(GetDbFilePath().c_str(), ios::binary | ios::trunc);
+			std::ofstream f(GetDbFilePath().c_str(), std::ios::binary | std::ios::trunc);
 			size_t token = 0;
 			foreach (char ch, varData) {
 				ch ^= fileKey[token++ % fileKey.size()];
@@ -188,16 +181,15 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool GetFileContent(
 					LicenseDbHead &head,
 					std::vector<unsigned char> &varData) {
-			using namespace std;
 			BOOST_ASSERT(varData.size() == head.licenseKeyLen + head.privateKeyLen);
-			vector<unsigned char> fileKey;
+			std::vector<unsigned char> fileKey;
 			GetFileEncryptingKey(fileKey);
-			ifstream f(GetDbFilePath().c_str(), ios::binary);
-			f.unsetf(ios_base::skipws);
-			typedef istreambuf_iterator<char> Iter; 
+			std::ifstream f(GetDbFilePath().c_str(), std::ios::binary);
+			f.unsetf(std::ios_base::skipws);
+			typedef std::istreambuf_iterator<char> Iter; 
 			const Iter end;
 			size_t token = 0;
-			vector<unsigned char> decrypted;
+			std::vector<unsigned char> decrypted;
 			for (Iter i = Iter(f); i != end; ++i) {
 				unsigned char ch = *i;
 				ch ^= fileKey[token++ % fileKey.size()];
@@ -218,16 +210,15 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline static std::string GetTrialLicense() {
-			using namespace std;
-			string result;
+			std::string result;
 			LicenseDbHead head;
-			vector<unsigned char> varData;
+			std::vector<unsigned char> varData;
 			if (!GetFileContent(head, varData)) {
 				result = ConvertString<String>(Helpers::Uuid().GetAsString().c_str()).GetCStr();
 				memcpy(head.licenseUuid, result.c_str(), sizeof(head.licenseUuid));
 				SetFileContent(head, varData);
 			} else {
-				string(head.licenseUuid, head.licenseUuid + sizeof(head.licenseUuid))
+				std::string(head.licenseUuid, head.licenseUuid + sizeof(head.licenseUuid))
 					.swap(result);
 			}
 			BOOST_ASSERT(result.size() == 36);
@@ -235,21 +226,19 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline static std::string GetLicenseKey(const boost::any & = boost::any()) {
-			using namespace std;
 			LicenseDbHead head;
-			vector<unsigned char> varData;
+			std::vector<unsigned char> varData;
 			for (size_t i = 1; i <= 2; ++i) {
 				GetFileContent(head, varData);
 				break;
 				/* if (all.size()) {
 					break;
 				}
-				using namespace boost;
 				using namespace Crypto;
 				const Rsa rsa;
-				vector<unsigned char> key;
+				std::vector<unsigned char> key;
 				Seale seale(key, rsa.GetPublicKey());
-				string keyEncrypted(seale.GetSealed().begin(), seale.GetSealed().end());
+				std::string keyEncrypted(seale.GetSealed().begin(), seale.GetSealed().end());
 				copy(seale.GetEnvKey().begin(), seale.GetEnvKey().end(), back_inserter(keyEncrypted));
 				format keyFormated("%1%%2% %3% %4% %5%%1%\r\n%6%\r\n%1%%7% %3% %4% %5%%1%\r\n");
 				keyFormated
@@ -263,23 +252,22 @@ namespace TunnelEx { namespace Licensing {
 				StoreLicenseKey(keyFormated.str(), rsa.GetPrivateKey().Export()); */
 			}
 			if (varData.size() < head.licenseKeyLen) {
-				return string();
+				return std::string();
 			}
-			return string(
+			return std::string(
 				varData.begin(),
 				varData.begin() + head.licenseKeyLen);
 		}
 
 		inline static std::string GetLocalAsymmetricPrivateKey(
 					const boost::any & = boost::any()) {
-			using namespace std;
 			LicenseDbHead head;
-			vector<unsigned char> varData;
+			std::vector<unsigned char> varData;
 			GetFileContent(head, varData);
 			if (varData.size() < head.licenseKeyLen + head.privateKeyLen) {
-				return string();
+				return std::string();
 			}
-			return string(
+			return std::string(
 				varData.begin() + head.licenseKeyLen,
 				varData.begin() + head.licenseKeyLen + head.privateKeyLen);
 		}
@@ -287,14 +275,13 @@ namespace TunnelEx { namespace Licensing {
 		inline static void StoreLicenseKey(
 					const std::string &licenseKey,
 					const std::string &privateKey) {
-			using namespace std;
 			LicenseDbHead head;
 			GetFileContent(head);
-			vector<unsigned char> varData(licenseKey.begin(), licenseKey.end());
+			std::vector<unsigned char> varData(licenseKey.begin(), licenseKey.end());
 			copy(privateKey.begin(), privateKey.end(), back_inserter(varData));
 			head.licenseKeyLen = licenseKey.size();
 			head.privateKeyLen = privateKey.size();
-			const string license
+			const std::string license
 				= License::GetLicense(KeyRetrieve::Import(licenseKey, privateKey));
 			memcpy(head.licenseUuid, license.c_str(), sizeof(head.licenseUuid));
 			SetFileContent(head, varData);

@@ -20,10 +20,8 @@
 #include "Application.hpp"
 #include "Auto.hpp"
 
-#include <TunnelEx/String.hpp>
+#include "Core/String.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
@@ -34,8 +32,8 @@ int wxCALLBACK SortCertificateListBySubjectCommonName(long item1, long item2, lo
 	}
 	const SslCertificateListDlg &dlg
 		= *reinterpret_cast<SslCertificateListDlg *>(sortData);
-	string a = dlg.GetCertificate(item1).subjectCommonName;
-	string b = dlg.GetCertificate(item2).subjectCommonName;
+	std::string a = dlg.GetCertificate(item1).subjectCommonName;
+	std::string b = dlg.GetCertificate(item2).subjectCommonName;
 	if (!dlg.m_columnSortDirection[SslCertificateListDlg::COLUMN_SUBJECT_COMMON_NAME]) {
 		a.swap(b);
 	}
@@ -48,8 +46,8 @@ int wxCALLBACK SortCertificateListByIssuerCommonName(long item1, long item2, lon
 	}
 	const SslCertificateListDlg &dlg
 		= *reinterpret_cast<SslCertificateListDlg *>(sortData);
-	string a = dlg.GetCertificate(item1).issuerCommonName;
-	string b = dlg.GetCertificate(item2).issuerCommonName;
+	std::string a = dlg.GetCertificate(item1).issuerCommonName;
+	std::string b = dlg.GetCertificate(item2).issuerCommonName;
 	if (!dlg.m_columnSortDirection[SslCertificateListDlg::COLUMN_ISSUER_COMMON_NAME]) {
 		a.swap(b);
 	}
@@ -65,7 +63,7 @@ int wxCALLBACK SortCertificateListByExpirationDate(long item1, long item2, long 
 	time_t a = dlg.GetCertificate(item1).validBeforeTimeUtc;
 	time_t b = dlg.GetCertificate(item2).validBeforeTimeUtc;
 	if (!dlg.m_columnSortDirection[SslCertificateListDlg::COLUMN_EXPIRATION_DATE]) {
-		swap(a, b);
+		std::swap(a, b);
 	}
 	return a < b ? -1 : a > b ? 1 : 0;
 }
@@ -79,7 +77,7 @@ int wxCALLBACK SortCertificateListByPrivate(long item1, long item2, long sortDat
 	bool a = dlg.GetCertificate(item1).isPrivate;
 	bool b = dlg.GetCertificate(item2).isPrivate;
 	if (!dlg.m_columnSortDirection[SslCertificateListDlg::COLUMN_PRIVATE]) {
-		swap(a, b);
+		std::swap(a, b);
 	}
 	return a < b ? -1 : a > b ? 1 : 0;
 }
@@ -145,7 +143,7 @@ SslCertificateListDlg::SslCertificateListDlg(
 
 	const Theme &theme = wxGetApp().GetTheme();
 
-	auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
+	std::auto_ptr<wxBoxSizer> topBox(new wxBoxSizer(wxVERTICAL));
 
 	long listStyle = wxLC_REPORT | wxLC_HRULES | wxLC_VRULES;
 	if (m_mode == MODE_SELECT_PRIVATE) {
@@ -162,7 +160,7 @@ SslCertificateListDlg::SslCertificateListDlg(
 	topBox->Add(m_list, theme.GetTopSizerFlags());
 	{
 
-		auto_ptr<wxImageList> imageList(new wxImageList(16, 16, true));
+		std::auto_ptr<wxImageList> imageList(new wxImageList(16, 16, true));
 		wxBitmap icon;
 		theme.GetSortAscIcon(icon);
 		imageList->Add(icon);
@@ -207,7 +205,7 @@ SslCertificateListDlg::SslCertificateListDlg(
 
 	}
 
-	auto_ptr<wxBoxSizer> contentButtonsBox(new wxBoxSizer(wxHORIZONTAL));
+	std::auto_ptr<wxBoxSizer> contentButtonsBox(new wxBoxSizer(wxHORIZONTAL));
 	const wxSizerFlags buttonFlags = wxSizerFlags(1);
 
 	wxButton &generateButton = *new wxButton(this, CONTROL_GENERATE, wxT("Generate"));
@@ -262,7 +260,7 @@ SslCertificateListDlg::SslCertificateListDlg(
 	}
 	topBox->Add(CreateButtonSizer(mainButtons), theme.GetTopSizerFlags());
 	if (m_mode != MODE_MANAGE) {
-		polymorphic_downcast<wxButton *>(FindWindow(wxID_OK))->SetLabel(wxT("Select"));
+		boost::polymorphic_downcast<wxButton *>(FindWindow(wxID_OK))->SetLabel(wxT("Select"));
 	}
 	topBox->AddSpacer(theme.GetDlgBottomBorder());
 
@@ -378,7 +376,7 @@ void SslCertificateListDlg::ClearSelection() {
 	}
 }
 
-void SslCertificateListDlg::SelectImpl(const wstring &id) {
+void SslCertificateListDlg::SelectImpl(const std::wstring &id) {
 	for (long item = -1; ; ) {
 		item = m_list->GetNextItem(item, wxLIST_NEXT_ALL);
 		if (item == -1) {
@@ -411,7 +409,7 @@ void SslCertificateListDlg::RefreshList() {
 
 	m_list->DeleteAllItems();
 
-	list<texs__SslCertificateShortInfo> certificates;
+	std::list<texs__SslCertificateShortInfo> certificates;
 	m_service.GetService().GetSslCertificates(certificates);
 
 	foreach (const texs__SslCertificateShortInfo &certificate, certificates) {
@@ -622,7 +620,7 @@ void SslCertificateListDlg::OnGenerate(wxCommandEvent &) {
 		
 			const PrivateKey *signKey = 0;
 
-			auto_ptr<const PrivateKey> signKeyImpl;
+			std::auto_ptr<const PrivateKey> signKeyImpl;
 			if (!m_signKey.empty()) {
 				try {
 					signKeyImpl.reset(new PrivateKey(m_signKey));
@@ -637,14 +635,14 @@ void SslCertificateListDlg::OnGenerate(wxCommandEvent &) {
 				
 			try {
 
-				const auto_ptr<const Rsa> rsa(Rsa::Generate(m_keySize));
+				const std::auto_ptr<const Rsa> rsa(Rsa::Generate(m_keySize));
 				if (!signKey) {
 					BOOST_ASSERT(m_signKey.empty());
 					BOOST_ASSERT(!signKeyImpl.get());
 					signKey = &rsa->GetPrivateKey();
 				}
 
-				const auto_ptr<const X509Private> cert(
+				const std::auto_ptr<const X509Private> cert(
 					X509Private::GenerateVersion3(
 						rsa->GetPrivateKey(),
 						rsa->GetPublicKey(),
@@ -701,10 +699,10 @@ void SslCertificateListDlg::OnGenerate(wxCommandEvent &) {
 		generator.GetCertificate(),
 		this);
 	if (resultDlg.ShowModal() == wxID_OK) {
-		const string buffer = generator.GetCertificate().ToAscii();
+		const std::string buffer = generator.GetCertificate().ToAscii();
 		m_service.GetService().ImportSslCertificateX509(
-			vector<unsigned char>(buffer.begin(), buffer.end()),
-			string(generator.GetPrivateKey().ToAscii()));
+			std::vector<unsigned char>(buffer.begin(), buffer.end()),
+			std::string(generator.GetPrivateKey().ToAscii()));
 		RefreshList();
 	}
 
@@ -765,7 +763,7 @@ void SslCertificateListDlg::OnRequest(wxCommandEvent &) {
 	public:
 		virtual ExitCode Entry() {
 			try {
-				auto_ptr<const PrivateKey> signKey;
+				std::auto_ptr<const PrivateKey> signKey;
 				if (!m_signKey.empty()) {
 					try {
 						signKey.reset(new PrivateKey(m_signKey));
@@ -774,7 +772,7 @@ void SslCertificateListDlg::OnRequest(wxCommandEvent &) {
 						return 0;
 					}
 				}
-				const auto_ptr<Rsa> rsa = Rsa::Generate(m_keySize);
+				const std::auto_ptr<Rsa> rsa = Rsa::Generate(m_keySize);
 				X509Request request(
 					rsa->GetPublicKey(),
 					signKey.get() ? *signKey : rsa->GetPrivateKey(),
@@ -834,21 +832,21 @@ void SslCertificateListDlg::OnImport(wxCommandEvent &) {
 		return;
 	}
 
-	vector<unsigned char> buffer;
+	std::vector<unsigned char> buffer;
 	{
-		ifstream f(fileRequestDlg.GetPath().c_str(), ios::binary);
+		std::ifstream f(fileRequestDlg.GetPath().c_str(), std::ios::binary);
 		if (!f) {
 			wxLogError(wxT("Could not open %s."), fileRequestDlg.GetPath());
 			return;
 		}
-		f.seekg(0, ios::end);
+		f.seekg(0, std::ios::end);
 		buffer.resize(f.tellg());
-		f.seekg(0, ios::beg);
+		f.seekg(0, std::ios::beg);
 		f.read(reinterpret_cast<char *>(&buffer[0]), buffer.size());
 	}
 
-	string password;
-	string privateKey;
+	std::string password;
+	std::string privateKey;
 	wxString upperName = fileRequestDlg.GetPath();
 	upperName.MakeUpper();
 	const bool isX509
@@ -884,17 +882,17 @@ void SslCertificateListDlg::OnImport(wxCommandEvent &) {
 					this);
 				return;
 			}
-			ifstream f(fileRequestDlg.GetPath().c_str(), ios::binary);
+			std::ifstream f(fileRequestDlg.GetPath().c_str(), std::ios::binary);
 			if (!f) {
 				wxLogError(wxT("Could not open %s."), fileRequestDlg.GetPath());
 				return;
 			}
-			f.seekg(0, ios::end);
-			vector<unsigned char> buffer;
+			f.seekg(0, std::ios::end);
+			std::vector<unsigned char> buffer;
 			buffer.resize(f.tellg());
-			f.seekg(0, ios::beg);
+			f.seekg(0, std::ios::beg);
 			f.read(reinterpret_cast<char *>(&buffer[0]), buffer.size());
-			string(buffer.begin(), buffer.end()).swap(privateKey);
+			std::string(buffer.begin(), buffer.end()).swap(privateKey);
 		}
 	}
 
@@ -961,7 +959,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 		if (answer != wxYES) {
 			return;
 		}
-		list<wstring> texsIds;
+		std::list<std::wstring> texsIds;
 		for (size_t i = 0; i < selected.GetSize(); ++i) {
 			texsIds.push_back(selected[i].GetCStr());
 		}
@@ -972,7 +970,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 
 // see TEX-642
 /* void SslCertificateListDlg::OnExport(wxCommandEvent &) {
-	list<string> selected;
+	list<std::string> selected;
 	GetSelected(selected);
 	BOOST_ASSERT(selected.size() > 0);
 	if (selected.size() == 0) {
@@ -982,7 +980,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 	m_service.GetService().GetSslCertificates(true, certificates);
 	foreach (const texs__SslCertificate &certificate, certificates) {
 		bool isSelected = false;
-		foreach (const wstring &id, selected) {
+		foreach (const std::wstring &id, selected) {
 			if (id == certificate.id) {
 				isSelected = true;
 				break;
@@ -991,7 +989,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 		if (!isSelected) {
 			continue;
 		}
-		const string exported
+		const std::string exported
 			= m_service.GetService().ExportSslCertificate(certificate.id);
 		wxFileDialog fileRequestDlg(
 			this,
@@ -1004,7 +1002,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 			break;
 		}
 		BOOST_ASSERT(!fileRequestDlg.GetPath().IsEmpty());
-		ofstream f(fileRequestDlg.GetPath().c_str(), ios::trunc | ios::binary);
+		ofstream f(fileRequestDlg.GetPath().c_str(), std::ios::trunc | std::ios::binary);
 		if (!f) {
 			wxLogError(wxT("Could not open file %d."), fileRequestDlg.GetPath().c_str());
 			break;
@@ -1044,7 +1042,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 		}
 		zip.SetLevel(9);
 		foreach (const texs__SslCertificate &certificate, certificates) {
-			wstring exported = m_service.GetService().ExportSslCertificate(certificate.id);
+			std::wstring exported = m_service.GetService().ExportSslCertificate(certificate.id);
 			if (!exported.empty()) {
 				zip.PutNextEntry(wxString::FromAscii(certificate.id.c_str()));
 				wxStringInputStream exportedStream(wxString::FromAscii(exported.c_str()));
@@ -1109,7 +1107,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 		wxZipInputStream zip(in);
 		BOOST_ASSERT(zip.IsOk());
 		if (zip.IsOk()) {
-			auto_ptr<wxZipEntry> entry;
+			std::auto_ptr<wxZipEntry> entry;
 			while (entry.reset(zip.GetNextEntry()), entry.get() != NULL) {
 				wxStringOutputStream stream;
 				zip.Read(stream);

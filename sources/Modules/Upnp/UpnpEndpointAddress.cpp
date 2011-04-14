@@ -19,8 +19,6 @@
 #include "Modules/Inet/InetEndpointAddress.hpp"
 #include "EndpointResourceIdentifierParsers.hpp"
 
-using namespace std;
-using namespace boost;
 using namespace TunnelEx;
 using namespace TunnelEx::Mods;
 using namespace TunnelEx::Mods::Upnp;
@@ -34,8 +32,8 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 				const SslCertificateId &certificate,
 				const SslCertificateIdCollection &remoteCertificates) {
 		BOOST_ASSERT(
-			(wstring(proto) == Inet::TcpEndpointAddress::GetProto())
-			|| (wstring(proto) == Inet::UdpEndpointAddress::GetProto()));
+			(std::wstring(proto) == Inet::TcpEndpointAddress::GetProto())
+			|| (std::wstring(proto) == Inet::UdpEndpointAddress::GetProto()));
 		BOOST_ASSERT(externalPort != 0);
 		WFormat host(L"upnp_%1%://*:%2%");
 		host % proto % externalPort;
@@ -81,11 +79,11 @@ public:
 };
 
 UpnpEndpointAddress::UpnpEndpointAddress(const WString &resourceIdentifier) {
-	const wstring path = resourceIdentifier.GetCStr();
+	const std::wstring path = resourceIdentifier.GetCStr();
 	EndpointResourceIdentifierParsers::UrlSplitConstIterator pathIt
-		= make_split_iterator(path, token_finder(is_any_of(L"?&")));
-	wstring host;
-	auto_ptr<Implementation> pimpl(new Implementation);
+		= boost::make_split_iterator(path, boost::token_finder(boost::is_any_of(L"?&")));
+	std::wstring host;
+	std::auto_ptr<Implementation> pimpl(new Implementation);
 	EndpointResourceIdentifierParsers::ParseEndpointHostPort(
 		pathIt,
 		host,
@@ -114,7 +112,7 @@ UpnpEndpointAddress::~UpnpEndpointAddress() throw() {
 }
 
 UpnpEndpointAddress & UpnpEndpointAddress::operator =(const UpnpEndpointAddress &rhs) {
-	auto_ptr<Implementation> newImpl(new Implementation(*rhs.m_pimpl));
+	std::auto_ptr<Implementation> newImpl(new Implementation(*rhs.m_pimpl));
 	EndpointAddress::operator =(rhs);
 	delete m_pimpl;
 	m_pimpl = newImpl.release();
@@ -122,7 +120,7 @@ UpnpEndpointAddress & UpnpEndpointAddress::operator =(const UpnpEndpointAddress 
 }
 
 void UpnpEndpointAddress::Swap(UpnpEndpointAddress &rhs) throw() {
-	swap(m_pimpl, rhs.m_pimpl);
+	std::swap(m_pimpl, rhs.m_pimpl);
 }
 
 const SslCertificateId & UpnpEndpointAddress::GetCertificate() const {
@@ -177,7 +175,7 @@ unsigned short UpnpEndpointAddress::GetExternalPort() const {
 	return m_pimpl->m_externalPort;
 }
 
-wstring UpnpEndpointAddress::GetHumanReadable(const wstring &externalIp) const {
+std::wstring UpnpEndpointAddress::GetHumanReadable(const std::wstring &externalIp) const {
 	WFormat result(L"> %1%://%2%:%3%");
 	result % GetSubProto() % externalIp % GetExternalPort();
 	return GetCertificate().IsEmpty()

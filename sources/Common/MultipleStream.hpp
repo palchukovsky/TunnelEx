@@ -113,38 +113,51 @@ namespace TunnelEx { namespace Helpers {
 		: public std::basic_ostream<typename Elem, std::char_traits<typename Elem> > {
 
 	public:
+
+		typedef MultipleStream<typename Elem> Me;
+		typedef std::basic_ostream<typename Elem, std::char_traits<typename Elem> > Base;
+		typedef typename Base::char_type char_type;
+
+	public:
 		
 		MultipleStream()
-			: std::basic_ostream<typename Elem, std::char_traits<typename Elem> >(&m_buffer)
-			, m_files()
-			, m_buffer() {
-			/*...*/
+				: Base(&m_buffer) {
+			//...//
 		}
 		
-		~MultipleStream() /* throw() */ {
-			const Files::const_iterator end = m_files.end();
-			for (Files::iterator i = m_files.begin(); i != end; ++i) {
-				DetachStream(*i->second);
+		~MultipleStream() throw() {
+			try {
+				const Files::const_iterator end = m_files.end();
+				for (Files::iterator i = m_files.begin(); i != end; ++i) {
+					DetachStream(*i->second);
+				}
+			} catch (...) {
+				BOOST_ASSERT(false);
 			}
 		}
 
 	public:
 
-		bool AttachStream(const _Myt& stream) {
+		bool AttachStream(const Base &stream) {
 			return m_buffer.attach(stream);
 		}
 		
-		bool DetachStream(const _Myt& stream) {
+		bool DetachStream(const Base &stream) {
 			return m_buffer.detach(stream);
 		}
 		
-		bool AttachFile(const std::basic_string<char_type>& filePath) {
+		bool AttachFile(const std::basic_string<char_type> & filePath) {
 			if (m_files.find(filePath) != m_files.end()) {
 				return true;
 			}
-			typedef std::basic_ofstream<char_type, char_traits<char_type> > FileStream;
-			boost::shared_ptr<_Myt> f(
-				new FileStream(filePath.c_str(), std::ios::out | ios::app | std::ios::ate));
+			typedef std::basic_ofstream<
+					char_type,
+					std::char_traits<char_type> >
+				FileStream;
+			boost::shared_ptr<Base> f(
+				new FileStream(
+					filePath.c_str(),
+					std::ios::out | std::ios::app | std::ios::ate));
 			if (*f && AttachStream(*f)) {
 				m_files[filePath] = f;
 				return true;
@@ -165,7 +178,7 @@ namespace TunnelEx { namespace Helpers {
 
 	private:
 
-		typedef std::map<std::basic_string<char_type>, boost::shared_ptr<_Myt> > Files;
+		typedef std::map<std::basic_string<char_type>, boost::shared_ptr<Base> > Files;
 
 		Files m_files;
 		MultipleStreamBuffer<char_type, std::char_traits<char_type> > m_buffer;

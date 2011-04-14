@@ -14,14 +14,12 @@
 
 #include "ServiceControl/Configuration.hpp"
 
-#include <TunnelEx/String.hpp>
+#include "Core/String.hpp"
 
 namespace ut = boost::unit_test;
 namespace tex = TunnelEx;
 namespace fs = boost::filesystem;
 namespace xml = TunnelEx::Helpers::Xml;
-using namespace std;
-using namespace boost;
 
 namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 
@@ -32,7 +30,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 			BOOST_REQUIRE(fs::remove(configurationFile));
 		}
 		{
-			shared_ptr<::ServiceConfiguration> defaultConf(::ServiceConfiguration::GetDefault());
+		boost::shared_ptr<::ServiceConfiguration> defaultConf(::ServiceConfiguration::GetDefault());
 			BOOST_REQUIRE(defaultConf->Save(configurationFile.string().c_str()));
 		}
 		::ServiceConfiguration configuration(configurationFile.string().c_str());
@@ -54,7 +52,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 			BOOST_REQUIRE(fs::remove(configurationFile));
 		}
 		{
-			shared_ptr<::ServiceConfiguration> defaultConf(::ServiceConfiguration::GetDefault());
+		boost::shared_ptr<::ServiceConfiguration> defaultConf(::ServiceConfiguration::GetDefault());
 			BOOST_REQUIRE(defaultConf->Save(configurationFile.string().c_str()));
 		}
 		::ServiceConfiguration configuration(configurationFile.string().c_str());
@@ -81,7 +79,7 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 			BOOST_REQUIRE(fs::remove(configurationFile));
 		}
 		{
-			shared_ptr<::ServiceConfiguration> defaultConf(::ServiceConfiguration::GetDefault());
+		boost::shared_ptr<::ServiceConfiguration> defaultConf(::ServiceConfiguration::GetDefault());
 			BOOST_REQUIRE(defaultConf->Save(configurationFile.string().c_str()));
 		}
 		{
@@ -98,10 +96,10 @@ namespace Test { BOOST_AUTO_TEST_SUITE(ServiceConfiguration)
 			BOOST_CHECK(configuration.IsServerStarted() == true);
 			configuration.Save(configurationFile.string().c_str());
 		}
-		shared_ptr<const xml::XPath> xpath(
+	boost::shared_ptr<const xml::XPath> xpath(
 			xml::Document::LoadFromFile(configurationFile.string().c_str())->GetXPath());
 		xml::ConstNodeCollection  queryResult;
-		string buffer;
+		std::string buffer;
 		xpath->Query("//Configuration[@Version = '1.2']/Rules", queryResult);
 		BOOST_REQUIRE(1 == queryResult.size());
 		BOOST_CHECK(queryResult[0]->GetContent(buffer) == "X:\\xxx yyy hhh\\vv ooov.xml");

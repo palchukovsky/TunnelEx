@@ -100,14 +100,8 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 
 	private:
 
-		WString m_resourceIdentifier;
-		bool m_isPathfinderNode;
-#		ifdef TEX_PATHFINDER_TEST
-			bool m_isTest;
-			size_t m_testIndex;
-#		endif
-		mutable bool m_isSetupCompleted;
-		mutable Inet::ProxyList m_proxy;
+		class Implementation;
+		Implementation *m_pimpl;
 
 	};
 

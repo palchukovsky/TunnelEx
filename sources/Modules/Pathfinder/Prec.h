@@ -14,14 +14,9 @@
 
 #include "CompileConfig.h"
 
-#if defined(_DEBUG) || defined(TEST)
-#	define TEX_PATHFINDER_TEST
-#endif
-
 #include <ace/OS_Errno.h>
 
 #include "Licensing/Prec.h"
-#include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
 
 #include "Hash.hpp"
 #include "Foreach.h"
@@ -44,9 +39,6 @@
 #	include <boost/optional.hpp>
 #	include <boost/algorithm/string.hpp>
 #	include <boost/cast.hpp>
-#	ifdef TEX_PATHFINDER_TEST
-#		include <boost/bind.hpp>
-#	endif
 #include "CompileWarningsBoost.h"
 
 #include <vector>

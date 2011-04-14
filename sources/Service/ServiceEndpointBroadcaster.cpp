@@ -13,8 +13,8 @@
 
 #include "ServiceEndpointBroadcaster.hpp"
 
-#include <TunnelEx/Log.hpp>
-#include <TunnelEx/String.hpp>
+#include "Core/Log.hpp"
+#include "Core/String.hpp"
 
 using namespace TunnelEx;
 

@@ -32,10 +32,20 @@ namespace TunnelEx {
 	
 	private:
 
-		typedef std::pair<
-				SharedPtr<Connection>,
-				SharedPtr<Connection> >
-			ReadWriteConnections;
+		struct ReadWriteConnections {
+			
+			SharedPtr<Connection> read;
+			SharedPtr<Connection> write;
+
+			ReadWriteConnections();
+			explicit ReadWriteConnections(
+						SharedPtr<Connection> read,
+						SharedPtr<Connection> write); 
+			
+			void Swap(ReadWriteConnections &) throw();
+
+		};
+
 		struct Licenses;
 
 		typedef ACE_Thread_Mutex ConnectionClosedMutex;
@@ -120,16 +130,16 @@ namespace TunnelEx {
 		void ReportClosed() const;
 
 		Connection & GetIncomingReadConnection() {
-			return *m_source.first;
+			return *m_source.read;
 		}
 		Connection & GetIncomingWriteConnection() {
-			return *m_source.second;
+			return *m_source.write;
 		}
 		Connection & GetOutcomingReadConnection() {
-			return *m_destination.first;
+			return *m_destination.read;
 		}
 		Connection & GetOutcomingWriteConnection() {
-			return *m_destination.second;
+			return *m_destination.write;
 		}
 
 		void OnConnectionSetup(Instance::Id);

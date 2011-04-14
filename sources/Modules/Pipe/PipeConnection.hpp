@@ -14,7 +14,7 @@
 
 #include "PipeEndpointAddress.hpp"
 
-#include <TunnelEx/Connection.hpp>
+#include "Core/Connection.hpp"
 
 namespace TunnelEx { namespace Mods { namespace Pipe {
 

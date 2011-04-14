@@ -39,8 +39,8 @@ namespace TunnelEx { namespace Helpers {
 #		ifndef _WINDOWS
 
 			Uuid() {
-				using namespace std;
-				auto_ptr<ACE_Utils::UUID> impl(ACE_Utils::UUID_Generator().generate_UUID());
+				std::auto_ptr<ACE_Utils::UUID> impl(
+					ACE_Utils::UUID_Generator().generate_UUID());
 				const char *pch = impl->to_string()->c_str();
 				const locale locale;
 				while (*pch) {
