@@ -97,6 +97,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		template<bool isInput>
 		struct Udp<true, isInput> {
 			// DTLS does not implemented yet!
+			BOOST_ASSERT(false); // added static instead
 		};
 
 		typedef Udp<false, true> UdpUnsecureIncoming;
@@ -120,6 +121,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		template<bool isSecured>
 		struct TcpIn<isSecured, false> {
 			// Scenario not implemented yet
+			BOOST_ASSERT(false); // added static instead
 		};
 
 		template<>

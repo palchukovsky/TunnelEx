@@ -13,7 +13,7 @@
 --------------------
     * ОС Microsoft Windows 2000 или выше;
     * Git;
-    * Microsoft Visual С++ 2005 SP1 или Microsoft Visual С++ 2010 SP1;
+    * Microsoft Visual С++ 2010 SP1;
     * WiX 3.0.2925.0 (http://wix.sourceforge.net);
     * RAR 3.42 (http://rarlab.com/rar_archiver.htm);
     * doxygen 1.6.2 (http://www.doxygen.org);
@@ -24,7 +24,6 @@
     * Patch for Windows 2.5.9
       (http://gnuwin32.sourceforge.net/packages/diffutils.htm, готовая к запуску
       сборка: http://tunnelex.net/download/gnuutils.7z);
-
 
 
 1.2. Требование к настройке

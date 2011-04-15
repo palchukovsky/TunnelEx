@@ -101,7 +101,7 @@ public:
 		//...//
 	}
 	void Bind(SharedPtr<Listener> listener) {
-		// I don't want to copy std::vector here before connect signal as it
+		// I don't want to copy vector here before connect signal as it
 		// can be to slow for each tunnel and each connection.
 		m_collection.push_back(listener);
 		try {
@@ -655,8 +655,8 @@ void Tunnel::OnConnectionClose(Instance::Id instanceId) {
 	++m_closedConnections;
 	if (closingNow) {
 		// object can be deleted here!
+		return; // FIXME: is it correct?
 	}
-	// FIXME: is it correct?
 	m_server.CloseTunnel(GetInstanceId(), false);
 }
 

@@ -25,8 +25,6 @@ set IsHelpMode=false
 set IsNoClean=false
 set IsNoBuild=false
 
-set MpcProjectOutTypeName=null
-
 :GetKey
 if "%1"=="" goto GetKeyEnd
 if "%1"=="conf" goto GetBuildType
@@ -143,20 +141,6 @@ if "%IsDebug%"=="false" if "%IsRelease%"=="false" if "%IsNoBuild%"=="false" (
 )
 if "%BuildWhat%"=="none" (
 	echo Please, specify what component should be build.
-	goto Help
-)
-
-
-if "%VSINSTALLDIR%"=="C:\Program Files\Microsoft Visual Studio 8" (
-	set MpcProjectOutTypeName=vc8
-	echo Using Microsoft Visual Studio 8 for building...
-)
-if "%VSINSTALLDIR%"=="C:\Program Files\Microsoft Visual Studio 10.0\" (
-	set MpcProjectOutTypeName=vc10
-	echo Using Microsoft Visual Studio 10.0 for building...
-)
-if "%MpcProjectOutTypeName%"=="null" (
-	echo Failed to get Microsoft Visual Studio version.
 	goto Help
 )
 

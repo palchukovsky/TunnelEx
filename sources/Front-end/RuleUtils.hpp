@@ -53,7 +53,7 @@ struct RuleUtils {
 		if (ctrl.GetCount() < 1) {
 			return;
 		}
-		// UPnP last in the std::list
+		// UPnP last in the list
 		ctrl.SetSelection(ctrl.GetCount() - 1);
 	}
 

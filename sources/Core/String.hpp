@@ -101,8 +101,8 @@ namespace TunnelEx {
 
 		//! Returns substring.
 		/** @param	destination		the destination object for substring;
-		  * @param	offset			substaing start in parent std::string;
-		  * @param	count			substring end in parent std::string (zero - to parent end);
+		  * @param	offset			substaing start in parent string;
+		  * @param	count			substring end in parent string (zero - to parent end);
 		  */
 		void SubStr(
 					MyType &destination,

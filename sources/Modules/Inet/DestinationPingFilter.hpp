@@ -43,7 +43,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		Endpoints m_endpoints;
 
-		//! \todo: Maybe search be UUID (not by std::string) will be faster? [2008/01/22 12:08]
+		//! \todo: Maybe search be UUID (not by string) will be faster? [2008/01/22 12:08]
 		typedef std::map<WString, Endpoints::iterator> EndpointUuids;
 		EndpointUuids m_endpointUuids;
 

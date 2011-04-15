@@ -497,7 +497,7 @@ void ServiceWindow::DeleteSelectedRules() {
 
 void ServiceWindow::DeleteAllRules() {
 	const int answer = wxMessageBox(
-		wxT("Delete ALL rules in the rule std::set?"),
+		wxT("Delete ALL rules in the rule set?"),
 		wxT("Confirm delete"),
 		wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_WARNING,
 		this);

@@ -616,7 +616,7 @@ public:
 			=	!m_privateKey
 				&& m_certificate == TcpEndpointAddress::GetAnonymousSslCertificateMagicName();
 
-		// Certificate std::set
+		// Certificate set
 		if (isServer || !isAnonymous) {
 			if (!m_privateKey) {
 				UniquePtr<X509Private> certificate = !isAnonymous
@@ -637,7 +637,7 @@ public:
 						.GetCStr();
 				throw SystemException(message.str().c_str());
 			}
-			// Private key std::set
+			// Private key set
 			//! @todo: Check implementation for this code in ACE after version 5.8.0 [2010/12/05 23:09]
 			if (	SSL_CTX_use_PrivateKey(result->context(), &m_privateKey->GetPrivateKey().Get()) <= 0
 					|| result->verify_private_key() != 0) {
@@ -651,7 +651,7 @@ public:
 		}
 
 		bool remoteKey = false;
-		// Remote side verification certificates std::set
+		// Remote side verification certificates set
 		//! @todo: Check implementation for this code in ACE after version 5.8.0 [2010/12/05 23:09]
 		if (m_remotePublicCertificate) {
 			if (	!X509_STORE_add_cert(
