@@ -61,6 +61,14 @@ if "%1"=="all" (
 	set BuildWhat=all
 	goto GetNextKey
 )
+if "%1"=="ws" (
+	set BuildWhat=workspace
+	goto GetNextKey
+)
+if "%1"=="workspace" (
+	set BuildWhat=workspace
+	goto GetNextKey
+)
 if "%1"=="ace" (
 	set BuildWhat=ACE
 	goto GetNextKey
@@ -83,6 +91,10 @@ if "%1"=="openssl" (
 )
 if "%1"=="miniupnp" (
 	set BuildWhat=MiniUPnP
+	goto GetNextKey
+)
+if "%1"=="tunnelex" (
+	set BuildWhat=TunnelEx
 	goto GetNextKey
 )
 
@@ -163,7 +175,9 @@ echo     conf           - configuration type
 echo                      values: "release", "debug" or "full"
 echo                      ex.: conf=release
 echo     build          - specify what component should be build
-echo                      values: "all", "openssl", "ace", "wxwidgets", "libxml", "gsoap" or "miniupnp"
+echo                      values: "all", "ws" (workspace), "openssl", "ace",
+echo                      "wxwidgets", "libxml", "gsoap", "miniupnp" or
+echo                      "tunnelex"
 echo                      ex.: build=all
 echo     full           - build all components for all configuraions
 echo     create_project - projects generation mode

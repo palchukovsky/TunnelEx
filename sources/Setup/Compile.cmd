@@ -9,8 +9,8 @@ set BinDir=%SolutionDir%..\output\bin\
 
 Call SetVars.cmd
 
-mkdir "%OutDir%"
-mkdir "%IntDir%"
+if not exist "%OutDir%" mkdir "%OutDir%"
+if not exist "%IntDir%" mkdir "%IntDir%"
 
 @rem Candle.cmd uses to convert long pathes to 8.3 fromat.
 Call Candle.cmd ^

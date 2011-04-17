@@ -328,19 +328,14 @@
 					<Component Id="MsFramework"
 							   Guid="B0443780-29A1-4881-974B-2E6EEB0AA5BF"
 							   KeyPath="yes">
-						<File Id="Microsoft.VC80.$(var.MsManifestNameSuffix)CRT.manifest"
-							  Name="Microsoft.VC80.$(var.MsManifestNameSuffix)CRT.manifest"
-							  Source="$(var.MsFrameworkDir)Microsoft.VC80.$(var.MsManifestNameSuffix)CRT.manifest"
+						<File Id="msvcp100$(var.MsFileNameSuffix).dll"
+							  Name="msvcp100$(var.MsFileNameSuffix).dll"
+							  Source="$(var.MsFrameworkDir)msvcp100$(var.MsFileNameSuffix).dll"
 							  DiskId="1"
 							  Vital="yes" />
-						<File Id="msvcp80$(var.MsFileNameSuffix).dll"
-							  Name="msvcp80$(var.MsFileNameSuffix).dll"
-							  Source="$(var.MsFrameworkDir)msvcp80$(var.MsFileNameSuffix).dll"
-							  DiskId="1"
-							  Vital="yes" />
-						<File Id="msvcr80$(var.MsFileNameSuffix).dll"
-							  Name="msvcr80$(var.MsFileNameSuffix).dll"
-							  Source="$(var.MsFrameworkDir)msvcr80$(var.MsFileNameSuffix).dll"
+						<File Id="msvcr100$(var.MsFileNameSuffix).dll"
+							  Name="msvcr100$(var.MsFileNameSuffix).dll"
+							  Source="$(var.MsFrameworkDir)msvcr100$(var.MsFileNameSuffix).dll"
 							  DiskId="1"
 							  Vital="yes" />
 					</Component>

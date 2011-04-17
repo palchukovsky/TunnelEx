@@ -30,7 +30,7 @@ if "%CreateProject%"=="no" goto Finish
 
 cd "%ACE_ROOT%\ace"
 @if %errorlevel% neq 0 goto Error
-%ACE_ROOT%\bin\mwc.pl -type %MpcProjectOutTypeName% -expand_vars -use_env -value_template WarnAsError=no -value_template platforms=Win32 ace.mwc
+%ACE_ROOT%\bin\mwc.pl -type vc10 -expand_vars -use_env -value_template WarnAsError=no -value_template platforms=Win32 ace.mwc
 @if %errorlevel% neq 0 goto Error
 if "%CreateProject%"=="only" goto Finish
 

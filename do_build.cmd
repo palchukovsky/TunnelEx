@@ -1,5 +1,8 @@
 
-@if "%BuildWhat%" neq "all" goto %BuildWhat%
+goto %BuildWhat%
+
+:all
+:workspace
 
 :OpenSSL
 @echo ***********************************************************
@@ -63,6 +66,18 @@ Call "%SolutionDir%\do_build_workspace_gsoap.cmd"
 @echo *                                                         *
 @echo ***********************************************************
 Call "%BuilderDir%\do_build_workspace_miniupnp.cmd"
+@if %errorlevel% neq 0 goto Error
+@if "%BuildWhat%" neq "all" goto End
+
+
+@if "%BuildWhat%"=="workspace" goto End
+:TunnelEx
+@echo ***********************************************************
+@echo *                                                         *
+@echo * Building TunnelEx...                                    *
+@echo *                                                         *
+@echo ***********************************************************
+Call "%BuilderDir%\do_build_tunnelex.cmd"
 @if %errorlevel% neq 0 goto Error
 @if "%BuildWhat%" neq "all" goto End
 

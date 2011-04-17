@@ -21,18 +21,12 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="Configuration">
     <ConfigurationType>Utility</ConfigurationType>
-    <CharacterSet>NotSet</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Utility</ConfigurationType>
-    <CharacterSet>NotSet</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Utility</ConfigurationType>
-    <CharacterSet>NotSet</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -55,6 +49,12 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\..\output\setups\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..\output\setups\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(ProjectDir)..\..\output\setups\</OutDir>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">msi</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">msi</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">msi</TargetExt>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">*.wixobj;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">*.wixobj;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">*.wixobj;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -62,8 +62,17 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+      <Command>Call Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+      <Message>Linking...</Message>
     </PostBuildEvent>
+    <CustomBuild>
+      <Message>Compiling...</Message>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(IntDir)%(Filename).%(Extension).wixobj</Outputs>
+      <AdditionalInputs>$(SolutionDir)Version\SetVersion.cmd</AdditionalInputs>
+      <Command>Call Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"</Command>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
@@ -71,8 +80,17 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+      <Command>Call Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+      <Message>Linking...</Message>
     </PostBuildEvent>
+    <CustomBuild>
+      <Message>Compiling...</Message>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(IntDir)%(Filename).%(Extension).wixobj</Outputs>
+      <AdditionalInputs>$(SolutionDir)Version\SetVersion.cmd</AdditionalInputs>
+      <Command>Call Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"</Command>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <PreBuildEvent>
@@ -80,8 +98,17 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+      <Command>Call Link.cmd "$(IntDir)" "$(Configuration)" "$(OutDir)" "$(SolutionDir)" "$(ProjectDir)"</Command>
+      <Message>Linking...</Message>
     </PostBuildEvent>
+    <CustomBuild>
+      <Message>Compiling...</Message>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(IntDir)%(Filename).%(Extension).wixobj</Outputs>
+      <AdditionalInputs>$(SolutionDir)Version\SetVersion.cmd</AdditionalInputs>
+      <Command>Call Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"</Command>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="Candle.cmd" />
@@ -90,63 +117,16 @@
     <None Include="SetVars.cmd" />
     <CustomBuild Include="Actions.wxs">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Components.wxs">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Product.wxs">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
+      <SubType>Designer</SubType>
     </CustomBuild>
     <CustomBuild Include="UI.wxs">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Compile.cmd "%(Filename)%(Extension)" "$(SolutionDir)" "$(Configuration)" "$(OutDir)" "$(IntDir)" "$(ProjectDir)"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(SolutionDir)Version\SetRevision.cmd;$(SolutionDir)Version\SetVersion.cmd;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(IntDir)%(Filename)%(Extension).wixobj;%(Outputs)</Outputs>
     </CustomBuild>
     <None Include="Localization\en-us.wxl" />
   </ItemGroup>
