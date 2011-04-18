@@ -48,7 +48,7 @@ set TexFileNameSuffix=_dbg
 set TexExternalsFileNameSuffix=%TexFileNameSuffix%
 set MsFileNameSuffix=d
 set MsManifestNameSuffix=Debug
-set MsFrameworkDir=%ProgramFiles%\Microsoft Visual Studio 8\VC\redist\Debug_NonRedist\x86\Microsoft.VC80.DebugCRT\
+set MsFrameworkDir=%ProgramFiles%\Microsoft Visual Studio 10.0\VC\redist\Debug_NonRedist\x86\Microsoft.VC100.DebugCRT\
 goto EndSet
 
 :SetTest

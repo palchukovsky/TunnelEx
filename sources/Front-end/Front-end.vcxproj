@@ -317,909 +317,504 @@ echo off
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\AddItemButton.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\AddItemButtonDisabled.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\AddItemIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\AddRuleIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\AddRuleIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\ArrowDownButton.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\ArrowDownButtonDisabled.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\ArrowUpButton.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\ArrowUpButtonDisabled.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\BloggerIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\BugIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\BugIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\CopyIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\CopyIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\CutIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\CutIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\EditItemButton.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\EditItemButtonDisabled.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\EditItemIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\EditRuleDisabledIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\EditRuleIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\EditRuleIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\GoProIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\GoProIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\GoRuleIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\GoRuleIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\HelpIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\HelpIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\KeyIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\LogIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\LogIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\PasteIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\PasteIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\PlayIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\PlayIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RemoveItemButton.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RemoveItemButtonDisabled.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RemoveItemIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RemoveRuleIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RemoveRuleIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RuleIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\RuleIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\StopIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\StopIconBig.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Icons\WarningRuleIcon.png">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">echo on
-mkdir $(OutDir)Templates
-copy /Y "%(FullPath)" "$(OutDir)Templates"
-echo off
-</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">if not exist "$(OutDir)Templates" mkdir "$(OutDir)Templates"
+copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)Templates\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>
