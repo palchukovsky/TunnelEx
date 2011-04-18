@@ -44,23 +44,25 @@
 каталог "externals", в том виде, в котором они были получены с сайта
 производителя (если в перечне ниже не оговорено другое). Для сборки
 проекта требуются следующие сторонние библиотеки:
-    * ACE 5.8.0 (http://download.dre.vanderbilt.edu/) - архив 
+    * ACE 6.0.0 (http://download.dre.vanderbilt.edu/) - архив 
       "sources only"-дистрибутива должен быть запакован с помощью TAR+BZ2
-      и иметь имя ACE-src-5.8.0.tar.bz2;
+      и иметь имя ACE-src-6.0.0.tar.bz2;
     * Boost 1.46.1 (http://boost.org, http://www.boostpro.com/download), все
       компоненты (static-библиотеки, для многопоточной runtime-библиотеки)
       - файлы заголовков (ссылки на них) должны быть расположены в директории
       IDE include, файлы библиотек (ссылки на них) в  директории lib (примеры:
       ...\VC\include\boost\1_46_1\ и ...VC\lib\boost\1_46_1\);
-    * Libxml2 2.7.2 (http://xmlsoft.org) - архив дистрибутива должен быть
-      запакован с помощью TAR+ZIP и иметь имя libxml2-sources-2.7.2.tar.gz;
-    * wxWidgets 2.8.10 (http://wxwidgets.org) - архив дистрибутива должен быть
-      запакован с помощью TAR+BZ2 и иметь имя wxWidgets-2.8.10.tar.bz2;
-    * OpenSSL 1.0.0d (http://openssl.org) - архив дистрибутива должен быть
-      запакован с помощью TAR+ZIP и иметь имя openssl-1.0.0d.tar.gz;
-    * MiniUPnP client (http://miniupnp.free.fr) - дистрибутив должен состоять
-      из двух частей: TAR+ZIP архива miniupnpc-1.4.20100418.tar.gz с исходными
-      кодами и ZIP архива upnpc-exe-win32-20100418.zip с бинарными файлам;
+    * Libxml2 2.7.2 (ftp://xmlsoft.org/libxml2/) - архив дистрибутива должен
+      быть запакован с помощью TAR+ZIP и иметь имя libxml2-sources-2.7.2.tar.gz;
+    * wxWidgets 2.8.10 (http://wxwidgets.org/downloads/) - архив дистрибутива
+      должен быть запакован с помощью TAR+BZ2 и иметь имя
+      wxWidgets-2.8.10.tar.bz2;
+    * OpenSSL 1.0.0d (http://openssl.org/source/) - архив дистрибутива должен
+      быть запакован с помощью TAR+ZIP и иметь имя openssl-1.0.0d.tar.gz;
+    * MiniUPnP client (http://miniupnp.free.fr/files/) - дистрибутив должен
+      состоять из двух частей: TAR+ZIP архива miniupnpc-1.4.20100418.tar.gz с
+      исходными кодами и ZIP архива upnpc-exe-win32-20100418.zip с бинарными
+      файлам;
 
 
 

@@ -12,7 +12,9 @@ goto %BuildWhat%
 @echo ***********************************************************
 Call "%BuilderDir%\do_build_workspace_openssl.cmd"
 @if %errorlevel% neq 0 goto Error
-@if "%BuildWhat%" neq "all" goto End
+@if "%BuildWhat%" neq "all" (
+	@if "%BuildWhat%" neq "workspace" goto End
+)
 
 
 :ACE
@@ -23,7 +25,9 @@ Call "%BuilderDir%\do_build_workspace_openssl.cmd"
 @echo ***********************************************************
 Call "%BuilderDir%\do_build_workspace_ace.cmd"
 @if %errorlevel% neq 0 goto Error
-@if "%BuildWhat%" neq "all" goto End
+@if "%BuildWhat%" neq "all" (
+	@if "%BuildWhat%" neq "workspace" goto End
+)
 
 
 :wxWidgets
@@ -34,7 +38,9 @@ Call "%BuilderDir%\do_build_workspace_ace.cmd"
 @echo ***********************************************************
 Call "%BuilderDir%\do_build_workspace_wxwidgets.cmd"
 @if %errorlevel% neq 0 goto Error
-@if "%BuildWhat%" neq "all" goto End
+@if "%BuildWhat%" neq "all" (
+	@if "%BuildWhat%" neq "workspace" goto End
+)
 
 
 :Libxml
@@ -45,7 +51,9 @@ Call "%BuilderDir%\do_build_workspace_wxwidgets.cmd"
 @echo ***********************************************************
 Call "%BuilderDir%\do_build_workspace_libxml.cmd"
 @if %errorlevel% neq 0 goto Error
-@if "%BuildWhat%" neq "all" goto End
+@if "%BuildWhat%" neq "all" (
+	@if "%BuildWhat%" neq "workspace" goto End
+)
 
 
 :gSOAP
@@ -56,7 +64,9 @@ Call "%BuilderDir%\do_build_workspace_libxml.cmd"
 @echo ***********************************************************
 Call "%SolutionDir%\do_build_workspace_gsoap.cmd"
 @if %errorlevel% neq 0 goto Error
-@if "%BuildWhat%" neq "all" goto End
+@if "%BuildWhat%" neq "all" (
+	@if "%BuildWhat%" neq "workspace" goto End
+)
 
 
 :MiniUPnP
