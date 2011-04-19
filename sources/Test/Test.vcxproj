@@ -96,6 +96,10 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Resource" mkdir "$(OutDir)Resource"
+copy "$(ProjectDir)Resource" "$(OutDir)Resource" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent />
@@ -120,6 +124,10 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Resource" mkdir "$(OutDir)Resource"
+copy "$(ProjectDir)Resource" "$(OutDir)Resource" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <PreBuildEvent />
@@ -145,6 +153,10 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Resource" mkdir "$(OutDir)Resource"
+copy "$(ProjectDir)Resource" "$(OutDir)Resource" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\Assert.cpp">
