@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * -------------------------------------------------------------------
- *       $Id: SslEndpointSettingsDlg.hpp 1109 2010-12-26 06:33:37Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__SslEndpointSettingsDlg_hpp__1011271101

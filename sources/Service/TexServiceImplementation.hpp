@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * -------------------------------------------------------------------
- *       $Id: TexServiceImplementation.hpp 1097 2010-12-14 18:04:02Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__TexServiceImplementation_h__0802170531

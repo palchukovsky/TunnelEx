@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2008 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: Locking.hpp 978 2010-07-09 03:09:22Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__Locking_h__0801120308

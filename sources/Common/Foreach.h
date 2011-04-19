@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2009 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: Foreach.h 864 2010-02-06 05:55:22Z palchukovsky $
  **************************************************************************/
 
 #ifndef foreach

@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.com
  * Copyright: 2007 - 2008 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: ServiceStateCtrl.hpp 1133 2011-02-22 23:18:56Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__ServiceStateCtrl_h__0801040300

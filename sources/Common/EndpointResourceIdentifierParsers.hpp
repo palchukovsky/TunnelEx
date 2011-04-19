@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * -------------------------------------------------------------------
- *       $Id: EndpointResourceIdentifierParsers.hpp 1080 2010-12-01 08:33:26Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__EndpointResourceIdentifierParsers_hpp__1001020637

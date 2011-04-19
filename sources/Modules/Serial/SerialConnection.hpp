@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * -------------------------------------------------------------------
- *       $Id: SerialConnection.hpp 1131 2011-02-22 21:13:12Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__OutcomingSerialPortConnection_hpp__0909171625

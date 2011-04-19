@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * -------------------------------------------------------------------
- *       $Id: IncomingUdpConnection.hpp 1133 2011-02-22 23:18:56Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__IncomingUdpConnection_hpp__0810252051

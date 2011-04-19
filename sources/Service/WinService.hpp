@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2009 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: WinService.hpp 959 2010-06-22 11:36:04Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__Service_h__0712270036

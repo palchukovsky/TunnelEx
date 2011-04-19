@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2009 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: LicenseDlg.hpp 1033 2010-10-15 20:27:41Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__LicenseDlg_hpp__0911292141

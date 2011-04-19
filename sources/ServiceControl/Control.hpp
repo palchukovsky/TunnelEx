@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.com
  * Copyright: 2007 - 2008 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: Control.hpp 959 2010-06-22 11:36:04Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__Control_h__0801051317

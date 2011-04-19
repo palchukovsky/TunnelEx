@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2009 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: StoragePolicies.hpp 977 2010-07-08 14:11:13Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__StoragePolicies_hpp__0910251050

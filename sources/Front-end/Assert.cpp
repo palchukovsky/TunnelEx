@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2008 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: Assert.cpp 1046 2010-11-02 12:07:07Z palchukovsky $
  **************************************************************************/
 
 #include "Prec.h"

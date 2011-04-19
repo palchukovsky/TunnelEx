@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2008 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: WinService.cpp 1032 2010-10-14 14:20:52Z palchukovsky $
  **************************************************************************/
 
 #include "Prec.h"

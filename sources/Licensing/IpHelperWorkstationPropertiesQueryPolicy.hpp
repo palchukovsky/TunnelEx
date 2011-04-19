@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * -------------------------------------------------------------------
- *       $Id: IpHelperWorkstationPropertiesQueryPolicy.hpp 1072 2010-11-25 20:02:26Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__IpHelperWorkstationPropertiesQueryPolicy_hpp__0912061142

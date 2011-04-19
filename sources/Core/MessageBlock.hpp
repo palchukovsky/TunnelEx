@@ -6,8 +6,6 @@
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
  * Copyright: 2007 - 2008 Eugene V. Palchukovsky
- * -------------------------------------------------------------------
- *       $Id: MessageBlock.hpp 864 2010-02-06 05:55:22Z palchukovsky $
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__MessageBlock_h__080731161000
