@@ -32,7 +32,7 @@ void BackupPreviousVersionFile(const fs::wpath &filePath) {
 		} catch (const fs::filesystem_error &) {
 			// silent for user (could not block work if backup is fail),
 			// but assert for developer
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 	}
 }

@@ -128,12 +128,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	template<>
 	void IncomingTcpConnection<true>::HandleAcceptSuccess(Stream &stream) const {
 
-		BOOST_ASSERT(
+		assert(
 			SSL_get_peer_certificate(stream.ssl()) != 0
 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
 					GetRuleEndpointAddress().Get())
 				->GetRemoteCertificates().GetSize() == 0);
-		BOOST_ASSERT(
+		assert(
 			SSL_get_peer_certificate(stream.ssl()) == 0
 			|| SSL_get_verify_result(stream.ssl()) == X509_V_OK);
 
@@ -207,7 +207,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		}
 
-		BOOST_ASSERT(stream.get_handle() == ACE_INVALID_HANDLE);
+		assert(stream.get_handle() == ACE_INVALID_HANDLE);
 		ACE_UNUSED_ARG(stream);
 
 	}

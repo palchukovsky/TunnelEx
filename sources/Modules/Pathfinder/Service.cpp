@@ -33,14 +33,14 @@ namespace {
 		Proxy result;
 		const std::string proxyHost = boost::copy_range<std::string>(*hostIt);
 		result.host = ConvertString<WString>(proxyHost.c_str()).GetCStr();
-		BOOST_ASSERT(!result.host.empty());
+		assert(!result.host.empty());
 		result.port = 0;
 		if (++hostIt != HostSplitInterator()) {
 			try {
 				result.port = boost::lexical_cast<unsigned short>(*hostIt);
-				BOOST_ASSERT(result.port > 0);
+				assert(result.port > 0);
 			} catch (const boost::bad_lexical_cast &) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 		if (result.port > 0 && !result.host.empty()) {
@@ -341,7 +341,7 @@ bool ServiceImpl::RequestProxy(
 				&answer[realAnswerSize],
 				DWORD(answer.size()) - realAnswerSize,
 				&bytesRead);
-			BOOST_ASSERT(readResult);
+			assert(readResult);
 			if (!readResult) {
 				const Error error(GetLastError());
 				WFormat message(
@@ -363,7 +363,7 @@ bool ServiceImpl::RequestProxy(
 #				endif
 			}
 		}
-		BOOST_ASSERT(answer.size() >= realAnswerSize);
+		assert(answer.size() >= realAnswerSize);
 		answer.resize(realAnswerSize + 1);
 		answer[realAnswerSize] = 0;
 	}
@@ -392,7 +392,7 @@ bool ServiceImpl::RequestProxy(
 				?	boost::lexical_cast<int>(*resultCodeIt)
 				:	(target.GetProxyList().size() > 0 ? 201 : 200);
 		} catch (const boost::bad_lexical_cast &) {
-			BOOST_ASSERT(false);
+			assert(false);
 			resultCode = 200;
 		}
 		Log::GetInstance().AppendDebug("Pathfinder service status code: %1%", resultCode);
@@ -430,7 +430,7 @@ bool ServiceImpl::RequestProxy(
 					while (++lineIt != AnswerSplitIterator()) {
 						std::string proxyStr = boost::copy_range<std::string>(*lineIt);
 						boost::trim_if(proxyStr, boost::is_space() || boost::is_cntrl());
-						BOOST_ASSERT(!proxyStr.empty());
+						assert(!proxyStr.empty());
 						if (!proxyStr.empty()) {
 							const Proxy proxy = ExtractProxy(proxyStr);
 							if (!proxy.host.empty() && proxy.port > 0) {
@@ -438,15 +438,15 @@ bool ServiceImpl::RequestProxy(
 							}
 						}
 					}
-					BOOST_ASSERT(proxyList.size() > 0);
+					assert(proxyList.size() > 0);
 					if (proxyList.size() > 0) {
 						proxyList.swap(result);
 						break;
 					}
 				}
-				BOOST_ASSERT(false);
+				assert(false);
 			default:
-				BOOST_ASSERT(false);
+				assert(false);
 			case 200:
 				{
 					WFormat message(errorTemplate);
@@ -564,7 +564,7 @@ void ServiceImpl::Report(
 	postDataStr
 		<< "&v="
 		<< StringUtil::EncodeUrl<char>(ConvertString<String>(TUNNELEX_VERSION_FULL_W).GetCStr());
-	BOOST_ASSERT(target.GetProxyList().size() >= 1);
+	assert(target.GetProxyList().size() >= 1);
 	postDataStr << "&p=" << (target.GetProxyList().size() - 1);
 	postDataStr
 		<< "&h="

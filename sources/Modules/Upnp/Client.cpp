@@ -171,7 +171,7 @@ private:
 public:
 
 	const char * ProtoToStr(Proto proto) const {
-		BOOST_ASSERT(proto == PROTO_TCP || proto == PROTO_UDP);
+		assert(proto == PROTO_TCP || proto == PROTO_UDP);
 		return proto == PROTO_TCP ? "TCP" : "UDP";
 	}
 
@@ -239,7 +239,7 @@ public:
 		if (!result) {
 			PortsCache::ReadLock lock(
 				const_cast<Implementation *>(this)->GetPortsCache().mutex);
-			BOOST_ASSERT(GetPortsCache().IsActual());
+			assert(GetPortsCache().IsActual());
 			result = CheckMapping(
 				GetPortsCache().ports,
 				externalPort,
@@ -493,16 +493,16 @@ bool Client::DeletePortMapping(const std::string &id) throw() {
 		message % ex.GetWhat();
 		Log::GetInstance().AppendDebug(
 			ConvertString<String>(message.str().c_str()).GetCStr());
-		BOOST_ASSERT(false);
+		assert(false);
 	} catch (const std::exception &ex) {
 		Log::GetInstance().AppendDebug(
 			"Error (std) in Mods::Upnp::Client::RemovePortMapping: \"%1%\".",
 			ex.what());
-		BOOST_ASSERT(false);
+		assert(false);
 	} catch (...) {
 		Log::GetInstance().AppendDebug(
 			"Unknown error in Mods::Upnp::Client::RemovePortMapping.");
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 	return false;
 }

@@ -84,7 +84,7 @@ protected:
 	}
 
 	void LoadCertificate(const fs::wpath &file, Storage &storage) const {
-		BOOST_ASSERT(storage.find(file.stem().c_str()) == storage.end());
+		assert(storage.find(file.stem().c_str()) == storage.end());
 		try {
 			if (boost::iequals(file.extension(), L".p12")) {
 				LoadPrivateCertificate(file, storage);
@@ -230,7 +230,7 @@ protected:
 			*i = ch;
 			++i;
 		}
-		BOOST_ASSERT(i == key.end());
+		assert(i == key.end());
 		std::string result(key.begin(), key.end());
 		result.swap(const_cast<Implementation *>(this)->m_key);
 		

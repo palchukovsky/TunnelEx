@@ -149,13 +149,13 @@ public:
 	}
 
 	void Send(size_t connectionIndex, const std::string &message) {
-		BOOST_ASSERT(message.size());
+		assert(message.size());
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		GetConnection(connectionIndex, lock).Send(message);
 	}
 
 	void Send(size_t connectionIndex, const Buffer &data) {
-		BOOST_ASSERT(data.size());
+		assert(data.size());
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		GetConnection(connectionIndex, lock).Send(data);
 	}
@@ -216,7 +216,7 @@ private:
 		try {
 			m_ioService.run();
 		} catch (const std::exception &) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 	}
 
@@ -303,7 +303,7 @@ private:
 public:
 
 	void Send(const std::string &message) {
-		BOOST_ASSERT(message.size());
+		assert(message.size());
 		try {
 			const size_t toSend = (message.size() + 1) * sizeof(std::string::value_type);
 			const size_t sent = m_socket.send(io::buffer(message.c_str(), toSend));
@@ -316,7 +316,7 @@ public:
 	}
 
 	void Send(const Buffer &data) {
-		BOOST_ASSERT(data.size());
+		assert(data.size());
 		try {
 			const size_t sent = m_socket.send(io::buffer(data));
 			if (sent != data.size() * sizeof(Buffer::value_type)) {
@@ -400,7 +400,7 @@ private:
 public:
 
 	void Send(const std::string &message) {
-		BOOST_ASSERT(message.size());
+		assert(message.size());
 		try {
 			const size_t toSend = (message.size() + 1) * sizeof(std::string::value_type);
 			const size_t sent = m_socket.send_to(
@@ -415,7 +415,7 @@ public:
 	}
 
 	void Send(const Buffer &data) {
-		BOOST_ASSERT(data.size());
+		assert(data.size());
 		try {
 			const size_t sent = m_socket.send_to(io::buffer(data), *m_resolverIterator);
 			if (sent != data.size() * sizeof(Buffer::value_type)) {

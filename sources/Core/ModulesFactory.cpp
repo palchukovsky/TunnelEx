@@ -341,15 +341,15 @@ public:
 	UniquePtr<EndpointAddress> CreateEndpointAddress(
 				const WString &resourceIdentifier) {
 		boost::wcmatch what;
-		BOOST_ASSERT(boost::regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp));
+		assert(boost::regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp));
 		if (boost::regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp)) {
 			EndpointAddressFabricByProto &index
 				= m_endpointAddressFabrics.get<ByProto>();
 			EndpointAddressFabricByProto::const_iterator fabricPos
 				= index.find(what[1]);
-			BOOST_ASSERT(fabricPos != index.end());
+			assert(fabricPos != index.end());
 			if (fabricPos != index.end()) {
-				BOOST_ASSERT(fabricPos->func);
+				assert(fabricPos->func);
 				return fabricPos->func(Server::GetInstance(), what[2].str().c_str());
 			}
 		}
@@ -364,14 +364,14 @@ public:
 
 		ServiceFabricByName &index = m_serviceFabrics.get<ByName>();
 		const ServiceFabricByName::const_iterator fabricPos = index.find(service.name);
-		BOOST_ASSERT(fabricPos != index.end());
+		assert(fabricPos != index.end());
 		if (fabricPos == index.end()) {
 			WFormat message(L"Could not find service by name \"%1%\".");
 			message % service.name.GetCStr();
 			throw InvalidLinkException(message.str().c_str());
 		}
 		
-		BOOST_ASSERT(fabricPos->func);
+		assert(fabricPos->func);
 		return fabricPos->func(rule, service);
 	
 	}

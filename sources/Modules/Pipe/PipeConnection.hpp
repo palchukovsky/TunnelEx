@@ -33,9 +33,9 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 			try {
 				const int result = m_stream->close();
 				ACE_UNUSED_ARG(result);
-				BOOST_ASSERT(result == 0);
+				assert(result == 0);
 			} catch (...) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 	

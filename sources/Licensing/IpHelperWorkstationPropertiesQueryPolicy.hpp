@@ -41,7 +41,7 @@ namespace TunnelEx { namespace Licensing {
 					props[WORKSTATION_PROPERTY_OS_VER]
 						= DigestSha1(oss.str()).GetAscii();
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 					props[WORKSTATION_PROPERTY_OS_VER] = std::string();
 				}
 			}
@@ -57,10 +57,10 @@ namespace TunnelEx { namespace Licensing {
 						props[WORKSTATION_PROPERTY_OS_VOLUME]
 							= DigestSha1(oss.str()).GetAscii();
 					} else {
-						BOOST_ASSERT(false);
+						assert(false);
 					}
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 			}
 
@@ -102,7 +102,7 @@ namespace TunnelEx { namespace Licensing {
 						adapter = adapter->Next;
 					}
 				}
-				BOOST_ASSERT(!adapterDigests.empty());
+				assert(!adapterDigests.empty());
 				if (!adapterDigests.empty()) {
 					props[WORKSTATION_PROPERTY_ADAPTER] = adapterDigests;
 				}
@@ -114,7 +114,7 @@ namespace TunnelEx { namespace Licensing {
 				HKEY key;
 				LONG status
 					= RegOpenKeyExA(HKEY_LOCAL_MACHINE, path.str().c_str(), 0, KEY_READ, &key);
-				BOOST_ASSERT(status == ERROR_SUCCESS);
+				assert(status == ERROR_SUCCESS);
 				if (status == ERROR_SUCCESS) {
 					//! @todo: replace with unique_ptr [2009/11/10 22:56]
 					boost::shared_ptr<HKEY__> autoKey(key, &RegCloseKey);
@@ -136,7 +136,7 @@ namespace TunnelEx { namespace Licensing {
 							bufferSize = DWORD(buffer.size()) - start;
 						}
 						status = RegQueryValueExA(key, item, NULL, &dataType, &buffer[0], &bufferSize);
-						BOOST_ASSERT(
+						assert(
 							status == ERROR_SUCCESS
 							|| (status == ERROR_FILE_NOT_FOUND && std::string(item) == "BuildGUID"));
 						if (status == ERROR_SUCCESS) {

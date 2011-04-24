@@ -253,7 +253,7 @@ void ProxyDlg::OnOk(wxCommandEvent &) {
 }
 
 void ProxyDlg::OnCreateCascade(wxCommandEvent &evnt) {
-	BOOST_ASSERT(m_isInCascade == false);
+	assert(m_isInCascade == false);
 	const int answer = wxMessageBox(
 			wxT("Save current changes?"),
 			wxT("Proxy server settings edit"),
@@ -261,7 +261,7 @@ void ProxyDlg::OnCreateCascade(wxCommandEvent &evnt) {
 			this);
 	switch (answer) {
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case wxCANCEL:
 			return;
 		case wxNO:
@@ -523,7 +523,7 @@ void ProxyCascadeDlg::OnEdit(wxCommandEvent &) {
 	if (selections.size() != 1) {
 		return;
 	}
-	BOOST_ASSERT(size_t(selections[0]) < m_cascade.size());
+	assert(size_t(selections[0]) < m_cascade.size());
 	ProxyDlg dlg(this, m_cascade[selections[0]], true, false);
 	if (dlg.ShowModal() == wxID_OK) {
 		m_cascade[selections[0]] = dlg.GetProxy();
@@ -542,7 +542,7 @@ void ProxyCascadeDlg::OnAdd(wxCommandEvent &) {
 void ProxyCascadeDlg::OnRemove(wxCommandEvent &) {
 	wxArrayInt selections;
 	m_listCtrl->GetSelections(selections);
-	BOOST_ASSERT(selections.size() > 0);
+	assert(selections.size() > 0);
 	if (selections.size() < 1) {
 		return;
 	}
@@ -568,7 +568,7 @@ void ProxyCascadeDlg::Move(bool up) {
 
 	wxArrayInt selections;
 	m_listCtrl->GetSelections(selections);
-	BOOST_ASSERT(selections.size() > 0);
+	assert(selections.size() > 0);
 
 	typedef std::map<unsigned int, unsigned int> ChangesMap;
 	ChangesMap selectedIndexes;

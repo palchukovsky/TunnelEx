@@ -67,9 +67,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			try {
 				const int result = m_acceptor.close();
 				ACE_UNUSED_ARG(result);
-				BOOST_ASSERT(result == 0);
+				assert(result == 0);
 			} catch (...) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 

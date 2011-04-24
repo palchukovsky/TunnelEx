@@ -164,7 +164,7 @@ namespace TunnelEx { namespace Helpers {
 						destination << ch;
 						i = nextNextI;
 					} else {
-						BOOST_ASSERT(false);
+						assert(false);
 						destination << ch;
 					}
 				} else {

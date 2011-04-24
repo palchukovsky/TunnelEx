@@ -259,7 +259,7 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 
 		void FreeDevList(UPNPDev *devList) const {
 			typedef void(Proto)(UPNPDev *devList);
-			BOOST_ASSERT(devList);
+			assert(devList);
 			GetFunction<Proto>("freeUPNPDevlist")(devList);
 		}
 

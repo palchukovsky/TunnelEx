@@ -45,8 +45,8 @@ namespace TunnelEx { namespace Licensing {
 				: m_privateKey(privateKey),
 				m_licenseKey(licenseKey),
 				m_clientParam(clientParam) {
-			BOOST_ASSERT(!m_licenseKey.empty());
-			BOOST_ASSERT(!m_privateKey.empty());
+			assert(!m_licenseKey.empty());
+			assert(!m_privateKey.empty());
 		}
 
 		inline ~KeyRequest() {
@@ -75,7 +75,7 @@ namespace TunnelEx { namespace Licensing {
 		}
 		
 		bool Accept() {
-			BOOST_ASSERT(!m_licenseKey.empty());
+			assert(!m_licenseKey.empty());
 			LocalStorage::StoreLicenseKey(m_licenseKey, m_privateKey, m_clientParam);
 			return true;
 		}

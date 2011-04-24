@@ -369,7 +369,7 @@ protected:
 		} else if (errorsTreatment == "warning") {
 			return TunnelRule::ERRORS_TREATMENT_WARN;
 		} else {
-			BOOST_ASSERT(errorsTreatment == "error");
+			assert(errorsTreatment == "error");
 			return TunnelRule::ERRORS_TREATMENT_ERROR;
 		}
 	}
@@ -539,7 +539,7 @@ protected:
 		} else if (errorsTreatment == "warning") {
 			return Rule::ERRORS_TREATMENT_WARN;
 		} else {
-			BOOST_ASSERT(errorsTreatment == "error");
+			assert(errorsTreatment == "error");
 			return Rule::ERRORS_TREATMENT_ERROR;
 		}
 	}
@@ -589,7 +589,7 @@ public:
 			} else if (errorsTreatment == "warning") {
 				return Rule::ERRORS_TREATMENT_WARN;
 			} else {
-				BOOST_ASSERT(errorsTreatment == "error");
+				assert(errorsTreatment == "error");
 				return Rule::ERRORS_TREATMENT_ERROR;
 			}
 		}

@@ -61,8 +61,8 @@ namespace Xml {
 	};
 	
 	inline void SetErrorsHandler(void(*func)(void *ctx, const char *msg, ...)) {
-		BOOST_ASSERT(func);
-		BOOST_ASSERT(!DebugData::CheckErrorDisablingResetFlag());
+		assert(func);
+		assert(!DebugData::CheckErrorDisablingResetFlag());
 		initGenericErrorDefaultFunc(&func);
 	}
 
@@ -80,11 +80,11 @@ namespace Xml {
 		public:
 			explicit Handler(xmlDocPtr doc)
 					: m_doc(doc) {
-				BOOST_ASSERT(m_doc != NULL);
+				assert(m_doc != NULL);
 			}
 			Handler(const Handler &rhs)
 					: m_doc(xmlCopyDoc(rhs.m_doc, true)) {
-				BOOST_ASSERT(m_doc != NULL);
+				assert(m_doc != NULL);
 			}
 			~Handler() {
 				xmlFreeDoc(m_doc);
@@ -111,14 +111,14 @@ namespace Xml {
 		//! Protected, use Document::CreateNew, Document::LoadFromMemory and Document::LoadFromFile.
 		explicit Document(boost::shared_ptr<Handler> handle)
 				: m_handler(handle) {
-			// BOOST_ASSERT(DebugData::GetErrorDisablingResetFlag());
+			// assert(DebugData::GetErrorDisablingResetFlag());
 		}
 
 	public:
 
 		explicit Document(const Document &rhs)
 				: m_handler(rhs.m_handler) {
-			// BOOST_ASSERT(DebugData::GetErrorDisablingResetFlag());
+			// assert(DebugData::GetErrorDisablingResetFlag());
 		}
 
 		const Document & operator =(const Document &rhs) {
@@ -279,7 +279,7 @@ namespace Xml {
 			xmlChar *const encodedValuePtr = xmlEncodeEntitiesReentrant(
 				m_doc->Get(),
 				value);
-			BOOST_ASSERT(encodedValuePtr != 0);
+			assert(encodedValuePtr != 0);
 			boost::shared_ptr<xmlChar> encodedValue(encodedValuePtr, &Free);
 			xmlNodeSetContent(m_node, encodedValuePtr);
 		}
@@ -389,7 +389,7 @@ namespace Xml {
 			if (!m_node->parent) {
 				return boost::shared_ptr<Node>();
 			}
-			BOOST_ASSERT(m_node->parent->type == XML_ELEMENT_NODE);
+			assert(m_node->parent->type == XML_ELEMENT_NODE);
 			return boost::shared_ptr<Node>(new Node(m_doc, m_node->parent));
 		}
 
@@ -445,16 +445,16 @@ namespace Xml {
 			}
 			m_parserContext = xmlSchemaNewDocParserCtxt(
 				m_schemaDoc->m_handler->Get());
-			BOOST_ASSERT(m_parserContext);
+			assert(m_parserContext);
 			xmlSchemaSetParserErrors(
 				m_parserContext,
 				&DumpSchemaParseError,
 				&DumpSchemaParseError,
 				NULL);
 			m_schema = xmlSchemaParse(m_parserContext);
-			BOOST_ASSERT(m_schema);
+			assert(m_schema);
 			m_validateContext = xmlSchemaNewValidCtxt(m_schema);
-			BOOST_ASSERT(m_validateContext);
+			assert(m_validateContext);
 		}
 
 		~Schema() {
@@ -551,7 +551,7 @@ namespace Xml {
 				}
 #			endif // _DEBUG
 		} catch (...) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 		va_end(vl);
 	}
@@ -595,7 +595,7 @@ namespace Xml {
 			message = messagef.str();
 			boost::trim(message);
 		} catch (...) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 		va_end(vl);
 		throw Schema::ParseException(message.c_str());
@@ -611,13 +611,13 @@ namespace Xml {
 		explicit XPath(boost::shared_ptr<Document::Handler> docHandler)
 				: m_doc(docHandler),
 				m_context(xmlXPathNewContext(m_doc->Get())) {
-			BOOST_ASSERT(m_context);
+			assert(m_context);
 		}
 
 		explicit XPath(Node &node)
 			: m_doc(node.m_doc),
 			m_context(xmlXPathNewContext(m_doc->Get())) {
-			BOOST_ASSERT(m_context);
+			assert(m_context);
 			m_context->node = node.m_node;
 		}
 
@@ -643,7 +643,7 @@ namespace Xml {
 			}
 			for (int i = 0; i < nodeSetVal->nodeNr; ++i) {
 				xmlNode *const nodeTab = nodeSetVal->nodeTab[i];
-				BOOST_ASSERT(nodeTab);
+				assert(nodeTab);
 				if (	nodeTab->type == XML_ELEMENT_NODE
 						|| nodeTab->type == XML_ATTRIBUTE_NODE) {
 					result.reset(new Node(m_doc, nodeTab));
@@ -705,7 +705,7 @@ namespace Xml {
 			resultTmp.reserve(nodesLimit);
 			for (int i = 0; i < nodesLimit; ++i) {
 				xmlNode *const nodeTab = nodeSetVal->nodeTab[i];
-				BOOST_ASSERT(nodeTab);
+				assert(nodeTab);
 				if (	nodeTab->type == XML_ELEMENT_NODE
 						|| nodeTab->type == XML_ATTRIBUTE_NODE) {
 					resultTmp.push_back(

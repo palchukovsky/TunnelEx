@@ -171,7 +171,7 @@ namespace TunnelEx {
 					m_dtorBarrier->wait();
 				}
 			} catch (...)  {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 			TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
 		}

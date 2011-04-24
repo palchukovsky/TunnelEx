@@ -177,7 +177,7 @@ namespace TunnelEx { namespace Helpers {
 					true);
 #				if defined(_DEBUG) && defined(TEST)
 					for (size_t i = 0; i < remoteCertificates.GetSize(); ++i) {
-						BOOST_ASSERT(!remoteCertificates[i].IsEmpty());
+						assert(!remoteCertificates[i].IsEmpty());
 					}
 #				endif
 				remoteCertificatesTmp.Swap(remoteCertificates);
@@ -193,7 +193,7 @@ namespace TunnelEx { namespace Helpers {
 							_1,
 							boost::ref(remoteCertificates)),
 						false);
-					BOOST_ASSERT(remoteCertificates.GetSize() == 0);
+					assert(remoteCertificates.GetSize() == 0);
 				}
 #				endif
 				SslCertificateIdCollection().Swap(remoteCertificates);

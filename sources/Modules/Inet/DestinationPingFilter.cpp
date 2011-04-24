@@ -34,7 +34,7 @@ public:
 	PingEndpoint()
 			: m_endpoint(),
 			m_pingTime(0) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 
 	explicit PingEndpoint(const RuleEndpoint &endpoint)
@@ -70,11 +70,11 @@ public:
 		typedef std::vector<ACE_INET_Addr> Addrs;
 		Addrs addrs;
 		if (m_endpoint.IsCombined()) {
-			BOOST_ASSERT(m_endpoint.CheckCombinedAddressType<InetEndpointAddress>());
+			assert(m_endpoint.CheckCombinedAddressType<InetEndpointAddress>());
 			addrs.push_back(
 				m_endpoint.GetCombinedTypedAddress<InetEndpointAddress>().GetAceInetAddr());
 		} else {
-			BOOST_ASSERT(
+			assert(
 				m_endpoint.CheckReadAddressType<InetEndpointAddress>()
 				|| m_endpoint.CheckWriteAddressType<InetEndpointAddress>());
 			if (m_endpoint.CheckReadAddressType<InetEndpointAddress>()) {
@@ -171,7 +171,7 @@ public:
 		Lock lock(m_endpointCollectionsMutex);
 		const EndpointCollections::iterator pos
 			= m_endpointCollections.find(&endpoints);
-		BOOST_ASSERT(pos != m_endpointCollections.end());
+		assert(pos != m_endpointCollections.end());
 		if (pos != m_endpointCollections.end()) {
 			m_endpointCollections.erase(pos);
 		}
@@ -349,7 +349,7 @@ DestinationPingFilter::DestinationPingFilter(
 	
 	if (!m_objectCount++) {
 		// Do not use locking here, construction and destructing always in one thread.
-		BOOST_ASSERT(!m_thread);
+		assert(!m_thread);
 		m_thread = new Thread;
 	}
 	m_thread->Register(*this, m_endpoints);
@@ -365,7 +365,7 @@ DestinationPingFilter::~DestinationPingFilter() {
 	if (m_isActive) {
 		m_thread->Unregister(m_endpoints);
 		if (!--m_objectCount) {
-			BOOST_ASSERT(m_thread);
+			assert(m_thread);
 			delete m_thread;
 			m_thread = 0;
 		}

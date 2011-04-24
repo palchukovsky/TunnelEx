@@ -143,7 +143,7 @@ namespace TunnelEx { namespace Licensing {
 				<< Test::licenseKeyTestServer->GetAsymmetricPrivateKeyFileModif()
 				<< ".pem";
 			std::ifstream f(oss.str().c_str());
-			BOOST_ASSERT(f);
+			assert(f);
 			f.unsetf(std::ios::skipws);
 			return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 		}
@@ -152,7 +152,7 @@ namespace TunnelEx { namespace Licensing {
 			std::ostringstream oss;
 			oss << "Resource\\LicenseKey" << Test::licenseKeyTestServer->GetLicenseKeyFileModif() << ".key";
 			std::ifstream f(oss.str().c_str());
-			BOOST_ASSERT(f);
+			assert(f);
 			f.unsetf(std::ios::skipws);
 			return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 		}
@@ -277,7 +277,7 @@ namespace Test {
 
 	bool GetValidLicenseKeyXml(std::string &result, const boost::any &) {
 		std::ifstream f("Resource\\LicenseKeyValid.xml");
-		BOOST_ASSERT(f);
+		assert(f);
 		f.unsetf(std::ios::skipws);
 		std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()).swap(result);
 		return true;

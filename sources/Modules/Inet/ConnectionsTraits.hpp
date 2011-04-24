@@ -96,7 +96,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		struct Udp<true, isInput> {
 			// DTLS does not implemented yet!
 			Udp() {
-				BOOST_ASSERT(false); // added static instead
+				assert(false); // added static instead
 			}
 		};
 
@@ -122,7 +122,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		struct TcpIn<isSecured, false> {
 			// Scenario not implemented yet
 			TcpIn() {
-				BOOST_ASSERT(false); // added static instead
+				assert(false); // added static instead
 			}
 		};
 

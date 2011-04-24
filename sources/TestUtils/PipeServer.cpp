@@ -59,7 +59,7 @@ private:
 				bufferSize,
 				0,
 				NULL);
-			BOOST_ASSERT(m_handle != INVALID_HANDLE_VALUE);
+			assert(m_handle != INVALID_HANDLE_VALUE);
 			if (m_handle == INVALID_HANDLE_VALUE) {
 				CloseHandle(m_overlap.hEvent);
 				throw std::exception("Could not start pipe server.");
@@ -69,9 +69,9 @@ private:
 	
 		~Connection() {
 			BOOL operationResult = FlushFileBuffers(m_handle);
-			BOOST_ASSERT(operationResult == TRUE);
+			assert(operationResult == TRUE);
 			operationResult = DisconnectNamedPipe(m_handle);
-			BOOST_ASSERT(operationResult == TRUE);
+			assert(operationResult == TRUE);
 			CloseHandle(m_handle);
 		}
 	
@@ -114,7 +114,7 @@ private:
 			// Start an overlapped connection for this pipe instance.
 			// Overlapped ConnectNamedPipe should return zero.
 			const bool isConnected = ConnectNamedPipe(m_handle, &m_overlap) == 0;
-			BOOST_ASSERT(isConnected);
+			assert(isConnected);
 			if (!isConnected ) {
 				throw std::exception("Could not connect to named pipe.");
 			}
@@ -134,11 +134,11 @@ private:
 		}
 	
 		bool GetPendingResult() {
-			BOOST_ASSERT(m_isPanding);
+			assert(m_isPanding);
 			DWORD bytesTransferred;
 			const BOOL isSuccess = GetOverlappedResult( 
 				m_handle, &m_overlap, &bytesTransferred, FALSE);
-			BOOST_ASSERT(isSuccess == TRUE);
+			assert(isSuccess == TRUE);
 			return isSuccess == TRUE;
 		}
 	
@@ -253,7 +253,7 @@ private:
 					m_connections.push_back(activeConnection);
 					break;
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 					stop = true;
 				}
 			}

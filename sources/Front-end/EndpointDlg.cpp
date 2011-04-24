@@ -117,7 +117,7 @@ void EndpointDlg::EndpointInfoItem::EnableSsl(bool isEnable) {
 void EndpointDlg::EndpointInfoItem::EnableSsl(
 			const SslCertificateId &newCertificate,
 			const SslCertificateIdCollection &newRemoteCertificates) {
-	BOOST_ASSERT(!newCertificate.IsEmpty() || newRemoteCertificates.GetSize() == 0);
+	assert(!newCertificate.IsEmpty() || newRemoteCertificates.GetSize() == 0);
 	const bool isEnabled = !newCertificate.IsEmpty();
 	sslUseInput->SetValue(isEnabled);
 	sslSettings->Enable(isEnabled);
@@ -243,7 +243,7 @@ bool EndpointDlg::SaveEndpointAddress(
 	switch (info.GetType()) {
 
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 
 		case ENDPOINT_TYPE_NETWORK:
 			{
@@ -255,7 +255,7 @@ bool EndpointDlg::SaveEndpointAddress(
 						&& info.IsAccepting()
 						&& RuleUtils::IsUpnpAdapterSelected(*info.adapterInput)) {
 
-					BOOST_ASSERT(info.adapterInput->GetCount() > 0);
+					assert(info.adapterInput->GetCount() > 0);
 
 					if (info.networkProtoInput->GetStringSelection() == wxT("TCP")) {
 						resourceIdentifier << UpnpTcpEndpointAddress::CreateResourceIdentifier(
@@ -264,7 +264,7 @@ bool EndpointDlg::SaveEndpointAddress(
 								info.remoteCertificates)
 							.GetCStr();
 					} else {
-						BOOST_ASSERT(info.networkProtoInput->GetStringSelection() == wxT("UDP"));
+						assert(info.networkProtoInput->GetStringSelection() == wxT("UDP"));
 						resourceIdentifier << UpnpUdpEndpointAddress::CreateResourceIdentifier(
 								port,
 								info.certificate,
@@ -372,7 +372,7 @@ bool EndpointDlg::SaveEndpointAddress(
 								.GetCStr();
 					}
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 			}
 			break;
@@ -486,7 +486,7 @@ void EndpointDlg::OnOk(wxCommandEvent &) {
 				break;
 			}
 		}
-		BOOST_ASSERT(listenersNumb > i);
+		assert(listenersNumb > i);
 	}
 
 	if (hasChanges) {
@@ -516,21 +516,21 @@ void EndpointDlg::SaveEnpointTemplate() const {
 			switch (info.GetType()) {
 				case ENDPOINT_TYPE_NETWORK:
 					result = info.networkProtoInput->GetStringSelection();
-					BOOST_ASSERT(!(isFtp && result != wxT("TCP")));
+					assert(!(isFtp && result != wxT("TCP")));
 					if (result == wxT("TCP") && isFtp) {
 						result = wxT("FTP");
 					}
 					break;
 				case ENDPOINT_TYPE_PIPE:
-					BOOST_ASSERT(!isFtp);
+					assert(!isFtp);
 					result = wxT("pipe");
 					break;
 				case ENDPOINT_TYPE_SERIAL:
-					BOOST_ASSERT(!isFtp);
+					assert(!isFtp);
 					result = wxT("serial");
 					break;
 				default:
-					BOOST_ASSERT(false);
+					assert(false);
 			}
 			return result;
 		}
@@ -742,7 +742,7 @@ void EndpointDlg::ShowControlReadWriteTypeEndpoint(int &y) {
 void EndpointDlg::ShowControlEndpoint(EndpointInfoItem &info, int &y) {
 
 	if (IsSplitEndpoint()) {
-		BOOST_ASSERT(!m_isFtpEndpoint);
+		assert(!m_isFtpEndpoint);
 		info.group->SetLabel(
 			info.isReadOrCombined
 				?	wxT("Endpoint: reading")
@@ -873,7 +873,7 @@ void EndpointDlg::ShowControlEndpointAction(EndpointInfoItem &info, int &y) {
 			info.isAcceptingInput->Show(true);
 			info.isAcceptingUdp->Show(false);
 		} else {
-			BOOST_ASSERT(info.networkProtoInput->GetStringSelection() == wxT("UDP"));
+			assert(info.networkProtoInput->GetStringSelection() == wxT("UDP"));
 			info.isAcceptingUdp->SetPosition(wxPoint(x, y));
 			CenterControls(*info.isAcceptingLabel, *info.isAcceptingUdp);
 			info.isAcceptingInput->Show(false);
@@ -887,7 +887,7 @@ void EndpointDlg::ShowControlEndpointAction(EndpointInfoItem &info, int &y) {
 	} else {
 		info.isAcceptingInput->Show(false);
 		info.isAcceptingUdp->Show(false);
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 	y += info.isAcceptingInput->GetSize().GetHeight();
 }
@@ -1597,10 +1597,10 @@ void EndpointDlg::CreateControlLog() {
 			bool result = true;
 			wxCheckBox *toggleCtrl = dynamic_cast<wxCheckBox *>(
 				parent->FindWindow(EndpointDlg::CONTROL_ID_LOGTRAFFIC_TOGGLE));
-			BOOST_ASSERT(toggleCtrl);
+			assert(toggleCtrl);
 			if (toggleCtrl->GetValue()) {
 				wxTextCtrl *ctrl = dynamic_cast<wxTextCtrl*>(GetWindow());
-				BOOST_ASSERT(ctrl);
+				assert(ctrl);
 				//! \todo: implemented only for Windows [2008/01/29 4:19]
 				const std::wstring dir(ctrl->GetValue().c_str());
 				result = boost::regex_match(
@@ -1785,7 +1785,7 @@ void EndpointDlg::ReadEndpointInfo(
 		info.SetType(ENDPOINT_TYPE_NETWORK);
 		info.networkProtoInput->SetStringSelection(wxT("TCP"));
 
-		BOOST_ASSERT(dynamic_cast<const TcpEndpointAddress *>(&address) != 0);
+		assert(dynamic_cast<const TcpEndpointAddress *>(&address) != 0);
 		if (dynamic_cast<const TcpEndpointAddress *>(&address) != 0) {
 			const TcpEndpointAddress &typedAddress
 				= *boost::polymorphic_downcast<const TcpEndpointAddress *>(&address);
@@ -1896,7 +1896,7 @@ void EndpointDlg::ReadEndpointInfo(
 		if (dynamic_cast<const UpnpTcpEndpointAddress *>(&address)) {
 			info.networkProtoInput->SetStringSelection(wxT("TCP"));
 		} else {
-			BOOST_ASSERT(dynamic_cast<const UpnpUdpEndpointAddress *>(&address));
+			assert(dynamic_cast<const UpnpUdpEndpointAddress *>(&address));
 			info.networkProtoInput->SetStringSelection(wxT("UDP"));
 		}
 
@@ -1910,7 +1910,7 @@ void EndpointDlg::ReadEndpointInfo(
 			info.SetType(ENDPOINT_TYPE_PIPE);
 			info.pipeInput->SetValue(what[2].str());
 		} else {
-			BOOST_ASSERT(false);
+			assert(false);
 			info.hostInput->Clear();
 			info.portInput->Clear();
 			info.pipeInput->Clear();
@@ -1956,7 +1956,7 @@ void EndpointDlg::CreateDefaultEndpointInfo(EndpointInfoItem &info) const {
 		} else if (typeName == wxT("serial")) {
 			info.SetType(ENDPOINT_TYPE_SERIAL);
 		} else {
-			BOOST_ASSERT(typeName.IsEmpty());
+			assert(typeName.IsEmpty());
 		}
 	}
 
@@ -1970,7 +1970,7 @@ void EndpointDlg::CreateDefaultEndpointInfo(EndpointInfoItem &info) const {
 		} else if (acceptor == wxT("none")) {
 			info.SetAccepting(false);
 		} else {
-			BOOST_ASSERT(acceptor.IsEmpty());
+			assert(acceptor.IsEmpty());
 		}
 	}
 	
@@ -1982,10 +1982,10 @@ void EndpointDlg::ReadEndpointInfo() {
 		SetSplitEndpoint(false);
 		CreateDefaultEndpointInfo(m_endpointsInfo[1]);
 	} else if (m_endpoint.IsCombined() || m_isFtpEndpoint) {
-		BOOST_ASSERT(m_endpoint.IsCombined());
+		assert(m_endpoint.IsCombined());
 		if (m_endpoint.IsCombined()) {
 			ReadEndpointInfo(*m_endpoint.GetCombinedAddress(), m_endpointsInfo[0]);
-			BOOST_ASSERT(
+			assert(
 				!m_isFtpEndpoint
 				|| !m_isInputEndpoint
 				|| m_endpoint.IsCombinedAcceptor());

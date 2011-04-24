@@ -80,7 +80,7 @@ namespace TunnelEx {
 				try {
 					AppendDebug(ConvertString<String>(message).GetCStr());
 				} catch (...) {
-					BOOST_ASSERT(false);
+					AppendWarn("Format-error for the log string.");
 				}
 			}
 			//! Format and add debug message.

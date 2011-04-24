@@ -46,7 +46,7 @@ void EndpointAddress::StatConnectionSetupCanceling(
 			const WString &reason)
 		const
 		throw() {
-	BOOST_ASSERT(!reason.IsEmpty());
+	assert(!reason.IsEmpty());
 	Log::GetInstance().AppendError(
 		ConvertString<String>(reason.GetCStr()).GetCStr());
 	StatConnectionSetupCanceling();

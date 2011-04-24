@@ -170,7 +170,7 @@ namespace TunnelEx { namespace Licensing {
 			} else if (editionUuid == EnterpriseEdition::GetUuid()) {
 				return EnterpriseEdition::GetId();
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				throw std::bad_cast();
 			}
 		}
@@ -185,7 +185,7 @@ namespace TunnelEx { namespace Licensing {
 			} else if (editionUuid == EnterpriseEdition::GetId()) {
 				return EnterpriseEdition::GetUuid();
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				throw std::bad_cast();
 			}
 		}
@@ -200,7 +200,7 @@ namespace TunnelEx { namespace Licensing {
 			} else if (editionUuid == EnterpriseEdition::GetId()) {
 				return EnterpriseEdition::GetName();
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				throw std::bad_cast();
 			}
 		}
@@ -249,7 +249,7 @@ namespace TunnelEx { namespace Licensing {
 			} else if (propertyUuid == OsVolumeProperty::GetUuid()) {
 				return OsVolumeProperty::GetId();
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				throw std::bad_cast();
 			}
 		}
@@ -266,7 +266,7 @@ namespace TunnelEx { namespace Licensing {
 			} else if (prop == OsVolumeProperty::GetId()) {
 				return OsVolumeProperty::GetUuid();
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				throw std::bad_cast();
 			}
 		}
@@ -288,7 +288,7 @@ namespace TunnelEx { namespace Licensing {
 				try {
 					const WorkstationProperty id
 						= CastStringToProperty(node->GetAttribute("Name", buffer));
-					BOOST_ASSERT(resultTmp.find(id) == resultTmp.end());
+					assert(resultTmp.find(id) == resultTmp.end());
 					resultTmp[id] = node->GetContent(buffer);
 				} catch (const std::bad_cast &) {
 					return false;
@@ -560,7 +560,7 @@ namespace TunnelEx { namespace Licensing {
 					const WorkstationProperty id
 						= WorkstationPropertiesQuery::CastStringToProperty(
 							node->GetAttribute("Property", buffer));
-					BOOST_ASSERT(result->workstationPropertiesScores.find(id)
+					assert(result->workstationPropertiesScores.find(id)
 						== result->workstationPropertiesScores.end());
 					result->workstationPropertiesScores[id]
 						= ValueCasting::Cast<Scores>(node->GetContent(buffer));

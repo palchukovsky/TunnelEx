@@ -112,8 +112,8 @@ namespace TunnelEx { namespace Licensing {
 					const std::string &control,
 					const std::string &local) {
 			const size_t hashSize = 40;
-			BOOST_ASSERT(!(control.size() % hashSize));
-			BOOST_ASSERT(!(local.size() % hashSize));
+			assert(!(control.size() % hashSize));
+			assert(!(local.size() % hashSize));
 			if (	!(control.size() % hashSize)
 					&& !(local.size() % hashSize)
 					&& !control.empty()) {
@@ -126,7 +126,7 @@ namespace TunnelEx { namespace Licensing {
 						= boost::find_first(control, sub);
 					if (	searchResult
 							&& !(std::distance(control.begin(), searchResult.begin()) % hashSize)) {
-						BOOST_ASSERT(!(std::distance(boost::end(searchResult), control.end()) % hashSize));
+						assert(!(std::distance(boost::end(searchResult), control.end()) % hashSize));
 						return true;
 					}
 				}

@@ -233,8 +233,8 @@ namespace {
 				insertRule.reset(new typename RuleSet::ItemType(serviceRule));
 			} else {
 				const RulesMap::const_iterator pos = currentRuleSet.find(id);
-				BOOST_ASSERT(pos != currentRuleSet.end());
-				BOOST_ASSERT(IsRule<RuleSet::ItemType>(pos->second));
+				assert(pos != currentRuleSet.end());
+				assert(IsRule<RuleSet::ItemType>(pos->second));
 				if (	pos != currentRuleSet.end()
 						&& IsRule<RuleSet::ItemType>(pos->second)) {
 					insertRule.reset(
@@ -265,7 +265,7 @@ void ServiceWindow::RefreshRuleSet() {
 
 	foreach (const NotAppliedRulesUuids::value_type &r, tmpNotAppliedRules) {
 		const RulesMap::const_iterator pos = m_rules.find(r.first);
-		BOOST_ASSERT(pos != m_rules.end());
+		assert(pos != m_rules.end());
 		if (pos != m_rules.end()) {
 			std::auto_ptr<Rule> rule = Clone(pos->second);
 			newRuleSet.insert(r.first, rule);
@@ -348,7 +348,7 @@ void ServiceWindow::AddRule(const Rule &rule) {
 			&& !wxGetApp().IsUnlimitedModeActive()) {
 		newRule->Enable(false);
 	}
-	BOOST_ASSERT(m_rules.find(newRule->GetUuid().GetCStr()) == m_rules.end());
+	assert(m_rules.find(newRule->GetUuid().GetCStr()) == m_rules.end());
 	Apply(*newRule);
 }
 
@@ -395,7 +395,7 @@ void ServiceWindow::EditSelectedRule() {
 			}
 		}
 	} else {
-		BOOST_ASSERT(IsService(selectedRuleCopy.get()));
+		assert(IsService(selectedRuleCopy.get()));
 		selectedRuleCopy = ServiceRuleDlg::EditRule(
 			*this,
 			*this,
@@ -407,13 +407,13 @@ void ServiceWindow::EditSelectedRule() {
 
 	const WString id = selectedRuleCopy->GetUuid();
 	const RulesMap::iterator pos(m_rules.find(id.GetCStr()));
-	BOOST_ASSERT(pos != m_rules.end());
+	assert(pos != m_rules.end());
 	if (pos != m_rules.end()) {
 		if (m_notAppliedRules.find(id.GetCStr()) != m_notAppliedRules.end()) {
 			RulesMap rules;
 			rules = m_rules.clone();
 			const RulesMap::iterator pos(rules.find(id.GetCStr()));
-			BOOST_ASSERT(pos != rules.end());
+			assert(pos != rules.end());
 			rules.erase(pos);
 			rules.insert(id.GetCStr(), selectedRuleCopy);
 			m_rules.swap(rules);
@@ -594,7 +594,7 @@ void ServiceWindow::SetServiceState(ServiceState state) {
 
 void ServiceWindow::OpenServiceLog() {
 
-	BOOST_ASSERT(!m_logWindows.get());
+	assert(!m_logWindows.get());
 	if (m_logWindows.get()) {
 		return;
 	}
@@ -610,7 +610,7 @@ void ServiceWindow::OpenServiceLog() {
 }
 
 void ServiceWindow::CloseServiceLog() {
-	BOOST_ASSERT(m_logWindows.get());
+	assert(m_logWindows.get());
 	m_logWindows.reset();
 }
 
@@ -743,7 +743,7 @@ void ServiceWindow::ApplyChanges() {
 		foreach (const NotAppliedRulesUuids::value_type &r, m_notAppliedRules) {
 			if (r.second != NARS_DELETED) {
 				const RulesMap::const_iterator pos = m_rules.find(r.first);
-				BOOST_ASSERT(pos != m_rules.end());
+				assert(pos != m_rules.end());
 				if (pos != m_rules.end()) {
 					Append(pos->second, changedRules);
 				}
@@ -751,7 +751,7 @@ void ServiceWindow::ApplyChanges() {
 				deletedRules.insert(r.first);
 			}
 		}
-		BOOST_ASSERT(changedRules.GetSize() || deletedRules.size());
+		assert(changedRules.GetSize() || deletedRules.size());
 		NotAppliedRulesUuids().swap(m_notAppliedRules);
 		if (changedRules.GetSize() > 0 || deletedRules.size() > 0) {
 			if (deletedRules.size() > 0) {
@@ -792,7 +792,7 @@ void ServiceWindow::ApplyChangesForSelectedRules() {
 		if (notAppliedPos != tmpNotAppliedRules.end()) {
 			if (notAppliedPos->second != NARS_DELETED) {
 				const RulesMap::const_iterator rulePos = m_rules.find(id);
-				BOOST_ASSERT(rulePos != m_rules.end());
+				assert(rulePos != m_rules.end());
 				if (rulePos != m_rules.end()) {
 					Append(rulePos->second, changedRules);
 				}
@@ -803,7 +803,7 @@ void ServiceWindow::ApplyChangesForSelectedRules() {
 		}
 	}
 
-	BOOST_ASSERT(changedRules.GetSize() || deletedRules.size());
+	assert(changedRules.GetSize() || deletedRules.size());
 	m_notAppliedRules.swap(tmpNotAppliedRules);
 	if (changedRules.GetSize() || deletedRules.size()) {
 		if (deletedRules.size()) {
@@ -990,7 +990,7 @@ wxString ServiceWindow::ExportSelectedRules() const {
 	RuleSet rulesToExport;
 	foreach (const RulesUuids::value_type &id, selectedUuids) {
 		const RulesMap::const_iterator pos = m_rules.find(id);
-		BOOST_ASSERT(pos != m_rules.end());
+		assert(pos != m_rules.end());
 		if (pos == m_rules.end()) {
 			continue;
 		}
@@ -1032,7 +1032,7 @@ size_t ServiceWindow::GetEnabledSelectedRulesCount() const {
 
 bool ServiceWindow::IsRuleEnabled(const std::wstring &ruleUuid) const {
 	const RulesMap::const_iterator rule = m_rules.find(ruleUuid);
-	BOOST_ASSERT(rule != m_rules.end());
+	assert(rule != m_rules.end());
 	if (rule != m_rules.end() && rule->second->IsEnabled()) {
 		const NotAppliedRulesUuids::const_iterator notAppliedPos
 			= m_notAppliedRules.find(ruleUuid);
@@ -1053,7 +1053,7 @@ size_t ServiceWindow::GetDisabledSelectedRulesCount() const {
 	const NotAppliedRulesUuids::const_iterator notAppliedEnd = m_notAppliedRules.end();
 	foreach (const RulesUuids::value_type &id, selectedUuids) {
 		const RulesMap::const_iterator rule = m_rules.find(id);
-		BOOST_ASSERT(rule != m_rules.end());
+		assert(rule != m_rules.end());
 		if (rule != m_rules.end() && !rule->second->IsEnabled()) {
 			const NotAppliedRulesUuids::const_iterator notAppliedPos
 				= m_notAppliedRules.find(id);
@@ -1205,7 +1205,7 @@ namespace {
 			Handles handles;
 			handles.inet
 				= InternetOpenA(TUNNELEX_NAME, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, 0);
-			BOOST_ASSERT(handles.inet);
+			assert(handles.inet);
 			if (!handles.inet) {
 				return 0;
 			}
@@ -1218,7 +1218,7 @@ namespace {
 				INTERNET_SERVICE_HTTP,
 				0,
 				0);
-			BOOST_ASSERT(handles.connect);
+			assert(handles.connect);
 			if (!handles.connect) {
 				return 0;
 			}
@@ -1233,7 +1233,7 @@ namespace {
 					| INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI
 					| INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD,
 				0);
-			BOOST_ASSERT(handles.request);
+			assert(handles.request);
 			if (!handles.request) {
 				return 0;
 			}
@@ -1275,7 +1275,7 @@ namespace {
 						&answer[realAnswerSize],
 						DWORD(answer.size() - realAnswerSize),
 						&bytesRead);
-					BOOST_ASSERT(readResult);
+					assert(readResult);
 					if (!readResult) {
 						return 0;
 					} if (bytesRead == 0) {
@@ -1286,7 +1286,7 @@ namespace {
 						answer.resize(answer.size() + 256);
 					}
 				}
-				BOOST_ASSERT(answer.size() >= realAnswerSize);
+				assert(answer.size() >= realAnswerSize);
 				answer.resize(realAnswerSize + 1);
 				answer[realAnswerSize] = 0;
 #				if defined(_DEBUG) || defined(TEST)
@@ -1303,7 +1303,7 @@ namespace {
 						++i) {
 					std::string line = boost::copy_range<std::string>(*i);
 					boost::trim_if(line, boost::is_space() || boost::is_cntrl());
-					BOOST_ASSERT(!line.empty());
+					assert(!line.empty());
 					if (line.empty()) {
 						continue;
 					} else if (licenseTmp.empty()) {
@@ -1312,15 +1312,15 @@ namespace {
 						try {
 							periodTmp = boost::lexical_cast<size_t>(line);
 						} catch (const std::bad_cast &) {
-							BOOST_ASSERT(false);
+							assert(false);
 						}
 						break;
 					}
 				}
 			}
 			
-			BOOST_ASSERT(!licenseTmp.empty());
-			BOOST_ASSERT(periodTmp != 0);
+			assert(!licenseTmp.empty());
+			assert(periodTmp != 0);
 			licenseTmp.swap(m_license);
 			m_period = periodTmp;
 
@@ -1370,14 +1370,14 @@ bool ServiceWindow::Activate() {
 
 bool ServiceWindow::ActivateTrial() {
 
-	BOOST_ASSERT(m_trialLicenseCache.empty() || !m_trialLicenseCacheTime.is_not_a_date_time());
+	assert(m_trialLicenseCache.empty() || !m_trialLicenseCacheTime.is_not_a_date_time());
 	if (	m_trialLicenseCache.empty()
 			||  pt::second_clock::universal_time() - m_trialLicenseCacheTime >= pt::hours(24)) {
 
 		using namespace Licensing;
 
 		std::auto_ptr<ExeLicense> currentLicense(new ExeLicense(LicenseState(GetService())));
-		BOOST_ASSERT(!currentLicense->IsTrial());
+		assert(!currentLicense->IsTrial());
 		if (currentLicense->IsTrial()) {
 			wxMessageBox(
 				wxT("Product trial already activated."),
@@ -1413,7 +1413,7 @@ bool ServiceWindow::ActivateTrial() {
 		m_trialLicensePeriodCache = period;
 
 	} else {
-		BOOST_ASSERT(m_trialLicensePeriodCache != 0);
+		assert(m_trialLicensePeriodCache != 0);
 	}
 
 	WFormat message(

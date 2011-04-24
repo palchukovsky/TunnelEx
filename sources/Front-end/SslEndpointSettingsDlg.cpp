@@ -195,8 +195,8 @@ void SslEndpointSettingsDlg::SelectCertificate() {
 	}
 	SslCertificateIdCollection ids;
 	dlg.GetSelected(ids);
-	BOOST_ASSERT(ids.GetSize() == 1);
-	BOOST_ASSERT(ids.GetSize() == 0 || !ids[0].IsEmpty());
+	assert(ids.GetSize() == 1);
+	assert(ids.GetSize() == 0 || !ids[0].IsEmpty());
 	if (ids.GetSize() > 0 && !ids[0].IsEmpty()) {
 		m_certificate = ids[0];
 	} else {
@@ -212,7 +212,7 @@ void SslEndpointSettingsDlg::SelectRemoteCertificates() {
 		return;
 	}
 	dlg.GetSelected(m_remoteCertificates);
-	BOOST_ASSERT(m_remoteCertificates.GetSize() > 0);
+	assert(m_remoteCertificates.GetSize() > 0);
 	UpdateState();
 }
 
@@ -249,7 +249,7 @@ void SslEndpointSettingsDlg::OnVerifyRemoteCertificatesToggle(wxCommandEvent &) 
 
 void SslEndpointSettingsDlg::UpdateState() {
 
-	BOOST_ASSERT(!m_certificate.IsEmpty());
+	assert(!m_certificate.IsEmpty());
 
 	if (m_certificate != TcpEndpointAddress::GetAnonymousSslCertificateMagicName()) {
 		texs__SslCertificateInfo info;

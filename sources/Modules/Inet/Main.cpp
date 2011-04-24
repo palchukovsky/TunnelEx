@@ -30,7 +30,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	} else if (fdwReason == DLL_PROCESS_DETACH) {
 		const int finiResult = ACE::fini();
 		finiResult;
-		BOOST_ASSERT(finiResult != -1);
+		assert(finiResult != -1);
 	}
 	return TRUE;
 }

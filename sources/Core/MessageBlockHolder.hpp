@@ -40,7 +40,7 @@ namespace TunnelEx {
 	public:
 
 		void Release() throw() {
-			BOOST_ASSERT(Test());
+			assert(Test());
 			m_messageBlock = 0;
 		}
 
@@ -51,7 +51,7 @@ namespace TunnelEx {
 	public:
 
 		ACE_Message_Block & Get() throw() {
-			BOOST_ASSERT(Test());
+			assert(Test());
 			return *m_messageBlock;
 		}
 
@@ -62,17 +62,17 @@ namespace TunnelEx {
 	public:
 
 		virtual const char * GetData() const throw() {
-			BOOST_ASSERT(Test());
+			assert(Test());
 			return m_messageBlock->rd_ptr();
 		}
 
 		virtual size_t GetUnreadedDataSize() const throw() {
-			BOOST_ASSERT(Test());
+			assert(Test());
 			return m_messageBlock->length();
 		}
 
 		virtual void SetData(const char *data, size_t length){
-			BOOST_ASSERT(Test());
+			assert(Test());
 			std::auto_ptr<ACE_Message_Block> newBlock(
 				new ACE_Message_Block(
 					length,
@@ -86,7 +86,7 @@ namespace TunnelEx {
 					ACE_Time_Value::max_time,
 					0,
 					0));
-			BOOST_ASSERT(!(newBlock->data_block()->size () < length));
+			assert(!(newBlock->data_block()->size () < length));
 			if (newBlock->data_block()->size () < length) {
 				// using SystemException instead InsufficientMemoryException
 				// as using internal memory buffer, not system.
@@ -103,17 +103,17 @@ namespace TunnelEx {
 		}
 
 		virtual void MarkAsAddedToQueue() throw() {
-			BOOST_ASSERT(Test());
-			BOOST_ASSERT(!m_isAddedToQueue);
+			assert(Test());
+			assert(!m_isAddedToQueue);
 			m_isAddedToQueue = true;
 		}
 		virtual bool IsAddedToQueue() const throw() {
-			BOOST_ASSERT(Test());
+			assert(Test());
 			return m_isAddedToQueue;
 		}
 
 		virtual bool IsTunnelMessage() const throw() {
-			BOOST_ASSERT(Test());
+			assert(Test());
 			return m_messageBlock->flags() & FLAG_TUNNEL_MESSAGE ? true : false;
 		}
 
@@ -128,7 +128,7 @@ namespace TunnelEx {
 			ACE_Message_Block *const result
 				= static_cast<ACE_Message_Block *>(
 					messageBlocksAllocator.malloc(sizeof(ACE_Message_Block)));
-			BOOST_ASSERT(result != 0);
+			assert(result != 0);
 			if (result == 0) {
 				// using SystemException instead InsufficientMemoryException
 				// as using internal memory buffer, not system.
@@ -147,7 +147,7 @@ namespace TunnelEx {
 				ACE_Time_Value::max_time,
 				&dataBlocksAllocator,
 				&messageBlocksAllocator);
-			BOOST_ASSERT(!(result->data_block()->size () < size));
+			assert(!(result->data_block()->size () < size));
 			if (result->data_block()->size () < size) {
 				Delete(*result);
 				// using SystemException instead InsufficientMemoryException
@@ -168,9 +168,9 @@ namespace TunnelEx {
 				dataBlocksAllocator,
 				messageBlocksAllocator);
 			if (messageBlocksAllocator) {
-				BOOST_ASSERT(messageBlock.flags() & FLAG_TUNNEL_MESSAGE);
-				BOOST_ASSERT(dataBlocksAllocator);
-				BOOST_ASSERT(dataBlocksBufferAllocator);
+				assert(messageBlock.flags() & FLAG_TUNNEL_MESSAGE);
+				assert(dataBlocksAllocator);
+				assert(dataBlocksBufferAllocator);
 				messageBlock.~ACE_Message_Block();
 				messageBlocksAllocator->free(&messageBlock);
 			} else {

@@ -25,7 +25,7 @@ public:
 	~AutoBusy() {
 		--m_refCount;
 		if (m_oldCursor.get()) {
-			BOOST_ASSERT(m_refCount == 0);
+			assert(m_refCount == 0);
 			m_window.SetCursor(*m_oldCursor);
 		}
 	}

@@ -39,7 +39,7 @@ namespace TunnelEx { namespace Licensing {
 			{
 				std::string now
 					= pt::to_iso_extended_string(pt::second_clock::universal_time());
-				BOOST_ASSERT(now[10] == 'T');
+				assert(now[10] == 'T');
 				now[10] = ' ';
 				release->CreateNewChild("Time")->SetContent(now);
 			}

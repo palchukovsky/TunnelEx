@@ -81,7 +81,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		void NotifyConnectionClose(const Connection &connection) {
 			ACE_UNUSED_ARG(connection);
 			DataConnectionWriteLock lock(m_dataConnectionMutex);
-			BOOST_ASSERT(&connection == m_dataConnection);
+			assert(&connection == m_dataConnection);
 			m_dataConnection = 0;
 		}
 
@@ -94,7 +94,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual UniquePtr<TunnelEx::Connection> Accept() {
 
 			DataConnectionWriteLock lock(m_dataConnectionMutex);
-			BOOST_ASSERT(m_dataConnection == 0);
+			assert(m_dataConnection == 0);
 
 			std::vector<char> incomingData;
 			ACE_INET_Addr senderAddr;

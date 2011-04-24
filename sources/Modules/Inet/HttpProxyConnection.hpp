@@ -49,7 +49,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					message % GetInstanceId();
 					Log::GetInstance().AppendWarn(message.str().c_str());
 				} catch (...) {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 			}
 		}
@@ -59,7 +59,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual void Setup() {
 			StartReadRemote();
 			m_currentProxy = m_address.GetProxyList().begin();
-			BOOST_ASSERT(m_currentProxy != m_address.GetProxyList().end());
+			assert(m_currentProxy != m_address.GetProxyList().end());
 			SetupCurrentProxy();
 		}
 

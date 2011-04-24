@@ -131,7 +131,7 @@ public:
 		}
 		if (result->IsChanged()) {
 			const bool saveResult = result->Save();
-			BOOST_ASSERT(saveResult);
+			assert(saveResult);
 			if (saveResult && !ServiceConfiguration::IsTestMode()) {
 				ServiceFilesSecurity::Set(ServiceConfiguration::GetConfigurationFileDir());
 			}
@@ -167,7 +167,7 @@ public:
 			const bool isEnabled
 				= Server::GetInstance().IsRuleEnabled(ruleSet[i].GetUuid());
 			if (isEnabled != ruleSet[i].IsEnabled()) {
-				BOOST_ASSERT(!isEnabled);
+				assert(!isEnabled);
 				ruleSet[i].Enable(isEnabled);
 				hasChanges = true;
 			}
@@ -702,7 +702,7 @@ void TexServiceImplementation::GetProperties(std::vector<unsigned char> &result)
 			reinterpret_cast<ValSize &>(*&notEncryptedBuffer[i]) = ValSize(prop.second.size());
 			i += sizeof(ValSize);
 			memcpy(&notEncryptedBuffer[i], prop.second.c_str(), prop.second.size());
-			BOOST_ASSERT(i + prop.second.size() == notEncryptedBuffer.size());
+			assert(i + prop.second.size() == notEncryptedBuffer.size());
 		}
 
 	} else {
@@ -896,7 +896,7 @@ void TexServiceImplementation::ImportSslCertificateX509(
 		return;
 	}
 
-	BOOST_ASSERT(x509.get() != 0 || privateKey.get() == 0);
+	assert(x509.get() != 0 || privateKey.get() == 0);
 
 	try {
 		Log::GetInstance().AppendDebug("Installing public SSL certificate...");
@@ -935,7 +935,7 @@ void TexServiceImplementation::ImportSslCertificatePkcs12(
 		return;
 	}
 
-	BOOST_ASSERT(pkcs12.get() != 0);
+	assert(pkcs12.get() != 0);
 	
 	std::auto_ptr<const X509Private> x509;
 	try {
@@ -951,7 +951,7 @@ void TexServiceImplementation::ImportSslCertificatePkcs12(
 		return;
 	}
 
-	BOOST_ASSERT(x509.get() != 0);
+	assert(x509.get() != 0);
 		
 	Log::GetInstance().AppendDebug("Installing private SSL certificate...");
 	try {

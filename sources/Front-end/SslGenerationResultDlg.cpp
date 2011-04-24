@@ -50,8 +50,8 @@ SslGenerationResultDlg::SslGenerationResultDlg(
 		m_mode(mode),
 		m_isKeySaved(false),
 		m_isClosing(false) {
-	BOOST_ASSERT(!privateKey.IsEmpty());
-	BOOST_ASSERT(!content.IsEmpty());
+	assert(!privateKey.IsEmpty());
+	assert(!content.IsEmpty());
 	CreateControls(privateKey, content);
 }
 
@@ -100,7 +100,7 @@ void SslGenerationResultDlg::OnSaveContent(wxCommandEvent &) {
 			filter = wxT("Certificate Signing Request (*.csr)|*.csr");
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 	}
 
 	wxFileDialog fileRequestDlg(
@@ -178,7 +178,7 @@ void SslGenerationResultDlg::OnCopyContent(wxCommandEvent &) {
 
 void SslGenerationResultDlg::Copy(const wxTextCtrl &ctrl) const {
 	if (!wxTheClipboard->Open()) {
-		BOOST_ASSERT(false);
+		assert(false);
 		return;
 	};
 	struct AutoCloseClipboard {
@@ -269,7 +269,7 @@ void SslGenerationResultDlg::CreateControls(
 			contentGroupLabel = wxT("Request");
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 	}
 
 	const Theme &theme = wxGetApp().GetTheme();

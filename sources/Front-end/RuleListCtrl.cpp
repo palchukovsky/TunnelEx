@@ -135,7 +135,7 @@ public:
 		itemCol.SetText(wxT("State"));
 		m_myInterface.InsertColumn(COLUMN_STATE, itemCol);
 
-		BOOST_ASSERT(m_controlsMap.find(m_controlIndex) == m_controlsMap.end());
+		assert(m_controlsMap.find(m_controlIndex) == m_controlsMap.end());
 		m_controlsMap.insert(std::make_pair(m_controlIndex, this));
 
 	}
@@ -167,7 +167,7 @@ public:
 			//...//
 		}
 
-		BOOST_ASSERT(m_controlsMap.find(m_controlIndex) != m_controlsMap.end());
+		assert(m_controlsMap.find(m_controlIndex) != m_controlsMap.end());
 		const ControlsMap::iterator pos = m_controlsMap.find(m_controlIndex);
 		if (pos != m_controlsMap.end()) {
 			m_controlsMap.erase(pos);
@@ -220,7 +220,7 @@ private:
 			.GetNetworkAdapters(false, serviceNetworkAdapters);
 		foreach (const texs__NetworkAdapterInfo &info, serviceNetworkAdapters) {
 			if (info.id == id) {
-				BOOST_ASSERT(!info.name.empty());
+				assert(!info.name.empty());
 				result = wxString::FromAscii(info.ipAddress.c_str()).c_str();
 			}
 		}
@@ -272,7 +272,7 @@ public:
 						stateName = wxT("deleted");
 						break;
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 					case NARS_MODIFIED:
 						itemInfo.SetImage(3);
 						stateName = wxT("modified");
@@ -292,7 +292,7 @@ public:
 			}
 
 			const long index = m_myInterface.InsertItem(itemInfo);
-			BOOST_ASSERT(index >= 0);
+			assert(index >= 0);
 			m_myInterface.SetItemData(index, long(m_rulesBind.size() - 1));
 
 			struct EndpointsJoiner {
@@ -376,7 +376,7 @@ public:
 					const size_t size = services.GetSize();
 					for (size_t i = 0; i < size; ++i) {
 						const ServiceRule::Service &ruleService = services[i];
-						BOOST_ASSERT(ruleService.name == L"Upnpc");
+						assert(ruleService.name == L"Upnpc");
 						if (ruleService.name != L"Upnpc") {
 							continue;
 						}
@@ -408,7 +408,7 @@ public:
 						wxString external;
 						service.GetUpnpStatus(external, local);
 					}
-					BOOST_ASSERT(service.GetCachedUpnpDeviceExternalIp());
+					assert(service.GetCachedUpnpDeviceExternalIp());
 					return !service.GetCachedUpnpDeviceExternalIp()->IsEmpty()
 						?	service.GetCachedUpnpDeviceExternalIp()->c_str()
 						:	L"<unknown>";
@@ -440,7 +440,7 @@ public:
 						adapterSearcher,
 						service));
 			} else {
-				BOOST_ASSERT(IsService(rule));
+				assert(IsService(rule));
 				m_myInterface.SetItem(
 					index,
 					1,
@@ -521,7 +521,7 @@ public:
 				fnSortCallBack = &::SortByState;
 				break;
 			default:
-				BOOST_ASSERT(false);
+				assert(false);
 				return;
 		}
 
@@ -548,7 +548,7 @@ public:
 		for (int i = 0; i < itemCount; ++i) {
 			item.SetId(i);
 			if (!m_myInterface.GetItem(item)) {
-				BOOST_ASSERT(false);
+				assert(false);
 				continue;
 			}
 			item.SetBackgroundColour(i % 2
@@ -570,7 +570,7 @@ public:
 			return NULL;
 		}
 		const long data = m_myInterface.GetItemData(item);
-		BOOST_ASSERT(data < long(m_rulesBind.size()));
+		assert(data < long(m_rulesBind.size()));
 		return m_rulesBind[data]->second;
 	}
 
@@ -584,7 +584,7 @@ public:
 			const long data = m_myInterface.GetItemData(item);
 #			pragma warning(push)
 #			pragma warning(disable: 4018)
-			BOOST_ASSERT(data < m_rulesBind.size());
+			assert(data < m_rulesBind.size());
 #			pragma warning(pop)
 			ids.insert(m_rulesBind[data]->first);
 		}
@@ -600,7 +600,7 @@ public:
 			const long data = m_myInterface.GetItemData(item);
 #			pragma warning(push)
 #			pragma warning(disable: 4018)
-			BOOST_ASSERT(data < m_rulesBind.size());
+			assert(data < m_rulesBind.size());
 #			pragma warning(pop)
 			if (ids.find(m_rulesBind[data]->first) != idsEnd) {
 				m_myInterface.SetItemState(
@@ -863,7 +863,7 @@ int SortByEndpoints(
 			buffer1,
 			isInput);
 	} else if (isInput) {
-		BOOST_ASSERT(IsService(rule1));
+		assert(IsService(rule1));
 		ToString::Get(
 			boost::polymorphic_downcast<const ServiceRule *>(&rule1)->GetServices(),
 			buffer1);
@@ -877,7 +877,7 @@ int SortByEndpoints(
 			buffer2,
 			isInput);
 	} else if (isInput) {
-		BOOST_ASSERT(IsService(rule2));
+		assert(IsService(rule2));
 		ToString::Get(
 			boost::polymorphic_downcast<const ServiceRule *>(&rule2)->GetServices(),
 			buffer2);
@@ -899,13 +899,13 @@ int wxCALLBACK SortByName(long item1, long item2, long sortData) {
 	}
 	const RuleListCtrl::Implementation::ControlsMap::const_iterator pos
 		= RuleListCtrl::Implementation::m_controlsMap.find(sortData);
-	BOOST_ASSERT(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
+	assert(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
 	if (pos == RuleListCtrl::Implementation::m_controlsMap.end()) {
 		return 0;
 	}
 	const RuleListCtrl::Implementation &ctrlImpl = *pos->second;
-	BOOST_ASSERT(item1 < long(ctrlImpl.m_rulesBind.size()));
-	BOOST_ASSERT(item2 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item1 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item2 < long(ctrlImpl.m_rulesBind.size()));
 	const WString &name1 = ctrlImpl.m_rulesBind[item1]->second->GetName();
 	const WString &name2 = ctrlImpl.m_rulesBind[item2]->second->GetName();
 	const int result = name1 < name2
@@ -922,13 +922,13 @@ int wxCALLBACK SortByInputs(long item1, long item2, long sortData) {
 	}
 	const RuleListCtrl::Implementation::ControlsMap::const_iterator pos
 		= RuleListCtrl::Implementation::m_controlsMap.find(sortData);
-	BOOST_ASSERT(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
+	assert(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
 	if (pos == RuleListCtrl::Implementation::m_controlsMap.end()) {
 		return 0;
 	}
 	const RuleListCtrl::Implementation &ctrlImpl = *pos->second;
-	BOOST_ASSERT(item1 < long(ctrlImpl.m_rulesBind.size()));
-	BOOST_ASSERT(item2 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item1 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item2 < long(ctrlImpl.m_rulesBind.size()));
 	return SortByEndpoints(
 		*ctrlImpl.m_rulesBind[item1]->second,
 		*ctrlImpl.m_rulesBind[item2]->second,
@@ -942,13 +942,13 @@ int wxCALLBACK SortByDestintations(long item1, long item2, long sortData) {
 	}
 	const RuleListCtrl::Implementation::ControlsMap::const_iterator pos
 		= RuleListCtrl::Implementation::m_controlsMap.find(sortData);
-	BOOST_ASSERT(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
+	assert(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
 	if (pos == RuleListCtrl::Implementation::m_controlsMap.end()) {
 		return 0;
 	}
 	const RuleListCtrl::Implementation &ctrlImpl = *pos->second;
-	BOOST_ASSERT(item1 < long(ctrlImpl.m_rulesBind.size()));
-	BOOST_ASSERT(item2 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item1 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item2 < long(ctrlImpl.m_rulesBind.size()));
 	return SortByEndpoints(
 		*ctrlImpl.m_rulesBind[item1]->second,
 		*ctrlImpl.m_rulesBind[item2]->second,
@@ -962,13 +962,13 @@ int wxCALLBACK SortByState(long item1, long item2, long sortData) {
 	}
 	const RuleListCtrl::Implementation::ControlsMap::const_iterator pos
 		= RuleListCtrl::Implementation::m_controlsMap.find(sortData);
-	BOOST_ASSERT(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
+	assert(RuleListCtrl::Implementation::m_controlsMap.end() != pos);
 	if (pos == RuleListCtrl::Implementation::m_controlsMap.end()) {
 		return 0;
 	}
 	const RuleListCtrl::Implementation &ctrlImpl = *pos->second;
-	BOOST_ASSERT(item1 < long(ctrlImpl.m_rulesBind.size()));
-	BOOST_ASSERT(item2 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item1 < long(ctrlImpl.m_rulesBind.size()));
+	assert(item2 < long(ctrlImpl.m_rulesBind.size()));
 	const NotAppliedRulesUuids::const_iterator notAppliedRulesEnd
 		= ctrlImpl.m_notAppliedRules.end();
 	NotAppliedRulesUuids::const_iterator notAppliedPos

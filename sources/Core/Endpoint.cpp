@@ -43,7 +43,7 @@ public:
 			: m_cachedCombinedOrReadResourceIdentifier(readResourceIdentifier),
 			m_cachedWriteResourceIdentifier(writeResourceIdentifier),
 			m_acceptor(acceptor) {
-		BOOST_ASSERT(
+		assert(
 			!m_cachedCombinedOrReadResourceIdentifier.IsEmpty()
 			&& !m_cachedWriteResourceIdentifier.IsEmpty());
 	}
@@ -62,7 +62,7 @@ public:
 			: m_combinedOrReadAddress(readAddress),
 			m_writeAddress(writeAddress),
 			m_acceptor(acceptor) {
-		BOOST_ASSERT(m_combinedOrReadAddress && m_writeAddress);
+		assert(m_combinedOrReadAddress && m_writeAddress);
 	}
 
 	Implementation(const Implementation &rhs)
@@ -85,11 +85,11 @@ public:
 
 	template<bool isCombined>
 	void CheckType() const {
-		BOOST_ASSERT(x);
+		assert(x);
 	}
 	template<>
 	void CheckType<false>() const {
-		BOOST_ASSERT(!IsCombined());
+		assert(!IsCombined());
 		if (IsCombined()) {
 			throw EndpointAddressTypeMismatchException(
 				L"Wrong endpoint type requested (not combined).");
@@ -97,7 +97,7 @@ public:
 	}
 	template<>
 	void CheckType<true>() const {
-		BOOST_ASSERT(IsCombined());
+		assert(IsCombined());
 		if (!IsCombined()) {
 			throw EndpointAddressTypeMismatchException(
 				L"Wrong endpoint type requested (combined).");

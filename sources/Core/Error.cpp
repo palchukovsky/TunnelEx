@@ -38,7 +38,7 @@ bool Error::CheckError() const {
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
-		BOOST_ASSERT(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
+		assert(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
 		return bufferSize;
 #	else
 		// not implemented yet
@@ -58,7 +58,7 @@ WString Error::GetString() const {
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
-		BOOST_ASSERT(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
+		assert(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
 		for (
 				; bufferSize > 0
 					&& (static_cast<LPCWSTR>(buffer)[bufferSize - 1] == L'\n'

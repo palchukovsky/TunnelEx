@@ -137,8 +137,8 @@ void Holder<T, LifetimePolicy, ThreadingModel>::MakeInstance() {
 
 template<typename T, template<class> class L, template<class> class Th>
 void Holder<T, L, Th>::DestroyInstance() {
-	BOOST_ASSERT(!m_isDestroyed);
-	BOOST_ASSERT(m_instancePtr);
+	assert(!m_isDestroyed);
+	assert(m_instancePtr);
 	delete m_instancePtr;
 	m_instancePtr = 0;
 	m_isDestroyed = true;

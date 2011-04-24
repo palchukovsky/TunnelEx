@@ -34,7 +34,7 @@ GlobalFixture::~GlobalFixture() {
 		while (Server::GetInstance().GetTunnelsNumber()) {
 			Sleep(500);
 		}
-		BOOST_ASSERT(!Server::GetInstance().IsStarted());
+		assert(!Server::GetInstance().IsStarted());
 		Server::GetInstance().Stop();
 	}
 	EVP_cleanup();

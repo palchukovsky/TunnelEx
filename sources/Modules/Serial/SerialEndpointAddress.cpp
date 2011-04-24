@@ -278,8 +278,8 @@ WString SerialEndpointAddress::CreateResourceIdentifier(
 			unsigned char stopBits,
 			Parity parity,
 			FlowControl flowControl) {
-	BOOST_ASSERT(!line.empty());
-	BOOST_ASSERT(baudRate > 0);
+	assert(!line.empty());
+	assert(baudRate > 0);
 	std::wostringstream result;
 	result
 		<< L"serial://" << StringUtil::EncodeUrl(line)
@@ -289,7 +289,7 @@ WString SerialEndpointAddress::CreateResourceIdentifier(
 		<< L"&parity=";
 	switch (parity) {
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case P_NONE:
 			result << L"none";
 			break;
@@ -309,7 +309,7 @@ WString SerialEndpointAddress::CreateResourceIdentifier(
 	result << L"&flowcontrol=";
 	switch (flowControl) {
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case FC_NONE:
 			result << L"none";
 			break;

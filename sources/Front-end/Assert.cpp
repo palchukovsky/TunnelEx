@@ -5,17 +5,14 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
-#include "Prec.h"
-
+#include "CompileConfig.h"
+#include <wx/log.h>
 #include "Core/String.hpp"
 #if !defined(__cplusplus) || !defined(__WXDEBUG__)
-#	include <assert.h>
-#endif // !defined(__cplusplus) || !defined(__WXDEBUG__)
-
-using namespace TunnelEx;
+#	include <cassert>
+#endif
 
 namespace boost
 {
@@ -24,6 +21,7 @@ namespace boost
 			char const *function,
 			char const *file,
 			long line) {
+		using namespace TunnelEx;
 #		if defined(__cplusplus) && defined(__WXDEBUG__)
 			wxOnAssert(
 				ConvertString<WString>(file).GetCStr(),
@@ -38,7 +36,7 @@ namespace boost
 				ConvertString<WString>(function).GetCStr(),
 				ConvertString<WString>(file).GetCStr(),
 				line);
-#		endif // if defined(__cplusplus) && defined(__WXDEBUG__)			
+#		endif
 	}
 
-} // namespace boost
+}

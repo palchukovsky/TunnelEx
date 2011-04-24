@@ -427,15 +427,15 @@ void MainFrame::BackupRules(const wxString &exportedRuleSet) {
 	if (fileRequestDlg.ShowModal() != wxID_OK) {
 		return;
 	}
-	BOOST_ASSERT(!fileRequestDlg.GetPath().IsEmpty());
+	assert(!fileRequestDlg.GetPath().IsEmpty());
 	{
 		wxFFileOutputStream out(fileRequestDlg.GetPath());
-		BOOST_ASSERT(out.IsOk());
+		assert(out.IsOk());
 		if (!out.IsOk()) {
 			return;
 		}
 		wxZipOutputStream zip(out);
-		BOOST_ASSERT(zip.IsOk());
+		assert(zip.IsOk());
 		if (!zip.IsOk()) {
 			return;
 		}
@@ -510,15 +510,15 @@ void MainFrame::OnCmdRuleRestore(wxCommandEvent &) {
 	}
 
 	wxFFileInputStream in(fileRequestDlg.GetPath());
-	BOOST_ASSERT(in.IsOk());
-	BOOST_ASSERT(in.IsSeekable());
+	assert(in.IsOk());
+	assert(in.IsSeekable());
 	if (!in.IsOk() || !in.IsSeekable()) {
 		return;
 	}
 
 	{
 		wxZipInputStream zip(in);
-		BOOST_ASSERT(zip.IsOk());
+		assert(zip.IsOk());
 		if (zip.IsOk()) {
 			std::auto_ptr<wxZipEntry> entry;
 			const wxString entryName = wxZipEntry::GetInternalName(wxT("RuleSet.xml"));
@@ -588,7 +588,7 @@ void MainFrame::OnCmdRuleCut(wxCommandEvent &event) {
 }
 
 void MainFrame::OnCmdRulePaste(wxCommandEvent &) {
-	BOOST_ASSERT(!m_internalClipboard.IsEmpty());
+	assert(!m_internalClipboard.IsEmpty());
 	if (!m_internalClipboard.IsEmpty()) {
 		m_window->ImportRules(m_internalClipboard, false);
 	}

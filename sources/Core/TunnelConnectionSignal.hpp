@@ -57,7 +57,7 @@ namespace TunnelEx {
 						case DATA_TRANSFER_CMD_CLOSE_TUNNEL:
 							break;
 						default:
-							BOOST_ASSERT(false);
+							assert(false);
 							break;
 					}
 #				endif // _DEBUG

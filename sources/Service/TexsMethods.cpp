@@ -84,7 +84,7 @@ int texs__SetLogLevel(
 			texLogLevel = TunnelEx::LOG_LEVEL_ERROR;
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 			texLogLevel = TunnelEx::LOG_LEVEL_INFO;
 	}
 	TexWinService::GetTexServiceInstance()->SetLogLevel(texLogLevel);
@@ -99,7 +99,7 @@ int texs__GetLogLevel(struct soap*, enum texs__LogLevel &getLogLevelResult) {
 			break;
 		case TunnelEx::LOG_LEVEL_UNKNOWN:
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case TunnelEx::LOG_LEVEL_INFO:
 			getLogLevelResult = ::LOG_LEVEL_INFO;
 			break;

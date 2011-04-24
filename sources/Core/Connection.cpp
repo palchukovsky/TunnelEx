@@ -73,8 +73,8 @@ private:
 		if (m_signal) {
 			m_signal->OnConnectionClosed(m_instanceId);
 		}
-		BOOST_ASSERT(m_idleTimeoutTimer == -1);
-		BOOST_ASSERT(m_proactor == 0);
+		assert(m_idleTimeoutTimer == -1);
+		assert(m_proactor == 0);
 		//! @todo: fix (currently don't know when buffer deletion is secure)
 		// m_buffer->DeleteBuffer(m_allocators);
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
@@ -140,8 +140,8 @@ public:
 
 		const bool isReadingAllowed = mode != Connection::MODE_WRITE;
 
-		BOOST_ASSERT(!m_proactor || m_proactor == &signal->GetTunnel().GetProactor());
-		BOOST_ASSERT(!m_proactor || m_isReadingAllowed == isReadingAllowed);
+		assert(!m_proactor || m_proactor == &signal->GetTunnel().GetProactor());
+		assert(!m_proactor || m_isReadingAllowed == isReadingAllowed);
 
 		if (m_proactor) {
 			if (	m_proactor != &signal->GetTunnel().GetProactor()
@@ -191,7 +191,7 @@ public:
 			if (ioHandleInfo.handle != 0) {
 				switch (ioHandleInfo.type) {
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 					case IoHandleInfo::TYPE_OTHER:
 						readStream.reset(new ACE_Asynch_Read_File);
 						openReadStreamFunc = boost::bind(
@@ -311,9 +311,9 @@ public:
 		
 		StateLock lock(m_stateMutex);
 
-		BOOST_ASSERT(!m_closeAtLastMessageBlock);
+		assert(!m_closeAtLastMessageBlock);
 		
-		BOOST_ASSERT(m_writeStream.get());
+		assert(m_writeStream.get());
 		if (!m_writeStream.get()) {
 			throw LogicalException(
 				L"Could not send data in connection, which does not opened");
@@ -324,7 +324,7 @@ public:
 		UniqueMessageBlockHolder &messageBlockHolder
 			= *boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
 
-		BOOST_ASSERT(messageBlock.GetUnreadedDataSize() > 0);
+		assert(messageBlock.GetUnreadedDataSize() > 0);
 		UniqueMessageBlockHolder blockToSend(messageBlockHolder.Get().duplicate());
 		const int writeResult = m_writeStreamFunc(
 			blockToSend.Get(),
@@ -359,7 +359,7 @@ public:
 	void OnMessageBlockSent(const MessageBlock &messageBlock) {
 		if (messageBlock.IsTunnelMessage()) {
 			StateLock lock(m_stateMutex);
-			BOOST_ASSERT(m_sentMessageBlockQueueSize > 0);
+			assert(m_sentMessageBlockQueueSize > 0);
 			--m_sentMessageBlockQueueSize;
 			if (!m_isReadingActive && m_isReadingInitiated) {
 				InitReadIfPossible();
@@ -398,7 +398,7 @@ private:
 		m_isSetupCompleted = true;
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
-		BOOST_ASSERT(m_idleTimeoutTimer == -1);
+		assert(m_idleTimeoutTimer == -1);
 		if (m_isSetupCompletedWithSuccess) {
 			UpdateIdleTimer();
 		}
@@ -408,8 +408,8 @@ public:
 
 	void StartRead() {
 		StateLock lock(m_stateMutex);
-		BOOST_ASSERT(!m_isReadingInitiated);
-		BOOST_ASSERT(m_proactor);
+		assert(!m_isReadingInitiated);
+		assert(m_proactor);
 		if (m_isReadingInitiated) {
 			return;
 		}
@@ -444,7 +444,7 @@ public:
 		if (m_proactor == 0) {
 			return;
 		}
-		BOOST_ASSERT(m_signal);
+		assert(m_signal);
 		UpdateIdleTimer();
 		m_signal->OnNewMessageBlock(messageBlock);
 		if (messageBlock.IsAddedToQueue()) {
@@ -484,7 +484,7 @@ private:
 	void DoHandleReadStream(const Result &result) {
 		{
 			UniqueMessageBlockHolder messageBlock(result.message_block());
-			BOOST_ASSERT(messageBlock.IsTunnelMessage());
+			assert(messageBlock.IsTunnelMessage());
 			if (!result.success()) {
 				const Error error(result.error());
 				switch (error.GetErrorNo()) {
@@ -549,7 +549,7 @@ private:
 		StateLock lock(m_stateMutex);
 		try {
 			const UniqueMessageBlockHolder messageBlock(result.message_block());
-			BOOST_ASSERT(m_sendQueueSize > 0);
+			assert(m_sendQueueSize > 0);
 			--m_sendQueueSize;
 			if (!m_proactor) {
 				// closing in progress or opening failed
@@ -578,19 +578,19 @@ private:
 		const int idleTimeoutToken = m_idleTimeoutToken;
 		
 		if (!m_proactor) {
-			BOOST_ASSERT(m_sendQueueSize == 0);
+			assert(m_sendQueueSize == 0);
 			delete this;
 			return;
 		}
 
 		StateLock lock(m_stateMutex);
 		if (act == 0) {
-			BOOST_ASSERT(!m_proactor);
-			BOOST_ASSERT(m_sendQueueSize == 0);
+			assert(!m_proactor);
+			assert(m_sendQueueSize == 0);
 			delete this;
 			return;
 		} else {
-			BOOST_ASSERT(act == reinterpret_cast<void *>(1));
+			assert(act == reinterpret_cast<void *>(1));
 			if (idleTimeoutToken == m_idleTimeoutToken) {
 				if (!m_myInterface.OnIdleTimeout()) {
 					Log::GetInstance().AppendDebug(
@@ -702,7 +702,7 @@ private:
 	}
 
 	void UpdateIdleTimer() {
-		BOOST_ASSERT(m_proactor != 0);
+		assert(m_proactor != 0);
 		if (m_idleTimeoutTimer != -1) {
 			m_proactor->cancel_timer(m_idleTimeoutTimer);
 			m_idleTimeoutTimer = -1;
@@ -785,7 +785,7 @@ DataTransferCommand Connection::WriteDirectly(MessageBlock &messageBlock) {
 }
 
 void Connection::WriteDirectly(const char *data, size_t size) {
-	BOOST_ASSERT(size > 0);
+	assert(size > 0);
 	if (!size) {
 		return;
 	}
@@ -797,7 +797,7 @@ void Connection::WriteDirectly(const char *data, size_t size) {
 	}
 	const DataTransferCommand cmd = WriteDirectly(messageBlock);
 	ACE_UNUSED_ARG(cmd);
-	BOOST_ASSERT(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
+	assert(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
 }
 
 DataTransferCommand Connection::Write(MessageBlock &messageBlock) {
@@ -809,7 +809,7 @@ DataTransferCommand Connection::SendToRemote(MessageBlock &messageBlock) {
 }
 
 void Connection::SendToRemote(const char *data, size_t size) {
-	BOOST_ASSERT(size > 0);
+	assert(size > 0);
 	if (!size) {
 		return;
 	}
@@ -821,7 +821,7 @@ void Connection::SendToRemote(const char *data, size_t size) {
 	}
 	const DataTransferCommand cmd = SendToRemote(messageBlock);
 	ACE_UNUSED_ARG(cmd);
-	BOOST_ASSERT(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
+	assert(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
 }
 
 void Connection::SendToTunnel(MessageBlock &messageBlock) {
@@ -829,7 +829,7 @@ void Connection::SendToTunnel(MessageBlock &messageBlock) {
 }
 
 void Connection::SendToTunnel(const char *data, size_t size) {
-	BOOST_ASSERT(size > 0);
+	assert(size > 0);
 	if (!size) {
 		return;
 	}
@@ -895,7 +895,7 @@ void Connection::ResetIdleTimeout(TimeSeconds seconds) {
 }
 
 bool Connection::OnIdleTimeout() throw() {
-	BOOST_ASSERT(false);
+	assert(false);
 	return true;
 }
 

@@ -34,13 +34,13 @@ TAG_HANDLER_PROC(tag) {
 	descriptionCtrl->Wrap(-1);
 
 	if (!descriptionCtrl->SetForegroundColour(m_WParser->GetActualColor())) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 	if (!m_WParser->GetFontFace().IsEmpty()) {
 		wxFont font;
 		if (	!font.SetFaceName(m_WParser->GetFontFace())
 			||	!descriptionCtrl->SetFont(font)) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 	}
 	for (	wxHtmlContainerCell* container = m_WParser->GetContainer()
@@ -49,7 +49,7 @@ TAG_HANDLER_PROC(tag) {
 		const wxColor color = container->GetBackgroundColour();
 		if (color != wxNullColour) {
 			if (!descriptionCtrl->SetBackgroundColour(color)) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 			break;
 		}
@@ -65,7 +65,7 @@ TAG_HANDLER_END(ServiceStateDescription)
 TAG_HANDLER_BEGIN(ServiceStateChoosing, "STATE")
 TAG_HANDLER_PROC(tag) {
 
-	BOOST_ASSERT(tag.HasParam(wxT("NAME")));
+	assert(tag.HasParam(wxT("NAME")));
 	if (!tag.HasParam(wxT("NAME"))) {
 		return false;
 	}
@@ -95,7 +95,7 @@ TAG_HANDLER_PROC(tag) {
 			currentStateName = wxT("changed");
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 	}
 	if (!currentStateName.IsEmpty() && currentStateName == passedStateName) {
 		ParseInner(tag);

@@ -350,7 +350,7 @@ void Tunnel::Init() {
 			//! @todo: can throw!
 			sourceDataTransferSignal->DisconnectAll();
 		} catch (...) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 		throw;
 	}
@@ -378,7 +378,7 @@ Tunnel::~Tunnel() throw() {
 		}
 		ReadWriteConnections().Swap(m_source);
 		ReadWriteConnections().Swap(m_destination);
-		BOOST_ASSERT(m_closedConnections <= m_connectionsToClose);
+		assert(m_closedConnections <= m_connectionsToClose);
 		while (m_closedConnections < m_connectionsToClose) {
 			ACE_Time_Value proactorWaitTime(0, 1);
 			if (GetProactor().handle_events(proactorWaitTime) != 1) {
@@ -389,7 +389,7 @@ Tunnel::~Tunnel() throw() {
 			}
 		}
 	} catch (...) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 	ReportClosed();
 }
@@ -400,14 +400,14 @@ Tunnel::ReadWriteConnections Tunnel::CreateDestinationConnections(
 
 	const RuleEndpointCollection &destinations = m_rule->GetDestinations();
 	const size_t destinationsNumber = destinations.GetSize();
-	BOOST_ASSERT(destinationsNumber > 0);
-	BOOST_ASSERT(destinationIndex < destinationsNumber);
+	assert(destinationsNumber > 0);
+	assert(destinationIndex < destinationsNumber);
 
 	for (size_t i = destinationIndex; i < destinationsNumber; ++i) {
 		const RuleEndpoint &endpoint = destinations[i];
 		if (endpoint.IsCombined()) {
 			SharedPtr<const EndpointAddress> address = endpoint.GetCombinedAddress();
-			BOOST_ASSERT(address != 0);
+			assert(address != 0);
 			try {
 				SharedPtr<Connection> connection(
 					address->CreateRemoteConnection(endpoint, address).Release());
@@ -439,9 +439,9 @@ Tunnel::ReadWriteConnections Tunnel::CreateDestinationConnections(
 				}
 			}
 			SharedPtr<const EndpointAddress> readAddress = endpoint.GetReadAddress();
-			BOOST_ASSERT(readAddress != 0);
+			assert(readAddress != 0);
 			SharedPtr<const EndpointAddress> writeAddress = endpoint.GetWriteAddress();
-			BOOST_ASSERT(writeAddress != 0);
+			assert(writeAddress != 0);
 			SharedPtr<Connection> readConnection;
 			SharedPtr<Connection> writeConnection;
 			try {
@@ -590,7 +590,7 @@ void Tunnel::ReportClosed() const throw() {
 		message % GetInstanceId();
 		Log::GetInstance().AppendInfo(message.str());
 	} catch (...) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -627,7 +627,7 @@ void Tunnel::StartRead() {
 }
 
 void Tunnel::OnConnectionSetup(Instance::Id instanceId) {
-	BOOST_ASSERT(m_setupComplitedConnections < m_connectionsToSetup.size());
+	assert(m_setupComplitedConnections < m_connectionsToSetup.size());
 	++m_setupComplitedConnections;
 	Log::GetInstance().AppendDebug(
 		"Connection %4% setup completed in tunnel %1% (connections: %2%, already completed: %3%).",
@@ -641,7 +641,7 @@ void Tunnel::OnConnectionSetup(Instance::Id instanceId) {
 }
 
 void Tunnel::OnConnectionClose(Instance::Id instanceId) {
-	BOOST_ASSERT(m_closedConnections < m_connectionsToClose);
+	assert(m_closedConnections < m_connectionsToClose);
 	const bool closingNow = m_closingNow;
 	Log::GetInstance().AppendDebug(
 		"Closing connection %1% in tunnel %2% (connections: %3%, already closed: %4%, closing: %5%).",
@@ -659,7 +659,7 @@ void Tunnel::OnConnectionClose(Instance::Id instanceId) {
 }
 
 void Tunnel::OnConnectionClosed(Instance::Id instanceId) {
-	BOOST_ASSERT(m_closedConnections < m_connectionsToClose);
+	assert(m_closedConnections < m_connectionsToClose);
 	Log::GetInstance().AppendDebug(
 		"Connection %1% closed in tunnel %2% (connections: %3%, already closed: %4%).",
 		instanceId,
@@ -692,7 +692,7 @@ bool Tunnel::Switch(
 
 	Log::GetInstance().AppendDebug("Switching tunnel %1%...", GetInstanceId());
 
-	BOOST_ASSERT(sourceRead || sourceWrite || IsDestinationSetupFailed());
+	assert(sourceRead || sourceWrite || IsDestinationSetupFailed());
 
 	const bool isDestinationSetupFailed = IsDestinationSetupFailed();
 
@@ -702,7 +702,7 @@ bool Tunnel::Switch(
 		//! @todo: can throw!
 		m_sourceDataTransferSignal->DisconnectDataTransfer();
 	} catch (...) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 
 	ReadWriteConnections source;
@@ -797,7 +797,7 @@ bool Tunnel::Switch(
 			destinationIndex = destinationIndexTmp;
 		}
 	} else {
-		BOOST_ASSERT(sourceRead || sourceRead);
+		assert(sourceRead || sourceRead);
 	}
 	source.Swap(m_source);
 	destination.Swap(m_destination);

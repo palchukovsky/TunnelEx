@@ -26,6 +26,10 @@ namespace Test {
 				const typename String::value_type* testStr4) {
 		String str1(testStr1);
 		BOOST_CHECK(str1 == testStr1);
+		{
+			std::basic_string<String::value_type> stdStr = str1.GetCStr();
+			BOOST_CHECK(stdStr == testStr1);
+		}
 		str1 = testStr2;
 		BOOST_CHECK(str1 == testStr2);
 		std::basic_string<String::value_type> conTestString(testStr1);

@@ -8,9 +8,9 @@
  **************************************************************************/
 
 #include "CompileConfig.h"
-
 #include "Core/Log.hpp"
-#include <assert.h> // .h to support old libraries w/o <cassert> - effect is the same
+#include <Windows.h>
+#include <cassert>
 #include <sstream>
 
 namespace boost {
@@ -20,13 +20,36 @@ namespace boost {
 			char const *function,
 			char const *file,
 			long line) {
-		std::ostringstream iss;
-		iss
+
+		std::ostringstream oss;
+		oss
 			<< "Assertion failed: \"" << expr << "\""
 			<< " in function \"" << function << "\""
 			<< " (file " << file << ":" << line << ")";
-		TunnelEx::Log::GetInstance().AppendError(iss.str());
-		assert(false);
+		TunnelEx::Log::GetInstance().AppendFatalError(oss.str());
+
+#		if defined(_DEBUG)
+		{
+			oss << std::endl << std::endl << "Stop program execution?";
+			const int userAns = MessageBoxA(
+				0,
+				oss.str().c_str(),
+				"Assertion failed",
+				MB_YESNO | MB_ICONSTOP);
+			if (userAns == IDYES) {
+				assert(false);
+			}
+		}
+#		else
+		{
+			MessageBoxA(
+				0,
+				oss.str().c_str(),
+				"Assertion failed",
+				MB_OK | MB_ICONSTOP);
+		}
+#		endif
+		
 	}
 
 }

@@ -130,7 +130,7 @@ namespace TunnelEx { namespace Helpers {
 					DetachStream(*i->second);
 				}
 			} catch (...) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 

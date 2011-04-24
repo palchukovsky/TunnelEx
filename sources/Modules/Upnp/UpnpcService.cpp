@@ -61,7 +61,7 @@ UpnpcService::UpnpcService(
 			const ServiceRule::Service &service)
 		: Service(rule, service) {
 	
-	BOOST_ASSERT(service.name == L"Upnpc");
+	assert(service.name == L"Upnpc");
 	
 	unsigned short externalPort = 0;
 	std::wstring destinationHost;
@@ -173,7 +173,7 @@ WString UpnpcService::CreateParam(
 	result << L"proto=";
 	switch (proto) {
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case Client::PROTO_TCP:
 			result << L"tcp";
 			break;
@@ -287,7 +287,7 @@ void UpnpcService::ParseParam(
 }
 
 void UpnpcService::Start() {
-	BOOST_ASSERT(!IsStarted());
+	assert(!IsStarted());
 	ACE_Time_Value nextCheck = m_pimpl->GetNextCheckTime();
 	m_pimpl->m_client.AddPortMapping(
 		m_pimpl->m_externalPort,
@@ -310,8 +310,8 @@ void UpnpcService::Stop() throw() {
 
 void UpnpcService::DoWork() {
 	
-	BOOST_ASSERT(IsStarted());
-	BOOST_ASSERT(m_pimpl->m_nextCheckTime != ACE_Time_Value::zero);
+	assert(IsStarted());
+	assert(m_pimpl->m_nextCheckTime != ACE_Time_Value::zero);
 	
 	if (ACE_OS::gettimeofday() < m_pimpl->m_nextCheckTime) {
 		return;

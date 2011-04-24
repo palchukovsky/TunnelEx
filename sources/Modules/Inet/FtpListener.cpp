@@ -177,7 +177,7 @@ void FtpListener::ReplaceCmd(
 DataTransferCommand FtpListener::OnNewMessageBlock(MessageBlock &messageBlock) {
 
 	const size_t dataLen = messageBlock.GetUnreadedDataSize();
-	BOOST_ASSERT(dataLen > 0);
+	assert(dataLen > 0);
 	const unsigned int maxPacketLenToParse = 70;
 	if (dataLen > maxPacketLenToParse || dataLen < 1) {
 		return DATA_TRANSFER_CMD_SEND_PACKET;
@@ -198,7 +198,7 @@ DataTransferCommand FtpListener::OnNewMessageBlock(MessageBlock &messageBlock) {
 
 	m_buffer.append(messageBlock.GetData(), dataLen);
 	if (m_buffer.size() > maxPacketLenToParse) {
-		BOOST_ASSERT(false);
+		assert(false);
 		Format message("File Transfer Protocol error: failed to parse \"%1%\".");\
 		message % m_buffer;
 		Log::GetInstance().AppendWarn(message.str().c_str());

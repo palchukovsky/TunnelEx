@@ -74,7 +74,7 @@ void TunnelBuffer::DeleteBuffer(const Allocators &allocators) throw()  {
 			&& !allocators.dataBlockBuffer) {
 		return;
 	}
-	BOOST_ASSERT(allocators.messageBlock && allocators.dataBlock && allocators.dataBlockBuffer);
+	assert(allocators.messageBlock && allocators.dataBlock && allocators.dataBlockBuffer);
 	AllAllocators allAllocators(m_allocators);
 	allAllocators.erase(allocators.messageBlock);
 	allAllocators.erase(allocators.dataBlock);

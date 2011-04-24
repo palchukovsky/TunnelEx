@@ -29,7 +29,7 @@ ServiceEndpointBroadcaster::ServiceEndpointBroadcaster()
 		NULL,
 		&m_key,
 		NULL);
-	BOOST_ASSERT(result == ERROR_SUCCESS);
+	assert(result == ERROR_SUCCESS);
 	if (result != ERROR_SUCCESS) {
 		HandleError("Could not store service instance endpoint (error code: %1%).", result);
 	}
@@ -37,7 +37,7 @@ ServiceEndpointBroadcaster::ServiceEndpointBroadcaster()
 
 ServiceEndpointBroadcaster::~ServiceEndpointBroadcaster() {
 	if (RegCloseKey(m_key) != ERROR_SUCCESS) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -53,7 +53,7 @@ void ServiceEndpointBroadcaster::Broadcast(const char* host, int port, bool isSe
 		reinterpret_cast<const BYTE*>(endpoint.GetCStr()),
 		(endpoint.GetLength() + 1) * sizeof(RegStringType::value_type));
 #	pragma warning(pop)
-	BOOST_ASSERT(result == ERROR_SUCCESS);
+	assert(result == ERROR_SUCCESS);
 	if (result != ERROR_SUCCESS) {
 		HandleError("Could not store service instance endpoint (error code: %1%).", result);
 	}
@@ -61,7 +61,7 @@ void ServiceEndpointBroadcaster::Broadcast(const char* host, int port, bool isSe
 
 void ServiceEndpointBroadcaster::CallbackAll() {
 	const LONG result = RegDeleteKeyW(m_key, L"");
-	BOOST_ASSERT(result == ERROR_SUCCESS);
+	assert(result == ERROR_SUCCESS);
 	if (result != ERROR_SUCCESS) {
 		HandleError("Could not delete service instance endpoint (error code: %1%).", result);
 	}

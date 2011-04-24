@@ -327,7 +327,7 @@ std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 			} else if (templateType == wxT("serial")) {
 				m_typeSerial->SetValue(true);
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				m_typeTcp->SetValue(true);
 			}
 		} else {
@@ -533,7 +533,7 @@ std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 						wxT("Settings..."));
 					m_destinationProxySettings->Enable(false);
 					m_destinationProxySettings->SetToolTip(wxT("Proxy server settings."));
-					BOOST_ASSERT(
+					assert(
 						m_destinationSslSettings->GetSize().GetHeight()
 						== m_destinationProxySettings->GetSize().GetHeight());
 					lineBox->Add(theme.GetDlgBorder(), 0);
@@ -893,13 +893,13 @@ bool TunnelRuleShortDlg::Save(TunnelEx::Rule &newAbstractRule) const {
 
 	if (m_typeTcp->GetValue() || m_typeUdp->GetValue() || m_typeFtp->GetValue()) {
 		
-		BOOST_ASSERT(m_inputSslUse->GetValue() == !m_inputCertificate.IsEmpty());
-		BOOST_ASSERT(
+		assert(m_inputSslUse->GetValue() == !m_inputCertificate.IsEmpty());
+		assert(
 			m_inputSslUse->GetValue()
 			|| m_inputRemoteCertificates.GetSize() == 0);
 
-		BOOST_ASSERT(m_destinationSslUse->GetValue() == !m_destinationCertificate.IsEmpty());
-		BOOST_ASSERT(
+		assert(m_destinationSslUse->GetValue() == !m_destinationCertificate.IsEmpty());
+		assert(
 			m_destinationSslUse->GetValue()
 			|| m_destinationRemoteCertificates.GetSize() == 0);
 
@@ -1023,8 +1023,8 @@ bool TunnelRuleShortDlg::Save(TunnelEx::Rule &newAbstractRule) const {
 			m_destinationSerialFlowControl->GetStringSelection());
 	}
 
-	BOOST_ASSERT(!inputRi.IsEmpty());
-	BOOST_ASSERT(!destRi.IsEmpty());
+	assert(!inputRi.IsEmpty());
+	assert(!destRi.IsEmpty());
 	if (newRule.GetInputs().GetSize() > 0) {
 		if (	newRule.GetInputs()[0].GetCombinedAddress()->GetResourceIdentifier()
 				!= inputRi) {
@@ -1071,7 +1071,7 @@ void TunnelRuleShortDlg::SaveTemplate() const {
 	} else if (m_typeSerial->GetValue()) {
 		type = wxT("serial");
 	} else {
-		BOOST_ASSERT(false);
+		assert(false);
 		return;
 	}
 
@@ -1111,7 +1111,7 @@ bool TunnelRuleShortDlg::CheckRule(const TunnelRule &rule) {
 	const boost::wregex exp(L"([^:/]+)://.+");
 	boost::wsmatch what;
 	std::wstring inputProto;
-	BOOST_ASSERT(boost::regex_match(resourceIdentifier, what, exp));
+	assert(boost::regex_match(resourceIdentifier, what, exp));
 	if (boost::regex_match(resourceIdentifier, what, exp)) {	
 		inputProto = what[1].str();
 		if (boost::iequals(inputProto, L"upnp_tcp")) {
@@ -1123,7 +1123,7 @@ bool TunnelRuleShortDlg::CheckRule(const TunnelRule &rule) {
 	resourceIdentifier
 		= rule.GetDestinations()[0].GetCombinedResourceIdentifier().GetCStr();
 	std::wstring destProto;
-	BOOST_ASSERT(boost::regex_match(resourceIdentifier, what, exp));
+	assert(boost::regex_match(resourceIdentifier, what, exp));
 	if (boost::regex_match(resourceIdentifier, what, exp)) {
 		destProto = what[1].str();
 		if (boost::iequals(destProto, L"pathfinder")) {
@@ -1136,18 +1136,18 @@ bool TunnelRuleShortDlg::CheckRule(const TunnelRule &rule) {
 
 void TunnelRuleShortDlg::ReadRule() {
 	
-	BOOST_ASSERT(!IsNewRule());
-	BOOST_ASSERT(CheckRule(GetRule()));
-	BOOST_ASSERT(GetRule().GetInputs().GetSize() == 1);
-	BOOST_ASSERT(GetRule().GetDestinations().GetSize() == 1);
+	assert(!IsNewRule());
+	assert(CheckRule(GetRule()));
+	assert(GetRule().GetInputs().GetSize() == 1);
+	assert(GetRule().GetDestinations().GetSize() == 1);
 
 	if (RuleUtils::IsFtpTunnelIsOnInRule(GetRule())) {
-		BOOST_ASSERT(
+		assert(
 			GetRule().GetInputs().GetSize() == 1
 			&&	GetRule().GetInputs()[0].IsCombined()
 			&&	(GetRule().GetInputs()[0].CheckCombinedAddressType<TcpEndpointAddress>()
 				|| GetRule().GetInputs()[0].CheckCombinedAddressType<UpnpEndpointAddress>()));
-		BOOST_ASSERT(
+		assert(
 			GetRule().GetDestinations().GetSize() == 1
 			&&	GetRule().GetDestinations()[0].IsCombined()
 			&&	(GetRule().GetDestinations()[0].CheckCombinedAddressType<TcpEndpointAddress>()
@@ -1156,8 +1156,8 @@ void TunnelRuleShortDlg::ReadRule() {
 	}
 	
 	if (GetRule().GetInputs().GetSize() > 0) {
-		BOOST_ASSERT(GetRule().GetInputs()[0].IsCombined());
-		BOOST_ASSERT(GetRule().GetInputs()[0].IsCombinedAcceptor());
+		assert(GetRule().GetInputs()[0].IsCombined());
+		assert(GetRule().GetInputs()[0].IsCombinedAcceptor());
 		if (GetRule().GetInputs()[0].IsCombined() && GetRule().GetInputs()[0].IsCombinedAcceptor()) {
 			if (GetRule().GetInputs()[0].CheckCombinedAddressType<InetEndpointAddress>()) {
 				if (GetRule().GetInputs()[0].CheckCombinedAddressType<TcpEndpointAddress>()) {
@@ -1169,7 +1169,7 @@ void TunnelRuleShortDlg::ReadRule() {
 						|| GetRule().GetInputs()[0].CheckCombinedAddressType<UpnpUdpEndpointAddress>()) {
 					m_typeUdp->SetValue(true);
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 				const InetEndpointAddress &addr
 					= GetRule().GetInputs()[0].GetCombinedTypedAddress<InetEndpointAddress>();
@@ -1197,7 +1197,7 @@ void TunnelRuleShortDlg::ReadRule() {
 				} else if (GetRule().GetInputs()[0].CheckCombinedAddressType<UpnpUdpEndpointAddress>()) {
 					m_typeUdp->SetValue(true);
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 				const UpnpEndpointAddress &addr
 					= GetRule().GetInputs()[0].GetCombinedTypedAddress<UpnpEndpointAddress>();
@@ -1240,18 +1240,18 @@ void TunnelRuleShortDlg::ReadRule() {
 					m_typePipe->SetValue(true);
 					m_inputPipe->SetValue(what[2].str());
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 			} 
 		}
 	}
 
 	if (GetRule().GetDestinations().GetSize() > 0) {
-		BOOST_ASSERT(GetRule().GetDestinations()[0].IsCombined());
-		BOOST_ASSERT(!GetRule().GetDestinations()[0].IsCombinedAcceptor());
+		assert(GetRule().GetDestinations()[0].IsCombined());
+		assert(!GetRule().GetDestinations()[0].IsCombinedAcceptor());
 		if (GetRule().GetDestinations()[0].IsCombined() && !GetRule().GetDestinations()[0].IsCombinedAcceptor()) {
 			if (m_typeTcp->GetValue() || m_typeUdp->GetValue() || m_typeFtp->GetValue()) {
-				BOOST_ASSERT(GetRule().GetDestinations()[0].CheckCombinedAddressType<InetEndpointAddress>());
+				assert(GetRule().GetDestinations()[0].CheckCombinedAddressType<InetEndpointAddress>());
 				if (GetRule().GetDestinations()[0].CheckCombinedAddressType<InetEndpointAddress>()) {
 					const InetEndpointAddress &addr
 						= GetRule().GetDestinations()[0].GetCombinedTypedAddress<InetEndpointAddress>();
@@ -1297,10 +1297,10 @@ void TunnelRuleShortDlg::ReadRule() {
 						&& !wxString(what[1].str()).CompareTo(wxT("pipe"), wxString::ignoreCase)) {
 					m_destinationPipe->SetValue(what[2].str());
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 			} else if (m_typeSerial->GetValue()) {
-				BOOST_ASSERT(GetRule().GetDestinations()[0].CheckCombinedAddressType<SerialEndpointAddress>());
+				assert(GetRule().GetDestinations()[0].CheckCombinedAddressType<SerialEndpointAddress>());
 				if (GetRule().GetDestinations()[0].CheckCombinedAddressType<SerialEndpointAddress>()) {
 					const SerialEndpointAddress &addr
 						= GetRule().GetDestinations()[0].GetCombinedTypedAddress<SerialEndpointAddress>();
@@ -1328,7 +1328,7 @@ void TunnelRuleShortDlg::ReadRule() {
 					}
 				}
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 	}
@@ -1403,7 +1403,7 @@ void TunnelRuleShortDlg::UpdateVisibleRuleEdit() {
 void TunnelRuleShortDlg::UpdateVisibleNewRule() {
 	switch (m_step) {
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case 1:
 			{
 				ShowGeneralSettings();
@@ -1425,7 +1425,7 @@ void TunnelRuleShortDlg::UpdateVisibleNewRule() {
 					m_typeDescription->SetLabel(wxT("Redirects Serial Port (COM) traffic."));
 					m_typeFtpLink->Hide();
 				} else {
-					BOOST_ASSERT(false);
+					assert(false);
 				}
 				const wxSize typeBoxMinSize = m_typeBox->GetMinSize();
 				m_typeBox->GetSizer()->SetSizeHints(m_typeBox);
@@ -1504,7 +1504,7 @@ void TunnelRuleShortDlg::OnAdvancedMode(wxCommandEvent &evnt) {
 			this);
 	switch (answer) {
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case wxCANCEL:
 			return;
 		case wxYES:
@@ -1526,7 +1526,7 @@ void TunnelRuleShortDlg::OnAdvancedMode(wxCommandEvent &evnt) {
 }
 
 void TunnelRuleShortDlg::OnPrevStep(wxCommandEvent &) {
-	BOOST_ASSERT(m_step > 1);
+	assert(m_step > 1);
 	--m_step;
 	UpdateVisible();
 }

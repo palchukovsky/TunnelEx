@@ -69,7 +69,7 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			params.paritymode = 0;
 			switch (address.GetParity()) {
 				default:
-					BOOST_ASSERT(false);
+					assert(false);
 				case SerialEndpointAddress::P_NONE:
 					break;
 				case SerialEndpointAddress::P_ODD:
@@ -87,7 +87,7 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			}
 			switch (address.GetFlowControl()) {
 				default:
-					BOOST_ASSERT(false);
+					assert(false);
 				case SerialEndpointAddress::FC_NONE:
 					break;
 				case SerialEndpointAddress::FC_XON_XOFF:

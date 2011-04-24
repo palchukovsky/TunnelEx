@@ -160,12 +160,12 @@ public:
 		if (m_name.IsEmpty()) {
 			String(ACE_INET_Addr("127.0.0").get_host_name()).Swap(
 				const_cast<Implementation *>(this)->m_name);
-			BOOST_ASSERT(!m_name.IsEmpty());
+			assert(!m_name.IsEmpty());
 			if (m_name.IsEmpty()) {
 				String("localhost").Swap(const_cast<Implementation *>(this)->m_name);
 			}
 		}
-		BOOST_ASSERT(!m_name.IsEmpty());
+		assert(!m_name.IsEmpty());
 		return m_name;
 	}
 

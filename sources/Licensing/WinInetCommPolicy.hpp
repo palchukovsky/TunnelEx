@@ -54,7 +54,7 @@ namespace TunnelEx { namespace Licensing {
 				0,
 				0,
 				0);
-			BOOST_ASSERT(handles.inet);
+			assert(handles.inet);
 			if (!handles.inet) {
 				return std::string();
 			}
@@ -63,7 +63,7 @@ namespace TunnelEx { namespace Licensing {
 			host % TUNNELEX_LICENSE_SERVICE_SUBDOMAIN % TUNNELEX_DOMAIN % ".";
 			handles.connect = InternetConnectA(
 				handles.inet, host.str().c_str(), 80, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
-			BOOST_ASSERT(handles.connect);
+			assert(handles.connect);
 			if (!handles.connect) {
 				return std::string();
 			}
@@ -81,7 +81,7 @@ namespace TunnelEx { namespace Licensing {
 					| INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI
 					| INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD,
 				0);
-			BOOST_ASSERT(handles.request);
+			assert(handles.request);
 			if (!handles.request) {
 				return std::string();
 			}
@@ -118,7 +118,7 @@ namespace TunnelEx { namespace Licensing {
 						&answer[realAnswerSize],
 						DWORD(answer.size() - realAnswerSize),
 						&bytesRead);
-					BOOST_ASSERT(readResult);
+					assert(readResult);
 					if (!readResult) {
 						return std::string();
 					} if (bytesRead == 0) {
@@ -133,7 +133,7 @@ namespace TunnelEx { namespace Licensing {
 #						endif
 					}
 				}
-				BOOST_ASSERT(answer.size() >= realAnswerSize);
+				assert(answer.size() >= realAnswerSize);
 				answer.resize(realAnswerSize + 1);
 				answer[realAnswerSize] = 0;
 			}

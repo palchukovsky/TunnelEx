@@ -59,7 +59,7 @@ int TunnelExModsInetSslBioRead(BIO *bio, char *buf, int len) {
 	int errVal = 0;
 	int retVal = stream.BioRead(buf, len, errVal);
 	if (retVal >= 0) {
-		BOOST_ASSERT(retVal != 0);
+		assert(retVal != 0);
 		return retVal;
 	}
 	if (errVal == EINPROGRESS) {
@@ -78,7 +78,7 @@ int TunnelExModsInetSslBioWrite(BIO *bio, const char *buf, int len) {
 	int errVal = 0;
 	int retVal = stream.BioWrite(buf, len, errVal);
 	if (retVal >= 0) {
-		BOOST_ASSERT(retVal != 0);
+		assert(retVal != 0);
 		return retVal;
 	}
 	if (errVal == EINPROGRESS) {
@@ -194,9 +194,9 @@ SslSockStream::SslSockStream(const ACE_SSL_Context &context)
 }
 
 SslSockStream::~SslSockStream() throw() {
-	BOOST_ASSERT(m_biorOrig == 0);
-	BOOST_ASSERT(m_biowOrig == 0);
-	BOOST_ASSERT(GetBuffers().out.size() == 0);
+	assert(m_biorOrig == 0);
+	assert(m_biowOrig == 0);
+	assert(GetBuffers().out.size() == 0);
 	if (m_biorOrig || m_biowOrig) {
 		if (m_biorOrig != m_biowOrig) {
 			BIO_free_all(m_biorOrig);
@@ -209,8 +209,8 @@ SslSockStream::~SslSockStream() throw() {
 
 void SslSockStream::SwitchToDecryptorEncryptorMode() {
 
-	BOOST_ASSERT(m_biorOrig == 0);
-	BOOST_ASSERT(m_biowOrig == 0);
+	assert(m_biorOrig == 0);
+	assert(m_biowOrig == 0);
 	if (IsDecryptorEncryptorMode()) {
 		return;
 	}
@@ -277,8 +277,8 @@ void SslSockStream::SwitchToDecryptorEncryptorMode() {
 void SslSockStream::SwitchToStreamMode() {
 	
 	// one-way can switch to this mode without check
-	// BOOST_ASSERT(m_biorOrig != 0);
-	// BOOST_ASSERT(m_biowOrig != 0);
+	// assert(m_biorOrig != 0);
+	// assert(m_biowOrig != 0);
 	if (!IsDecryptorEncryptorMode()) {
 		return;
 	}
@@ -293,8 +293,8 @@ void SslSockStream::SwitchToStreamMode() {
 
 void SslSockStream::Decrypt(MessageBlock &messageBlock) const {
 
-	BOOST_ASSERT(GetBuffers().out.size() == 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
+	assert(GetBuffers().out.size() == 0);
+	assert(IsDecryptorEncryptorMode());
 
 	GetBuffers().encryptedMessage = &messageBlock;
 	GetBuffers().encryptedMessageReadPos = 0;
@@ -332,7 +332,7 @@ void SslSockStream::Decrypt(MessageBlock &messageBlock) const {
 		}
 	}
 
-	BOOST_ASSERT(
+	assert(
 		GetBuffers().encryptedMessage->GetUnreadedDataSize()
 		== GetBuffers().encryptedMessageReadPos);
 
@@ -348,8 +348,8 @@ void SslSockStream::Decrypt(MessageBlock &messageBlock) const {
 
 void SslSockStream::Encrypt(MessageBlock &messageBlock) const {
 
-	BOOST_ASSERT(messageBlock.GetUnreadedDataSize() > 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
+	assert(messageBlock.GetUnreadedDataSize() > 0);
+	assert(IsDecryptorEncryptorMode());
 
 	GetBuffers().out.resize(0);
 	ssize_t sendPos = 0;
@@ -360,7 +360,7 @@ void SslSockStream::Encrypt(MessageBlock &messageBlock) const {
 			= send(messageBlock.GetData() + sendPos, bytesToSend);
 		if (sentBytes == -1) {
 			const Error error(errno);
-			BOOST_ASSERT(error.GetErrorNo() != EWOULDBLOCK);
+			assert(error.GetErrorNo() != EWOULDBLOCK);
 			if (error.GetErrorNo() == EWOULDBLOCK) {
 				break;
 			}
@@ -376,10 +376,10 @@ void SslSockStream::Encrypt(MessageBlock &messageBlock) const {
 			message % error.GetErrorNo();
 			throw SystemException(message.str().c_str());
 		} else if (sentBytes != bytesToSend) {
-			BOOST_ASSERT(sentBytes < bytesToSend);
+			assert(sentBytes < bytesToSend);
 			sendPos += sentBytes;
 		} else {
-			BOOST_ASSERT(sentBytes == bytesToSend);
+			assert(sentBytes == bytesToSend);
 			break;
 		}
 	}
@@ -390,8 +390,8 @@ void SslSockStream::Encrypt(MessageBlock &messageBlock) const {
 }
 
 int SslSockStream::BioWrite(const char *buf, size_t len, int &errVal) {
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
-	BOOST_ASSERT(len > 0);
+	assert(IsDecryptorEncryptorMode());
+	assert(len > 0);
 	try {
 		GetBuffers().out.reserve(GetBuffers().out.size() + len);
 		copy(buf, buf + len, back_inserter(GetBuffers().out));
@@ -408,8 +408,8 @@ int SslSockStream::BioWrite(const char *buf, size_t len, int &errVal) {
 
 int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 
-	BOOST_ASSERT(len > 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
+	assert(len > 0);
+	assert(IsDecryptorEncryptorMode());
 
 	if (!GetBuffers().encryptedMessage) {
 		errVal = EINPROGRESS;
@@ -430,7 +430,7 @@ int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 		GetBuffers().encryptedMessage->GetData() + GetBuffers().encryptedMessageReadPos,
 		dataLen);
 	GetBuffers().encryptedMessageReadPos += dataLen;
-	BOOST_ASSERT(
+	assert(
 		GetBuffers().encryptedMessageReadPos
 		<= GetBuffers().encryptedMessage->GetUnreadedDataSize());
 	
@@ -440,9 +440,9 @@ int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 
 void SslSockStream::Connect() {
 
-	BOOST_ASSERT(GetBuffers().out.size() == 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
-	BOOST_ASSERT(!IsConnected());
+	assert(GetBuffers().out.size() == 0);
+	assert(IsDecryptorEncryptorMode());
+	assert(!IsConnected());
 	if (IsConnected()) {
 		return;
 	}
@@ -450,7 +450,7 @@ void SslSockStream::Connect() {
 	// Check if a connection is already pending for the given SSL
 	// structure.
 	if (!SSL_in_connect_init(ssl())) {
-		BOOST_ASSERT(!SSL_in_accept_init(ssl()));
+		assert(!SSL_in_accept_init(ssl()));
 		SSL_set_connect_state(ssl());
 	}
 
@@ -463,16 +463,16 @@ void SslSockStream::Connect() {
 		throw;
 	}
 
-	BOOST_ASSERT(GetBuffers().out.size() > 0);
+	assert(GetBuffers().out.size() > 0);
 
 }
 
 void SslSockStream::Connect(MessageBlock &messageBlock) {
 
-	BOOST_ASSERT(GetBuffers().out.size() == 0);
-	BOOST_ASSERT(messageBlock.GetUnreadedDataSize() > 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
-	BOOST_ASSERT(!IsConnected());
+	assert(GetBuffers().out.size() == 0);
+	assert(messageBlock.GetUnreadedDataSize() > 0);
+	assert(IsDecryptorEncryptorMode());
+	assert(!IsConnected());
 	if (IsConnected()) {
 		return;
 	}
@@ -480,7 +480,7 @@ void SslSockStream::Connect(MessageBlock &messageBlock) {
 	// Check if a connection is already pending for the given SSL
 	// structure.
 	if (!SSL_in_connect_init(ssl())) {
-		BOOST_ASSERT(!SSL_in_accept_init(ssl()));
+		assert(!SSL_in_accept_init(ssl()));
 		SSL_set_connect_state(ssl());
 	}
 
@@ -543,15 +543,15 @@ void SslSockStream::ConnectSsl() {
 			throw Exception();
 	}
 
-	BOOST_ASSERT(false);
+	assert(false);
 
 }
 
 void SslSockStream::Accept() {
 
-	BOOST_ASSERT(GetBuffers().out.size() == 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
-	BOOST_ASSERT(!IsConnected());
+	assert(GetBuffers().out.size() == 0);
+	assert(IsDecryptorEncryptorMode());
+	assert(!IsConnected());
 	if (IsConnected()) {
 		return;
 	}
@@ -559,7 +559,7 @@ void SslSockStream::Accept() {
 	// Check if a connection is already pending for the given SSL
 	// structure.
 	if (!SSL_in_accept_init(ssl())) {
-		BOOST_ASSERT(!SSL_in_connect_init(ssl()));
+		assert(!SSL_in_connect_init(ssl()));
 		SSL_set_accept_state(ssl());
 	}
 
@@ -576,10 +576,10 @@ void SslSockStream::Accept() {
 
 void SslSockStream::Accept(MessageBlock &messageBlock) {
 
-	BOOST_ASSERT(GetBuffers().out.size() == 0);
-	BOOST_ASSERT(messageBlock.GetUnreadedDataSize() > 0);
-	BOOST_ASSERT(IsDecryptorEncryptorMode());
-	BOOST_ASSERT(!IsConnected());
+	assert(GetBuffers().out.size() == 0);
+	assert(messageBlock.GetUnreadedDataSize() > 0);
+	assert(IsDecryptorEncryptorMode());
+	assert(!IsConnected());
 	if (IsConnected()) {
 		return;
 	}
@@ -587,7 +587,7 @@ void SslSockStream::Accept(MessageBlock &messageBlock) {
 	// Check if a connection is already pending for the given SSL
 	// structure.
 	if (!SSL_in_accept_init(ssl())) {
-		BOOST_ASSERT(!SSL_in_connect_init(ssl()));
+		assert(!SSL_in_connect_init(ssl()));
 		SSL_set_accept_state(ssl());
 	}
 
@@ -650,7 +650,7 @@ void SslSockStream::AcceptSsl() {
 			throw Exception();
 	}
 
-	BOOST_ASSERT(false);
+	assert(false);
 
 }
 

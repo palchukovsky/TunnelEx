@@ -28,10 +28,10 @@ IncomingTcpSslClientConnection::~IncomingTcpSslClientConnection() throw() {
 	try {
 		CloseDataStream();
 		const int result = m_rawStream.close();
-		BOOST_ASSERT(result == 0);
+		assert(result == 0);
 		ACE_UNUSED_ARG(result);
 	} catch (...) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -82,7 +82,7 @@ void IncomingTcpSslClientConnection::AcceptConnection(
 
 void IncomingTcpSslClientConnection::Setup() {
 	
-	BOOST_ASSERT(!GetDataStream().IsDecryptorEncryptorMode());
+	assert(!GetDataStream().IsDecryptorEncryptorMode());
 	
 	GetDataStream().SwitchToDecryptorEncryptorMode();
 	
@@ -107,12 +107,12 @@ void IncomingTcpSslClientConnection::Setup() {
 		GetDataStream().ResetEncryptorDecryptorAnswer();
 		StartReadRemote();
 	} else if (GetDataStream().IsConnected()) {
-		BOOST_ASSERT(
+		assert(
 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
 					GetRuleEndpointAddress().Get())
 				->GetRemoteCertificates().GetSize() == 0);
-		BOOST_ASSERT(
+		assert(
 			SSL_get_peer_certificate(GetDataStream().ssl()) == 0
 			|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
 		Base::Setup();
@@ -126,7 +126,7 @@ void IncomingTcpSslClientConnection::Setup() {
 
 void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 	
-	BOOST_ASSERT(GetDataStream().IsDecryptorEncryptorMode());
+	assert(GetDataStream().IsDecryptorEncryptorMode());
 
 	if (	GetDataStream().IsConnected()
 			|| messageBlock.GetUnreadedDataSize() == 0) {
@@ -134,7 +134,7 @@ void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 		return;
 	}
 
-	BOOST_ASSERT(!IsSetupCompleted());
+	assert(!IsSetupCompleted());
 
 	try {
 		GetDataStream().Connect(messageBlock);
@@ -157,7 +157,7 @@ void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 		GetDataStream().ResetEncryptorDecryptorAnswer();
 	}
 
-	BOOST_ASSERT(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
+	assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
 
 	if (GetDataStream().IsConnected()) {
 		Log::GetInstance().AppendDebug(

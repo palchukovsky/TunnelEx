@@ -86,7 +86,7 @@ LicenseKeyDlg::LicenseKeyDlg(
 
 void LicenseKeyDlg::OnPaste(wxCommandEvent &) {
 	if (!wxTheClipboard->Open()) {
-		BOOST_ASSERT(false);
+		assert(false);
 		return;
 	};
 	struct AutoCloseClipboard {
@@ -105,11 +105,11 @@ void LicenseKeyDlg::OnOk(wxCommandEvent &) {
 	if (!Validate()) {
 		return;
 	}
-	BOOST_ASSERT(
+	assert(
 		wxGetApp().GetConfig().Exists(wxT("/License/OfflineActivation/State")));
 	const wxString privateKeySerialized
 		= wxGetApp().GetConfig().Read(wxT("/License/OfflineActivation/State"));
-	BOOST_ASSERT(!privateKeySerialized.IsEmpty());
+	assert(!privateKeySerialized.IsEmpty());
 	if (!privateKeySerialized.IsEmpty()) {
 		std::string privateKey;
 		{
@@ -208,7 +208,7 @@ public:
 public:
 	void OnCopy(wxCommandEvent &) {
 		if (!wxTheClipboard->Open()) {
-			BOOST_ASSERT(false);
+			assert(false);
 			return;
 		};
 		struct AutoCloseClipboard {

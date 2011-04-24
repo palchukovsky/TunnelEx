@@ -77,7 +77,7 @@ protected:
 
 	void CheckNewRelease() {
 
-		BOOST_ASSERT(!m_versionResolved);
+		assert(!m_versionResolved);
 
 		WFormat url(
 			L"http://" TUNNELEX_DOMAIN_W L"/version/xml/"
@@ -107,7 +107,7 @@ protected:
 		std::vector<std::wstring> versionNumbers;
 		versionNumbers.reserve(4);
 		split(versionNumbers, version, boost::is_any_of(L"."));
-		BOOST_ASSERT(versionNumbers.size() == 4);
+		assert(versionNumbers.size() == 4);
 		if (versionNumbers.size() != 4) {
 			return false;
 		}
@@ -118,7 +118,7 @@ protected:
 			parsed.minorHigh = boost::lexical_cast<unsigned long>(versionNumbers[2]);
 			parsed.minorLow = boost::lexical_cast<unsigned long>(versionNumbers[3]);
 		} catch (const boost::bad_lexical_cast &) {
-			BOOST_ASSERT(false);
+			assert(false);
 			return false;
 		}
 		result = parsed;
@@ -145,14 +145,14 @@ protected:
 					|| doc->put_async(VARIANT_TRUE) != S_OK
 					|| doc->load(CComVariant(url), &loadResult) != S_OK
 					|| loadResult != VARIANT_TRUE) {
-				BOOST_ASSERT(false);
+				assert(false);
 				return false;
 			}
 
 			for ( ; !m_isShutdownMode; ) {
 				long state;
 				if (doc->get_readyState(&state) != S_OK) {
-					BOOST_ASSERT(false);
+					assert(false);
 					return false;
 				} else if (state != READYSTATE_COMPLETE) {
 					MSG msg;
@@ -165,7 +165,7 @@ protected:
 					CComPtr<IXMLDOMParseError> parseError;
 					long parseErrorCode;
 					if (doc->get_parseError(&parseError) != S_OK) {
-						BOOST_ASSERT(false);
+						assert(false);
 						return false;
 					} else if (parseError->get_errorCode(&parseErrorCode) != S_FALSE) {
 						return false;
@@ -180,7 +180,7 @@ protected:
 			}
 
 		} catch (...) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 		
 		return false;
@@ -244,8 +244,8 @@ void UpdateChecker::WaitCheck() const {
 }
 
 void UpdateChecker::RunCheck() {
-	BOOST_ASSERT(!m_thread->IsRunning());
-	BOOST_ASSERT(m_isActive);
+	assert(!m_thread->IsRunning());
+	assert(m_isActive);
 	m_thread->Run();
 }
 

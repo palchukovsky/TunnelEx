@@ -35,10 +35,10 @@
 					m_method(method),
 					m_file(file),
 					m_line(line) {
-				BOOST_ASSERT(m_instancesNumber == 0);
+				assert(m_instancesNumber == 0);
 			}
 			~ObjectsDeletionChecker() {
-				BOOST_ASSERT(m_instancesNumber == 0);
+				assert(m_instancesNumber == 0);
 			}
 		public:
 			long GetInstancesNumber() const {
@@ -59,7 +59,7 @@
 		template<class templateClass1> \
 		volatile long className<templateClass1>::name = 0
 
-#	define TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(name) BOOST_ASSERT(BOOST_INTERLOCKED_DECREMENT(&name) >= 0)
+#	define TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(name) assert(BOOST_INTERLOCKED_DECREMENT(&name) >= 0)
 	//!todo: move counter to static field
 #	define TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(name) \
 		do { \
@@ -71,7 +71,7 @@
 #	define TUNNELEX_OBJECTS_DELETION_CHECK_ZERO(condition, name) \
 		do { \
 			if (condition) { \
-				BOOST_ASSERT(name == 0); \
+				assert(name == 0); \
 			} \
 		} while (name == 0)
 

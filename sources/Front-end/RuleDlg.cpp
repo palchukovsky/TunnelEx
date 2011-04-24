@@ -102,7 +102,7 @@ void RuleDlg::CheckInit() {
 
 void RuleDlg::Init() {
 
-	BOOST_ASSERT(!m_isInited);
+	assert(!m_isInited);
 
 	const Theme &theme = wxGetApp().GetTheme();
 
@@ -233,7 +233,7 @@ std::auto_ptr<wxSizer> RuleDlg::CreateControlOptions() {
 			.GetConfig()
 			.Read(wxT("/Rule/Template/ErrorTreatment"), &ctrlVal);
 	}
-	BOOST_ASSERT(treatTypes.Index(ctrlVal) != wxNOT_FOUND || ctrlVal.IsEmpty());
+	assert(treatTypes.Index(ctrlVal) != wxNOT_FOUND || ctrlVal.IsEmpty());
 	if (ctrlVal.IsEmpty() || treatTypes.Index(ctrlVal) == wxNOT_FOUND) {
 		switch (m_rule->GetErrorsTreatment()) {
 			case Rule::ERRORS_TREATMENT_INFO:
@@ -243,13 +243,13 @@ std::auto_ptr<wxSizer> RuleDlg::CreateControlOptions() {
 				ctrlVal = wxT("warning");
 				break;
 			default:
-				BOOST_ASSERT(false);
+				assert(false);
 			case Rule::ERRORS_TREATMENT_ERROR:
 				ctrlVal = wxT("error");
 				break;
 		}
 	}
-	BOOST_ASSERT(treatTypes.Index(ctrlVal) != wxNOT_FOUND);
+	assert(treatTypes.Index(ctrlVal) != wxNOT_FOUND);
 	wxChoice &treatInput = *new wxChoice(
 		this,
 		CONTROL_ID_ERROS_TREATMENT,
@@ -328,7 +328,7 @@ void RuleDlg::OnOk(wxCommandEvent &) {
 			} else  if (ctrl.GetStringSelection() == wxT("warning")) {
 				newErrorsTreatment = TunnelRule::ERRORS_TREATMENT_WARN;
 			} else {
-				BOOST_ASSERT(ctrl.GetStringSelection() == wxT("error"));
+				assert(ctrl.GetStringSelection() == wxT("error"));
 				newErrorsTreatment = TunnelRule::ERRORS_TREATMENT_ERROR;
 			}
 		}

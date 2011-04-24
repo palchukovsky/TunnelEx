@@ -27,7 +27,7 @@ using namespace TunnelEx;
 //////////////////////////////////////////////////////////////////////////
 
 TexWinService::TexWinService() {
-	BOOST_ASSERT(!m_texService.get());
+	assert(!m_texService.get());
 	m_texService.reset(new TexServiceImplementation);
 	soap_init2(&m_soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 	m_soap.max_keep_alive = 1000;
@@ -45,7 +45,7 @@ TexWinService::~TexWinService() {
 		Connections().swap(m_connections);
 	}
 	m_adminThreads.join_all();
-	BOOST_ASSERT(m_texService.get());
+	assert(m_texService.get());
 	m_texService.reset();
 }
 
@@ -144,7 +144,7 @@ void TexWinService::RunSoapServer(HANDLE stopEvent) {
 		sockaddr_in hostInfo;
 		int hostInfoSize = sizeof(hostInfo);
 		if (getsockname(masterSocket, reinterpret_cast<sockaddr*>(&hostInfo), &hostInfoSize)) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 		m_soap.port = ntohs(hostInfo.sin_port);
 		acceptEvent.reset(new ConnectionAcceptEvent(masterSocket));

@@ -11,6 +11,7 @@
 #define INCLUDED_FILE__Prec_h__1006221050
 
 #include "CompileConfig.h"
+#include "Assert.h"
 
 #include <ace/OS_Errno.h>
 

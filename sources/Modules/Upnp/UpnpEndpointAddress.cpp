@@ -29,21 +29,21 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 				unsigned short externalPort,
 				const SslCertificateId &certificate,
 				const SslCertificateIdCollection &remoteCertificates) {
-		BOOST_ASSERT(
+		assert(
 			(std::wstring(proto) == Inet::TcpEndpointAddress::GetProto())
 			|| (std::wstring(proto) == Inet::UdpEndpointAddress::GetProto()));
-		BOOST_ASSERT(externalPort != 0);
+		assert(externalPort != 0);
 		WFormat host(L"upnp_%1%://*:%2%");
 		host % proto % externalPort;
 		WString result = host.str().c_str();
-		BOOST_ASSERT(!certificate.IsEmpty() || remoteCertificates.GetSize() == 0);
+		assert(!certificate.IsEmpty() || remoteCertificates.GetSize() == 0);
 		if (!certificate.IsEmpty()) {
 			result += L"?certificate=";
 			result += certificate.EncodeUrlClone();
 			const size_t remoteCertificatesSize = remoteCertificates.GetSize();
 			for (size_t i = 0; i < remoteCertificatesSize; ++i) {
 				const SslCertificateId &certificate = remoteCertificates[i];
-				BOOST_ASSERT(!certificate.IsEmpty());
+				assert(!certificate.IsEmpty());
 				if (certificate.IsEmpty()) {
 					continue;
 				}

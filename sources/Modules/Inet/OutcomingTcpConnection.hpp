@@ -75,10 +75,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			try {
 				CloseDataStream();
 				const int result = m_ioStream.close();
-				BOOST_ASSERT(result == 0);
+				assert(result == 0);
 				ACE_UNUSED_ARG(result);
 			} catch (...) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 
@@ -86,7 +86,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual void Setup() {
 			
-			BOOST_ASSERT(!GetDataStream().IsDecryptorEncryptorMode());
+			assert(!GetDataStream().IsDecryptorEncryptorMode());
 	
 			GetDataStream().SwitchToDecryptorEncryptorMode();
 			
@@ -112,12 +112,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				GetDataStream().ResetEncryptorDecryptorAnswer();
 				StartReadRemote();
 			} else if (GetDataStream().IsConnected()) {
-				BOOST_ASSERT(
+				assert(
 					SSL_get_peer_certificate(GetDataStream().ssl()) != 0
 					|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
 							GetRuleEndpointAddress().Get())
 						->GetRemoteCertificates().GetSize() == 0);
-				BOOST_ASSERT(
+				assert(
 					SSL_get_peer_certificate(GetDataStream().ssl()) == 0
 					|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
 				Base::Setup();
@@ -133,7 +133,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual void ReadRemote(MessageBlock &messageBlock) {
 	
-			BOOST_ASSERT(GetDataStream().IsDecryptorEncryptorMode());
+			assert(GetDataStream().IsDecryptorEncryptorMode());
 
 			if (	GetDataStream().IsConnected()
 					|| messageBlock.GetUnreadedDataSize() == 0) {
@@ -141,7 +141,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				return;
 			}
 
-			BOOST_ASSERT(!IsSetupCompleted());
+			assert(!IsSetupCompleted());
 
 			try {
 				SslConnect(messageBlock);
@@ -164,7 +164,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				GetDataStream().ResetEncryptorDecryptorAnswer();
 			}
 
-			BOOST_ASSERT(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
+			assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
 
 			if (GetDataStream().IsConnected()) {
 				Log::GetInstance().AppendDebug(

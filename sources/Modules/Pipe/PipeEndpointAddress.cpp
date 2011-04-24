@@ -35,7 +35,7 @@ const WString & PipeEndpointAddress::GetResourceIdentifier() const {
 	if (m_identifier.IsEmpty()) {
 		if (m_impl.get_path_name()[0] != 0) {
 			WString identifier = L"pipe://";
-			BOOST_ASSERT(boost::starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\"));
+			assert(boost::starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\"));
 			identifier += boost::starts_with(m_impl.get_path_name(), L"\\\\.\\pipe\\")
 				?	m_impl.get_path_name() + 9
 				:	m_impl.get_path_name();

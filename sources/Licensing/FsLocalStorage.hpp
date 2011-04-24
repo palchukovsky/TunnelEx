@@ -57,7 +57,7 @@ namespace TunnelEx { namespace Licensing {
 		static std::string GetDbDir() {
 			std::vector<char> buffer(MAX_PATH + 1, 0);
 			if (!SHGetSpecialFolderPathA(NULL, &buffer[0], CSIDL_COMMON_APPDATA, TRUE)) {
-				BOOST_ASSERT(false);
+				assert(false);
 				return std::string();
 			}
 			std::string result = &buffer[0];
@@ -154,7 +154,7 @@ namespace TunnelEx { namespace Licensing {
 		inline static void SetFileContent(
 					const LicenseDbHead &head,
 					const std::vector<unsigned char> &varData) {
-			BOOST_ASSERT(varData.size() == head.licenseKeyLen + head.privateKeyLen);
+			assert(varData.size() == head.licenseKeyLen + head.privateKeyLen);
 			std::vector<unsigned char> fileKey;
 			GetFileEncryptingKey(fileKey);
 			std::ofstream f(GetDbFilePath().c_str(), std::ios::binary | std::ios::trunc);
@@ -179,7 +179,7 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool GetFileContent(
 					LicenseDbHead &head,
 					std::vector<unsigned char> &varData) {
-			BOOST_ASSERT(varData.size() == head.licenseKeyLen + head.privateKeyLen);
+			assert(varData.size() == head.licenseKeyLen + head.privateKeyLen);
 			std::vector<unsigned char> fileKey;
 			GetFileEncryptingKey(fileKey);
 			std::ifstream f(GetDbFilePath().c_str(), std::ios::binary);
@@ -219,7 +219,7 @@ namespace TunnelEx { namespace Licensing {
 				std::string(head.licenseUuid, head.licenseUuid + sizeof(head.licenseUuid))
 					.swap(result);
 			}
-			BOOST_ASSERT(result.size() == 36);
+			assert(result.size() == 36);
 			return result;
 		}
 

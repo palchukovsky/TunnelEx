@@ -47,7 +47,7 @@ struct RuleUtils {
 		return ctrl.GetCurrentSelection() + 1 == int(ctrl.GetCount());
 	}
 	static void SelectUpnpAdapter(wxChoice &ctrl) {
-		BOOST_ASSERT(ctrl.GetCount() > 0);
+		assert(ctrl.GetCount() > 0);
 		if (ctrl.GetCount() < 1) {
 			return;
 		}

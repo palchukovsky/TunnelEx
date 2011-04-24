@@ -145,7 +145,7 @@ wxChoice & RuleUtils::CreateAdapterSelector(
 		adapters.Add(adapter);
 	}
 	
-	BOOST_ASSERT(adapters.GetCount() >= 2);
+	assert(adapters.GetCount() >= 2);
 	if (!isFtpEndpoint) {
 		adapters.Add(wxT("UPnP Router Port Mapping"));
 	}
@@ -363,7 +363,7 @@ bool RuleUtils::ShowSslSettingsDialog(
 		service,
 		readonly);
 	if (settings.ShowModal() == wxID_OK) {
-		BOOST_ASSERT(
+		assert(
 			!settings.GetCertificate().IsEmpty()
 			|| settings.GetRemoteCertificates().GetSize() == 0);
 		certificate = settings.GetCertificate();
@@ -478,8 +478,8 @@ bool RuleUtils::CheckInactiveAdapterWarning(
 }
 
 void RuleUtils::SaveFtpInRule(const bool isOn, TunnelRule &rule) {
-	BOOST_ASSERT(rule.GetInputs().GetSize() > 0);
-	BOOST_ASSERT(rule.GetDestinations().GetSize() > 0);
+	assert(rule.GetInputs().GetSize() > 0);
+	assert(rule.GetDestinations().GetSize() > 0);
 	RuleUtils::ListenerFinder ftpActiveFinder(L"Tunnel/Ftp/Active");
 	RuleUtils::ListenerFinder ftpPassiveFinder(L"Tunnel/Ftp/Passive");
 	ftpPassiveFinder.Remove(rule.GetInputs());
@@ -510,12 +510,12 @@ WString RuleUtils::CreateSerialResourceIdentifier(
 	typedef std::map<wxString, SerialEndpointAddress::Parity> ParityMap;
 	ParityMap parityMap;
 	GetSerialParityValsMap(parityMap);
-	BOOST_ASSERT(parityMap.find(parityStr) != parityMap.end());
+	assert(parityMap.find(parityStr) != parityMap.end());
 
 	typedef std::map<wxString, SerialEndpointAddress::FlowControl> FcMap;
 	FcMap fcMap;
 	GetSerialFlowControlValsMap(fcMap);
-	BOOST_ASSERT(fcMap.find(flowControlStr) != fcMap.end());
+	assert(fcMap.find(flowControlStr) != fcMap.end());
 		
 	return SerialEndpointAddress::CreateResourceIdentifier(
 		serialLine.c_str(),

@@ -118,7 +118,7 @@ namespace Crypto {
 	private:
 
 		void LoadStringError() throw() {
-			BOOST_ASSERT(m_buffer[0] == 0);
+			assert(m_buffer[0] == 0);
 			char *ptr = m_buffer;
 			foreach (const unsigned long error, m_errorCodes) {
 				ptr += strlen(ptr);
@@ -476,7 +476,7 @@ namespace Crypto {
 		}
 		explicit AutoBio(BIO *bio) throw()
 				: m_bio(bio) {
-			BOOST_ASSERT(m_bio);
+			assert(m_bio);
 		}
 		~AutoBio() throw() {
 			if (m_bio) {
@@ -508,7 +508,7 @@ namespace Crypto {
 	public:
 		explicit AutoBioChain(BIO *bio) throw()
 				: m_bio(bio) {
-			BOOST_ASSERT(m_bio);
+			assert(m_bio);
 		}
 		~AutoBioChain() throw() {
 			BIO_free_all(m_bio);
@@ -557,7 +557,7 @@ namespace Crypto {
 		}
 		explicit BigNumber(BIGNUM *const impl)
 				: m_impl(impl)  {
-			BOOST_ASSERT(impl);
+			assert(impl);
 		}
 	public:
 		~BigNumber() {
@@ -762,7 +762,7 @@ namespace Crypto {
 		Key(EVP_PKEY *const key, bool isPublic) throw()
 				: m_isPublic(isPublic),
 				m_key(key) {
-			BOOST_ASSERT(key);
+			assert(key);
 		}
 
 		Key(const Key &rhs) /*throw(Crypto::Exception)*/
@@ -774,7 +774,7 @@ namespace Crypto {
 			try {
 				switch(rhs.m_key->type) {
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 						throw Exception("Wrong or unsupported algorithm type");
 					case EVP_PKEY_RSA: // currently supports only RSA
 						{
@@ -854,7 +854,7 @@ namespace Crypto {
 						:	m_key->pkey.dsa->priv_key;
 					break;
 				default:
-					BOOST_ASSERT(false);
+					assert(false);
 					throw Exception("Wrong or unsupported algorithm type");
 			}
 
@@ -867,7 +867,7 @@ namespace Crypto {
 				case SIZE_8192:
 					return Size(result);
 				default:
-					BOOST_ASSERT(false);
+					assert(false);
 					throw Exception("Wrong key size");
 			}
 		
@@ -1153,7 +1153,7 @@ namespace Crypto {
 					const PrivateKey &privateKey)
 				/*throw(Crypto::Exception)*/ {
 			EVP_CIPHER_CTX ctx;
-			BOOST_ASSERT(encryptedLen <= (1024 * 5));
+			assert(encryptedLen <= (1024 * 5));
 			Buffer buffer(encryptedLen + 1);
 			int len1,
 				len2;
@@ -1171,12 +1171,12 @@ namespace Crypto {
 							&len1,
 							encrypted,
 							int(encryptedLen))) {
-				BOOST_ASSERT(false);
+				assert(false);
 				throw OpenSslException(OpenSslError::GetLast(true));
 			} else {
-				BOOST_ASSERT(size_t(len1) < buffer.size());
+				assert(size_t(len1) < buffer.size());
 				if (!EVP_OpenFinal(&ctx, &buffer[len1], &len2) || len1 + len2 == 0) {
-					BOOST_ASSERT(false);
+					assert(false);
 					throw OpenSslException(OpenSslError::GetLast(true));
 				}
 			}
@@ -1324,7 +1324,7 @@ namespace Crypto {
 			unsigned char *i2dPtr = &buffer[0];
 			keyLen = i2d_RSAPublicKey(newKey.rsa, &i2dPtr);
 			keyLen += i2d_RSAPrivateKey(newKey.rsa, &i2dPtr);
-			BOOST_ASSERT(keyLen == buffer.size());
+			assert(keyLen == buffer.size());
 			newKey.Reset();
 			
 			const unsigned char *d2iPtr = &buffer[0];
@@ -1392,7 +1392,7 @@ namespace Crypto {
 
 		explicit X509Shared(X509 *const cert) throw()
 				: m_cert(cert) {
-			BOOST_ASSERT(m_cert);
+			assert(m_cert);
 		}
 
 		explicit X509Shared(const unsigned char *data, size_t dataLen) {
@@ -1917,8 +1917,8 @@ namespace Crypto {
 			if (!PKCS12_parse(m_pkcs12, password.c_str(), &privateKey, &cert, &ca)) {
 				throw OpenSslException(OpenSslError::GetLast(true));
 			}
-			BOOST_ASSERT(cert);
-			BOOST_ASSERT(privateKey);
+			assert(cert);
+			assert(privateKey);
 			if (ca) {
 				sk_X509_pop_free(ca, X509_free);
 			}

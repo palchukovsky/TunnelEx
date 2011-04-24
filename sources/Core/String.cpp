@@ -110,8 +110,7 @@ public:
 
 	typedef std::basic_string<typename Element> MyString;
 
-	Implementation()
-			: m_string() {
+	Implementation() {
 		//...//
 	}
 
@@ -305,10 +304,9 @@ typename BasicString<Element>::SizeType BasicString<Element>::Find(
 	return m_pimpl->m_string.find(str.m_pimpl->m_string);
 }
 
-
 template<class Element>
 void BasicString<Element>::Swap(MyType &rhs) throw() {
-	m_pimpl->m_string.swap(rhs.m_pimpl->m_string);
+	std::swap(m_pimpl, rhs.m_pimpl);
 }
 
 template<class Element>

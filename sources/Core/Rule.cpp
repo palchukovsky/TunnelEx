@@ -419,7 +419,7 @@ namespace TunnelEx {
 					treatment = "warning";
 					break;
 				default:
-					BOOST_ASSERT(false);
+					assert(false);
 				case TunnelRule::ERRORS_TREATMENT_ERROR:
 					treatment = "error";
 					break;
@@ -482,7 +482,7 @@ namespace TunnelEx {
 					const char *acceptor;
 					switch (endpoints[i].GetReadWriteAcceptor()) {
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 					case Endpoint::ACCEPTOR_NONE:
 						acceptor = "none";
 						break;
@@ -584,7 +584,7 @@ namespace TunnelEx {
 			} else if (errorsTreatment == "warning") {
 				return Rule::ERRORS_TREATMENT_WARN;
 			} else {
-				BOOST_ASSERT(errorsTreatment == "error");
+				assert(errorsTreatment == "error");
 				return Rule::ERRORS_TREATMENT_ERROR;
 			}
 		}

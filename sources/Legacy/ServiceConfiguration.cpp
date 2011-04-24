@@ -40,7 +40,7 @@ boost::shared_ptr<Document> MigrateServiceConfigurationFrom_1_0(
 			"Legacy version supports (service configuration migration):"
 				" Importing \"Rules\"...");
 		newDocXPath->Query("/Configuration/Rules", newDocQueryResult);
-		BOOST_ASSERT(newDocQueryResult.size() == 1);
+		assert(newDocQueryResult.size() == 1);
 		newDocQueryResult[0]->SetContent(oldDocQueryResult[0]->GetContent(buffer));
 	}
 
@@ -50,7 +50,7 @@ boost::shared_ptr<Document> MigrateServiceConfigurationFrom_1_0(
 				"Legacy version supports (service configuration migration):"
 					" Importing \"Log\"...");
 		newDocXPath->Query("/Configuration/Log", newDocQueryResult);
-		BOOST_ASSERT(newDocQueryResult.size() == 1);
+		assert(newDocQueryResult.size() == 1);
 		newDocQueryResult[0]->SetContent(oldDocQueryResult[0]->GetContent(buffer));
 		if (oldDocQueryResult[0]->HasAttribute("Level")) {
 			Log::GetInstance().AppendInfo(
@@ -91,7 +91,7 @@ boost::shared_ptr<Document> MigrateServiceConfigurationFrom_1_1(
 			"Legacy version supports (service configuration migration):"
 			" Importing \"ServerState\"...");
 		newDocXPath->Query("/Configuration/ServerState", newDocQueryResult);
-		BOOST_ASSERT(newDocQueryResult.size() == 1);
+		assert(newDocQueryResult.size() == 1);
 		newDocQueryResult[0]->SetContent(oldDocQueryResult[0]->GetContent(buffer));
 	}
 

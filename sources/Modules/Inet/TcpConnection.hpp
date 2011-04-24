@@ -42,14 +42,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			try {
 				CloseDataStream();
 			} catch (...) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 
 	protected:
 
 		void SetDataStream(std::auto_ptr<Stream> stream) {
-			BOOST_ASSERT(!m_dataStream.get());
+			assert(!m_dataStream.get());
 			m_dataStream = stream;
 		}
 
@@ -64,7 +64,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	protected:
 
 		void GetRemoteAceAddress(ACE_INET_Addr &result) const {
-			BOOST_ASSERT(m_dataStream.get());
+			assert(m_dataStream.get());
 			if (GetIoStream().get_remote_addr(result) != 0) {
 				const Error error(errno);
 				WFormat message(L"Failed to get remote inet (TCP) address: \"%1% (%2%)\".");
@@ -77,13 +77,13 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual void ReadRemote(MessageBlock &messageBlock) {
 			BOOST_MPL_ASSERT((boost::is_same<Stream, ACE_SOCK_Stream>));
-			BOOST_ASSERT(m_dataStream.get());
+			assert(m_dataStream.get());
 			Base::ReadRemote(messageBlock);
 		}
 
 		virtual DataTransferCommand Write(MessageBlock &messageBlock) {
 			BOOST_MPL_ASSERT((boost::is_same<Stream, ACE_SOCK_Stream>));
-			BOOST_ASSERT(m_dataStream.get());
+			assert(m_dataStream.get());
 			return Base::Write(messageBlock);
 		}
 
@@ -97,7 +97,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 
 		Stream & GetDataStream() {
-			BOOST_ASSERT(m_dataStream.get());
+			assert(m_dataStream.get());
 			return *m_dataStream;
 		}
 		const Stream & GetDataStream() const {
@@ -110,7 +110,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				return;
 			}
 			const int result = m_dataStream->close();
-			BOOST_ASSERT(result == 0);
+			assert(result == 0);
 			ACE_UNUSED_ARG(result);
 			m_dataStream.reset();
 		}
@@ -128,14 +128,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 		m_dataStream->SwitchToStreamMode();
 		const int result = m_dataStream->close();
-		BOOST_ASSERT(result == 0);
+		assert(result == 0);
 		ACE_UNUSED_ARG(result);
 		m_dataStream.reset();
 	}
 
 	template<>
 	void TcpConnection<SslSockStream>::ReadRemote(MessageBlock &messageBlock) {
-		BOOST_ASSERT(m_dataStream.get());
+		assert(m_dataStream.get());
 		if (	GetDataStream().IsDecryptorEncryptorMode()
 				&& messageBlock.GetUnreadedDataSize() > 0) {
 			GetDataStream().Decrypt(messageBlock);
@@ -159,14 +159,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		if (	GetDataStream().IsDecryptorEncryptorMode()
 				&& messageBlock.GetUnreadedDataSize() > 0) {
 			GetDataStream().Encrypt(messageBlock);
-			BOOST_ASSERT(GetDataStream().GetEncryptorDecryptorAnswer().empty());
+			assert(GetDataStream().GetEncryptorDecryptorAnswer().empty());
 		}
 		return Base::Write(messageBlock);
 	}
 
 	template<>
 	UniquePtr<EndpointAddress> TcpConnection<SslSockStream>::GetRemoteAddress() const {
-		BOOST_ASSERT(m_dataStream.get());
+		assert(m_dataStream.get());
 		using namespace TunnelEx::Helpers::Crypto;
 		ACE_INET_Addr aceAddr;
 		GetRemoteAceAddress(aceAddr);

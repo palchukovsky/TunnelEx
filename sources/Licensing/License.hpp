@@ -78,7 +78,7 @@ namespace TunnelEx { namespace Licensing {
 					defaultValue(defaultValue),
 					isActive(isActive),
 					unactivityReason(unactivityReason) {
-				BOOST_ASSERT(isActive || unactivityReason != UR_NO);
+				assert(isActive || unactivityReason != UR_NO);
 			}
 			
 			explicit inline Cache(
@@ -91,7 +91,7 @@ namespace TunnelEx { namespace Licensing {
 					defaultValue(defaultValue),
 					isActive(isActive),
 					unactivityReason(unactivityReason) {
-				BOOST_ASSERT(isActive || unactivityReason != UR_NO);
+				assert(isActive || unactivityReason != UR_NO);
 			}
 
 		public:
@@ -144,12 +144,12 @@ namespace TunnelEx { namespace Licensing {
 		 *  @return	true if feature available, false otherwise
 		 */
 		inline bool IsFeatureValueAvailable(const FeatureValue &valueToCheck) const {
-			BOOST_ASSERT(m_cache.get());
+			assert(m_cache.get());
 			return m_cache.get() && IsFeatureValueAvailable(*m_cache, valueToCheck);
 		}
 
 		inline bool GetFeatureValue(FeatureValue &value) {
-			BOOST_ASSERT(m_cache.get());
+			assert(m_cache.get());
 			if (	!m_cache.get()
 					||	!m_cache->isActive
 					||	!m_cache->value) {
@@ -160,7 +160,7 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		UnactivityReason GetUnactivityReason() const {
-			BOOST_ASSERT(m_cache.get());
+			assert(m_cache.get());
 			return !m_cache.get() ? UR_NO : m_cache->unactivityReason;
 		}
 
@@ -448,7 +448,7 @@ namespace TunnelEx { namespace Licensing {
 						Check::GetCheckTimeFailReason(keyInfo, localInfo),
 						defaultValue));
 			} else {
-				BOOST_ASSERT(false);
+				assert(false);
 				result.reset(
 					new Cache(
 						false,

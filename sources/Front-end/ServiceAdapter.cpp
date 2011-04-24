@@ -72,7 +72,7 @@ private:
 								errorCode
 									= m_serviceAdapter.m_service.texs__CheckState(state);
 							}
-							BOOST_ASSERT(
+							assert(
 								errorCode == SOAP_EOF
 								|| errorCode == SOAP_OK
 								|| errorCode == SOAP_TCP_ERROR
@@ -102,7 +102,7 @@ private:
 						}
 						break;
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 						continue;
 				}
 			}
@@ -217,7 +217,7 @@ public:
 
 	~Implementation() {
 		if (m_stateCheckingThread.IsRunning()) {
-			BOOST_ASSERT(m_stateCheckingStopEvent.get());
+			assert(m_stateCheckingStopEvent.get());
 			SetEvent(m_stateCheckingStopEvent.get());
 			m_stateCheckingThread.Wait();
 		}
@@ -743,7 +743,7 @@ public:
 					new WorkstationPropertyValues);
 				for (size_t i = sizeof(Result); ; ) {
 					const size_t bufferSize = decryptedBuffer.size() - i;
-					BOOST_ASSERT(bufferSize == 0 || bufferSize > sizeof(Id) + sizeof(ValSize));
+					assert(bufferSize == 0 || bufferSize > sizeof(Id) + sizeof(ValSize));
 					if (bufferSize <= sizeof(Id) + sizeof(ValSize)) {
 						break;
 					}
@@ -760,7 +760,7 @@ public:
 					i += sizeof(Id) + sizeof(ValSize) + valSize;
 				}
 
-				BOOST_ASSERT(encryptedBuffer.size() == 0 || properties->size() > 0);
+				assert(encryptedBuffer.size() == 0 || properties->size() > 0);
 				
 				m_properties = properties;
 				result = *m_properties;
@@ -828,7 +828,7 @@ private:
 
 	void InitiateStateUpdate(const wxMutexLocker &) {
 		if (m_stateCheckingThread.IsRunning()) {
-			BOOST_ASSERT(m_stateCheckingUpdateEvent.get());
+			assert(m_stateCheckingUpdateEvent.get());
 			SetEvent(m_stateCheckingUpdateEvent.get());
 		}
 	}
@@ -925,7 +925,7 @@ private:
 
 	void GenerateEvent(ServiceAdapter::Event::Id eventId) const {
 		ServiceAdapter::Event adapterEvent(EVT_SERVICE_ADAPTER_ACTION, eventId);
-		BOOST_ASSERT(m_statusEventListener);
+		assert(m_statusEventListener);
 		wxPostEvent(m_statusEventListener, adapterEvent);
 	}
 

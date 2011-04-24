@@ -313,7 +313,7 @@ SslCertificateListDlg::~SslCertificateListDlg() {
 		}
 
 	} catch (...) {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 
 }
@@ -352,7 +352,7 @@ void SslCertificateListDlg::Select(const SslCertificateId &id) {
 }
 
 void SslCertificateListDlg::Select(const SslCertificateIdCollection &ids) {
-	BOOST_ASSERT(m_mode != MODE_SELECT_PRIVATE || ids.GetSize() <= 1);
+	assert(m_mode != MODE_SELECT_PRIVATE || ids.GetSize() <= 1);
 	ClearSelection();
 	for (size_t i = 0; i < ids.GetSize(); ++i) {
 		SelectImpl(ids[i].GetCStr());
@@ -425,7 +425,7 @@ void SslCertificateListDlg::RefreshList() {
 			itemInfo.SetImage(2);
 		}
 		const long index = m_list->InsertItem(itemInfo);
-		BOOST_ASSERT(index >= 0);
+		assert(index >= 0);
 		m_list->SetItemData(index, reinterpret_cast<long>(&certificate));
 		m_list->SetItem(
 			index,
@@ -498,7 +498,7 @@ void SslCertificateListDlg::SortList(Column column, bool changeDirection) {
 			fnSortCallBack = &SortCertificateListByPrivate;
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 			return;
 	}
 
@@ -525,7 +525,7 @@ void SslCertificateListDlg::SortList(Column column, bool changeDirection) {
 	for (int i = 0; i < itemCount; ++i) {
 		item.SetId(i);
 		if (!m_list->GetItem(item)) {
-			BOOST_ASSERT(false);
+			assert(false);
 			continue;
 		}
 		item.SetBackgroundColour(i % 2
@@ -553,7 +553,7 @@ namespace {
 						wxT("Unknown SSL certificate key size: %1%, %2% will be used."),
 						size,
 						int(defaultKeySize));
-					BOOST_ASSERT(false);
+					assert(false);
 					return defaultKeySize;
 				}
 		}
@@ -601,8 +601,8 @@ void SslCertificateListDlg::OnGenerate(wxCommandEvent &) {
 					m_error);
 				return false;
 			}
-			BOOST_ASSERT(!m_privateKeyStr.IsEmpty());
-			BOOST_ASSERT(!m_certificateStr.IsEmpty());
+			assert(!m_privateKeyStr.IsEmpty());
+			assert(!m_certificateStr.IsEmpty());
 			return true;
 		}
 	public:
@@ -635,8 +635,8 @@ void SslCertificateListDlg::OnGenerate(wxCommandEvent &) {
 
 				const std::auto_ptr<const Rsa> rsa(Rsa::Generate(m_keySize));
 				if (!signKey) {
-					BOOST_ASSERT(m_signKey.empty());
-					BOOST_ASSERT(!signKeyImpl.get());
+					assert(m_signKey.empty());
+					assert(!signKeyImpl.get());
 					signKey = &rsa->GetPrivateKey();
 				}
 
@@ -747,8 +747,8 @@ void SslCertificateListDlg::OnRequest(wxCommandEvent &) {
 					m_error);
 				return false;
 			}
-			BOOST_ASSERT(!m_keyStr.IsEmpty());
-			BOOST_ASSERT(!m_requestStr.IsEmpty());
+			assert(!m_keyStr.IsEmpty());
+			assert(!m_requestStr.IsEmpty());
 			return true;
 		}
 	public:
@@ -915,7 +915,7 @@ void SslCertificateListDlg::OnListItemActivated(wxListEvent &) {
 void SslCertificateListDlg::ViewSelected() {
 	SslCertificateIdCollection selected;
 	GetSelected(selected);
-	BOOST_ASSERT(selected.GetSize() > 0);
+	assert(selected.GetSize() > 0);
 	if (selected.GetSize() == 0) {
 		return;
 	}
@@ -947,7 +947,7 @@ void SslCertificateListDlg::GetSelected(SslCertificateIdCollection &result) cons
 void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 	SslCertificateIdCollection selected;
 	GetSelected(selected);
-	BOOST_ASSERT(selected.GetSize() > 0);
+	assert(selected.GetSize() > 0);
 	if (selected.GetSize() > 0) {
 		const int answer = wxMessageBox(
 			wxT("Delete selected certificates?"),
@@ -970,7 +970,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 /* void SslCertificateListDlg::OnExport(wxCommandEvent &) {
 	list<std::string> selected;
 	GetSelected(selected);
-	BOOST_ASSERT(selected.size() > 0);
+	assert(selected.size() > 0);
 	if (selected.size() == 0) {
 		return;
 	}
@@ -999,7 +999,7 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 		if (fileRequestDlg.ShowModal() != wxID_OK) {
 			break;
 		}
-		BOOST_ASSERT(!fileRequestDlg.GetPath().IsEmpty());
+		assert(!fileRequestDlg.GetPath().IsEmpty());
 		ofstream f(fileRequestDlg.GetPath().c_str(), std::ios::trunc | std::ios::binary);
 		if (!f) {
 			wxLogError(wxT("Could not open file %d."), fileRequestDlg.GetPath().c_str());
@@ -1026,15 +1026,15 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 		return;
 	}
 	size_t count = 0;
-	BOOST_ASSERT(!fileRequestDlg.GetPath().IsEmpty());
+	assert(!fileRequestDlg.GetPath().IsEmpty());
 	{
 		wxFFileOutputStream out(fileRequestDlg.GetPath());
-		BOOST_ASSERT(out.IsOk());
+		assert(out.IsOk());
 		if (!out.IsOk()) {
 			return;
 		}
 		wxZipOutputStream zip(out);
-		BOOST_ASSERT(zip.IsOk());
+		assert(zip.IsOk());
 		if (!zip.IsOk()) {
 			return;
 		}
@@ -1095,15 +1095,15 @@ void SslCertificateListDlg::OnDel(wxCommandEvent &) {
 	}
 
 	wxFFileInputStream in(fileRequestDlg.GetPath());
-	BOOST_ASSERT(in.IsOk());
-	BOOST_ASSERT(in.IsSeekable());
+	assert(in.IsOk());
+	assert(in.IsSeekable());
 	if (!in.IsOk() || !in.IsSeekable()) {
 		return;
 	}
 
 	{
 		wxZipInputStream zip(in);
-		BOOST_ASSERT(zip.IsOk());
+		assert(zip.IsOk());
 		if (zip.IsOk()) {
 			std::auto_ptr<wxZipEntry> entry;
 			while (entry.reset(zip.GetNextEntry()), entry.get() != NULL) {

@@ -88,14 +88,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		void NotifyAcceptorClose(const Acceptor &acceptor) {
 			ACE_UNUSED_ARG(acceptor);
 			AcceptorLock lock(m_acceptorMutex);
-			BOOST_ASSERT(&acceptor == m_acceptor);
+			assert(&acceptor == m_acceptor);
 			m_acceptor = 0;
 		}
 
 	protected:
 
 		virtual void Setup() {
-			BOOST_ASSERT(m_incomingData.size() > 0);
+			assert(m_incomingData.size() > 0);
 			StartReadRemote();
 			SendToTunnel(&m_incomingData[0], m_incomingData.size());
 			StopReadRemote();
@@ -116,7 +116,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 
 		virtual DataTransferCommand Write(MessageBlock &messageBlock) {
-			BOOST_ASSERT(messageBlock.GetUnreadedDataSize() > 0);
+			assert(messageBlock.GetUnreadedDataSize() > 0);
 			SendReadLock addrLock(m_sendMutex);
 			const ssize_t sentBytesNumb = m_socket->send(
 				messageBlock.GetData(),

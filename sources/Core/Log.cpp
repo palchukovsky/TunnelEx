@@ -86,8 +86,8 @@ public:
 	}
 
 	LevelInfo & GetLevelInfo(LogLevel levelId) throw() {
-		BOOST_ASSERT(static_cast<size_t>(levelId) < m_levels.size());
-		BOOST_ASSERT(levelId < LOG_LEVEL_LEVELS_COUNT);
+		assert(static_cast<size_t>(levelId) < m_levels.size());
+		assert(levelId < LOG_LEVEL_LEVELS_COUNT);
 		if (levelId >= LOG_LEVEL_LEVELS_COUNT) {
 			levelId = LOG_LEVEL_UNKNOWN;
 		}
@@ -123,7 +123,7 @@ public:
 				level.lastOccurTime = occurTime;
 			}
 		} catch (...) {
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 	}
 
@@ -270,7 +270,7 @@ void LogPolicy::AppendDebug(const std::string &message) throw() {
 		oss << ACE_OS::thr_self() << " " << message;
 		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
 	} catch (...) {
-		BOOST_ASSERT(false);
+		assert(false);
 		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), message);
 	}
 }

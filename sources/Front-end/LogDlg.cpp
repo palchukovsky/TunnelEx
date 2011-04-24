@@ -233,7 +233,7 @@ void LogDlg::AppendRecord(const texs__LogRecord &record) {
 		case TunnelEx::LOG_LEVEL_FATAL_ERROR:
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 	}
 
 	wxListCtrl &listCtrl
@@ -267,7 +267,7 @@ void LogDlg::AppendRecord(const texs__LogRecord &record) {
 			item.SetText(wxT("Error"));
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 			break;
 	}
 	item.SetFont(itemFont);
@@ -324,7 +324,7 @@ void LogDlg::OnSize(wxSizeEvent &event) {
 
 void LogDlg::DoContextMenu(bool save, bool copy) {
 	
-	BOOST_ASSERT(save || copy);
+	assert(save || copy);
 	
 	wxListCtrl &list = *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 	wxMenu menu;
@@ -360,7 +360,7 @@ void LogDlg::OnCopyButton(wxCommandEvent &) {
 void LogDlg::Copy(bool onlySelected) {
 
 	if (!wxTheClipboard->Open()) {
-		BOOST_ASSERT(false);
+		assert(false);
 		return;
 	};
 
@@ -503,7 +503,7 @@ void LogDlg::ShowLastRecord() {
 		= *boost::polymorphic_downcast<wxListCtrl *>(FindWindow(CONTROL_LIST));
 	int pxOffset = 0;
 	const int itemCount = list.GetItemCount();
-	BOOST_ASSERT(itemCount >= list.GetTopItem());
+	assert(itemCount >= list.GetTopItem());
 	for (int i = list.GetTopItem(); i < itemCount; ++i) {
 		wxRect rect;
 		if (list.GetItemRect(i, rect)) {
@@ -555,7 +555,7 @@ void LogDlg::SetLogLevel(texs__LogLevel logLevel, bool force /*= false*/) {
 			str = wxT("only errors");
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		case ::LOG_LEVEL_INFO:
 			str = wxT("full");
 	}
@@ -584,7 +584,7 @@ void LogDlg::OnLogLevelChange(wxCommandEvent &) {
 	} else if (str == wxT("full")) {
 		level = ::LOG_LEVEL_INFO;
 	} else {
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 	m_logLevel = level;
 	boost::polymorphic_downcast<ServiceWindow *>(GetParent())
@@ -608,7 +608,7 @@ void LogDlg::OnRecordActivated(wxListEvent &) {
 			-1,
 			wxLIST_NEXT_ALL,
 			wxLIST_STATE_SELECTED);
-		BOOST_ASSERT(itemId != -1);
+		assert(itemId != -1);
 		if (itemId == -1) {
 			return;
 		}
@@ -687,7 +687,7 @@ void LogDlg::OnRecordActivated(wxListEvent &) {
 				ctrl.SetForegroundColour(wxColor(wxT("RGB(204,0,0)")));
 				break;
 			default:
-				BOOST_ASSERT(false);
+				assert(false);
 				break;
 		}
 		ctrl.SetFont(font);

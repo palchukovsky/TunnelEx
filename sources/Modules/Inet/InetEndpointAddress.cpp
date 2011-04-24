@@ -91,8 +91,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				NetworkPort port,
 				const SslCertificateId &certificate = SslCertificateId(),
 				const SslCertificateIdCollection &remoteCertificates = SslCertificateIdCollection()) {
-		BOOST_ASSERT(std::wstring(proto).size() > 0);
-		BOOST_ASSERT(host.size() > 0);
+		assert(std::wstring(proto).size() > 0);
+		assert(host.size() > 0);
 		WString result;
 		{
 			WFormat str(L"%1%://%2%:%3%");
@@ -104,14 +104,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			}
 			result = str.str().c_str();
 		}
-		BOOST_ASSERT(!certificate.IsEmpty() || remoteCertificates.GetSize() == 0);
+		assert(!certificate.IsEmpty() || remoteCertificates.GetSize() == 0);
 		if (!certificate.IsEmpty()) {
 			result += L"?certificate=";
 			result += certificate.EncodeUrlClone();
 			const size_t remoteCertificatesNumb = remoteCertificates.GetSize();
 			for (size_t i = 0; i < remoteCertificatesNumb; ++i) {
 				const SslCertificateId &certificate = remoteCertificates[i];
-				BOOST_ASSERT(!certificate.IsEmpty());
+				assert(!certificate.IsEmpty());
 				if (certificate.IsEmpty()) {
 					continue;
 				}
@@ -129,7 +129,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				const std::wstring &allowedHost,
 				const SslCertificateId &certificate = SslCertificateId(),
 				const SslCertificateIdCollection &remoteCertificates = SslCertificateIdCollection()) {
-		BOOST_ASSERT(adapter.size() > 0);
+		assert(adapter.size() > 0);
 		WString result = CreateEndpointResourceIdentifier(
 			proto,
 			allowedHost,
@@ -154,8 +154,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				const SslCertificateIdCollection &remoteCertificates,
 				const ProxyList &proxyList) {
 		
-		BOOST_ASSERT(host != L"*");
-		BOOST_ASSERT(port != 0);
+		assert(host != L"*");
+		assert(port != 0);
 
 		WString result = CreateEndpointResourceIdentifier(
 			proto,
@@ -197,7 +197,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 							.str());
 				}
 			}
-			BOOST_ASSERT(proxyListStr.size() == proxyList.size());
+			assert(proxyListStr.size() == proxyList.size());
 			if (result.Find(L'?') == result.GetNPos()) {
 				result += L'?';
 			} else {
@@ -547,14 +547,14 @@ private:
 public:
 
 	bool IsSslServer() const {
-		BOOST_ASSERT(
+		assert(
 			(!m_sslClientContext && m_forceSslStatus != FSS_CLIENT)
 			|| (!m_sslServerContext && m_forceSslStatus != FSS_SERVER));
 		return m_sslServerContext || m_forceSslStatus == FSS_SERVER;
 	}
 
 	bool IsSslClient() const {
-		BOOST_ASSERT(
+		assert(
 			(!m_sslServerContext && m_forceSslStatus != FSS_SERVER)
 			|| (!m_sslClientContext && m_forceSslStatus != FSS_CLIENT));
 		return m_sslClientContext || m_forceSslStatus == FSS_CLIENT;
@@ -829,17 +829,17 @@ UniquePtr<Acceptor> TcpEndpointAddress::OpenForIncomingConnections(
 		const {
 	UniquePtr<Acceptor> result;
 	if (GetCertificate().IsEmpty()) {
-		BOOST_ASSERT(!m_pimpl->IsSslServer());
-		BOOST_ASSERT(!m_pimpl->IsSslClient());
-		BOOST_ASSERT(!m_pimpl->m_sslClientContext);
-		BOOST_ASSERT(!m_pimpl->m_sslServerContext);
+		assert(!m_pimpl->IsSslServer());
+		assert(!m_pimpl->IsSslClient());
+		assert(!m_pimpl->m_sslClientContext);
+		assert(!m_pimpl->m_sslServerContext);
 		result.Reset(
 			new TcpConnectionAcceptor<false, true>(
 				*this,
 				ruleEndpoint,
 				ruleEndpointAddress));
 	} else if (m_pimpl->IsSslClient()) {
-		BOOST_ASSERT(!m_pimpl->IsSslServer());
+		assert(!m_pimpl->IsSslServer());
 		result.Reset(
 			new TcpConnectionAcceptor<true, false>(
 				*this,
@@ -878,15 +878,15 @@ UniquePtr<Connection> TcpEndpointAddress::CreateConnection(
 	const ACE_INET_Addr *const proxyAddress = GetProxyAceInetAddr();
 	if (proxyAddress == 0) {
 		if (GetCertificate().IsEmpty()) {
-			BOOST_ASSERT(!m_pimpl->IsSslServer());
-			BOOST_ASSERT(!m_pimpl->IsSslClient());
-			BOOST_ASSERT(!m_pimpl->m_sslClientContext);
-			BOOST_ASSERT(!m_pimpl->m_sslServerContext);
+			assert(!m_pimpl->IsSslServer());
+			assert(!m_pimpl->IsSslClient());
+			assert(!m_pimpl->m_sslClientContext);
+			assert(!m_pimpl->m_sslServerContext);
 			typedef TcpOut<false, false>::Connection Connection;
 			result.Reset(
 				new Connection(GetAceInetAddr(), ruleEndpoint, ruleEndpointAddress));
 		} else if (m_pimpl->IsSslServer()) {
-			BOOST_ASSERT(!m_pimpl->IsSslClient());
+			assert(!m_pimpl->IsSslClient());
 			typedef TcpOut<true, true>::Connection Connection;
 			result.Reset(
 				new Connection(GetAceInetAddr(), ruleEndpoint, ruleEndpointAddress));
@@ -896,15 +896,15 @@ UniquePtr<Connection> TcpEndpointAddress::CreateConnection(
 				new Connection(GetAceInetAddr(), ruleEndpoint, ruleEndpointAddress));
 		}
 	} else if (GetCertificate().IsEmpty()) {
-		BOOST_ASSERT(!m_pimpl->IsSslServer());
-		BOOST_ASSERT(!m_pimpl->IsSslClient());
-		BOOST_ASSERT(!m_pimpl->m_sslClientContext);
-		BOOST_ASSERT(!m_pimpl->m_sslServerContext);
+		assert(!m_pimpl->IsSslServer());
+		assert(!m_pimpl->IsSslClient());
+		assert(!m_pimpl->m_sslClientContext);
+		assert(!m_pimpl->m_sslServerContext);
 		typedef TcpOut<false, false>::Connection SubConnection;
 		typedef HttpProxyConnection<SubConnection> Connection;
 		result.Reset(new Connection(*proxyAddress, ruleEndpoint, ruleEndpointAddress));
 	} else if (m_pimpl->IsSslServer()) {
-		BOOST_ASSERT(!m_pimpl->IsSslClient());
+		assert(!m_pimpl->IsSslClient());
 		typedef TcpOut<true, true>::Connection SubConnection;
 		typedef HttpProxyConnection<SubConnection> Connection;
 		result.Reset(
@@ -978,7 +978,7 @@ std::wstring TcpEndpointAddress::GetHumanReadable(
 		props.push_back(L"secured");
 	}
 	if (!GetAdapter().empty()) {
-		BOOST_ASSERT(GetProxyList().size() == 0);
+		assert(GetProxyList().size() == 0);
 		result += L"> ";
 		result += CreateEndpointResourceIdentifier(
 				GetProto(),
@@ -1087,9 +1087,9 @@ const ProxyList & TcpEndpointAddress::GetProxyList() const {
 void TcpEndpointAddress::SetProxyList(const ProxyList &newList) {
 #	if defined(_DEBUG) || defined(TEST)
 		BOOST_FOREACH(const Proxy &proxy, newList) {
-			BOOST_ASSERT(!proxy.host.empty());
-			BOOST_ASSERT(proxy.port > 0);
-			BOOST_ASSERT(
+			assert(!proxy.host.empty());
+			assert(proxy.port > 0);
+			assert(
 				(proxy.password.empty() || proxy.user.empty())
 				|| (!proxy.password.empty() && !proxy.user.empty()));
 		}
@@ -1109,7 +1109,7 @@ void TcpEndpointAddress::ClearResourceIdentifierCache() throw() {
 	} catch (...) {
 		Log::GetInstance().AppendFatalError(
 			"Exception at TcpEndpointAddress::ClearResourceIdentifierCache");
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -1136,9 +1136,9 @@ void TcpEndpointAddress::SetRemoteCertificates(const SslCertificateIdCollection 
 }
 
 const ACE_SSL_Context & TcpEndpointAddress::GetSslServerContext() const {
-	BOOST_ASSERT(!m_pimpl->m_sslClientContext.get());
+	assert(!m_pimpl->m_sslClientContext.get());
 	if (m_pimpl->m_sslServerContext.get()) {
-		BOOST_ASSERT(m_pimpl->m_forceSslStatus != Implementation::FSS_CLIENT);
+		assert(m_pimpl->m_forceSslStatus != Implementation::FSS_CLIENT);
 		return *m_pimpl->m_sslServerContext;
 	} else if (!GetServer()) {
 		throw LogicalException(L"Internal error: failed to get server context");
@@ -1150,9 +1150,9 @@ const ACE_SSL_Context & TcpEndpointAddress::GetSslServerContext() const {
 }
 
 const ACE_SSL_Context & TcpEndpointAddress::GetSslClientContext() const {
-	BOOST_ASSERT(!m_pimpl->m_sslServerContext.get());
+	assert(!m_pimpl->m_sslServerContext.get());
 	if (m_pimpl->m_sslClientContext.get()) {
-		BOOST_ASSERT(m_pimpl->m_forceSslStatus != Implementation::FSS_SERVER);
+		assert(m_pimpl->m_forceSslStatus != Implementation::FSS_SERVER);
 		return *m_pimpl->m_sslClientContext;
 	} else if (!GetServer()) {
 		throw LogicalException(L"Internal error: failed to get server context");
@@ -1176,7 +1176,7 @@ void TcpEndpointAddress::CopyCertificate(
 	Implementation::ForceSslStatus forceSslStatus
 		= localEndpoint.m_pimpl->m_forceSslStatus;
 	if (forceSslStatus == Implementation::FSS_NONE) {
-		BOOST_ASSERT(
+		assert(
 			!localEndpoint.m_pimpl->m_sslClientContext
 			|| !localEndpoint.m_pimpl->m_sslServerContext);
 		if (localEndpoint.m_pimpl->m_sslClientContext) {
@@ -1185,7 +1185,7 @@ void TcpEndpointAddress::CopyCertificate(
 			forceSslStatus = Implementation::FSS_SERVER;
 		}
 	}
-	BOOST_ASSERT(
+	assert(
 		(!localEndpoint.m_pimpl->m_sslServerContext && forceSslStatus != Implementation::FSS_SERVER)
 		|| (!localEndpoint.m_pimpl->m_sslClientContext && forceSslStatus != Implementation::FSS_CLIENT));
 	m_pimpl->m_certificate.Swap(certificate);
@@ -1205,14 +1205,14 @@ void TcpEndpointAddress::CopyRemoteCertificate(const TcpEndpointAddress &remoteE
 	boost::shared_ptr<ACE_SSL_Context> sslClientContext;
 	Implementation::ForceSslStatus forceSslStatus = m_pimpl->m_forceSslStatus;
 	if (forceSslStatus == Implementation::FSS_NONE) {
-		BOOST_ASSERT(!m_pimpl->m_sslClientContext || !m_pimpl->m_sslServerContext);
+		assert(!m_pimpl->m_sslClientContext || !m_pimpl->m_sslServerContext);
 		if (m_pimpl->m_sslClientContext) {
 			forceSslStatus = Implementation::FSS_CLIENT;
 		} else if (m_pimpl->m_sslServerContext) {
 			forceSslStatus = Implementation::FSS_SERVER;
 		}
 	}
-	BOOST_ASSERT(
+	assert(
 		(!m_pimpl->m_sslServerContext && forceSslStatus != Implementation::FSS_SERVER)
 		|| (!m_pimpl->m_sslClientContext && forceSslStatus != Implementation::FSS_CLIENT));
 	m_pimpl->m_remoteCertificates.Swap(remoteCertificates);

@@ -29,9 +29,9 @@ namespace TunnelEx { namespace Helpers {
 	inline TunnelEx::TimeT ConvertPosixTimeToTimeT(
 				const boost::posix_time::ptime &posixTime) {
 		namespace pt = boost::posix_time;
-		BOOST_ASSERT(!posixTime.is_special());
+		assert(!posixTime.is_special());
 		static const pt::ptime timeTEpoch(boost::gregorian::date(1970, 1, 1));
-		BOOST_ASSERT(!(posixTime < timeTEpoch));
+		assert(!(posixTime < timeTEpoch));
 		if (posixTime < timeTEpoch) {
 			return 0;
 		}

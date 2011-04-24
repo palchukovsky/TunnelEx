@@ -58,7 +58,7 @@ std::auto_ptr<ServiceRule> ServiceRuleDlg::EditRule(
 			wxWindow &parent,
 			const TunnelEx::ServiceRule &rule) {
 	std::auto_ptr<ServiceRule> result;
-	BOOST_ASSERT(
+	assert(
 		rule.GetServices().GetSize() == 1 && rule.GetServices()[0].name == L"Upnpc");
 	UpnpServiceRuleDlg dlg(service, &parent, rule);
 	if (dlg.ShowModal() == wxID_OK) {

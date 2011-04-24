@@ -43,10 +43,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual ~OutcomingUdpConnection() throw() {
 			try {
 				const int result = m_stream.close();
-				BOOST_ASSERT(result == 0);
+				assert(result == 0);
 				ACE_UNUSED_ARG(result);
 			} catch (...) {
-				BOOST_ASSERT(false);
+				assert(false);
 			}
 		}
 

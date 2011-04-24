@@ -495,7 +495,7 @@ public:
 
 	bool Update(const Rule &rule) {
 		RuleUpdatingState::Lock stateLock(m_ruleUpdatingState.stateMutex);
-		BOOST_ASSERT(m_isDestructionMode == false);
+		assert(m_isDestructionMode == false);
 		m_ruleUpdatingState.rule = &rule;
 		m_ruleUpdatingState.operationBarrier.wait();
 		m_ruleUpdatingState.operationCompleteBarrier.wait();
@@ -554,7 +554,7 @@ public:
 			activeServices.reset(new ActiveServices(m_activeServices));
 			const ActiveServiceByRule::iterator pos
 				= activeServices->get<ByRule>().find(uuid);
-			BOOST_ASSERT(pos != activeServices->get<ByRule>().end());
+			assert(pos != activeServices->get<ByRule>().end());
 			if (pos != activeServices->get<ByRule>().end()) {
 				service = pos->service;
 				activeServices->get<ByRule>().erase(pos);
@@ -564,11 +564,11 @@ public:
 		std::auto_ptr<IndexedTunnelRuleSet> tunnelRulesToCheck;
 		if (	m_tunnelRulesToCheck.get<ByUuid>().find(uuid)
 				!= m_tunnelRulesToCheck.get<ByUuid>().end()) {
-			BOOST_ASSERT(isTunnel);
+			assert(isTunnel);
 			tunnelRulesToCheck.reset(new IndexedTunnelRuleSet(m_tunnelRulesToCheck));
 			const TunnelRuleByUuid::iterator pos(
 				tunnelRulesToCheck->get<ByUuid>().find(uuid));
-			BOOST_ASSERT(pos != tunnelRulesToCheck->get<ByUuid>().end());
+			assert(pos != tunnelRulesToCheck->get<ByUuid>().end());
 			tunnelRulesToCheck->erase(pos);
 			if (Log::GetInstance().IsDebugRegistrationOn()) {
 				Log::GetInstance().AppendDebug(
@@ -583,7 +583,7 @@ public:
 			if (activeServices.get()) {
 				swap(*activeServices, m_activeServices);
 				activeServicesLock.reset();
-				BOOST_ASSERT(service);
+				assert(service);
 				if (service) {
 					service->Stop();
 					service.reset();
@@ -644,7 +644,7 @@ public:
 		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
 		m_tunnelOpeningState.ruleInfo = ruleInfo;
 		m_tunnelOpeningState.inConnection = inConnection;
-		BOOST_ASSERT(!m_tunnelOpeningState.tunnel);
+		assert(!m_tunnelOpeningState.tunnel);
 		conditionLock.release();
 		m_tunnelOpeningState.operationCondition.signal();
 		const ACE_Time_Value startWaitingThreadTime = ACE_OS::gettimeofday();
@@ -743,7 +743,7 @@ private:
 		SharedPtr<const ServiceRule> rule(new ServiceRule(sourceRule));
 		ActiveServices servicesTmp(services);
 		const size_t servicesNumb = rule->GetServices().GetSize();
-		BOOST_ASSERT(servicesNumb > 0);
+		assert(servicesNumb > 0);
 		for (size_t i = 0; i < servicesNumb; ++i) {
 			const ServiceRule::Service &s = rule->GetServices()[i];
 			UniquePtr<Service> servicePtr
@@ -760,7 +760,7 @@ private:
 			}
 		}
 		if (servicesTmp.size() != services.size()) {
-			BOOST_ASSERT(servicesTmp.size() > services.size());
+			assert(servicesTmp.size() > services.size());
 			servicesTmp.swap(services);
 		}
 	}
@@ -796,7 +796,7 @@ private:
 					acceptorAddress = endpoint.GetReadWriteAcceptor() == Endpoint::ACCEPTOR_READER
 						?	readerAddress
 						:	writerAddress;
-					BOOST_ASSERT(
+					assert(
 						acceptorAddress == readerAddress
 						|| endpoint.GetReadWriteAcceptor() == Endpoint::ACCEPTOR_WRITER);
 				}
@@ -829,7 +829,7 @@ private:
 					const EndpointAcceptorHandler endpointAcceptorHandler(
 						endpoint.GetUuid(),
 						handler);
-					BOOST_ASSERT(
+					assert(
 						activeRule.acceptHandlers.get<ByEndpoint>().find(endpointAcceptorHandler.enpointUuid)
 						== activeRule.acceptHandlers.get<ByEndpoint>().end());
 					activeRule.acceptHandlers.insert(endpointAcceptorHandler);
@@ -862,7 +862,7 @@ private:
 						:	CreateConnection(endpoint, writerAddress, L"write");
 					boost::shared_ptr<Tunnel> tunnel(
 						new Tunnel(true, m_myInterface, ruleInfo->rule, reader, writer));
-					BOOST_ASSERT(
+					assert(
 						tunnels.get<ByInstance>().find(tunnel->GetInstanceId())
 						== tunnels.get<ByInstance>().end());
 					newTunnels.push_back(tunnel);
@@ -949,7 +949,7 @@ private:
 			IndexedTunnelRuleSet tmpRulesToCheck(m_tunnelRulesToCheck);
 			OpenRule(rule, newRule, tmpActiveTunnels, newTunnels, tmpRulesToCheck);
 			openedTunnelsNumb = tmpActiveTunnels.size() - m_activeTunnels.size();
-			BOOST_ASSERT(
+			assert(
 				m_activeRules.get<ByUuid>().find(newRule.uuid)
 				== m_activeRules.get<ByUuid>().end());
 			m_activeRules.insert(newRule);
@@ -1040,7 +1040,7 @@ private:
 			const size_t oldActiveServicesCount = m_activeServices.size();
 			OpenRule(rule, m_activeServices);
 			if (oldActiveServicesCount != m_activeServices.size()) {
-				BOOST_ASSERT(oldActiveServicesCount < m_activeServices.size());
+				assert(oldActiveServicesCount < m_activeServices.size());
 				swap(activeRules, m_activeRules);
 			}
 		} else if (rule.IsEnabled()) {
@@ -1073,7 +1073,7 @@ private:
 							*boost::polymorphic_downcast<const TunnelRule *>(
 								instance.m_ruleUpdatingState.rule));
 				} else {
-					BOOST_ASSERT(dynamic_cast<const ServiceRule *>(instance.m_ruleUpdatingState.rule));
+					assert(dynamic_cast<const ServiceRule *>(instance.m_ruleUpdatingState.rule));
 					instance.m_ruleUpdatingState.lastResult
 						= instance.UpdateImplementation(
 							*boost::polymorphic_downcast<const ServiceRule *>(
@@ -1112,7 +1112,7 @@ private:
 			if (waitResult != -1 || instance.m_isDestructionMode) {
 				break;
 			}
-			BOOST_ASSERT(errno == ETIME);
+			assert(errno == ETIME);
 
 			try {
 			
@@ -1185,7 +1185,7 @@ private:
 			if (waitResult != -1 || instance.m_isDestructionMode) {
 				break;
 			}
-			BOOST_ASSERT(errno == ETIME);
+			assert(errno == ETIME);
 			try {
 				if (!instance.CheckTunnelRules()) {
 					RulesWriteLock lock(instance.m_rulesMutex);
@@ -1220,7 +1220,7 @@ private:
 			}
 			m_tunnelRulesToCheck.swap(rulesToCheck);
 		}
-		BOOST_ASSERT(rulesToCheck.size() > 0);
+		assert(rulesToCheck.size() > 0);
 		foreach (const TunnelRule &rule, rulesToCheck) {
 			try {
 				Update(rule);
@@ -1238,8 +1238,8 @@ private:
 	void SwitchTunnel(boost::shared_ptr<Tunnel> tunnel) {
 		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
 		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
-		BOOST_ASSERT(!m_tunnelOpeningState.ruleInfo);
-		BOOST_ASSERT(!m_tunnelOpeningState.inConnection);
+		assert(!m_tunnelOpeningState.ruleInfo);
+		assert(!m_tunnelOpeningState.inConnection);
 		m_tunnelOpeningState.tunnel = tunnel;
 		conditionLock.release();
 		m_tunnelOpeningState.operationCondition.signal();
@@ -1267,7 +1267,7 @@ private:
 			SharedPtr<Connection> writer;
 			const RuleEndpoint &sourceEndpoint = inConnection->GetRuleEndpoint();
 			if (sourceEndpoint.IsCombined()) {
-				BOOST_ASSERT(sourceEndpoint.IsCombinedAcceptor());
+				assert(sourceEndpoint.IsCombinedAcceptor());
 				reader = writer = inConnection;
 			} else if (!m_rwSplitLicense.IsFeatureAvailable(true)) {
 				Log::GetInstance().AppendWarn(
@@ -1278,7 +1278,7 @@ private:
 						" or get free trial at http://" TUNNELEX_DOMAIN "/order/trial.");
 				throw LocalException(L"Failed to open connection, License Upgrade required");
 			} else {
-				BOOST_ASSERT(sourceEndpoint.GetReadWriteAcceptor() != Endpoint::ACCEPTOR_NONE);
+				assert(sourceEndpoint.GetReadWriteAcceptor() != Endpoint::ACCEPTOR_NONE);
 				switch (sourceEndpoint.GetReadWriteAcceptor()) {
 					case Endpoint::ACCEPTOR_READER:
 						reader = inConnection;
@@ -1295,10 +1295,10 @@ private:
 							L"read");
 						break;
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 				}
 			}
-			BOOST_ASSERT(reader && writer);
+			assert(reader && writer);
 			tunnel.reset(
 				new Tunnel(false, m_myInterface, ruleInfo->rule, reader, writer));
 		}
@@ -1426,7 +1426,7 @@ private:
 				throw LocalException(
 					L"Failed to open new connection, License Upgrade required");
 			}
-			BOOST_ASSERT(
+			assert(
 				m_activeTunnels.get<ByInstance>().find(tunnel->GetInstanceId())
 				== m_activeTunnels.get<ByInstance>().end());
 			m_activeTunnels.insert(ActiveTunnel(tunnel));
@@ -1482,7 +1482,7 @@ private:
 					inConnection = instance.m_tunnelOpeningState.inConnection;
 					tunnel = instance.m_tunnelOpeningState.tunnel;
 					instance.m_tunnelOpeningState.tunnel.reset();
-					BOOST_ASSERT(
+					assert(
 						(ruleInfo && inConnection && !tunnel)
 						|| (!ruleInfo && !inConnection && tunnel));
 					if (instance.m_tunnelOpeningState.startBarrier.wait() == -1) {
@@ -1496,7 +1496,7 @@ private:
 				const int waitResult
 					= instance.m_tunnelOpeningState.operationCondition.wait(&waitUntilTime);
 				if (waitResult == -1) {
-					BOOST_ASSERT(errno == ETIME);
+					assert(errno == ETIME);
 					if (instance.m_tunnelOpeningThreadManager.count_threads() > 5) {
 						Log::GetInstance().AppendDebug(
 							"Too many threads for tunnel opening (%1%), closing open...",
@@ -1506,7 +1506,7 @@ private:
 				}
 			}
 			try {
-				BOOST_ASSERT(
+				assert(
 					(ruleInfo && inConnection && !tunnel)
 					|| (!ruleInfo && !inConnection && tunnel));
 				if (!tunnel) {
@@ -1528,7 +1528,7 @@ private:
 							ConvertString<String>(ex.GetWhat()).GetCStr());				
 						break;
 					default:
-						BOOST_ASSERT(false);
+						assert(false);
 					case TunnelRule::ERRORS_TREATMENT_ERROR:
 						Log::GetInstance().AppendError(
 							ConvertString<String>(ex.GetWhat()).GetCStr());				
@@ -1557,7 +1557,7 @@ private:
 			try {
 				ACE_Proactor &proactor = static_cast<Implementation *>(param)->m_proactor;
 				proactor.proactor_run_event_loop();
-				BOOST_ASSERT(static_cast<Implementation *>(param)->m_activeTunnels.size() == 0);
+				assert(static_cast<Implementation *>(param)->m_activeTunnels.size() == 0);
 				break;
 			} catch (const TunnelEx::LocalException &ex) {
 				Log::GetInstance().AppendFatalError(ConvertString<String>(ex.GetWhat()).GetCStr());
@@ -1599,7 +1599,7 @@ private:
 			m_proactor.schedule_timer(*handler, 0, ACE_Time_Value(0, 1));
 			handler.release();
 		} catch (...) {
-			BOOST_ASSERT(false);
+			assert(false);
 			m_proactor.proactor_end_event_loop();
 		}
 	}

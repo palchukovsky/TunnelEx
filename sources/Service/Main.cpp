@@ -77,7 +77,7 @@ int main(int, const char*[]) {
 		}
 		
 		if (func) {
-			BOOST_ASSERT(result == -1);
+			assert(result == -1);
 			result = func() ? 0 : 3;
 		}
 

@@ -103,7 +103,7 @@ const WString & PathfinderEndpointAddress::GetResourceIdentifier() const {
 		ConvertTcpToPathfinder(resourceIdentifier);
 		m_pimpl->m_resourceIdentifier.Swap(resourceIdentifier);
 	}
-	BOOST_ASSERT(!m_pimpl->m_resourceIdentifier.IsEmpty());
+	assert(!m_pimpl->m_resourceIdentifier.IsEmpty());
 	return m_pimpl->m_resourceIdentifier;
 }
 
@@ -114,7 +114,7 @@ bool PathfinderEndpointAddress::IsHasMultiClientsType(void) const {
 UniquePtr<EndpointAddress> PathfinderEndpointAddress::Clone() const {
 	UniquePtr<PathfinderEndpointAddress> result(new PathfinderEndpointAddress(*this));
 	if (result->m_pimpl->m_isPathfinderNode) {
-		BOOST_ASSERT(GetProxyList().size() > 0);
+		assert(GetProxyList().size() > 0);
 		if (result->m_pimpl->m_isSetupCompleted) {
 			result->m_pimpl->m_isSetupCompleted = false;
 		}
@@ -128,14 +128,14 @@ UniquePtr<Connection> PathfinderEndpointAddress::CreateConnection(
 		const {
 
 	if (m_pimpl->m_isPathfinderNode) {
-		BOOST_ASSERT(GetProxyList().size() > 0);
-		BOOST_ASSERT(this == originalAddress.Get());
+		assert(GetProxyList().size() > 0);
+		assert(this == originalAddress.Get());
 		if (!m_pimpl->m_isSetupCompleted) {
 			return TcpEndpointAddress::CreateConnection(endpoint, originalAddress);
 		} else {
 			m_pimpl->m_isSetupCompleted = false;
 			ProxyList proxyList(GetProxyList());
-			BOOST_ASSERT(m_pimpl->m_proxy.size() > 0);
+			assert(m_pimpl->m_proxy.size() > 0);
 			while (m_pimpl->m_proxy.size() > 0) {
 				*proxyList.rbegin() = *m_pimpl->m_proxy.begin();
 				m_pimpl->m_proxy.pop_front();
@@ -159,7 +159,7 @@ UniquePtr<Connection> PathfinderEndpointAddress::CreateConnection(
 					}
 				}
 			}
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 	}
 	
@@ -184,7 +184,7 @@ UniquePtr<Connection> PathfinderEndpointAddress::CreateConnection(
 		try {
 			isOnlineRequest
 				= Service::instance()->GetProxy(*this, address->m_pimpl->m_proxy);
-			BOOST_ASSERT(address->m_pimpl->m_proxy.size() > 0);
+			assert(address->m_pimpl->m_proxy.size() > 0);
 		} catch (const TunnelEx::Mods::Pathfinder::LicensingException &) {
 			throw;
 		} catch (const TunnelEx::Mods::Pathfinder::ServiceException &ex) {
@@ -238,7 +238,7 @@ const ACE_INET_Addr * PathfinderEndpointAddress::GetFirstProxyAceInetAddr(
 
 bool PathfinderEndpointAddress::IsReadyToRecreateConnection() const {
 	if (m_pimpl->m_isSetupCompleted && m_pimpl->m_proxy.size() > 0) {
-		BOOST_ASSERT(m_pimpl->m_isPathfinderNode);
+		assert(m_pimpl->m_isPathfinderNode);
 		return true;
 	} else  {
 		return false;
@@ -251,11 +251,11 @@ void PathfinderEndpointAddress::ClearResourceIdentifierCache() throw() {
 }
 
 void PathfinderEndpointAddress::ConvertTcpToPathfinder(WString &resourceIdentifier) {
-	BOOST_ASSERT(boost::starts_with(std::wstring(resourceIdentifier.GetCStr()), L"tcp://"));
+	assert(boost::starts_with(std::wstring(resourceIdentifier.GetCStr()), L"tcp://"));
 	WString result = L"pathfinder";
 	result += resourceIdentifier.SubStr(3);
-	BOOST_ASSERT(boost::starts_with(std::wstring(result.GetCStr()), L"pathfinder://"));
-	BOOST_ASSERT(!result.IsEmpty());
+	assert(boost::starts_with(std::wstring(result.GetCStr()), L"pathfinder://"));
+	assert(!result.IsEmpty());
 	result.Swap(resourceIdentifier);
 }
 
@@ -292,24 +292,24 @@ WString PathfinderEndpointAddress::CreateResourceIdentifier(
 void PathfinderEndpointAddress::StatConnectionSetupCompleting() const throw() {
 	TcpEndpointAddress::StatConnectionSetupCompleting();
 	if (!m_pimpl->m_isPathfinderNode) {
-		BOOST_ASSERT(m_pimpl->m_proxy.size() == 0);
+		assert(m_pimpl->m_proxy.size() == 0);
 		return;
 	}
-	BOOST_ASSERT(m_pimpl->m_isSetupCompleted == false);
+	assert(m_pimpl->m_isSetupCompleted == false);
 	m_pimpl->m_isSetupCompleted = true;
-	BOOST_ASSERT(GetProxyList().size() > 0);
+	assert(GetProxyList().size() > 0);
 	Service::instance()->ReportSuccess(*this, *GetProxyList().rbegin());
 }
 
 void PathfinderEndpointAddress::StatConnectionSetupCanceling() const throw() {
 	TcpEndpointAddress::StatConnectionSetupCanceling();
 	if (!m_pimpl->m_isPathfinderNode) {
-		BOOST_ASSERT(m_pimpl->m_proxy.size() == 0);
+		assert(m_pimpl->m_proxy.size() == 0);
 		return;
 	}
-	BOOST_ASSERT(m_pimpl->m_isSetupCompleted == false);
+	assert(m_pimpl->m_isSetupCompleted == false);
 	m_pimpl->m_isSetupCompleted = true;
-	BOOST_ASSERT(GetProxyList().size() > 0);
+	assert(GetProxyList().size() > 0);
 	Service::instance()->ReportWorkingError(*this, *GetProxyList().rbegin());
 }
 

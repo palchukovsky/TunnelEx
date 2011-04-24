@@ -250,7 +250,7 @@ wxControl & TunnelRuleDlg::CreateControlEnpointList(
 		}
 		virtual bool Validate(wxWindow *) {
 			wxListBox *listBox = dynamic_cast<wxListBox *>(GetWindow());
-			BOOST_ASSERT(listBox);
+			assert(listBox);
 			const bool result = !(listBox && !listBox->GetCount());
 			if (!result) {
 				wxLogWarning(m_errorText);
@@ -629,7 +629,7 @@ std::wstring TunnelRuleDlg::SearchNetworkAdapter(const std::wstring &wId) const 
 	GetService().GetNetworkAdapters(false, serviceNetworkAdapters);
 	foreach (const texs__NetworkAdapterInfo &info, serviceNetworkAdapters) {
 		if (info.id == id) {
-			BOOST_ASSERT(info.name.size() > 0);
+			assert(info.name.size() > 0);
 			result = wxString::FromAscii(info.ipAddress.c_str()).c_str();
 		}
 	}
@@ -699,7 +699,7 @@ void TunnelRuleDlg::RemoveSelectedEndpoints(
 	wxListBox &ctrl = *boost::polymorphic_downcast<wxListBox *>(FindWindow(ctrlId));
 	wxArrayInt selections;
 	ctrl.GetSelections(selections);
-	BOOST_ASSERT(selections.GetCount() > 0);
+	assert(selections.GetCount() > 0);
 	RuleEndpointCollection newEndpoints(originalEndpoints);
 	for (size_t i = selections.GetCount() - 1; ; --i) {
 		newEndpoints.Remove(selections.Item(i));
@@ -777,7 +777,7 @@ std::wstring TunnelRuleDlg::GetExternalIpAddress() const {
 		GetService().GetUpnpStatus(external, local);
 		const_cast<TunnelRuleDlg *>(this)->m_isUpnpDevRequested = true;
 	}
-	BOOST_ASSERT(GetService().GetCachedUpnpDeviceExternalIp());
+	assert(GetService().GetCachedUpnpDeviceExternalIp());
 	return !GetService().GetCachedUpnpDeviceExternalIp()->IsEmpty()
 		?	GetService().GetCachedUpnpDeviceExternalIp()->c_str()
 		:	L"<unknown>";

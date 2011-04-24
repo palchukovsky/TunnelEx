@@ -211,7 +211,7 @@ public:
 public:
 
 	bool Activate(const std::string &license, ServiceAdapter &service) {
-		BOOST_ASSERT(!m_request.get());
+		assert(!m_request.get());
 		m_request.reset(
 			new TunnelEx::Licensing::OnlineKeyRequest(
 				license,
