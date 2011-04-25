@@ -176,14 +176,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Acceptor.cpp" />
-    <ClCompile Include="..\Common\Assert.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="..\Common\LocalAssert.cpp" />
     <ClCompile Include="Collection.cpp" />
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="ConnectionSignal.cpp" />

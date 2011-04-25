@@ -653,7 +653,7 @@ void Tunnel::OnConnectionClose(Instance::Id instanceId) {
 	++m_closedConnections;
 	if (closingNow) {
 		// object can be deleted here!
-		return; // FIXME: is it correct?
+		return;
 	}
 	m_server.CloseTunnel(GetInstanceId(), false);
 }

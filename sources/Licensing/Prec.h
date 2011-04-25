@@ -12,7 +12,7 @@
 
 #include "Constants.h"
 #include "CompileConfig.h"
-#include "Assert.h"
+#include "LocalAssert.h"
 
 #include "Crypto.hpp"
 #include "Foreach.h"

@@ -141,9 +141,6 @@
     <ClCompile Include="SslSockStream.cpp">
       <Filter>Connection\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\Assert.cpp">
-      <Filter>Util\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>Util\Source Files</Filter>
     </ClCompile>
@@ -151,6 +148,9 @@
       <Filter>Util\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\Xml.cpp">
+      <Filter>Util\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\LocalAssert.cpp">
       <Filter>Util\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

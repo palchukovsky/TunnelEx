@@ -14,9 +14,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\Assert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ConnectionAcceptEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -46,6 +43,9 @@
     </ClCompile>
     <ClCompile Include="TexsMethods.cpp">
       <Filter>Source Files\SOAP interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\LocalAssert.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -23,9 +23,6 @@
     <ClCompile Include="Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Assert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Auto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -118,6 +115,9 @@
     </ClCompile>
     <ClCompile Include="..\..\externals\gSOAP\stdsoap2.cpp">
       <Filter>Source Files\TunnelEx SOAP client</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalAssert.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

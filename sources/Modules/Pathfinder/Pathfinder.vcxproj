@@ -152,14 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Common\Assert.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="..\..\Common\LocalAssert.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PathfinderEndpointAddress.cpp" />
     <ClCompile Include="Prec.cpp">

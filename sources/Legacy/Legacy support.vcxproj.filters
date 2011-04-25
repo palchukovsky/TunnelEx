@@ -11,9 +11,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\Assert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LegacySupporter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -27,6 +24,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Xml.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\LocalAssert.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
