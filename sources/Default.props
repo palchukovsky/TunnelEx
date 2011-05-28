@@ -5,8 +5,8 @@
   <PropertyGroup>
     <IntDir>$(SolutionDir)..\output\int\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)..\output\bin\</OutDir>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Common;$(SolutionDir)..\externals\openssl\1.0.0d;$(SolutionDir)..\externals\ACE_wrappers;$(SolutionDir)..\externals\gSOAP;$(SolutionDir)..\externals\libxml\libxml2-2.7.2;$(VCInstallDir)include\boost\1_46_1;$(VCInstallDir)PlatformSDK\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\output\lib;$(VCInstallDir)lib\boost\1_46_1;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Common;$(SolutionDir)..\externals\openssl\1.0.0d;$(SolutionDir)..\externals\ACE_wrappers;$(SolutionDir)..\externals\gSOAP;$(SolutionDir)..\externals\libxml\libxml2-2.7.2;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\output\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
