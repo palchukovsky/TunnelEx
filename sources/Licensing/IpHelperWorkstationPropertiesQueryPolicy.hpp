@@ -112,8 +112,12 @@ namespace TunnelEx { namespace Licensing {
 				boost::format path("%3%\\%1%\\%4% %2%\\%5%");
 				path % "Microsoft" % "NT" % "SOFTWARE" % "Windows" % "CurrentVersion";
 				HKEY key;
-				LONG status
-					= RegOpenKeyExA(HKEY_LOCAL_MACHINE, path.str().c_str(), 0, KEY_READ, &key);
+				LONG status = RegOpenKeyExA(
+					HKEY_LOCAL_MACHINE,
+					path.str().c_str(),
+					0,
+					KEY_READ | KEY_WOW64_64KEY,
+					&key);
 				assert(status == ERROR_SUCCESS);
 				if (status == ERROR_SUCCESS) {
 					//! @todo: replace with unique_ptr [2009/11/10 22:56]
@@ -128,7 +132,8 @@ namespace TunnelEx { namespace Licensing {
 						"ProductId",
 						"SystemRoot",
 						"ProductName",
-						"PathName"};
+						"PathName"
+					};
 					foreach (const char *const item, items) {
 						DWORD bufferSize = DWORD(buffer.size()) - start;
 						if (bufferSize < 255) {
