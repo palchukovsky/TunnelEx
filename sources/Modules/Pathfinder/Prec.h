@@ -11,6 +11,7 @@
 #define INCLUDED_FILE__Prec_h__1006221330
 
 #include "CompileConfig.h"
+#include "LocalAssert.h"
 
 #include <ace/OS_Errno.h>
 
@@ -21,6 +22,7 @@
 #include "Format.hpp"
 #include "StringUtil.hpp"
 #include "ModulePath.hpp"
+#include "UseUnused.hpp"
 
 #include <Wininet.h>
 #pragma comment(lib, "Wininet.lib")
@@ -45,3 +47,5 @@
 #include <fstream>
 
 #endif
+
+#include "LocalAssert.h"

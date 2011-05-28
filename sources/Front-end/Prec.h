@@ -22,6 +22,7 @@
 #include "ModulePath.hpp"
 #include "Foreach.h"
 #include "StringUtil.hpp"
+#include "UseUnused.hpp"
 
 #include "SoapServiceInterface/soapStub.h"
 #include "SoapServiceInterface/soapTunnelExServiceProxy.h"
@@ -86,3 +87,5 @@ inline int CorrectBorderForButtonSizer(const int borderWidth) {
 }
 
 #endif
+
+#include "LocalAssert.h"

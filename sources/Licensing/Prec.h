@@ -20,6 +20,7 @@
 #include "StringUtil.hpp"
 #include "Xml.hpp"
 #include "Uuid.hpp"
+#include "UseUnused.hpp"
 
 #include <windows.h>
 #include <ShlObj.h>
@@ -51,3 +52,5 @@
 #include <utility>
 
 #endif
+
+#include "LocalAssert.h"

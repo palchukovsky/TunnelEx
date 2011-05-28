@@ -11,6 +11,8 @@
 #define INCLUDED_FILE__Prec_h__1006221353
 
 #include "CompileConfig.h"
+#include "LocalAssert.h"
+#include "UseUnused.hpp"
 
 #include <Windows.h>
 
@@ -34,3 +36,5 @@
 #include <exception>
 
 #endif
+
+#include "LocalAssert.h"

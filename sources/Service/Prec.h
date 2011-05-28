@@ -12,6 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
+#include "LocalAssert.h"
 
 #define BOOST_FILESYSTEM_VERSION 2
 
@@ -22,6 +23,7 @@
 #include "StringUtil.hpp"
 #include "Format.hpp"
 #include "Foreach.h"
+#include "UseUnused.hpp"
 
 #include "SoapServiceInterface/soapStub.h"
 #include "SoapServiceInterface/TunnelExService.nsmap"
@@ -58,3 +60,5 @@
 #include <map>
 
 #endif
+
+#include "LocalAssert.h"

@@ -30,6 +30,7 @@
 #include "ModulePath.hpp"
 #include "StringUtil.hpp"
 #include "Constants.h"
+#include "UseUnused.hpp"
 
 #include "CompileWarningsAce.h"
 #	include <ace/Init_ACE.h>
@@ -81,3 +82,5 @@
 #include <vector>
 
 #endif
+
+#include "LocalAssert.h"

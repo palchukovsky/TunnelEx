@@ -12,6 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
+#include "LocalAssert.h"
 
 #include <ace/OS_Errno.h>
 
@@ -21,6 +22,7 @@
 #include "Xml.hpp"
 #include "Crypto.hpp"
 #include "Uuid.hpp"
+#include "UseUnused.hpp"
 
 #include <Windows.h>
 
@@ -66,3 +68,5 @@
 #include <vector>
 
 #endif
+
+#include "LocalAssert.h"

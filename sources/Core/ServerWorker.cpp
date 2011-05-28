@@ -680,10 +680,12 @@ public:
 		}
 	}
 
-	void CloseTunnel(Instance::Id tunnelId, bool forceClosing) {
+	void CloseTunnel(Instance::Id tunnelId) {
+
 		if (m_isDestructionMode) {
 			return;
 		}
+
 		boost::shared_ptr<Tunnel> tunnel;
 		{
 			ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
@@ -697,29 +699,59 @@ public:
 			tunnel = pos->tunnel;
 			index.erase(pos);
 		}
-		if (forceClosing) {
-			tunnel->SetForceClosingMode();
-		} else if (tunnel->IsSetupFailed()) {
-			// tunnel object will be closed if no destinations will be opened,
-			// even if all other connections already closed.
-			SwitchTunnel(tunnel);
-		} else if (tunnel->IsStatic()) {
-			TunnelRule rule(tunnel->GetRule());
-			tunnel.reset();
-			{
-				if (Log::GetInstance().IsDebugRegistrationOn()) {
-					Log::GetInstance().AppendDebug(
-						"Deleting rule %1%...",
-						ConvertString<String>(rule.GetUuid()).GetCStr());
+
+		if (!tunnel->IsDead()) {
+			if (tunnel->IsSetupFailed()) {
+				// tunnel object will be closed if no destinations will be opened,
+				// even if all other connections already closed.
+				SwitchTunnel(tunnel);
+			} else if (tunnel->IsStatic()) {
+				TunnelRule rule(tunnel->GetRule());
+				tunnel.reset();
+				{
+					if (Log::GetInstance().IsDebugRegistrationOn()) {
+						Log::GetInstance().AppendDebug(
+							"Deleting rule %1%...",
+							ConvertString<String>(rule.GetUuid()).GetCStr());
+					}
+					RulesWriteLock lock(m_rulesMutex);
+					m_activeRules.get<ByUuid>().erase(rule.GetUuid());
 				}
-				RulesWriteLock lock(m_rulesMutex);
-				m_activeRules.get<ByUuid>().erase(rule.GetUuid());
+				Log::GetInstance().AppendDebug(
+					"Trying to reopen rule %1% for static tunnel...",
+					ConvertString<String>(rule.GetUuid()).GetCStr());
+				Update(rule);
+			} else {
+				tunnel->MarkAsDead();
 			}
-			Log::GetInstance().AppendDebug(
-				"Trying to reopen rule %1% for static tunnel...",
-				ConvertString<String>(rule.GetUuid()).GetCStr());
-			Update(rule);
 		}
+		
+		if (!tunnel->IsDead()) {
+			return;
+		}
+
+		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
+		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
+		assert(!m_tunnelOpeningState.ruleInfo);
+		assert(!m_tunnelOpeningState.inConnection);
+		m_tunnelOpeningState.tunnel = tunnel;
+		tunnel.reset();
+		conditionLock.release();
+		m_tunnelOpeningState.operationCondition.signal();
+		const ACE_Time_Value startWaitingThreadTime = ACE_OS::gettimeofday();
+		if (m_tunnelOpeningState.startBarrier.wait() == -1) {
+			return;
+		}
+		const ACE_Time_Value waitThreadTime(ACE_OS::gettimeofday() - startWaitingThreadTime);
+		if (Log::GetInstance().IsDebugRegistrationOn()) {
+			Format message("Waited for closing thread %1% second and %2% microseconds.");
+			message % waitThreadTime.sec() % waitThreadTime.usec();
+			Log::GetInstance().AppendDebug(message.str().c_str());
+		}
+		if (waitThreadTime.sec() > 1) {
+			StartTunnelOpeningThread();
+		}
+
 	}
 
 	ACE_Proactor & GetProactor() {
@@ -930,7 +962,8 @@ private:
 				const ActiveTunnelByRule::const_iterator pos
 					= index.find(rule.GetUuid());
 				if (pos != index.end()) {
-					pos->tunnel->SetForceClosingMode();
+					//! @todo: FIXME move closing to thread
+					pos->tunnel->MarkAsDead();
 					index.erase(pos);
 				}
 			}
@@ -981,7 +1014,8 @@ private:
 			try {
 				tunnel->StartSetup();
 			} catch (...) {
-				CloseTunnel(tunnel->GetInstanceId(), true);
+				tunnel->MarkAsDead();
+				CloseTunnel(tunnel->GetInstanceId());
 				throw;
 			}
 		}
@@ -1249,7 +1283,7 @@ private:
 		}
 		const ACE_Time_Value waitThreadTime(ACE_OS::gettimeofday() - startWaitingThreadTime);
 		if (Log::GetInstance().IsDebugRegistrationOn()) {
-			Format message("Waited for opening thread %1% second and %2% microseconds.");
+			Format message("Waited for switching thread %1% second and %2% microseconds.");
 			message % waitThreadTime.sec() % waitThreadTime.usec();
 			Log::GetInstance().AppendDebug(message.str().c_str());
 		}
@@ -1434,7 +1468,8 @@ private:
 		try {
 			tunnel->StartSetup();
 		} catch (...) {
-			CloseTunnel(tunnel->GetInstanceId(), true);
+			tunnel->MarkAsDead();
+			CloseTunnel(tunnel->GetInstanceId());
 			throw;
 		}
 		return true;
@@ -1490,7 +1525,7 @@ private:
 					}
 					break;
 				}
-				//! @todo:hadcored sleep time, move to options or config
+				//! @todo: hadcored sleep time, move to options or config
 				const ACE_Time_Value waitUntilTime
 					= ACE_OS::gettimeofday() + ACE_Time_Value(20 * 60); // wait 20 min.
 				const int waitResult
@@ -1499,7 +1534,7 @@ private:
 					assert(errno == ETIME);
 					if (instance.m_tunnelOpeningThreadManager.count_threads() > 5) {
 						Log::GetInstance().AppendDebug(
-							"Too many threads for tunnel opening (%1%), closing open...",
+							"Too many threads for tunnel opening (%1%), closing one...",
 							instance.m_tunnelOpeningThreadManager.count_threads());
 						return 0;
 					}
@@ -1511,7 +1546,7 @@ private:
 					|| (!ruleInfo && !inConnection && tunnel));
 				if (!tunnel) {
 					instance.OpenTunnelImplementation(ruleInfo, inConnection);
-				} else {
+				} else if (!tunnel->IsDead()) {
 					instance.SwitchTunnelImplementation(tunnel);
 				}
 			} catch (const TunnelEx::DestinationConnectionOpeningException &ex) {
@@ -1744,8 +1779,8 @@ ACE_Reactor & ServerWorker::GetReactor() {
 	return m_pimpl->GetReactor();
 }
 
-void ServerWorker::CloseTunnel(Instance::Id tunnelId, bool forceClosing) {
-	m_pimpl->CloseTunnel(tunnelId, forceClosing);
+void ServerWorker::CloseTunnel(Instance::Id tunnelId) {
+	m_pimpl->CloseTunnel(tunnelId);
 }
 
 Server::Ref ServerWorker::GetServer() {

@@ -22,6 +22,7 @@
 #include "EndpointAddress.hpp"
 #include "String.hpp"
 #include "Licensing.hpp"
+#include "Locking.hpp"
 
 using namespace TunnelEx;
 
@@ -204,7 +205,7 @@ Tunnel::Tunnel(
 		m_source(sourceRead, sourceWrite),
 		m_destinationIndex(0),
 		m_closedConnections(0),
-		m_closingNow(false) {
+		m_isDead(false) {
 	m_destination = CreateDestinationConnections(m_destinationIndex);
 	Log::GetInstance().AppendDebug("Outcoming connection created for %1%.", GetInstanceId());
 	Init();
@@ -369,27 +370,20 @@ void Tunnel::Init() {
 Tunnel::~Tunnel() throw() {
 	//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
 	try {
-		m_closingNow = true;
 		m_sourceDataTransferSignal->DisconnectDataTransfer();
 		m_destinationDataTransferSignal->DisconnectDataTransfer();
-		{
-			ACE_Time_Value proactorWaitTime(0, 1);
-			while (GetProactor().handle_events(proactorWaitTime) == 1);
-		}
-		ReadWriteConnections().Swap(m_source);
-		ReadWriteConnections().Swap(m_destination);
-		assert(m_closedConnections <= m_connectionsToClose);
-		while (m_closedConnections < m_connectionsToClose) {
-			ACE_Time_Value proactorWaitTime(0, 1);
-			if (GetProactor().handle_events(proactorWaitTime) != 1) {
-				Log::GetInstance().AppendDebug(
-					"Not all connections closed in tunnel %1%, wait for scheduled...",
-					GetInstanceId());
-				ACE_OS::sleep(ACE_Time_Value(0, 500 * 1000));
-			}
-		}
 	} catch (...) {
 		assert(false);
+	}
+	ReadWriteConnections().Swap(m_source);
+	ReadWriteConnections().Swap(m_destination);
+	assert(m_closedConnections <= m_connectionsToClose);
+	while (m_closedConnections < m_connectionsToClose) {
+		// FIXME - reimplement with condition
+		Log::GetInstance().AppendDebug(
+			"Not all connections closed in tunnel %1%, wait for scheduled...",
+			GetInstanceId());
+		ACE_OS::sleep(ACE_Time_Value(0, 500 * 1000));
 	}
 	ReportClosed();
 }
@@ -642,20 +636,13 @@ void Tunnel::OnConnectionSetup(Instance::Id instanceId) {
 
 void Tunnel::OnConnectionClose(Instance::Id instanceId) {
 	assert(m_closedConnections < m_connectionsToClose);
-	const bool closingNow = m_closingNow;
 	Log::GetInstance().AppendDebug(
-		"Closing connection %1% in tunnel %2% (connections: %3%, already closed: %4%, closing: %5%).",
+		"Closing connection %1% in tunnel %2% (connections: %3%, already closed: %4%).",
 		instanceId,
 		GetInstanceId(),
 		m_connectionsToClose,
-		m_closedConnections.value(),
-		!closingNow);
-	++m_closedConnections;
-	if (closingNow) {
-		// object can be deleted here!
-		return;
-	}
-	m_server.CloseTunnel(GetInstanceId(), false);
+		m_closedConnections);
+	m_server.CloseTunnel(GetInstanceId());
 }
 
 void Tunnel::OnConnectionClosed(Instance::Id instanceId) {
@@ -665,25 +652,15 @@ void Tunnel::OnConnectionClosed(Instance::Id instanceId) {
 		instanceId,
 		GetInstanceId(),
 		m_connectionsToClose,
-		m_closedConnections.value());
-	++m_closedConnections;
+		m_closedConnections);
+	Interlocked::Increment(&m_closedConnections);
+	// FIXME: shot here d-or condition or not?
 	// object can be deleted here!
 }
 
 Tunnel::Licenses & Tunnel::GetLicenses() {
 	static Licenses licenses;
 	return licenses;
-}
-
-void Tunnel::SetForceClosingMode() {
-	GetIncomingReadConnection().SetForceClosingMode();
-	if (&GetIncomingReadConnection() != &GetIncomingWriteConnection()) {
-		GetIncomingWriteConnection().SetForceClosingMode();
-	}
-	GetOutcomingReadConnection().SetForceClosingMode();
-	if (&GetOutcomingReadConnection() != &GetOutcomingWriteConnection()) {
-		GetOutcomingWriteConnection().SetForceClosingMode();
-	}
 }
 
 bool Tunnel::Switch(

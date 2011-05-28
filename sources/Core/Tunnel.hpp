@@ -49,6 +49,10 @@ namespace TunnelEx {
 		typedef ACE_Thread_Mutex ConnectionClosedMutex;
 		typedef ACE_Guard<ConnectionClosedMutex> ConnectionClosedLock;
 
+		class ListenerBinder;
+		template<class Base>
+		class ConnectionOpeningExceptionImpl;
+
 	public:
 		
 		//! C'tor for new tunnel instance.
@@ -105,8 +109,6 @@ namespace TunnelEx {
 			return m_buffer;
 		}
 
-		void SetForceClosingMode();
-
 		//! Closes current destination and tries to open next. Returns
 		//! false if there no more destinations in list.
 		bool Switch(
@@ -117,6 +119,14 @@ namespace TunnelEx {
 
 		bool IsSourceSetupFailed() const;
 		bool IsDestinationSetupFailed() const;
+
+		void MarkAsDead() throw() {
+			assert(!m_isDead);
+			m_isDead = true;
+		}
+		bool IsDead() const {
+			return m_isDead;
+		}
 
 	private:
 
@@ -150,12 +160,6 @@ namespace TunnelEx {
 		Licenses & GetLicenses();
 
 	private:
-	
-		class ListenerBinder;
-		template<class Base>
-		class ConnectionOpeningExceptionImpl;
-		
-	private:
 
 		const bool m_isStatic;
 
@@ -166,7 +170,7 @@ namespace TunnelEx {
 		SharedPtr<TunnelConnectionSignal> m_destinationDataTransferSignal;
 
 		std::list<Connection *> m_connectionsToSetup;
-		size_t m_connectionsToClose;
+		long m_connectionsToClose;
 		size_t m_setupComplitedConnections;
 
 		boost::shared_ptr<TunnelBuffer> m_buffer;
@@ -178,8 +182,9 @@ namespace TunnelEx {
 
 		unsigned int m_destinationIndex;
 
-		ACE_Atomic_Op<ACE_Thread_Mutex, unsigned long> m_closedConnections;
-		bool m_closingNow;
+		volatile long m_closedConnections;
+
+		bool m_isDead;
 
 	};
 

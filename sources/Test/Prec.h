@@ -12,6 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
+#include "LocalAssert.h"
 
 #define BOOST_FILESYSTEM_VERSION 2
 #define BOOST_TEST_MODULE TunnelEx General Tests
@@ -38,3 +39,5 @@
 #include <limits>
 
 #endif
+
+#include "LocalAssert.h"

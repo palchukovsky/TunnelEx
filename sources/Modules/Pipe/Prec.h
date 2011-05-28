@@ -11,8 +11,10 @@
 #define INCLUDED_FILE__Prec_h__1006221324
 
 #include "CompileConfig.h"
+#include "LocalAssert.h"
 
 #include "Format.hpp"
+#include "UseUnused.hpp"
 
 #include "CompileWarningsAce.h"
 #include <ace/Init_ACE.h>
@@ -33,3 +35,5 @@
 #include <string>
 
 #endif
+
+#include "LocalAssert.h"

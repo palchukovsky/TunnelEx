@@ -6,7 +6,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		CompileConfig.h = CompileConfig.h
 		Common\Constants.h = Common\Constants.h
 		icon.ico = icon.ico
-		Performance1.psess = Performance1.psess
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Docs", "Docs\Docs.vcxproj", "{9F4B8D91-2911-4F1F-98FD-3345D8AE993D}"
@@ -61,6 +60,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utils", "Utils", "{5509928A
 		Common\ServiceFilesSecurity.hpp = Common\ServiceFilesSecurity.hpp
 		Common\StringFwd.hpp = Common\StringFwd.hpp
 		Common\StringUtil.hpp = Common\StringUtil.hpp
+		Common\UseUnused.hpp = Common\UseUnused.hpp
 		Common\Uuid.hpp = Common\Uuid.hpp
 		Common\Xml.hpp = Common\Xml.hpp
 	EndProjectSection

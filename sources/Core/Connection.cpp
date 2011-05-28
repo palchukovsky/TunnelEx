@@ -20,12 +20,103 @@
 #include "Tunnel.hpp"
 #include "TunnelBuffer.hpp"
 #include "Error.hpp"
+#include "Locking.hpp"
 #include "ObjectsDeletionCheck.h"
 #ifdef TUNNELEX_OBJECTS_DELETION_CHECK
-# include "Server.hpp"
+#	include "Server.hpp"
 #endif
 
 using namespace TunnelEx;
+
+//////////////////////////////////////////////////////////////////////////
+
+namespace {
+
+	template<int TypeVal>
+	struct MutexTypeToType {
+		typedef MutexTypeToType<TypeVal> Type;
+	};
+
+	template<typename Mutex, typename TypeT>
+	class TypedMutex : public Mutex {
+		typedef typename TypeT::Type Type;
+	};
+
+}
+
+#if defined(_DEBUG) || defined(TEST)
+namespace {
+
+	struct DebugLockStat {
+		static volatile long locks;
+		static volatile long fails;
+		static volatile long proactor;
+		static volatile long recursive;
+	};
+	volatile long DebugLockStat::locks = 0;
+	volatile long DebugLockStat::fails = 0;
+	volatile long DebugLockStat::proactor = 0;
+	volatile long DebugLockStat::recursive = 0;
+
+	template<typename MutexT>
+	class LockWithDebugReports : public ACE_Guard<MutexT> {
+	public:
+		typedef MutexT Mutex;
+		typedef ACE_Guard<Mutex> Base;
+	public:
+		explicit LockWithDebugReports(Mutex &mutex, const bool isFromProactor)
+				: Base(mutex, 0) {
+			const bool isWasLocked = locked();
+			if (!isWasLocked) {
+				if (ACE_OS::thr_self() == mutex.get_thread_id()) {
+					Interlocked::Increment(&DebugLockStat::recursive);
+				}
+				acquire();
+				Interlocked::Increment(&DebugLockStat::fails);
+				if (isFromProactor) {
+					Interlocked::Increment(&DebugLockStat::proactor);
+				}
+			}
+			if (!(Interlocked::Increment(&DebugLockStat::locks) % 100) || !isWasLocked) {
+				const double failesPercent
+					= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
+				Format stat(
+					"Connection locks/fails/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% fails).");
+				stat
+					% DebugLockStat::locks
+					% DebugLockStat::fails
+					% DebugLockStat::proactor
+					% DebugLockStat::recursive
+					% failesPercent;
+				if (failesPercent > 5) {
+					Log::GetInstance().AppendError(stat.str());
+				} else if (failesPercent > 2.5) {
+					Log::GetInstance().AppendWarn(stat.str());
+				} else {
+					Log::GetInstance().AppendInfo(stat.str());
+				}
+			}
+		}
+	};
+
+}
+#else
+namespace {
+
+	typename<typename MutexT>
+	class LockWithDebugReports : public Base {
+	public:
+		typedef MutexT Mutex;
+		typedef ACE_Guard<Mutex> Base;
+	public:
+		explicit LockReporter(Mutex &mutex, const bool)
+				: Base(mutex, 0) {
+			//...//
+		}
+	};
+
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -33,9 +124,14 @@ class Connection::Implementation : public ACE_Handler {
 
 private:
 
-	typedef ACE_Recursive_Thread_Mutex StateMutex;
-	typedef ACE_Guard<StateMutex> StateLock;
-	
+	enum MutexType {
+		MT_DEFAULT
+	};
+
+	typedef TypedMutex<ACE_Recursive_Thread_Mutex, MutexTypeToType<MT_DEFAULT>>
+		Mutex;
+	typedef LockWithDebugReports<Mutex> Lock;
+
 public:
 
 	explicit Implementation(
@@ -44,10 +140,11 @@ public:
 				SharedPtr<const EndpointAddress> &ruleEndpointAddress)
 			: m_myInterface(myInteface),
 			m_instanceId(m_myInterface.GetInstanceId()),
+			m_refsCount(1),
 			m_ruleEndpoint(ruleEndpoint),
 			m_ruleEndpointAddress(ruleEndpointAddress),
 			m_isReadingAllowed(false),
-			m_isReadingInitiated(false),
+			m_isReadingInitiated(0),
 			m_isReadingActive(true),
 			m_isSetupCompleted(false),
 			m_isSetupCompletedWithSuccess(false),
@@ -55,10 +152,8 @@ public:
 			m_dataBlockSize(1024), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
 			m_messageBlockQueueBufferSize((1024 * 1024) / m_dataBlockSize), // 1 Mb
 			m_sentMessageBlockQueueSize(0),
-			m_closeAtLastMessageBlock(false),
+			m_closeAtLastMessageBlock(0),
 			m_sendQueueSize(0),
-			m_forceClosingMode(false),
-			m_idleTimeoutToken(0),
 			m_idleTimeoutTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 	}
@@ -70,78 +165,69 @@ private:
 		if (!m_isSetupCompleted) {
 			m_ruleEndpointAddress->StatConnectionSetupCanceling();
 		}
-		if (m_signal) {
-			m_signal->OnConnectionClosed(m_instanceId);
-		}
 		assert(m_idleTimeoutTimer == -1);
-		assert(m_proactor == 0);
 		//! @todo: fix (currently don't know when buffer deletion is secure)
 		// m_buffer->DeleteBuffer(m_allocators);
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
-		//! @todo: FIXME [2010/06/07 1:54]
-		/* TUNNELEX_OBJECTS_DELETION_CHECK_ZERO(
-			Server::GetInstance().GetTunnelsNumber() == 0,
-			m_instancesNumber); */
 	}
 
 public:
 
-	//! Schedules handler deletions from non-proactor's thread.
-	/*	For proactor's thread use CloseFromProactor-method! */
-	void ScheduleDeletion() {
-		if (m_proactor) {
-			StateLock lock(m_stateMutex);
-			if (m_proactor) {
-				if (m_sendQueueSize > 0 && !m_forceClosingMode) {
-					Log::GetInstance().AppendDebug(
-						"Flushing connection %1% buffer...",
-						m_instanceId);
-					m_closeAtLastMessageBlock = true;
-				} else {
-					if (m_idleTimeoutTimer != -1) {
-						m_proactor->cancel_timer(m_idleTimeoutTimer);
-						m_idleTimeoutTimer = -1;
-					}
-					m_proactor->schedule_timer(*this, 0, ACE_Time_Value::zero);
-					m_proactor = 0;
-				}
-				return;
-			}
-		}
-		delete this;
+	void CheckedDelete() {
+		Lock lock(m_mutex, false);
+		CheckedDelete(lock);
 	}
 
-	void ResetIdleTimeout(TimeSeconds seconds) {
-		if (seconds > 0) {
-			Log::GetInstance().AppendDebug(
-				"Setting idle timeout %1% seconds for connection %2%...",
-				seconds,
-				m_instanceId);
+private:
+
+	bool CheckedDelete(Lock &lock) {
+		assert(m_proactor || m_refsCount == 1);
+		if (m_idleTimeoutTimer != -1) {
+			assert(m_proactor);
+			m_proactor->cancel_timer(m_idleTimeoutTimer);
+			m_idleTimeoutTimer = -1;
+		}
+		m_readStream.reset();
+		m_writeStream.reset();
+		assert(m_refsCount <= 2);
+		assert(m_refsCount >= 1);
+		if (Interlocked::Decrement(&m_refsCount)) {
+			return false;
+		}
+		const Id instanceId = m_instanceId;
+		const SharedPtr<ConnectionSignal> signal = m_signal;
+		lock.release();
+		delete this;
+		signal->OnConnectionClosed(instanceId);
+		return true;
+	}
+
+	/* Can be called only from 1) reading handling at 0 2) from data send
+	 * notification if m_closeAtLastMessageBlock is true and buffer now is
+	 * empty.
+	 */
+	bool Close(Lock &lock) {
+		assert(!m_closeAtLastMessageBlock || m_sendQueueSize);
+		if (m_sendQueueSize == 0) {
+			m_signal->OnConnectionClose(m_instanceId);
+			return CheckedDelete(lock);
 		} else {
-			Log::GetInstance().AppendDebug(
-				"Disabling idle timeout for connection %1%...",
-				m_instanceId);
-		}
-		StateLock lock(m_stateMutex);
-		if (!m_proactor) {
-			return;
-		}
-		ACE_Time_Value oldInterval(m_idleTimeoutInterval);
-		m_idleTimeoutInterval.set(seconds);
-		try {
-			UpdateIdleTimer();
-		} catch (...) {
-			std::swap(oldInterval, m_idleTimeoutInterval);
-			throw;
+			Interlocked::Increment(&m_closeAtLastMessageBlock);
+			return false;
 		}
 	}
+
+public:
 
 	void Open(SharedPtr<ConnectionSignal> &signal, Connection::Mode mode) {
 
 		const bool isReadingAllowed = mode != Connection::MODE_WRITE;
 
+		Lock lock(m_mutex, false);
+
 		assert(!m_proactor || m_proactor == &signal->GetTunnel().GetProactor());
 		assert(!m_proactor || m_isReadingAllowed == isReadingAllowed);
+		assert(!IsOpened());
 
 		if (m_proactor) {
 			if (	m_proactor != &signal->GetTunnel().GetProactor()
@@ -295,24 +381,49 @@ public:
 			m_isReadingAllowed = isReadingAllowed;
 			m_signal.Swap(signal);
 			m_proactor = &proactor;
+			++m_refsCount; // no interlocking needed
 
 		} catch (...) {
 			buffer->DeleteBuffer(allocators);
-			Proxy *const proxy = this->proxy_.get();
-			if (proxy) {
-				proxy->reset();
-			}
 			throw;
 		}
 		
 	}
 
-	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
+	void ResetIdleTimeout(TimeSeconds seconds) {
 		
-		StateLock lock(m_stateMutex);
+		// Private in Connection. Called only from proactor thread so
+		// no locking needed (already under lock).
+		AssertLockedByMyThread(m_mutex);
+		assert(IsOpened());
+		
+		if (seconds > 0) {
+			Log::GetInstance().AppendDebug(
+				"Setting idle timeout %1% seconds for connection %2%...",
+				seconds,
+				m_instanceId);
+		} else {
+			Log::GetInstance().AppendDebug(
+				"Disabling idle timeout for connection %1%...",
+				m_instanceId);
+		}
+	
+		ACE_Time_Value oldInterval(m_idleTimeoutInterval);
+		m_idleTimeoutInterval.set(seconds);
+		try {
+			UpdateIdleTimer();
+		} catch (...) {
+			std::swap(oldInterval, m_idleTimeoutInterval);
+			throw;
+		}
+	
+	}
 
-		assert(!m_closeAtLastMessageBlock);
-		
+	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
+
+		AssertNotLockedByMyThread(m_mutex);
+		Lock lock(m_mutex, false);
+		assert(IsOpened());
 		assert(m_writeStream.get());
 		if (!m_writeStream.get()) {
 			throw LogicalException(
@@ -330,25 +441,12 @@ public:
 			blockToSend.Get(),
 			blockToSend.GetUnreadedDataSize());
 		if (writeResult == -1) {
-			const Error error(errno);
-			const bool isClosedConnectionError
-				= error.GetErrorNo() == ERROR_NETNAME_DELETED // see TEX-553
-				|| error.GetErrorNo() == WSAECONNRESET;
-			if (	!isClosedConnectionError
-					|| Log::GetInstance().IsDebugRegistrationOn()) {
-				WFormat errorStr(L"Could not write data into stream: %1% (%2%)");
-				errorStr % error.GetString().GetCStr();
-				errorStr % error.GetErrorNo();
-				if (isClosedConnectionError) {
-					Log::GetInstance().AppendDebug(
-						ConvertString<String>(errorStr.str().c_str()).GetCStr());
-				} else {
-					throw SystemException(errorStr.str().c_str());
-				}
-			}
+			lock.release();
+			ReportSendError(errno); // not only log, can throws
 		} else {
-			blockToSend.Release();
 			++m_sendQueueSize;
+			lock.release();
+			blockToSend.Release();
 			messageBlock.MarkAsAddedToQueue();
 		}
 
@@ -356,76 +454,59 @@ public:
 	
 	}
 
+public:
+
 	void OnMessageBlockSent(const MessageBlock &messageBlock) {
-		if (messageBlock.IsTunnelMessage()) {
-			StateLock lock(m_stateMutex);
-			assert(m_sentMessageBlockQueueSize > 0);
-			--m_sentMessageBlockQueueSize;
-			if (!m_isReadingActive && m_isReadingInitiated) {
+
+		AssertNotLockedByMyThread(m_mutex);
+
+		if (!messageBlock.IsTunnelMessage()) {
+			return;
+		}
+
+		Interlocked::Decrement(&m_sentMessageBlockQueueSize);
+		assert(m_sentMessageBlockQueueSize >= 0);
+
+		if (!m_isReadingActive) {
+			Lock lock(m_mutex, false);
+			if (!m_isReadingActive) {
 				InitReadIfPossible();
 			}
 		}
+
 	}
 
-public:
-
 	void OnSetupSuccess() {
+		AssertNotLocked(m_mutex);
 		CompleteSetup(true);
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
 		m_signal->OnConnectionSetupCompleted(m_instanceId);
 	}
 
 	void OnSetupFail(const WString &failReason) {
+		AssertNotLocked(m_mutex);
 		CompleteSetup(false);
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
 			"Setup for connection %1% has been canceled - connection will be closed.",
 			m_instanceId);
-		StateLock lock(m_stateMutex);
-		if (m_proactor) {
-			SharedPtr<ConnectionSignal> signal = m_signal;
-			m_signal.Reset();
-			// after "OnConnectionClose" object can be already destructed, so release mutex here
-			lock.release();
-			signal->OnConnectionClose(m_instanceId);
-		}
-	}
-
-private:
-
-	void CompleteSetup(bool setupCompletedWithSuccess) {
-		StateLock lock(m_stateMutex);
-		m_isSetupCompleted = true;
-		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
-		// Must be not started yet!
-		assert(m_idleTimeoutTimer == -1);
-		if (m_isSetupCompletedWithSuccess) {
-			UpdateIdleTimer();
-		}
+		m_signal->OnConnectionClose(m_instanceId);
 	}
 
 public:
 
 	void StartRead() {
-		StateLock lock(m_stateMutex);
 		assert(!m_isReadingInitiated);
-		assert(m_proactor);
-		if (m_isReadingInitiated) {
-			return;
-		}
-		if (!m_closeAtLastMessageBlock) {
-			InitRead();
-		}
+		AssertNotLocked(m_mutex);
+		Lock lock(m_mutex, false);
 		m_isReadingInitiated = true;
+		InitReadIfPossible();
 	}
 
 	void StopRead() {
-		// works only for Connection::Read (proactor thread), so no locking needed
+		AssertLockedByMyThread(m_mutex); // Protected in Connection
+		assert(m_isReadingInitiated);
 		m_isReadingInitiated = false;
-	}
-
-	void SetForceClosingMode() {
-		m_forceClosingMode = true;
 	}
 
 	const RuleEndpoint & GetRuleEndpoint() const {
@@ -437,18 +518,14 @@ public:
 	}
 
 	void SendToTunnel(MessageBlock &messageBlock) {
+		AssertLockedByMyThread(m_mutex);
 		if (messageBlock.GetUnreadedDataSize() == 0) {
 			return;
 		}
-		StateLock lock(m_stateMutex);
-		if (m_proactor == 0) {
-			return;
-		}
-		assert(m_signal);
 		UpdateIdleTimer();
 		m_signal->OnNewMessageBlock(messageBlock);
 		if (messageBlock.IsAddedToQueue()) {
-			++m_sentMessageBlockQueueSize;
+			Interlocked::Increment(&m_sentMessageBlockQueueSize);
 		}
 	}
 
@@ -478,172 +555,150 @@ public:
 		DoHandleWriteStream(result);
 	}
 
+	virtual void handle_time_out(const ACE_Time_Value &, const void *act = 0) {
+
+		AssertNotLockedByMyThread(m_mutex);
+		assert(act != 0); // deprecated
+		assert(act == reinterpret_cast<void *>(1));
+
+		if (!m_myInterface.OnIdleTimeout()) {
+			Log::GetInstance().AppendDebug(
+				"Closing connection %1% by idle timeout...",
+				m_instanceId);
+			m_signal->OnConnectionClose(m_instanceId);
+		} else {
+			Lock lock(m_mutex, true);
+			UpdateIdleTimer();
+		}
+
+	}
+
 private:
 	
+	void ReportSendError(int errorNo) const {
+		const Error error(errorNo);
+		const bool isClosedConnectionError
+			= error.GetErrorNo() == ERROR_NETNAME_DELETED // see TEX-553
+			|| error.GetErrorNo() == WSAECONNRESET;
+		if (	!isClosedConnectionError
+				|| Log::GetInstance().IsDebugRegistrationOn()) {
+			WFormat errorStr(L"Could not write data into stream: %1% (%2%)");
+			errorStr % error.GetString().GetCStr();
+			errorStr % error.GetErrorNo();
+			if (isClosedConnectionError) {
+				Log::GetInstance().AppendDebug(
+					ConvertString<String>(errorStr.str().c_str()).GetCStr());
+			} else {
+				throw SystemException(errorStr.str().c_str());
+			}
+		}
+	}
+
 	template<typename Result>
 	void DoHandleReadStream(const Result &result) {
-		{
-			UniqueMessageBlockHolder messageBlock(result.message_block());
-			assert(messageBlock.IsTunnelMessage());
-			if (!result.success()) {
-				const Error error(result.error());
-				switch (error.GetErrorNo()) {
-					case ERROR_NETNAME_DELETED: // see TEX-553
-					case ERROR_BROKEN_PIPE: // see TEX-338
-						Log::GetInstance().AppendDebug(
-							"Read operation has been canceled for connection %1%, closing connection... ",
-							m_instanceId);
-						break;
-					case ERROR_OPERATION_ABORTED:
-						// don't tall about it anything - proactor just removed
-						// message blocks for canceled operations.
-						break;
-					default:
-						if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
-							Format message(
-								"Connection %3% read operation completes with error:"
-									" %1% (%2%), closing connection...");
-							message
-								% ConvertString<String>(error.GetString()).GetCStr()
-								% error.GetErrorNo()
-								% m_instanceId;
-							Log::GetInstance().AppendSystemError(message.str().c_str());
-						}
-						break;
-				}
-			} else if (result.bytes_transferred() == 0) {
-				if (m_proactor && !m_closeAtLastMessageBlock) {
-					StateLock lock(m_stateMutex);
-					if (m_proactor) {
-						Log::GetInstance().AppendDebug(
-							"Connection %1% closed by remote side.",
-							m_instanceId);
-					}
-				}
-			} else {
-				StateLock lock(m_stateMutex);
-				try {
-					if (!m_proactor || m_closeAtLastMessageBlock) {
-						// closing in progress or opening failed
-						return;
-					} else if (!m_isReadingAllowed) {
-						// connection only for writing
-						return;
-					}
-					ReadFromStream(messageBlock);
+
+		AssertNotLockedByMyThread(m_mutex);
+
+		UniqueMessageBlockHolder messageBlock(result.message_block());
+		
+		assert(messageBlock.IsTunnelMessage());
+		assert(!m_closeAtLastMessageBlock);
+
+		// if no will be returned in this "if" - connection will be closed
+		if (!result.success()) {
+			ReportReadError(result);
+		} else if (result.bytes_transferred() == 0) {
+			Log::GetInstance().AppendDebug(
+				"Connection %1% closed by remote side.",
+				m_instanceId);
+		} else if (m_isReadingAllowed && IsOpened()) {
+			try {
+				Lock lock(m_mutex, true);
+				if (IsOpened() && m_isReadingAllowed) {
+					m_myInterface.ReadRemote(messageBlock);
+					InitReadIfPossible();
 					return;
-				} catch (const TunnelEx::LocalException &ex) {
-					Log::GetInstance().AppendError(
-						ConvertString<String>(ex.GetWhat()).GetCStr());
 				}
+			} catch (const TunnelEx::LocalException &ex) {
+				Log::GetInstance().AppendError(
+					ConvertString<String>(ex.GetWhat()).GetCStr());
 			}
 		}
 
-		StateLock lock(m_stateMutex);
-		CloseFromProactor(lock);
+		Lock lock(m_mutex, true);
+		if (m_proactor && !Close(lock)) {
+			m_proactor = 0;
+		}
 
+	}
+
+	template<typename Result>
+	void ReportReadError(const Result &result) const {
+		
+		const Error error(result.error());
+		
+		switch (error.GetErrorNo()) {
+			
+			case ERROR_NETNAME_DELETED: // see TEX-553
+			case ERROR_BROKEN_PIPE: // see TEX-338
+				Log::GetInstance().AppendDebug(
+					"Read operation has been canceled for connection %1%, closing connection... ",
+					m_instanceId);
+				break;
+			
+			case ERROR_OPERATION_ABORTED:
+				// don't tall about it anything - proactor just removed
+				// message blocks for canceled operations.
+				break;
+		
+			default:
+				if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
+					Format message(
+						"Connection %3% read operation completes with error:"
+							" %1% (%2%), closing connection...");
+					message
+						% ConvertString<String>(error.GetString()).GetCStr()
+						% error.GetErrorNo()
+						% m_instanceId;
+					Log::GetInstance().AppendSystemError(message.str().c_str());
+				}
+				break;
+		}
+	
 	}
 	
 	template<typename Result>
 	void DoHandleWriteStream(const Result &result) {
-		StateLock lock(m_stateMutex);
 		try {
 			const UniqueMessageBlockHolder messageBlock(result.message_block());
-			assert(m_sendQueueSize > 0);
-			--m_sendQueueSize;
-			if (!m_proactor) {
-				// closing in progress or opening failed
-				return;
+			{
+				Lock lock(m_mutex, true);
+				if (--m_sendQueueSize == 0 && m_closeAtLastMessageBlock) {
+					Close(lock);
+					return;
+				}
 			}
-			//! @todo: if is a TEX-549 workaround, remove after bag will be resolved.
-			if (!m_closeAtLastMessageBlock) {
-				m_signal->OnMessageBlockSent(messageBlock);
-			}
-			if (!m_closeAtLastMessageBlock || m_sendQueueSize > 0) {
-				return;
-			}
+			m_signal->OnMessageBlockSent(messageBlock);
 		} catch (const TunnelEx::LocalException &ex) {
 			Log::GetInstance().AppendError(
 				ConvertString<String>(ex.GetWhat()).GetCStr());
-		}
-		if (m_closeAtLastMessageBlock) {
-			ScheduleDeletion();
-		} else {
-			CloseFromProactor(lock);
+			m_signal->OnConnectionClose(m_instanceId);
 		}
 	}
 
-	virtual void handle_time_out(const ACE_Time_Value &, const void *act = 0) {
-
-		const int idleTimeoutToken = m_idleTimeoutToken;
-		
-		if (!m_proactor) {
-			assert(m_sendQueueSize == 0);
-			delete this;
-			return;
-		}
-
-		StateLock lock(m_stateMutex);
-		if (act == 0) {
-			assert(!m_proactor);
-			assert(m_sendQueueSize == 0);
-			delete this;
-			return;
-		} else {
-			assert(act == reinterpret_cast<void *>(1));
-			if (idleTimeoutToken == m_idleTimeoutToken) {
-				if (!m_myInterface.OnIdleTimeout()) {
-					Log::GetInstance().AppendDebug(
-						"Closing connection %1% by idle timeout...",
-						m_instanceId);
-					CloseFromProactor(lock);
-				} else {
-					UpdateIdleTimer();
-				}
-			}
-		}
-		
-	}
-
-private:
-
-	void ReadFromStream(UniqueMessageBlockHolder &messageBlock) {
-		m_myInterface.ReadRemote(messageBlock);
-		if (m_isReadingInitiated) {
-			InitReadIfPossible();
-		}
-		//! @todo: try to throw exception here [2008/07/30 22:17]
-	}
-
-	//! Closing in proactor thread.
-	/* This method only for optimization! For another threads and if you
-	 * have any doubts - use ScheduleDeletion-method.
-	 */
-	void CloseFromProactor(StateLock &lock) {
-		if (!m_proactor) {
-			return;
-		}
-		if (m_idleTimeoutTimer != -1) {
-			m_proactor->cancel_timer(m_idleTimeoutTimer);
-			m_idleTimeoutTimer = -1;
-		}
-		m_proactor = 0;
-		m_readStream.reset();
-		m_writeStream.reset();
-		Proxy *const proxy = this->proxy_.get();
-		if (proxy) {
-			proxy->reset();
-		}
-		SharedPtr<ConnectionSignal> signal = m_signal;
-		m_signal.Reset();
-		// after "OnConnectionClose" object can be already destructed, so release mutex here
-		lock.release();
-		signal->OnConnectionClose(m_instanceId);
-	}
-
+	//! Inits read buffer if it possible and allowed
+	/**  Can be called only from proactor thread.
+	  */
 	void InitReadIfPossible() {
+
+		AssertLockedByMyThread(m_mutex);
+
+		// FIXME
+		// Can't explain this situation, try to do it at assert fail.
+		// Who can stop reading if it already started and working?
+		assert(m_isReadingInitiated);
 		
-		if (m_closeAtLastMessageBlock) {
+		if (!m_isReadingInitiated) {
 			return;
 		} else if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize) {
 			if (m_isReadingActive) {
@@ -653,7 +708,8 @@ private:
 						" data read from connection %2% will be suspended.",
 					bytes,
 					m_instanceId);
-				m_isReadingActive = false;
+				Interlocked::Decrement(&m_isReadingActive);
+				assert(m_isReadingActive == 0);
 			}
 			return;
 		} else if (!m_isReadingActive) {
@@ -666,60 +722,76 @@ private:
 					" data read from connection %2% will be resumed.",
 				bytes,
 				m_instanceId);
-			m_isReadingActive = true;
+			Interlocked::Increment(&m_isReadingActive);
+			assert(m_isReadingActive == 1);
 		}
 
-		InitRead();
-
-	}
-
-	void InitRead() const {
-		if (!m_readStream.get()) {
-			return;
-		}
-		UniqueMessageBlockHolder messageBlock(
-			UniqueMessageBlockHolder::CreateMessageBlockForTunnel(
-				m_dataBlockSize,
-				*m_allocators.messageBlock,
-				*m_allocators.dataBlock,
-				*m_allocators.dataBlockBuffer));
-		if (m_readStreamFunc(messageBlock.Get(), m_dataBlockSize) == -1) {
-			const Error error(errno);
-			WFormat message(
-				L"Could not initiate read stream for connection %3%: %1% (%2%)");
-			message
-				% error.GetString().GetCStr()
-				% error.GetErrorNo()
-				% m_instanceId;	
-			if (error.GetErrorNo() == ERROR_NETNAME_DELETED) {
-				// see TEX-553
-				Log::GetInstance().AppendDebug(message.str().c_str());
-			} else {
-				throw ConnectionException(message.str().c_str());
+		// read init
+		{
+			assert(m_readStream.get());
+			UniqueMessageBlockHolder messageBlock(
+				UniqueMessageBlockHolder::CreateMessageBlockForTunnel(
+					m_dataBlockSize,
+					*m_allocators.messageBlock,
+					*m_allocators.dataBlock,
+					*m_allocators.dataBlockBuffer));
+			if (m_readStreamFunc(messageBlock.Get(), m_dataBlockSize) == -1) {
+				const Error error(errno);
+				WFormat message(
+					L"Could not initiate read stream for connection %3%: %1% (%2%)");
+				message
+					% error.GetString().GetCStr()
+					% error.GetErrorNo()
+					% m_instanceId;	
+				if (error.GetErrorNo() == ERROR_NETNAME_DELETED) {
+					// see TEX-553
+					Log::GetInstance().AppendDebug(message.str().c_str());
+				} else {
+					throw ConnectionException(message.str().c_str());
+				}
 			}
+			messageBlock.Release();
 		}
-		messageBlock.Release();
+	
 	}
 
 	void UpdateIdleTimer() {
-		assert(m_proactor != 0);
+		assert(IsOpened());
 		if (m_idleTimeoutTimer != -1) {
+			assert(m_proactor);
 			m_proactor->cancel_timer(m_idleTimeoutTimer);
 			m_idleTimeoutTimer = -1;
 		}
 		if (m_idleTimeoutInterval != ACE_Time_Value::zero && m_isSetupCompleted) {
+			assert(m_proactor);
 			m_idleTimeoutTimer = m_proactor->schedule_timer(
 				*this,
 				reinterpret_cast<void *>(1),
 				m_idleTimeoutInterval);
 		}
-		++m_idleTimeoutToken;
+	}
+	
+	bool IsOpened() const {
+		return m_refsCount == 2 && !m_closeAtLastMessageBlock;
+	}
+
+	void CompleteSetup(bool setupCompletedWithSuccess) {
+		AssertNotLocked(m_mutex);
+		m_isSetupCompleted = true;
+		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
+		// Must be not started yet!
+		assert(m_idleTimeoutTimer == -1);
+		if (m_isSetupCompletedWithSuccess) {
+			UpdateIdleTimer();
+		}
 	}
 
 private:
 	
 	Connection &m_myInterface;
 	const Id m_instanceId;
+
+	volatile long m_refsCount;
 	
 	const RuleEndpoint &m_ruleEndpoint;
 	const SharedPtr<const EndpointAddress> m_ruleEndpointAddress;
@@ -731,30 +803,28 @@ private:
 	boost::function<int(ACE_Message_Block &, size_t)> m_readStreamFunc;
 	boost::function<int(ACE_Message_Block &, size_t)> m_writeStreamFunc;
 	
+	Mutex m_mutex;
+
 	bool m_isReadingAllowed;
 	
-	StateMutex m_stateMutex;
-	
 	bool m_isReadingInitiated;
-	bool m_isReadingActive;
+	volatile long m_isReadingActive;
 	bool m_isSetupCompleted;
 	bool m_isSetupCompletedWithSuccess;
 	
+	// if null - not opened or closed by DoHandleReadStream
 	ACE_Proactor *m_proactor;
 
 	const size_t m_dataBlockSize;
-	const size_t m_messageBlockQueueBufferSize;
-	size_t m_sentMessageBlockQueueSize;
+	const long m_messageBlockQueueBufferSize;
+	volatile long m_sentMessageBlockQueueSize;
 
-	bool m_closeAtLastMessageBlock;
-	size_t m_sendQueueSize;
+	volatile long m_closeAtLastMessageBlock;
+	unsigned long m_sendQueueSize;
 
 	boost::shared_ptr<TunnelBuffer> m_buffer;
 	TunnelBuffer::Allocators m_allocators;
 
-	bool m_forceClosingMode;
-
-	int m_idleTimeoutToken;
 	ACE_Time_Value m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
 
@@ -773,7 +843,7 @@ Connection::Connection(
 }
 
 Connection::~Connection() {
-	m_pimpl->ScheduleDeletion();
+	m_pimpl->CheckedDelete();
 }
 
 void Connection::Open(SharedPtr<ConnectionSignal> signal, Mode mode) {
@@ -789,6 +859,7 @@ void Connection::WriteDirectly(const char *data, size_t size) {
 	if (!size) {
 		return;
 	}
+	//! @todo: reimplement, memory usage!!!
 	// not using internal allocator for memory, so buffer can be with any size
 	UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
 	if (messageBlock.Get().copy(data, size) == -1) {
@@ -796,8 +867,8 @@ void Connection::WriteDirectly(const char *data, size_t size) {
 			L"Insufficient message block memory");
 	}
 	const DataTransferCommand cmd = WriteDirectly(messageBlock);
-	ACE_UNUSED_ARG(cmd);
 	assert(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
+	UseUnused(cmd);
 }
 
 DataTransferCommand Connection::Write(MessageBlock &messageBlock) {
@@ -813,6 +884,7 @@ void Connection::SendToRemote(const char *data, size_t size) {
 	if (!size) {
 		return;
 	}
+	//! @todo: reimplement, memory usage!!!
 	// not using internal allocator for memory, so buffer can be with any size
 	UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
 	if (messageBlock.Get().copy(data, size) == -1) {
@@ -820,8 +892,8 @@ void Connection::SendToRemote(const char *data, size_t size) {
 			L"Insufficient message block memory");
 	}
 	const DataTransferCommand cmd = SendToRemote(messageBlock);
-	ACE_UNUSED_ARG(cmd);
 	assert(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
+	UseUnused(cmd);
 }
 
 void Connection::SendToTunnel(MessageBlock &messageBlock) {
@@ -833,6 +905,7 @@ void Connection::SendToTunnel(const char *data, size_t size) {
 	if (!size) {
 		return;
 	}
+	//! @todo: reimplement, memory usage!!!
 	// not using internal allocator for memory, so buffer can be with any size
 	UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
 	if (messageBlock.Get().copy(data, size) == -1) {
@@ -876,10 +949,6 @@ void Connection::StartReadRemote() {
 
 void Connection::StopReadRemote() {
 	m_pimpl->StopRead();
-}
-
-void Connection::SetForceClosingMode() {
-	m_pimpl->SetForceClosingMode();
 }
 
 bool Connection::IsSetupCompleted() const {

@@ -12,11 +12,13 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
+#include "LocalAssert.h"
 
 #define BOOST_FILESYSTEM_VERSION 2
 
 #include "ModulePath.hpp"
 #include "Xml.hpp"
+#include "UseUnused.hpp"
 
 #include "CompileWarningsBoost.h"
 #	include <boost/noncopyable.hpp>
@@ -35,3 +37,5 @@
 #include <memory>
 
 #endif
+
+#include "LocalAssert.h"

@@ -76,7 +76,7 @@ namespace TunnelEx {
 		void OpenTunnel(
 				boost::shared_ptr<RuleInfo> ruleInfo,
 				Acceptor &incomingConnectionAcceptor);
-		void CloseTunnel(Instance::Id tunnelId, bool forceClosing);
+		void CloseTunnel(Instance::Id tunnelId);
 
 		Server::Ref GetServer();
 

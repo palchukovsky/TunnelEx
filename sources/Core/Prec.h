@@ -26,6 +26,7 @@
 #include "ObjectsDeletionCheck.h"
 #include "Uuid.hpp"
 #include "Crypto.hpp"
+#include "UseUnused.hpp"
 
 #include "Licensing/Prec.h"
 
@@ -96,3 +97,5 @@
 #include <exception>
 
 #endif
+
+#include "LocalAssert.h"

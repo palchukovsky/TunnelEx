@@ -47,7 +47,7 @@ namespace TunnelEx {
 						first != last && lastSlotResult == DATA_TRANSFER_CMD_SEND_PACKET;
 						lastSlotResult = *first++);
 				if (lastSlotResult == DATA_TRANSFER_CMD_CLOSE_TUNNEL) {
-					m_tunnel.GetServer().CloseTunnel(m_tunnel.GetInstanceId(), false);
+					m_tunnel.GetServer().CloseTunnel(m_tunnel.GetInstanceId());
 				}
 #				ifdef _DEBUG
 					// just a checking

@@ -19,6 +19,7 @@
 #include "Foreach.h"
 #include "Format.hpp"
 #include "Xml.hpp"
+#include "UseUnused.hpp"
 
 #include <Aclapi.h>
 
@@ -37,3 +38,5 @@
 #include <set>
 
 #endif
+
+#include "LocalAssert.h"

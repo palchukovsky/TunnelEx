@@ -7,18 +7,40 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
-#ifndef INCLUDED_FILE__TUNNELEX__Assert_h__1104192147
-#define INCLUDED_FILE__TUNNELEX__Assert_h__1104192147
-
-#include <cassert>
-#ifdef assert
-#	undef assert
-#endif
-
+#include <assert.h>
 #include "CompileWarningsBoost.h"
 #	include <boost/assert.hpp>
 #include "CompileWarningsBoost.h"
 
+#ifdef assert
+#	undef assert
+#endif
 #define assert(expr) BOOST_ASSERT(expr)
 
-#endif // INCLUDED_FILE__TUNNELEX__Assert_h__1104192147
+#ifndef INCLUDED_FILE__TUNNELEX__LocalAssert_h__1105130132
+#define INCLUDED_FILE__TUNNELEX__LocalAssert_h__1105130132
+
+template<typename Mutex>
+inline void AssertLocked(const Mutex &mutex) {
+	assert(const_cast<Mutex &>(mutex).get_nesting_level() > 0);
+}
+
+template<typename Mutex>
+inline void AssertLockedByMyThread(const Mutex &mutex) {
+	assert(const_cast<Mutex &>(mutex).get_nesting_level() > 0);
+	assert(ACE_OS::thr_self() == const_cast<Mutex &>(mutex).get_thread_id());
+}
+
+template<typename Mutex>
+inline void AssertNotLocked(const Mutex &mutex) {
+	assert(const_cast<Mutex &>(mutex).get_nesting_level() < 1);
+}
+
+template<typename Mutex>
+inline void AssertNotLockedByMyThread(const Mutex &mutex) {
+	assert(
+		const_cast<Mutex &>(mutex).get_nesting_level() < 1
+		|| ACE_OS::thr_self() != const_cast<Mutex &>(mutex).get_thread_id());
+}
+
+#endif

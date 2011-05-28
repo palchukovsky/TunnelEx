@@ -109,13 +109,11 @@ namespace TunnelEx {
 		//! Callback for data block sent event.
 		void OnMessageBlockSent(const ::TunnelEx::MessageBlock &messageBlock);
 
-		void SetForceClosingMode();
+	public:
 
 		bool IsSetupCompleted() const;
 
 		bool IsSetupFailed() const;
-			
-	public:
 
 		//! Returns true if connection does not exist for tunneling.
 		virtual bool IsOneWay() const;
