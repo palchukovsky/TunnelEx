@@ -1,6 +1,6 @@
 diff -crBN ACE_wrappers/ace/ace.mwc ACE_wrappers.TunnelEx/ace/ace.mwc
 *** ACE_wrappers/ace/ace.mwc	2010-09-15 16:42:34.000000000 +0700
---- ACE_wrappers.TunnelEx/ace/ace.mwc	2011-04-09 22:56:32.416815300 +0700
+--- ACE_wrappers.TunnelEx/ace/ace.mwc	2011-05-13 00:12:18.319579400 +0700
 ***************
 *** 2,6 ****
 --- 2,8 ----
@@ -12,8 +12,8 @@ diff -crBN ACE_wrappers/ace/ace.mwc ACE_wrappers.TunnelEx/ace/ace.mwc
   }
   
 diff -crBN ACE_wrappers/ace/config-win32-common.h ACE_wrappers.TunnelEx/ace/config-win32-common.h
-*** ACE_wrappers/ace/config-win32-common.h	2010-10-01 19:00:02.000000000 +0700
---- ACE_wrappers.TunnelEx/ace/config-win32-common.h	2011-04-09 22:57:34.448363300 +0700
+*** ACE_wrappers/ace/config-win32-common.h	2010-10-01 19:00:01.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/config-win32-common.h	2011-05-13 00:12:18.377582700 +0700
 ***************
 *** 619,625 ****
   # endif /* !ACE_HAS_WINCE */
@@ -33,7 +33,7 @@ diff -crBN ACE_wrappers/ace/config-win32-common.h ACE_wrappers.TunnelEx/ace/conf
   ///////////////////////////////////////
 diff -crBN ACE_wrappers/ace/config.h ACE_wrappers.TunnelEx/ace/config.h
 *** ACE_wrappers/ace/config.h	1970-01-01 06:00:00.000000000 +0600
---- ACE_wrappers.TunnelEx/ace/config.h	2011-04-09 22:17:18.898201800 +0700
+--- ACE_wrappers.TunnelEx/ace/config.h	2011-05-13 00:12:18.385583100 +0700
 ***************
 *** 0 ****
 --- 1,18 ----
@@ -55,9 +55,34 @@ diff -crBN ACE_wrappers/ace/config.h ACE_wrappers.TunnelEx/ace/config.h
 + #include <ace/config-win32.h>
 + 
 + #endif // INCLUDED_FILE__TUNNELEX__config_h__1005091822
+diff -crBN ACE_wrappers/ace/Recursive_Thread_Mutex.cpp ACE_wrappers.TunnelEx/ace/Recursive_Thread_Mutex.cpp
+*** ACE_wrappers/ace/Recursive_Thread_Mutex.cpp	2010-09-09 18:21:50.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/Recursive_Thread_Mutex.cpp	2011-05-13 00:57:46.940647600 +0700
+***************
+*** 61,72 ****
+  {
+    // ACE_TRACE ("ACE_Recursive_Thread_Mutex::get_thread_id");
+  #if defined (ACE_HAS_RECURSIVE_MUTEXES)
+!   // @@ The structure CriticalSection in Win32 doesn't hold the thread
+!   // handle of the thread that owns the lock.  However it is still not
+!   // clear at this point how to translate a thread handle to its
+!   // corresponding thread id.
+!   errno = ENOTSUP;
+!   return ACE_OS::NULL_thread;
+  #else
+    ACE_thread_t owner_id;
+    ACE_OS::mutex_lock (&this->lock_.nesting_mutex_);
+--- 61,67 ----
+  {
+    // ACE_TRACE ("ACE_Recursive_Thread_Mutex::get_thread_id");
+  #if defined (ACE_HAS_RECURSIVE_MUTEXES)
+!   return ACE_thread_t(this->lock_.OwningThread);
+  #else
+    ACE_thread_t owner_id;
+    ACE_OS::mutex_lock (&this->lock_.nesting_mutex_);
 diff -crBN ACE_wrappers/ace/WIN32_Asynch_IO.cpp ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp
 *** ACE_wrappers/ace/WIN32_Asynch_IO.cpp	2010-08-16 20:03:34.000000000 +0700
---- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp	2011-04-09 22:59:14.185068000 +0700
+--- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.cpp	2011-05-13 00:12:18.393583600 +0700
 ***************
 *** 1713,1718 ****
 --- 1713,1764 ----
@@ -114,8 +139,8 @@ diff -crBN ACE_wrappers/ace/WIN32_Asynch_IO.cpp ACE_wrappers.TunnelEx/ace/WIN32_
   ACE_WIN32_Asynch_Write_File::writev (ACE_Message_Block &message_block,
                                        size_t bytes_to_write,
 diff -crBN ACE_wrappers/ace/WIN32_Asynch_IO.h ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h
-*** ACE_wrappers/ace/WIN32_Asynch_IO.h	2010-10-21 18:15:18.000000000 +0700
---- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h	2011-04-09 22:59:21.804503800 +0700
+*** ACE_wrappers/ace/WIN32_Asynch_IO.h	2010-10-21 18:15:17.000000000 +0700
+--- ACE_wrappers.TunnelEx/ace/WIN32_Asynch_IO.h	2011-05-13 00:12:18.400584000 +0700
 ***************
 *** 960,965 ****
 --- 960,972 ----
@@ -133,8 +158,8 @@ diff -crBN ACE_wrappers/ace/WIN32_Asynch_IO.h ACE_wrappers.TunnelEx/ace/WIN32_As
   
   /**
 diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/ace_output.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb
-*** ACE_wrappers/bin/MakeProjectCreator/config/ace_output.mpb	2008-03-04 20:51:24.000000000 +0600
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb	2011-04-09 22:59:55.878452700 +0700
+*** ACE_wrappers/bin/MakeProjectCreator/config/ace_output.mpb	2008-03-04 20:51:23.000000000 +0600
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/ace_output.mpb	2011-05-13 00:12:18.408584500 +0700
 ***************
 *** 2,8 ****
   // $Id: ace_output.mpb 80826 2008-03-04 14:51:23Z wotte $
@@ -154,8 +179,8 @@ diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/ace_output.mpb ACE_wrapper
     specific(automake) {
       libout -= $(ACE_ROOT)/lib
 diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/acedefaults.mpb ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb
-*** ACE_wrappers/bin/MakeProjectCreator/config/acedefaults.mpb	2010-06-23 10:24:28.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb	2011-04-09 22:59:49.514088700 +0700
+*** ACE_wrappers/bin/MakeProjectCreator/config/acedefaults.mpb	2010-06-23 10:24:27.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/acedefaults.mpb	2011-05-13 00:12:18.419585100 +0700
 ***************
 *** 4,10 ****
   project: ipv6, vc_warnings, build_files, test_files, svc_conf_files, ace_unicode {
@@ -174,8 +199,8 @@ diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/acedefaults.mpb ACE_wrappe
     // Support the alternative Borland Make project type
     specific(bmake) {
 diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/default.rel ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel
-*** ACE_wrappers/bin/MakeProjectCreator/config/default.rel	2008-03-04 20:51:24.000000000 +0600
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel	2011-04-09 23:00:07.123095800 +0700
+*** ACE_wrappers/bin/MakeProjectCreator/config/default.rel	2008-03-04 20:51:23.000000000 +0600
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/default.rel	2011-05-13 00:12:18.436586100 +0700
 ***************
 *** 4,8 ****
 --- 4,9 ----
@@ -187,7 +212,7 @@ diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/default.rel ACE_wrappers.T
   CIAO_ROOT, $TAO_ROOT/CIAO
 diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/global.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features
 *** ACE_wrappers/bin/MakeProjectCreator/config/global.features	2010-10-20 16:26:46.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features	2011-04-09 23:00:50.238561900 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/global.features	2011-05-13 00:12:18.451586900 +0700
 ***************
 *** 18,31 ****
   // settings can be set here.
@@ -302,8 +327,8 @@ diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/global.features ACE_wrappe
   //Use the ZIP_Wrapper feature for when using the ZIP wrapper classes
   ZIP_Wrapper = 0
 diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/vc10.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc10.features
-*** ACE_wrappers/bin/MakeProjectCreator/config/vc10.features	2009-09-17 01:45:38.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc10.features	2011-04-09 23:00:58.605040400 +0700
+*** ACE_wrappers/bin/MakeProjectCreator/config/vc10.features	2009-09-17 01:45:37.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc10.features	2011-05-13 00:12:18.465587700 +0700
 ***************
 *** 1,6 ****
   // $Id: vc10.features 86721 2009-09-16 18:45:37Z johnnyw $
@@ -320,8 +345,8 @@ diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/vc10.features ACE_wrappers
   rwho=0
   sctp=0
 diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/vc8.features ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features
-*** ACE_wrappers/bin/MakeProjectCreator/config/vc8.features	2009-09-17 01:45:38.000000000 +0700
---- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features	2011-04-09 23:01:08.647614800 +0700
+*** ACE_wrappers/bin/MakeProjectCreator/config/vc8.features	2009-09-17 01:45:37.000000000 +0700
+--- ACE_wrappers.TunnelEx/bin/MakeProjectCreator/config/vc8.features	2011-05-13 00:12:18.478588500 +0700
 ***************
 *** 1,6 ****
   // $Id: vc8.features 86721 2009-09-16 18:45:37Z johnnyw $
@@ -339,7 +364,7 @@ diff -crBN ACE_wrappers/bin/MakeProjectCreator/config/vc8.features ACE_wrappers.
   sctp=0
 diff -crBN ACE_wrappers/MPC/config/default.rel ACE_wrappers.TunnelEx/MPC/config/default.rel
 *** ACE_wrappers/MPC/config/default.rel	2009-09-03 19:57:26.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/config/default.rel	2011-04-09 23:02:30.826315200 +0700
+--- ACE_wrappers.TunnelEx/MPC/config/default.rel	2011-05-13 00:12:18.496589500 +0700
 ***************
 *** 4,6 ****
 --- 4,7 ----
@@ -349,8 +374,8 @@ diff -crBN ACE_wrappers/MPC/config/default.rel ACE_wrappers.TunnelEx/MPC/config/
 + *Dir
 \ No newline at end of file
 diff -crBN ACE_wrappers/MPC/config/openssl.mpb ACE_wrappers.TunnelEx/MPC/config/openssl.mpb
-*** ACE_wrappers/MPC/config/openssl.mpb	2009-05-07 22:44:54.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/config/openssl.mpb	2011-04-09 23:03:07.993441000 +0700
+*** ACE_wrappers/MPC/config/openssl.mpb	2009-05-07 22:44:53.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/config/openssl.mpb	2011-05-13 00:12:18.513590500 +0700
 ***************
 *** 6,18 ****
   // default. If we ever add a new ssl library, then you
@@ -393,8 +418,8 @@ diff -crBN ACE_wrappers/MPC/config/openssl.mpb ACE_wrappers.TunnelEx/MPC/config/
     }
   }
 diff -crBN ACE_wrappers/MPC/templates/vc10.mpd ACE_wrappers.TunnelEx/MPC/templates/vc10.mpd
-*** ACE_wrappers/MPC/templates/vc10.mpd	2010-11-02 00:36:40.000000000 +0600
---- ACE_wrappers.TunnelEx/MPC/templates/vc10.mpd	2011-04-10 01:34:58.670773500 +0700
+*** ACE_wrappers/MPC/templates/vc10.mpd	2010-11-02 00:36:39.000000000 +0600
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10.mpd	2011-05-13 00:12:18.546592400 +0700
 ***************
 *** 305,311 ****
   <%if(TreatSpecificWarningsAsErrors)%>
@@ -413,8 +438,8 @@ diff -crBN ACE_wrappers/MPC/templates/vc10.mpd ACE_wrappers.TunnelEx/MPC/templat
   <%endif%>
   <%if(CompileAsManaged)%>
 diff -crBN ACE_wrappers/MPC/templates/vc10dll.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10dll.mpt
-*** ACE_wrappers/MPC/templates/vc10dll.mpt	2010-08-18 05:03:32.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/templates/vc10dll.mpt	2011-04-10 00:59:48.808864800 +0700
+*** ACE_wrappers/MPC/templates/vc10dll.mpt	2010-08-18 05:03:31.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10dll.mpt	2011-05-13 00:12:18.574594000 +0700
 ***************
 *** 4,32 ****
   conditional_include "common"
@@ -446,7 +471,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10dll.mpt ACE_wrappers.TunnelEx/MPC/temp
   }
   
   Memcheck Release {
---- 4,51 ----
+--- 4,52 ----
   conditional_include "common"
   conditional_include "windowscommon"
   
@@ -480,6 +505,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10dll.mpt ACE_wrappers.TunnelEx/MPC/temp
 !   lib_modifier     = _dbg
 !   LinkIncremental  = 2
 !   MinimalRebuild   = true
+!   GenerateDebugInformation = true
 ! }
 ! 
 ! Test {
@@ -496,8 +522,8 @@ diff -crBN ACE_wrappers/MPC/templates/vc10dll.mpt ACE_wrappers.TunnelEx/MPC/temp
   
   Memcheck Release {
 diff -crBN ACE_wrappers/MPC/templates/vc10exe.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10exe.mpt
-*** ACE_wrappers/MPC/templates/vc10exe.mpt	2010-08-18 05:03:32.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/templates/vc10exe.mpt	2011-04-10 00:59:54.985218000 +0700
+*** ACE_wrappers/MPC/templates/vc10exe.mpt	2010-08-18 05:03:31.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10exe.mpt	2011-05-13 00:12:18.588594800 +0700
 ***************
 *** 4,33 ****
   conditional_include "common"
@@ -530,7 +556,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10exe.mpt ACE_wrappers.TunnelEx/MPC/temp
   }
   
   Memcheck Release {
---- 4,52 ----
+--- 4,53 ----
   conditional_include "common"
   conditional_include "windowscommon"
   
@@ -565,6 +591,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10exe.mpt ACE_wrappers.TunnelEx/MPC/temp
 !   lib_modifier     = _dbg
 !   LinkIncremental  = 2
 !   MinimalRebuild   = true
+!   GenerateDebugInformation = true
 ! }
 ! 
 ! Test {
@@ -581,8 +608,8 @@ diff -crBN ACE_wrappers/MPC/templates/vc10exe.mpt ACE_wrappers.TunnelEx/MPC/temp
   
   Memcheck Release {
 diff -crBN ACE_wrappers/MPC/templates/vc10lib.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10lib.mpt
-*** ACE_wrappers/MPC/templates/vc10lib.mpt	2010-08-18 05:03:32.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/templates/vc10lib.mpt	2011-04-10 00:59:33.619996000 +0700
+*** ACE_wrappers/MPC/templates/vc10lib.mpt	2010-08-18 05:03:31.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10lib.mpt	2011-05-13 00:12:18.600595400 +0700
 ***************
 *** 4,33 ****
   conditional_include "common"
@@ -615,7 +642,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10lib.mpt ACE_wrappers.TunnelEx/MPC/temp
   }
   
   Memcheck Release {
---- 4,51 ----
+--- 4,52 ----
   conditional_include "common"
   conditional_include "windowscommon"
   
@@ -649,6 +676,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10lib.mpt ACE_wrappers.TunnelEx/MPC/temp
 !   lib_modifier     = _dbg
 !   LinkIncremental  = 2
 !   MinimalRebuild   = true
+!   GenerateDebugInformation = true
 ! }
 ! 
 ! Test {
@@ -665,8 +693,8 @@ diff -crBN ACE_wrappers/MPC/templates/vc10lib.mpt ACE_wrappers.TunnelEx/MPC/temp
   
   Memcheck Release {
 diff -crBN ACE_wrappers/MPC/templates/vc10libexe.mpt ACE_wrappers.TunnelEx/MPC/templates/vc10libexe.mpt
-*** ACE_wrappers/MPC/templates/vc10libexe.mpt	2010-08-18 05:03:32.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/templates/vc10libexe.mpt	2011-04-10 00:59:28.473701700 +0700
+*** ACE_wrappers/MPC/templates/vc10libexe.mpt	2010-08-18 05:03:31.000000000 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc10libexe.mpt	2011-05-13 00:12:18.612596100 +0700
 ***************
 *** 4,35 ****
   conditional_include "common"
@@ -701,7 +729,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10libexe.mpt ACE_wrappers.TunnelEx/MPC/t
   }
   
   Memcheck Release {
---- 4,52 ----
+--- 4,53 ----
   conditional_include "common"
   conditional_include "windowscommon"
   
@@ -736,6 +764,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10libexe.mpt ACE_wrappers.TunnelEx/MPC/t
 !   lib_modifier     = _dbg
 !   LinkIncremental  = 2
 !   MinimalRebuild   = true
+!   GenerateDebugInformation = true
 ! }
 ! 
 ! Test {
@@ -753,7 +782,7 @@ diff -crBN ACE_wrappers/MPC/templates/vc10libexe.mpt ACE_wrappers.TunnelEx/MPC/t
   Memcheck Release {
 diff -crBN ACE_wrappers/MPC/templates/vc8dll.mpt ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt
 *** ACE_wrappers/MPC/templates/vc8dll.mpt	2010-04-11 02:38:14.000000000 +0700
---- ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt	2011-04-09 23:04:18.165454600 +0700
+--- ACE_wrappers.TunnelEx/MPC/templates/vc8dll.mpt	2011-05-13 00:12:18.619596500 +0700
 ***************
 *** 4,32 ****
   conditional_include "common"
