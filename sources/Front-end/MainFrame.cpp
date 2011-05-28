@@ -176,7 +176,7 @@ void MainFrame::CreateToolBar(bool goPro) {
 	toolBar.EnableTool(CMD_RULE_COPY, false);
 
 	wxGetApp().GetTheme().GetPasteIcon(icon, true);
-	toolBar.AddTool(CMD_RULE_PASTE, icon, wxT("Pase Rule(s)"));
+	toolBar.AddTool(CMD_RULE_PASTE, icon, wxT("Paste Rule(s)"));
 	toolBar.EnableTool(CMD_RULE_PASTE, false);
 
 	wxGetApp().GetTheme().GetRemoveRuleIcon(icon, true);
@@ -288,7 +288,7 @@ void MainFrame::CreateMenu(bool goPro) {
 	item->SetBitmap(icon);
 	edit->Append(item);
 	edit->Enable(CMD_RULE_COPY, false);
-	item = new wxMenuItem(edit.get(), CMD_RULE_PASTE, wxT("&Pase Rule(s)\tCtrl-V"));
+	item = new wxMenuItem(edit.get(), CMD_RULE_PASTE, wxT("&Paste Rule(s)\tCtrl-V"));
 	wxGetApp().GetTheme().GetPasteIcon(icon, false);
 	item->SetBitmap(icon);
 	edit->Append(item);

@@ -659,7 +659,7 @@ public:
 		item->SetBitmap(icon);
 		menu.Append(item);
 		menu.Enable(MainFrame::CMD_RULE_COPY, selected > 0);
-		item = new wxMenuItem(&menu, MainFrame::CMD_RULE_PASTE, wxT("&Pase Rule(s)\tCtrl-V"));
+		item = new wxMenuItem(&menu, MainFrame::CMD_RULE_PASTE, wxT("&Paste Rule(s)\tCtrl-V"));
 		wxGetApp().GetTheme().GetPasteIcon(icon, false);
 		item->SetBitmap(icon);
 		menu.Append(item);
