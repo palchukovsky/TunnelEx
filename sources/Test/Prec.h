@@ -14,21 +14,22 @@
 #include "Constants.h"
 #include "LocalAssert.h"
 
+#include "Xml.hpp"
+#include "Crypto.hpp"
+
 #define BOOST_FILESYSTEM_VERSION 2
-#define BOOST_TEST_MODULE TunnelEx General Tests
-#define BOOST_TEST_MAIN
 
 #include "Licensing/Prec.h"
 
 #include <Winsock2.h>
 
+#include <gtest/gtest.h>
+
 #include "CompileWarningsBoost.h"
 #	include <boost/shared_ptr.hpp>
-#	include <boost/noncopyable.hpp>
 #	include <boost/function.hpp>
 #	include <boost/bind.hpp>
 #	include <boost/foreach.hpp>
-#	include <boost/test/unit_test.hpp>
 #	include <boost/filesystem.hpp>
 #include "CompileWarningsBoost.h"
 

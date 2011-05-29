@@ -10,7 +10,6 @@
 #include "Prec.h"
 #include "Core/String.hpp"
 
-namespace ut = boost::unit_test;
 namespace tex = TunnelEx;
 using namespace std;
 using namespace boost;
@@ -25,40 +24,41 @@ namespace Test {
 				const typename String::value_type* testStr3,
 				const typename String::value_type* testStr4) {
 		String str1(testStr1);
-		BOOST_CHECK(str1 == testStr1);
+		EXPECT_TRUE(str1 == testStr1);
 		{
 			std::basic_string<String::value_type> stdStr = str1.GetCStr();
-			BOOST_CHECK(stdStr == testStr1);
+			EXPECT_TRUE(stdStr == testStr1);
 		}
 		str1 = testStr2;
-		BOOST_CHECK(str1 == testStr2);
+		EXPECT_TRUE(str1 == testStr2);
 		std::basic_string<String::value_type> conTestString(testStr1);
 		conTestString += testStr2;
 		str1 = testStr1;
-		BOOST_CHECK(str1 == testStr1);
+		EXPECT_TRUE(str1 == testStr1);
 		str1 += testStr2;
-		BOOST_CHECK(str1 == conTestString.c_str());
-		BOOST_CHECK(str1 != testStr3);
+		EXPECT_TRUE(str1 == conTestString.c_str());
+		EXPECT_TRUE(str1 != testStr3);
 		const String str2(conTestString.c_str());
-		BOOST_CHECK(str1 == str2);
-		BOOST_CHECK(str2 != testStr4);
+		EXPECT_TRUE(str1 == str2);
+		EXPECT_TRUE(str2 != testStr4);
 		String str5(testStr1);
-		BOOST_CHECK(str5 == testStr1);
+		EXPECT_TRUE(str5 == testStr1);
 		str5.Clear();
-		BOOST_CHECK(str5.IsEmpty());
-		BOOST_CHECK(str5 == String());
+		EXPECT_TRUE(str5.IsEmpty());
+		EXPECT_TRUE(str5 == String());
 		String str6(testStr1);
 		String str7(testStr4);
 		str6.Swap(str7);
-		BOOST_CHECK(str6 == testStr4);
-		BOOST_CHECK(str7 == testStr1);
+		EXPECT_TRUE(str6 == testStr4);
+		EXPECT_TRUE(str7 == testStr1);
 	}
 
 }
 
-namespace Test { BOOST_AUTO_TEST_SUITE(Strings)
+namespace Test {
 
-	BOOST_AUTO_TEST_CASE(Operators) {
+	TEST(Strings, Operators) {
+
 		OperatorsTestImplementation<tex::String>(
 			"Multibyte first test string",
 			"Multibyte second test string",
@@ -71,33 +71,33 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Strings)
 			L"Wide 4-th test string - тоже на русском языке (йяхзщЩшШэЮЯяэ)");
 	}
 
-	BOOST_AUTO_TEST_CASE(WideToMultibyte) {
+	TEST(Strings, WideToMultibyte) {
 
 		const wchar_t *const from = L"Test string - Тестовая строка - ЭЮЯЩШэюящш12345 ;№%э№;.";
 		const char *const to = "Test string - Тестовая строка - ЭЮЯЩШэюящш12345 ;№%э№;.";
 		tex::String cache;
 		
-		BOOST_CHECK(tex::ConvertString(from, cache) == to);
+		EXPECT_TRUE(tex::ConvertString(from, cache) == to);
 
 		cache.Clear();
-		BOOST_CHECK(tex::ConvertString(tex::WString(from), cache) == to);
+		EXPECT_TRUE(tex::ConvertString(tex::WString(from), cache) == to);
 
 	}
 
-	BOOST_AUTO_TEST_CASE(MultibyteToWide) {
+	TEST(Strings, MultibyteToWide) {
 
 		const char *const from = "Test string - Тестовая строка - ЭЮЯЩШэюящш12345 ;№%э№;.";
 		const wchar_t *const to = L"Test string - Тестовая строка - ЭЮЯЩШэюящш12345 ;№%э№;.";
 		tex::WString cache;
 		
-		BOOST_CHECK(tex::ConvertString(from, cache) == to);
+		EXPECT_TRUE(tex::ConvertString(from, cache) == to);
 
 		cache.Clear();
-		BOOST_CHECK(tex::ConvertString(tex::String(from), cache) == to);
+		EXPECT_TRUE(tex::ConvertString(tex::String(from), cache) == to);
 
 	}
 
-	BOOST_AUTO_TEST_CASE(WideToUtf8) {
+	TEST(Strings, WideToUtf8) {
 
 		const wchar_t *const from = L"Test string in UTF-8 - Тестовая строка в UTF-8.";
 		tex::UString cache;
@@ -110,14 +110,14 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Strings)
 			0x20, 0x55, 0x54, 0x46, 0x2d, 0x38, 0x2e, 0x00
 		};
 
-		BOOST_CHECK(tex::ConvertString(from, cache) == to);
+		EXPECT_TRUE(tex::ConvertString(from, cache) == to);
 
 		cache.Clear();
-		BOOST_CHECK(tex::ConvertString(tex::WString(from), cache) == to);
+		EXPECT_TRUE(tex::ConvertString(tex::WString(from), cache) == to);
 
 	}
 
-	BOOST_AUTO_TEST_CASE(Utf8ToWide) {
+	TEST(Strings, Utf8ToWide) {
 		
 		const tex::UString::value_type from[] = {
 			0x54, 0x65, 0x73, 0x74, 0x20, 0x73, 0x74, 0x72, 0x69, 0x6e, 0x67,
@@ -130,14 +130,14 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Strings)
 		tex::WString cache;
 		const wchar_t *const to = L"Test string in UTF-8 - Тестовая строка в UTF-8.";
 
-		BOOST_CHECK(tex::ConvertString(from, cache) == to);
+		EXPECT_TRUE(tex::ConvertString(from, cache) == to);
 
 		cache.Clear();
-		BOOST_CHECK(tex::ConvertString(tex::UString(from), cache) == to);
+		EXPECT_TRUE(tex::ConvertString(tex::UString(from), cache) == to);
 	
 	}
 
-	BOOST_AUTO_TEST_CASE(Utf8ToMultibyte) {
+	TEST(Strings, Utf8ToMultibyte) {
 		
 		const char *const to = "Test string in UTF-8 - Тестовая строка в UTF-8.";
 		const tex::UString::value_type from[] = {
@@ -150,12 +150,12 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Strings)
 		};
 		tex::String cache;
 
-		BOOST_CHECK(tex::ConvertString(from, cache) == to);
-		BOOST_CHECK(tex::ConvertString(tex::UString(from), cache) == to);
+		EXPECT_TRUE(tex::ConvertString(from, cache) == to);
+		EXPECT_TRUE(tex::ConvertString(tex::UString(from), cache) == to);
 
 	}
 
-	BOOST_AUTO_TEST_CASE(MultibyteToUtf8) {
+	TEST(Strings, MultibyteToUtf8) {
 
 		const char *const from = "Test string in UTF-8 - Тестовая строка в UTF-8.";
 		const tex::UString::value_type to[] = {
@@ -168,11 +168,11 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Strings)
 		};
 		tex::UString cache;
 
-		BOOST_CHECK(tex::ConvertString(from, cache) == to);
+		EXPECT_TRUE(tex::ConvertString(from, cache) == to);
 
 		cache.Clear();
-		BOOST_CHECK(tex::ConvertString(tex::String(from), cache) == to);
+		EXPECT_TRUE(tex::ConvertString(tex::String(from), cache) == to);
 	
 	}
 
-BOOST_AUTO_TEST_SUITE_END() }
+}

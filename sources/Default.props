@@ -21,10 +21,20 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Prec.h</PrecompiledHeaderFile>
       <ExceptionHandling>Async</ExceptionHandling>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
     </ResourceCompile>
+    <Link>
+      <ImportLibrary>$(SolutionDir)..\output\lib\$(TargetName).lib</ImportLibrary>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName)$(TargetExt).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(TargetDir)$(TargetName)$(TargetExt).pgd</ProfileGuidedDatabase>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

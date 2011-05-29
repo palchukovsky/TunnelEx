@@ -5,18 +5,21 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\Tests">
-      <UniqueIdentifier>{adf2d8a5-15ca-4f2f-a017-f488ea5ad181}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{b59d3e56-62c9-43b3-aa85-8c6496fdacb6}</UniqueIdentifier>
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource">
-      <UniqueIdentifier>{dbff2169-bc93-41fd-a4a6-f807f3ffe4e5}</UniqueIdentifier>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Tests">
+      <UniqueIdentifier>{e2a61114-4259-4912-a218-bb1de2f2d963}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Fixtures.cpp">
+    <ClCompile Include="Environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
@@ -51,29 +54,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Fixtures.hpp">
+    <ClInclude Include="Environment.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Prec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resource\LicenseKeyValid.xml">
-      <Filter>Resource</Filter>
-    </None>
-    <None Include="Resource\LocalAsymmetricPrivateKey.pem">
-      <Filter>Resource</Filter>
-    </None>
-    <None Include="Resource\LocalAsymmetricPublicKey.pem">
-      <Filter>Resource</Filter>
-    </None>
-    <None Include="Resource\RuleSet_1_3.xml">
-      <Filter>Resource</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Test.rc" />
+    <ResourceCompile Include="Test.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

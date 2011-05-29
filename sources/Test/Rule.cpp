@@ -9,8 +9,8 @@
 
 #include "Prec.h"
 
-#include "PipeServer.hpp"
-#include "Wait.h"
+#include "TestUtils/PipeServer.hpp"
+#include "TestUtils/Wait.h"
 
 #include "Modules/Inet/InetEndpointAddress.hpp"
 
@@ -21,13 +21,12 @@
 #include "Core/Exceptions.hpp"
 #include "Core/String.hpp"
 
-namespace ut = boost::unit_test;
 namespace tex = TunnelEx;
 namespace xml = tex::Helpers::Xml;
 
-namespace Test { BOOST_AUTO_TEST_SUITE(Rule)
+namespace Test {
 
-	BOOST_AUTO_TEST_CASE(XmlParse) {
+	TEST(Rule, XmlParse) {
 		
 		const wchar_t *const xml
 			=	L"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -86,128 +85,128 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Rule)
 		const tex::RuleSet p(xml);
 		
 		// rules number:
-		BOOST_REQUIRE(2 == p.GetServices().GetSize());
-		BOOST_REQUIRE(2 == p.GetTunnels().GetSize());
+		ASSERT_TRUE(2 == p.GetServices().GetSize());
+		ASSERT_TRUE(2 == p.GetTunnels().GetSize());
 		// rules names:
-		BOOST_CHECK(tex::WString(L"First rule") == p.GetTunnels()[0].GetName());
-		BOOST_CHECK(p.GetTunnels()[0].GetUuid() == L"AC055577-E705-4805-BAE9-D16D522DB726");
-		BOOST_CHECK(	p.GetTunnels()[1].GetName()
+		EXPECT_TRUE(tex::WString(L"First rule") == p.GetTunnels()[0].GetName());
+		EXPECT_TRUE(p.GetTunnels()[0].GetUuid() == L"AC055577-E705-4805-BAE9-D16D522DB726");
+		EXPECT_TRUE(	p.GetTunnels()[1].GetName()
 						== L"��� ������� �� ������� ����� ������ ��������� ������ � UTF-8");
-		BOOST_CHECK(p.GetTunnels()[1].GetUuid() == L"AC055577-E705-480a-BAE9-D16D522DB727");
-		BOOST_CHECK(p.GetServices()[0].GetName() == L"First service rule");
-		BOOST_CHECK(p.GetServices()[0].GetUuid() == L"12355577-E705-4805-BAE9-D16D522DB726");
-		BOOST_CHECK(p.GetServices()[1].GetName() == L"2-nd service rule");
-		BOOST_CHECK(p.GetServices()[1].GetUuid() == L"33333337-E705-4805-BAE9-D16D522DB726");
+		EXPECT_TRUE(p.GetTunnels()[1].GetUuid() == L"AC055577-E705-480a-BAE9-D16D522DB727");
+		EXPECT_TRUE(p.GetServices()[0].GetName() == L"First service rule");
+		EXPECT_TRUE(p.GetServices()[0].GetUuid() == L"12355577-E705-4805-BAE9-D16D522DB726");
+		EXPECT_TRUE(p.GetServices()[1].GetName() == L"2-nd service rule");
+		EXPECT_TRUE(p.GetServices()[1].GetUuid() == L"33333337-E705-4805-BAE9-D16D522DB726");
 		
-		BOOST_CHECK(p.GetTunnels()[0].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_ERROR);
-		BOOST_CHECK(p.GetTunnels()[1].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_WARN);
-		BOOST_CHECK(p.GetServices()[0].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_ERROR);
-		BOOST_CHECK(p.GetServices()[1].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_WARN);
+		EXPECT_TRUE(p.GetTunnels()[0].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_ERROR);
+		EXPECT_TRUE(p.GetTunnels()[1].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_WARN);
+		EXPECT_TRUE(p.GetServices()[0].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_ERROR);
+		EXPECT_TRUE(p.GetServices()[1].GetErrorsTreatment() == tex::TunnelRule::ERRORS_TREATMENT_WARN);
 
-		BOOST_CHECK(p.GetTunnels()[0].IsEnabled() == true);
-		BOOST_CHECK(p.GetTunnels()[1].IsEnabled() == false);
-		BOOST_CHECK(p.GetServices()[0].IsEnabled() == true);
-		BOOST_CHECK(p.GetServices()[1].IsEnabled() == false);
+		EXPECT_TRUE(p.GetTunnels()[0].IsEnabled() == true);
+		EXPECT_TRUE(p.GetTunnels()[1].IsEnabled() == false);
+		EXPECT_TRUE(p.GetServices()[0].IsEnabled() == true);
+		EXPECT_TRUE(p.GetServices()[1].IsEnabled() == false);
 
 		// services
-		BOOST_REQUIRE(p.GetServices()[0].GetServices().GetSize() == 1);
-		BOOST_CHECK(p.GetServices()[0].GetServices()[0].name == L"Service nameeee");
-		BOOST_CHECK(p.GetServices()[0].GetServices()[0].uuid == L"43215577-E705-4805-BAE9-D16D522DB726");
-		BOOST_CHECK(p.GetServices()[0].GetServices()[0].param  == L"1234567");
-		BOOST_CHECK(p.GetServices()[1].GetServices()[0].name == L"Service name 1");
-		BOOST_CHECK(p.GetServices()[1].GetServices()[0].uuid == L"43215577-3334-5805-BAE9-D16D522DB726");
-		BOOST_CHECK(p.GetServices()[1].GetServices()[0].param  == L"qwerty");
-		BOOST_CHECK(p.GetServices()[1].GetServices()[1].name == L"Service name 2");
-		BOOST_CHECK(p.GetServices()[1].GetServices()[1].uuid == L"41233333-3344-4805-BAE9-D16D522DB726");
-		BOOST_CHECK(p.GetServices()[1].GetServices()[1].param.IsEmpty());
+		ASSERT_TRUE(p.GetServices()[0].GetServices().GetSize() == 1);
+		EXPECT_TRUE(p.GetServices()[0].GetServices()[0].name == L"Service nameeee");
+		EXPECT_TRUE(p.GetServices()[0].GetServices()[0].uuid == L"43215577-E705-4805-BAE9-D16D522DB726");
+		EXPECT_TRUE(p.GetServices()[0].GetServices()[0].param  == L"1234567");
+		EXPECT_TRUE(p.GetServices()[1].GetServices()[0].name == L"Service name 1");
+		EXPECT_TRUE(p.GetServices()[1].GetServices()[0].uuid == L"43215577-3334-5805-BAE9-D16D522DB726");
+		EXPECT_TRUE(p.GetServices()[1].GetServices()[0].param  == L"qwerty");
+		EXPECT_TRUE(p.GetServices()[1].GetServices()[1].name == L"Service name 2");
+		EXPECT_TRUE(p.GetServices()[1].GetServices()[1].uuid == L"41233333-3344-4805-BAE9-D16D522DB726");
+		EXPECT_TRUE(p.GetServices()[1].GetServices()[1].param.IsEmpty());
 		
 		// input endpoints number:
-		BOOST_REQUIRE(2 == p.GetTunnels()[0].GetInputs().GetSize());
-		BOOST_REQUIRE(2 == p.GetTunnels()[0].GetInputs()[1].GetPreListeners().GetSize());
-		BOOST_REQUIRE(1 == p.GetTunnels()[0].GetInputs()[1].GetPostListeners().GetSize());
-		BOOST_REQUIRE(2 == p.GetTunnels()[1].GetInputs().GetSize());
+		ASSERT_TRUE(2 == p.GetTunnels()[0].GetInputs().GetSize());
+		ASSERT_TRUE(2 == p.GetTunnels()[0].GetInputs()[1].GetPreListeners().GetSize());
+		ASSERT_TRUE(1 == p.GetTunnels()[0].GetInputs()[1].GetPostListeners().GetSize());
+		ASSERT_TRUE(2 == p.GetTunnels()[1].GetInputs().GetSize());
 
 		// input endpoints
-		BOOST_REQUIRE(p.GetTunnels()[0].GetInputs()[0].IsCombined());
-		BOOST_CHECK(p.GetTunnels()[0].GetInputs()[0].IsCombinedAcceptor());
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[0].GetCombinedAddress()->GetResourceIdentifier()
+		ASSERT_TRUE(p.GetTunnels()[0].GetInputs()[0].IsCombined());
+		EXPECT_TRUE(p.GetTunnels()[0].GetInputs()[0].IsCombinedAcceptor());
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[0].GetCombinedAddress()->GetResourceIdentifier()
 						== L"tcp://host-212.213.214.1-from-hosts:755");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[0].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[0].GetUuid()
 						== L"AC055577-E705-480a-BAE9-D11D522DB726");
-		BOOST_REQUIRE(p.GetTunnels()[0].GetInputs()[1].IsCombined());
-		BOOST_CHECK(!p.GetTunnels()[0].GetInputs()[1].IsCombinedAcceptor());
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetCombinedAddress()->GetResourceIdentifier()
+		ASSERT_TRUE(p.GetTunnels()[0].GetInputs()[1].IsCombined());
+		EXPECT_FALSE(p.GetTunnels()[0].GetInputs()[1].IsCombinedAcceptor());
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetCombinedAddress()->GetResourceIdentifier()
 						== L"tcp://212.213.214.2:69");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetUuid()
 						== L"AC055577-E705-480a-BAE9-D12D522DB726");
-		BOOST_REQUIRE(!p.GetTunnels()[1].GetInputs()[0].IsCombined());
-		BOOST_CHECK(	p.GetTunnels()[1].GetInputs()[0].GetReadAddress()->GetResourceIdentifier()
+		ASSERT_TRUE(!p.GetTunnels()[1].GetInputs()[0].IsCombined());
+		EXPECT_TRUE(	p.GetTunnels()[1].GetInputs()[0].GetReadAddress()->GetResourceIdentifier()
 						== L"tcp://*:234");
-		BOOST_CHECK(	p.GetTunnels()[1].GetInputs()[0].GetWriteAddress()->GetResourceIdentifier()
+		EXPECT_TRUE(	p.GetTunnels()[1].GetInputs()[0].GetWriteAddress()->GetResourceIdentifier()
 						== L"tcp://zx:233");
-		BOOST_CHECK(	p.GetTunnels()[1].GetInputs()[0].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[1].GetInputs()[0].GetUuid()
 						== L"AC055577-E705-480a-BAE9-D15D522DB726");
-		BOOST_CHECK(p.GetTunnels()[1].GetInputs()[0].GetReadWriteAcceptor() == tex::Endpoint::ACCEPTOR_READER);
-		BOOST_REQUIRE(!p.GetTunnels()[1].GetInputs()[1].IsCombined());
-		BOOST_CHECK(	p.GetTunnels()[1].GetInputs()[1].GetReadAddress()->GetResourceIdentifier()
+		EXPECT_TRUE(p.GetTunnels()[1].GetInputs()[0].GetReadWriteAcceptor() == tex::Endpoint::ACCEPTOR_READER);
+		ASSERT_TRUE(!p.GetTunnels()[1].GetInputs()[1].IsCombined());
+		EXPECT_TRUE(	p.GetTunnels()[1].GetInputs()[1].GetReadAddress()->GetResourceIdentifier()
 						== L"tcp://ttt:238");
-		BOOST_CHECK(	p.GetTunnels()[1].GetInputs()[1].GetWriteAddress()->GetResourceIdentifier()
+		EXPECT_TRUE(	p.GetTunnels()[1].GetInputs()[1].GetWriteAddress()->GetResourceIdentifier()
 						== L"tcp://zx:239");
-		BOOST_CHECK(	p.GetTunnels()[1].GetInputs()[1].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[1].GetInputs()[1].GetUuid()
 						== L"FC055577-E705-4803-BAE9-D15D522DB72F");
-		BOOST_CHECK(p.GetTunnels()[1].GetInputs()[1].GetReadWriteAcceptor() == tex::Endpoint::ACCEPTOR_NONE);
+		EXPECT_TRUE(p.GetTunnels()[1].GetInputs()[1].GetReadWriteAcceptor() == tex::Endpoint::ACCEPTOR_NONE);
 
 		// destinations endpoints number:
-		BOOST_REQUIRE(2 == p.GetTunnels()[0].GetDestinations().GetSize());
-		BOOST_REQUIRE(1 == p.GetTunnels()[0].GetDestinations()[0].GetPreListeners().GetSize());
-		BOOST_REQUIRE(1 == p.GetTunnels()[1].GetDestinations().GetSize());
+		ASSERT_TRUE(2 == p.GetTunnels()[0].GetDestinations().GetSize());
+		ASSERT_TRUE(1 == p.GetTunnels()[0].GetDestinations()[0].GetPreListeners().GetSize());
+		ASSERT_TRUE(1 == p.GetTunnels()[1].GetDestinations().GetSize());
 		
 		// destination endpoints:
-		BOOST_REQUIRE(p.GetTunnels()[0].GetDestinations()[0].IsCombined());
-		BOOST_CHECK(	p.GetTunnels()[0].GetDestinations()[0].GetCombinedAddress()->GetResourceIdentifier()
+		ASSERT_TRUE(p.GetTunnels()[0].GetDestinations()[0].IsCombined());
+		EXPECT_TRUE(	p.GetTunnels()[0].GetDestinations()[0].GetCombinedAddress()->GetResourceIdentifier()
 						== L"tcp://host-212.213.214.3-from-hosts:80");
-		BOOST_CHECK(	p.GetTunnels()[0].GetDestinations()[0].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[0].GetDestinations()[0].GetUuid()
 						== L"AC055577-E705-480a-BAE9-D13D522DB726");
-		BOOST_REQUIRE(p.GetTunnels()[0].GetDestinations()[1].IsCombined());
-		BOOST_CHECK(	p.GetTunnels()[0].GetDestinations()[1].GetCombinedAddress()->GetResourceIdentifier()
+		ASSERT_TRUE(p.GetTunnels()[0].GetDestinations()[1].IsCombined());
+		EXPECT_TRUE(	p.GetTunnels()[0].GetDestinations()[1].GetCombinedAddress()->GetResourceIdentifier()
 						== L"tcp://host-212.213.214.6-from-hosts:86");
-		BOOST_CHECK(	p.GetTunnels()[0].GetDestinations()[1].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[0].GetDestinations()[1].GetUuid()
 						== L"AC055577-E705-480a-BAE9-D14D522DB726");
-		BOOST_REQUIRE(!p.GetTunnels()[1].GetDestinations()[0].IsCombined());
-		BOOST_CHECK(	p.GetTunnels()[1].GetDestinations()[0].GetReadAddress()->GetResourceIdentifier()
+		ASSERT_TRUE(!p.GetTunnels()[1].GetDestinations()[0].IsCombined());
+		EXPECT_TRUE(	p.GetTunnels()[1].GetDestinations()[0].GetReadAddress()->GetResourceIdentifier()
 						== L"tcp://212.213.214.5:80");
-		BOOST_CHECK(	p.GetTunnels()[1].GetDestinations()[0].GetWriteAddress()->GetResourceIdentifier()
+		EXPECT_TRUE(	p.GetTunnels()[1].GetDestinations()[0].GetWriteAddress()->GetResourceIdentifier()
 						== L"tcp://212.213.214.9:81");
-		BOOST_CHECK(	p.GetTunnels()[1].GetDestinations()[0].GetUuid()
+		EXPECT_TRUE(	p.GetTunnels()[1].GetDestinations()[0].GetUuid()
 						== L"AC055577-E705-4809-BAE9-D16D522DB726");
 
 		// filters:
-		BOOST_REQUIRE(2 == p.GetTunnels()[0].GetFilters().GetSize());
-		BOOST_REQUIRE(0 == p.GetTunnels()[1].GetFilters().GetSize());
-		BOOST_CHECK(tex::WString(L"some filter name") == p.GetTunnels()[0].GetFilters()[0]);
-		BOOST_CHECK(tex::WString(L"second filter name") == p.GetTunnels()[0].GetFilters()[1]);
+		ASSERT_TRUE(2 == p.GetTunnels()[0].GetFilters().GetSize());
+		ASSERT_TRUE(0 == p.GetTunnels()[1].GetFilters().GetSize());
+		EXPECT_TRUE(tex::WString(L"some filter name") == p.GetTunnels()[0].GetFilters()[0]);
+		EXPECT_TRUE(tex::WString(L"second filter name") == p.GetTunnels()[0].GetFilters()[1]);
 
 		// listeners
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[0].name
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[0].name
 						== L"SomeListenerNumberOne");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[1].name
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[1].name
 						== L"SomeListenerNumberOne/2");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetPostListeners()[0].name
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetPostListeners()[0].name
 						== L"SomeListenerNumberOne/3");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[0].param
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[0].param
 						== L"Some Listener Number One Param");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[1].param
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetPreListeners()[1].param
 						== L"Some Listener Number One Param / 2");
-		BOOST_CHECK(	p.GetTunnels()[0].GetInputs()[1].GetPostListeners()[0].param
+		EXPECT_TRUE(	p.GetTunnels()[0].GetInputs()[1].GetPostListeners()[0].param
 						== L"Some Listener Number One Param / 3");
-		BOOST_CHECK(	p.GetTunnels()[0].GetDestinations()[0].GetPreListeners()[0].name
+		EXPECT_TRUE(	p.GetTunnels()[0].GetDestinations()[0].GetPreListeners()[0].name
 						== L"SomeListenerNumberTwo");
-		BOOST_CHECK(	p.GetTunnels()[0].GetDestinations()[0].GetPreListeners()[0].param
+		EXPECT_TRUE(	p.GetTunnels()[0].GetDestinations()[0].GetPreListeners()[0].param
 						== L"Some Listener Number Two Param");
 
 	}
 
-	BOOST_AUTO_TEST_CASE(XmlSave) {
+	TEST(Rule, XmlSave) {
 		tex::TunnelRuleSet rules(2);
 		{
 			tex::TunnelRule rule;
@@ -277,131 +276,131 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Rule)
 		tex::WString xml;
 		tex::RuleSet(tex::ServiceRuleSet(), rules).GetXml(xml);
 		{
-			BOOST_REQUIRE_NO_THROW(const tex::RuleSet parseTest(xml));
+			ASSERT_NO_THROW(const tex::RuleSet parseTest(xml));
 		}
 		boost::shared_ptr<const xml::XPath> xpath(
 			xml::Document::LoadFromString(xml)->GetXPath());
 		xml::ConstNodeCollection  queryResult;
 		xpath->Query("/RuleSet/TunnelRule", queryResult);
-		BOOST_REQUIRE(2 == queryResult.size());
+		ASSERT_TRUE(2 == queryResult.size());
 		tex::String strBuf;
 		tex::WString wStrBuf;
-		BOOST_REQUIRE_NO_THROW(queryResult[0]->GetAttribute("Name", wStrBuf));
-		BOOST_CHECK(wStrBuf == L"First rule");
-		BOOST_REQUIRE_NO_THROW(queryResult[1]->GetAttribute("Name", wStrBuf));
-		BOOST_CHECK(	wStrBuf
+		ASSERT_NO_THROW(queryResult[0]->GetAttribute("Name", wStrBuf));
+		EXPECT_TRUE(wStrBuf == L"First rule");
+		ASSERT_NO_THROW(queryResult[1]->GetAttribute("Name", wStrBuf));
+		EXPECT_TRUE(	wStrBuf
 						== L"��� ���� ��� ������� �� ������� ����� ������ ��������� ������ � UTF-8");
-		BOOST_REQUIRE_NO_THROW(queryResult[0]->GetAttribute("ErrorsTreatment", wStrBuf));
-		BOOST_CHECK(wStrBuf == L"information");
-		BOOST_REQUIRE_NO_THROW(queryResult[1]->GetAttribute("ErrorsTreatment", wStrBuf));
-		BOOST_CHECK(wStrBuf == L"warning");
-		BOOST_CHECK_NO_THROW(queryResult[0]->GetAttribute("IsEnabled", wStrBuf));
-		BOOST_CHECK(wStrBuf == L"false");
-		BOOST_CHECK_NO_THROW(queryResult[1]->GetAttribute("IsEnabled", wStrBuf));
-		BOOST_CHECK(wStrBuf == L"true");
+		ASSERT_NO_THROW(queryResult[0]->GetAttribute("ErrorsTreatment", wStrBuf));
+		EXPECT_TRUE(wStrBuf == L"information");
+		ASSERT_NO_THROW(queryResult[1]->GetAttribute("ErrorsTreatment", wStrBuf));
+		EXPECT_TRUE(wStrBuf == L"warning");
+		EXPECT_NO_THROW(queryResult[0]->GetAttribute("IsEnabled", wStrBuf));
+		EXPECT_TRUE(wStrBuf == L"false");
+		EXPECT_NO_THROW(queryResult[1]->GetAttribute("IsEnabled", wStrBuf));
+		EXPECT_TRUE(wStrBuf == L"true");
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/FilterSet/Filter",
 			queryResult);
-		BOOST_REQUIRE(2 == queryResult.size());
-		BOOST_CHECK(queryResult[0]->GetAttribute("Name", strBuf) == "first filter name - example");
-		BOOST_CHECK(queryResult[1]->GetAttribute("Name", strBuf) == "second filter name - example too");
+		ASSERT_TRUE(2 == queryResult.size());
+		EXPECT_TRUE(queryResult[0]->GetAttribute("Name", strBuf) == "first filter name - example");
+		EXPECT_TRUE(queryResult[1]->GetAttribute("Name", strBuf) == "second filter name - example too");
 		xpath->Query(
 			"/RuleSet/TunnelRule[2]/FilterSet/Filter",
 			queryResult);
-		BOOST_REQUIRE(0 == queryResult.size());
+		ASSERT_TRUE(0 == queryResult.size());
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/InputSet/Endpoint",
 			queryResult);
-		BOOST_REQUIRE(2 == queryResult.size());
+		ASSERT_TRUE(2 == queryResult.size());
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/InputSet/Endpoint[1]/CombinedAddress",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
 						== "tcp://host-212.213.214.1-from-hosts:102");
-		BOOST_CHECK(queryResult[0]->GetAttribute("IsAcceptor", strBuf) == "true");
+		EXPECT_TRUE(queryResult[0]->GetAttribute("IsAcceptor", strBuf) == "true");
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/InputSet/Endpoint[2]/CombinedAddress",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
 						== "tcp://google.com:103");
-		BOOST_CHECK(queryResult[0]->GetAttribute("IsAcceptor", strBuf) == "false");
+		EXPECT_TRUE(queryResult[0]->GetAttribute("IsAcceptor", strBuf) == "false");
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/InputSet/Endpoint/PreListener",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(queryResult[0]->GetAttribute("Name", strBuf) == "input/listener test");
-		BOOST_CHECK(queryResult[0]->GetContent(strBuf) == "input/listener parameter");
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(queryResult[0]->GetAttribute("Name", strBuf) == "input/listener test");
+		EXPECT_TRUE(queryResult[0]->GetContent(strBuf) == "input/listener parameter");
 		
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/InputSet/Endpoint/PostListener",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(queryResult[0]->GetAttribute("Name", strBuf) == "output/listener test");
-		BOOST_CHECK(queryResult[0]->GetContent(strBuf) == "output/listener parameter");
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(queryResult[0]->GetAttribute("Name", strBuf) == "output/listener test");
+		EXPECT_TRUE(queryResult[0]->GetContent(strBuf) == "output/listener parameter");
 
 		xpath->Query("/RuleSet/TunnelRule[1]/DestinationSet/Endpoint", queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
+		ASSERT_TRUE(1 == queryResult.size());
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/DestinationSet/Endpoint[1]/CombinedAddress",
 			queryResult);
-		BOOST_CHECK(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
 						== "tcp://host-212.213.214.3-from-hosts:104");
-		BOOST_CHECK(!queryResult[0]->HasAttribute("IsAccepter"));
+		EXPECT_FALSE(queryResult[0]->HasAttribute("IsAccepter"));
 		
 		xpath->Query(
 			"/RuleSet/TunnelRule[1]/DestinationSet/Endpoint/PreListener",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(queryResult[0]->GetAttribute("Name", strBuf) == "input/listener test 2");
-		BOOST_CHECK(queryResult[0]->GetContent(strBuf) == "input/listener parameter 2");
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(queryResult[0]->GetAttribute("Name", strBuf) == "input/listener test 2");
+		EXPECT_TRUE(queryResult[0]->GetContent(strBuf) == "input/listener parameter 2");
 		
 		xpath->Query(
 			"/RuleSet/TunnelRule[2]/InputSet/Endpoint",
 			queryResult);
-		BOOST_REQUIRE(2 == queryResult.size());
+		ASSERT_TRUE(2 == queryResult.size());
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[2]/InputSet/Endpoint/SplitAddress",
 			queryResult);
-		BOOST_REQUIRE(2 == queryResult.size());
-		BOOST_CHECK(	queryResult[0]->GetAttribute("ReadResourceIdentifier", strBuf)
+		ASSERT_TRUE(2 == queryResult.size());
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("ReadResourceIdentifier", strBuf)
 						== "tcp://*:105");
-		BOOST_CHECK(	queryResult[0]->GetAttribute("WriteResourceIdentifier", strBuf)
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("WriteResourceIdentifier", strBuf)
 						== "tcp://xxx:106");
-		BOOST_CHECK(queryResult[0]->GetAttribute("Acceptor", strBuf) == "reader");
-		BOOST_CHECK(	queryResult[1]->GetAttribute("ReadResourceIdentifier", strBuf)
+		EXPECT_TRUE(queryResult[0]->GetAttribute("Acceptor", strBuf) == "reader");
+		EXPECT_TRUE(	queryResult[1]->GetAttribute("ReadResourceIdentifier", strBuf)
 						== "tcp://xxx:107");
-		BOOST_CHECK(	queryResult[1]->GetAttribute("WriteResourceIdentifier", strBuf)
+		EXPECT_TRUE(	queryResult[1]->GetAttribute("WriteResourceIdentifier", strBuf)
 						== "tcp://xxx:108");
-		BOOST_CHECK(queryResult[1]->GetAttribute("Acceptor", strBuf) == "none");
+		EXPECT_TRUE(queryResult[1]->GetAttribute("Acceptor", strBuf) == "none");
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[2]/DestinationSet/Endpoint",
 			queryResult);
-		BOOST_REQUIRE(2 == queryResult.size());
+		ASSERT_TRUE(2 == queryResult.size());
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[2]/DestinationSet/Endpoint/SplitAddress",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(	queryResult[0]->GetAttribute("ReadResourceIdentifier", strBuf)
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("ReadResourceIdentifier", strBuf)
 						== "tcp://host-212.213.214.5-from-hosts:106");
-		BOOST_CHECK(	queryResult[0]->GetAttribute("WriteResourceIdentifier", strBuf)
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("WriteResourceIdentifier", strBuf)
 						== "tcp://host-212.213.214.5-from-hosts:108");
-		BOOST_CHECK(!queryResult[0]->HasAttribute("Acceptor"));
+		EXPECT_FALSE(queryResult[0]->HasAttribute("Acceptor"));
 
 		xpath->Query(
 			"/RuleSet/TunnelRule[2]/DestinationSet/Endpoint/CombinedAddress",
 			queryResult);
-		BOOST_REQUIRE(1 == queryResult.size());
-		BOOST_CHECK(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
+		ASSERT_TRUE(1 == queryResult.size());
+		EXPECT_TRUE(	queryResult[0]->GetAttribute("ResourceIdentifier", strBuf)
 						== "tcp://host-212.213.214.6-from-hosts:116");
-		BOOST_CHECK(!queryResult[0]->HasAttribute("Acceptor"));
+		EXPECT_FALSE(queryResult[0]->HasAttribute("Acceptor"));
 
 	}
 
@@ -448,43 +447,43 @@ namespace Test { BOOST_AUTO_TEST_SUITE(Rule)
 		{
 			tex::SslCertificatesStorage certStorage(L"", 0, 0);
 			tex::Server::GetInstance().Start(rules, certStorage);
-			BOOST_CHECK(tex::Server::GetInstance().GetOpenedEndpointsNumber() == 2);
+			EXPECT_TRUE(tex::Server::GetInstance().GetOpenedEndpointsNumber() == 2);
 			tex::Server::GetInstance().Stop();
 		}
 
 	} */
 
-	BOOST_AUTO_TEST_CASE(EndpointWithProxy) {
+	TEST(Rule, EndpointWithProxy) {
 		
 		using namespace TunnelEx::Mods::Inet;
 		
 		TcpEndpointAddress address(
 			L"destination_host:987?proxy=http://no_auth_proxy_host:376&proxy=http://asDAsdceed:sdfuweWderWf@auth_ptoxy_host:10&proxy=http://uuu@test:1");
 		
-		BOOST_CHECK(address.GetHostName() == L"destination_host");
-		BOOST_CHECK(address.GetPort() == 987);
+		EXPECT_TRUE(address.GetHostName() == L"destination_host");
+		EXPECT_TRUE(address.GetPort() == 987);
 
-		BOOST_REQUIRE(address.GetProxyList().size() == 3);
+		ASSERT_TRUE(address.GetProxyList().size() == 3);
 
 		std::vector<TunnelEx::Mods::Inet::Proxy> proxyList(
 			address.GetProxyList().begin(), address.GetProxyList().end());
 		
-		BOOST_CHECK(proxyList[0].host == L"no_auth_proxy_host");
-		BOOST_CHECK(proxyList[0].port == 376);
-		BOOST_CHECK(proxyList[0].user.empty());
-		BOOST_CHECK(proxyList[0].password.empty());
+		EXPECT_TRUE(proxyList[0].host == L"no_auth_proxy_host");
+		EXPECT_TRUE(proxyList[0].port == 376);
+		EXPECT_TRUE(proxyList[0].user.empty());
+		EXPECT_TRUE(proxyList[0].password.empty());
 
-		BOOST_CHECK(proxyList[1].host == L"auth_ptoxy_host");
-		BOOST_CHECK(proxyList[1].port == 10);
-		BOOST_CHECK(proxyList[1].user == L"asDAsdceed");
-		BOOST_CHECK(proxyList[1].password == L"sdfuweWderWf");
+		EXPECT_TRUE(proxyList[1].host == L"auth_ptoxy_host");
+		EXPECT_TRUE(proxyList[1].port == 10);
+		EXPECT_TRUE(proxyList[1].user == L"asDAsdceed");
+		EXPECT_TRUE(proxyList[1].password == L"sdfuweWderWf");
 
-		BOOST_CHECK(proxyList[2].host == L"test");
-		BOOST_CHECK(proxyList[2].port == 1);
-		BOOST_CHECK(proxyList[2].user == L"uuu");
-		BOOST_CHECK(proxyList[2].password.empty());
+		EXPECT_TRUE(proxyList[2].host == L"test");
+		EXPECT_TRUE(proxyList[2].port == 1);
+		EXPECT_TRUE(proxyList[2].user == L"uuu");
+		EXPECT_TRUE(proxyList[2].password.empty());
 
 	}
 
-BOOST_AUTO_TEST_SUITE_END() }
+}
 
