@@ -24,7 +24,7 @@
 namespace tex = TunnelEx;
 namespace xml = tex::Helpers::Xml;
 
-namespace Test {
+namespace {
 
 	TEST(Rule, XmlParse) {
 		

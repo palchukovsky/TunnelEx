@@ -5,7 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.com
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
 #include "Prec.h"
@@ -18,7 +17,7 @@ namespace tex = TunnelEx;
 namespace fs = boost::filesystem;
 namespace xml = TunnelEx::Helpers::Xml;
 
-namespace Test {
+namespace {
 
 	TEST(ServiceConfiguration, DefaultValues) {
 		fs::wpath configurationFile = fs::initial_path<fs::wpath>();

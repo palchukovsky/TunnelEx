@@ -14,7 +14,6 @@
 #include "Core/Server.hpp"
 #include "Core/Log.hpp"
 
-using namespace Test;
 namespace tex = TunnelEx;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@
 namespace tex = TunnelEx;
 namespace crypto = TunnelEx::Helpers::Crypto;
 
-namespace Test {
+namespace {
 
 	TEST(Crypto, Certificate) {
 

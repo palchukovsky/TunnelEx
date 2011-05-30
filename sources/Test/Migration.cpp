@@ -21,7 +21,7 @@ namespace fs = boost::filesystem;
 namespace tex = TunnelEx;
 namespace xml = tex::Helpers::Xml;
 
-namespace Test {
+namespace {
 
 	TEST(Migration, ules_1_0) {
 

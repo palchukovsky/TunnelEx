@@ -15,7 +15,7 @@ using namespace std;
 using namespace boost;
 
 
-namespace Test {
+namespace {
 
 	template<class String>
 	void OperatorsTestImplementation(
@@ -55,7 +55,7 @@ namespace Test {
 
 }
 
-namespace Test {
+namespace {
 
 	TEST(Strings, Operators) {
 

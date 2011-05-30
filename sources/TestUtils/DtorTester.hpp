@@ -5,13 +5,12 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__DtorTester_hpp__0803222220
 #define INCLUDED_FILE__TUNNELEX__DtorTester_hpp__0803222220
 
-namespace Test {
+namespace TestUtil {
 
 	class DtorTester : private boost::noncopyable {
 	public:

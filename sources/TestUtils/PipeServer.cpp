@@ -11,11 +11,11 @@
 
 #include "PipeServer.hpp"
  
-using namespace Test;
+using namespace TestUtil;
 
 //////////////////////////////////////////////////////////////////////////
 
-namespace Test {
+namespace {
 
 	void Receive(HANDLE handle, Buffer &receivedBuffer) {
 		Buffer operationBuffer(255);
@@ -100,7 +100,7 @@ private:
 		}
 
 		Buffer GetReceived() {
-			Test::Receive(m_handle, m_received);
+			Receive(m_handle, m_received);
 			return m_received;
 		}
 
@@ -382,7 +382,7 @@ void PipeClient::Send(const char *data, size_t size) {
 
 Buffer PipeClient::Receive() {
 	Buffer result;
-	Test::Receive(m_pimpl->m_handle, result);
+	::Receive(m_pimpl->m_handle, result);
 	return result;
 }
 

@@ -28,6 +28,7 @@
 #	include <boost/enable_shared_from_this.hpp>
 #	include <boost/regex.hpp>
 #	include <boost/noncopyable.hpp>
+#	include <boost/date_time.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <memory>

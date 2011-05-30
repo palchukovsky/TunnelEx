@@ -22,24 +22,49 @@ namespace {
 
 int main(int argc, char **argv) {
 
-	const bool isServer = argc < 2 || boost::iequals(argv[1], "server");
-	const bool isClient = argc < 2 || boost::iequals(argv[1], "client");
+	const bool isServer
+		= argc < 2
+		|| boost::iequals(argv[1], "tcpserver")
+		|| boost::iequals(argv[1], "tcp-server");
+	const bool isClient
+		= argc < 2
+		|| boost::iequals(argv[1], "tcpclient")
+		|| boost::iequals(argv[1], "tcp-client");
 	assert(!isServer || isServer != isClient);
 
 	CloseStopper closeStopper;
 
-	testing::AddGlobalTestEnvironment(new Test::Environment);
+	testing::AddGlobalTestEnvironment(new Environment);
 
 	if (!isServer && !isClient) {
-		testing::AddGlobalTestEnvironment(new Test::LocalEnvironment);
+		
+		testing::AddGlobalTestEnvironment(new LocalEnvironment);
+		
+		std::string filter = testing::GTEST_FLAG(filter).c_str();
+		filter
+			+= "-TcpClient.*:TcpServer.*"
+				":UdpClient.*:UdpServer.*"
+				":PipeClient.*:PipeServer.*";
+		testing::GTEST_FLAG(filter) = filter;
+	
 	} else if (isServer) {
-		assert(!isServer);
-		testing::AddGlobalTestEnvironment(new Test::ServerEnvironment);
-		testing::GTEST_FLAG(filter) = "Server.*";
+		assert(!isClient);
+		
+		testing::AddGlobalTestEnvironment(new ServerEnvironment);
+		
+		if (testing::GTEST_FLAG(filter) == "*") {
+			testing::GTEST_FLAG(filter) = "TcpServer.DataExchange";
+		}
+	
 	} else {
 		assert(isClient);
-		testing::AddGlobalTestEnvironment(new Test::ClientEnvironment);
-		testing::GTEST_FLAG(filter) = "Client.*";
+		
+		testing::AddGlobalTestEnvironment(new ClientEnvironment);
+		
+		if (testing::GTEST_FLAG(filter) == "*") {
+			testing::GTEST_FLAG(filter) = "TcpClient.*";
+		}
+	
 	}
 
 	testing::InitGoogleTest(&argc, argv);

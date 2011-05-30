@@ -5,13 +5,12 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__Server_hpp__0904121756
 #define INCLUDED_FILE__TUNNELEX__Server_hpp__0904121756
 
-namespace Test {
+namespace TestUtil {
 
 	//////////////////////////////////////////////////////////////////////////
 

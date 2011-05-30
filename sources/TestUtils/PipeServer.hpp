@@ -5,7 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__PipeServer_hpp__0811270444
@@ -13,11 +12,11 @@
 
 #include "Server.hpp"
 
-namespace Test {
+namespace TestUtil {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	class PipeServer : public Test::Server {
+	class PipeServer : public TestUtil::Server {
 
 	public:
 		
@@ -56,7 +55,7 @@ namespace Test {
 	
 	//////////////////////////////////////////////////////////////////////////
 	
-	class PipeClient : public Test::Client {
+	class PipeClient : public TestUtil::Client {
 
 	public:
 

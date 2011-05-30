@@ -31,6 +31,7 @@
 #	include <boost/bind.hpp>
 #	include <boost/foreach.hpp>
 #	include <boost/filesystem.hpp>
+#	include <boost/date_time.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <memory>
@@ -38,6 +39,12 @@
 #include <sstream>
 #include <string>
 #include <limits>
+
+namespace testing {
+
+	extern const unsigned short tcpServerPort;
+
+}
 
 #endif
 

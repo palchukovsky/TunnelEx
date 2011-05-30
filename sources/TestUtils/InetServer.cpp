@@ -8,11 +8,11 @@
  **************************************************************************/
 
 #include "Prec.h"
-
 #include "InetServer.hpp"
 
 namespace io = boost::asio;
-using namespace Test;
+namespace pt = boost::posix_time;
+using namespace TestUtil;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -197,7 +197,7 @@ private:
 		}
 	}
 
-	Connection & GetConnection(size_t connectionIndex, boost::mutex::scoped_lock &) {
+	Connection & GetConnection(size_t connectionIndex, const boost::mutex::scoped_lock &) {
 		if (connectionIndex >= m_connections.size()) {
 			throw std::logic_error("Could not find connection by index");
 		}
@@ -206,7 +206,7 @@ private:
 
 	const Connection & GetConnection(
 				size_t connectionIndex,
-				boost::mutex::scoped_lock &lock)
+				const boost::mutex::scoped_lock &lock)
 			const {
 		return const_cast<Implementation *>(this)
 			->GetConnection(connectionIndex, lock);
@@ -243,6 +243,14 @@ TcpServer::~TcpServer() {
 
 bool TcpServer::IsConnected() const {
 	return m_pimpl->GetNumberOfAcceptedConnections() > 0;
+}
+
+bool TcpServer::WaitConnect(const pt::time_duration &sleepTime, size_t connectionsNumber) const {
+	const pt::ptime toTime = pt::second_clock::local_time() + sleepTime;
+	while (m_pimpl->GetNumberOfAcceptedConnections() < connectionsNumber && pt::second_clock::local_time() <= toTime) {
+		boost::this_thread::sleep(pt::milliseconds(500));
+	}
+	return m_pimpl->GetNumberOfAcceptedConnections() >= connectionsNumber;
 }
 
 unsigned int TcpServer::GetNumberOfAcceptedConnections() const {

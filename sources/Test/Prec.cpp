@@ -8,3 +8,5 @@
  **************************************************************************/
 
 #include "Prec.h"
+
+const unsigned short testing::tcpServerPort = 12332;

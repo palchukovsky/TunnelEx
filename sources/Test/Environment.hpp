@@ -10,74 +10,70 @@
 #ifndef INCLUDED_FILE__TUNNELEX__Fixtures_hpp__0810211416
 #define INCLUDED_FILE__TUNNELEX__Fixtures_hpp__0810211416
 
-namespace Test {
+////////////////////////////////////////////////////////////////////////////////
 
-	////////////////////////////////////////////////////////////////////////////////
+class Environment : public testing::Environment {
 
-	class Environment : public testing::Environment {
-
-	public:
+public:
 		
-		virtual ~Environment();
+	virtual ~Environment();
 
-	public:
+public:
 
-		virtual void SetUp();
-		virtual void TearDown();
+	virtual void SetUp();
+	virtual void TearDown();
 
-	private:
+private:
 
-		void SetLogParams();
+	void SetLogParams();
 
-	};
+};
 
-	////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-	class LocalEnvironment : public testing::Environment {
+class LocalEnvironment : public testing::Environment {
 
-	public:
+public:
 		
-		virtual ~LocalEnvironment();
+	virtual ~LocalEnvironment();
 
-	public:
+public:
 
-		virtual void SetUp();
-		virtual void TearDown();
+	virtual void SetUp();
+	virtual void TearDown();
 
-	};
+};
 	
-	////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-	class ServerEnvironment : public testing::Environment {
+class ServerEnvironment : public testing::Environment {
 
-	public:
+public:
 		
-		virtual ~ServerEnvironment();
+	virtual ~ServerEnvironment();
 
-	public:
+public:
 
-		virtual void SetUp();
-		virtual void TearDown();
+	virtual void SetUp();
+	virtual void TearDown();
 
-	};
+};
 
-	////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-	class ClientEnvironment : public testing::Environment {
+class ClientEnvironment : public testing::Environment {
 
-	public:
+public:
 		
-		virtual ~ClientEnvironment();
+	virtual ~ClientEnvironment();
 
-	public:
+public:
 
-		virtual void SetUp();
-		virtual void TearDown();
+	virtual void SetUp();
+	virtual void TearDown();
 
-	};
+};
 
-	////////////////////////////////////////////////////////////////////////////////
-
-}
+////////////////////////////////////////////////////////////////////////////////
 
 #endif // INCLUDED_FILE__TUNNELEX__Fixtures_hpp__0810211416

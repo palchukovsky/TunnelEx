@@ -14,9 +14,10 @@
 #include "Core/SharedPtr.hpp"
 #include "Core/UniquePtr.hpp"
 
+using namespace TestUtil;
 namespace tex = TunnelEx;
 
-namespace Test {
+namespace {
 
 	TEST(SmartPtr, Share) {
 		

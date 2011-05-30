@@ -5,7 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2009 Eugene V. Palchukovsky
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__Server_h__0801122134
@@ -13,11 +12,11 @@
 
 #include "Server.hpp"
 
-namespace Test {
+namespace TestUtil {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	class TcpServer : public Test::Server {
+	class TcpServer : public TestUtil::Server {
 
 	public:
 
@@ -43,6 +42,10 @@ namespace Test {
 	public:
 
 		bool IsConnected() const;
+		bool WaitConnect(
+				const boost::posix_time::time_duration &sleepTime,
+				size_t connectionsNumber)
+			const;
 		unsigned int GetNumberOfAcceptedConnections() const;
 		void CloseConnection(size_t connectionIndex);
 
@@ -55,7 +58,7 @@ namespace Test {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	class InetClient : public Test::Client {
+	class InetClient : public TestUtil::Client {
 		//...//
 	};
 	

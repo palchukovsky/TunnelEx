@@ -21,7 +21,7 @@ namespace pt = boost::posix_time;
 
 //////////////////////////////////////////////////////////////////////////
 
-namespace Test {
+namespace {
 
 	//////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +139,7 @@ namespace TunnelEx { namespace Licensing {
 			std::ostringstream oss;
 			oss
 				<< "Resource\\LocalAsymmetricPrivateKey"
-				<< Test::licenseKeyTestServer->GetAsymmetricPrivateKeyFileModif()
+				<< licenseKeyTestServer->GetAsymmetricPrivateKeyFileModif()
 				<< ".pem";
 			std::ifstream f(oss.str().c_str());
 			assert(f);
@@ -149,7 +149,7 @@ namespace TunnelEx { namespace Licensing {
 		
 		static std::string GetLicenseKey(const boost::any &) {
 			std::ostringstream oss;
-			oss << "Resource\\LicenseKey" << Test::licenseKeyTestServer->GetLicenseKeyFileModif() << ".key";
+			oss << "Resource\\LicenseKey" << licenseKeyTestServer->GetLicenseKeyFileModif() << ".key";
 			std::ifstream f(oss.str().c_str());
 			assert(f);
 			f.unsetf(std::ios::skipws);
@@ -208,8 +208,8 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		static bool Get(std::string &key, const boost::any &clientParam) {
-			return Test::licenseKeyTestServer->GetXmlLicenseKeyRetriever()
-				?	Test::licenseKeyTestServer->GetXmlLicenseKeyRetriever()(key, clientParam)
+			return licenseKeyTestServer->GetXmlLicenseKeyRetriever()
+				?	licenseKeyTestServer->GetXmlLicenseKeyRetriever()(key, clientParam)
 				:	Original::Get(key, clientParam);
 		}
 
@@ -224,8 +224,8 @@ namespace TunnelEx { namespace Licensing {
 			Original;
 
 		static bool Get(WorkstationPropertyValues &result, const boost::any &clientParam) {
-			return Test::licenseKeyTestServer->GetLocalWorkstationPropertyValuesGetter()
-				?	Test::licenseKeyTestServer
+			return licenseKeyTestServer->GetLocalWorkstationPropertyValuesGetter()
+				?	licenseKeyTestServer
 						->GetLocalWorkstationPropertyValuesGetter()(boost::ref(result), clientParam)
 				:	Original::Get(result, clientParam);
 		}
@@ -245,9 +245,9 @@ namespace TunnelEx { namespace Licensing {
 					const boost::any &clientParam) {
 			std::auto_ptr<const LocalInfo> result = Original::Get(doc, options, clientParam);
 			if (	result.get()
-					&& !Test::licenseKeyTestServer->GetCurrentTime().is_not_a_date_time()) {
+					&& !licenseKeyTestServer->GetCurrentTime().is_not_a_date_time()) {
 				const_cast<LocalInfo &>(*result).time
-					= Test::licenseKeyTestServer->GetCurrentTime();
+					= licenseKeyTestServer->GetCurrentTime();
 			}
 			return result;
 		}
@@ -260,7 +260,7 @@ namespace TunnelEx { namespace Licensing {
 
 //////////////////////////////////////////////////////////////////////////
 
-namespace Test {
+namespace {
 
 	//////////////////////////////////////////////////////////////////////////
 	
@@ -369,7 +369,7 @@ namespace Test {
 
 //////////////////////////////////////////////////////////////////////////
 
-namespace Test {
+namespace {
 
 	TEST(Licensing, NotExistsLicenseKey) {
 
