@@ -44,7 +44,7 @@ namespace {
 
 }
 
-#if defined(_DEBUG) || defined(TEST)
+#ifdef DEV_VER
 namespace {
 
 	struct DebugLockStat {
@@ -103,13 +103,13 @@ namespace {
 #else
 namespace {
 
-	typename<typename MutexT>
-	class LockWithDebugReports : public Base {
+	template<typename MutexT>
+	class LockWithDebugReports : public ACE_Guard<MutexT> {
 	public:
 		typedef MutexT Mutex;
 		typedef ACE_Guard<Mutex> Base;
 	public:
-		explicit LockReporter(Mutex &mutex, const bool)
+		explicit LockWithDebugReports(Mutex &mutex, const bool)
 				: Base(mutex, 0) {
 			//...//
 		}
@@ -560,6 +560,7 @@ public:
 		AssertNotLockedByMyThread(m_mutex);
 		assert(act != 0); // deprecated
 		assert(act == reinterpret_cast<void *>(1));
+		UseUnused(act);
 
 		if (!m_myInterface.OnIdleTimeout()) {
 			Log::GetInstance().AppendDebug(
