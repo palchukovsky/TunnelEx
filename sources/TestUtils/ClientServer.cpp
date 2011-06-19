@@ -14,7 +14,34 @@ using namespace TestUtil;
 namespace pt = boost::posix_time;
 
 namespace {
-	const pt::milliseconds iterationSleepTime(500);
+
+	struct Util {
+	
+		static size_t CheckReceivedData(
+					const std::list<const std::string *> &waitDataList,
+					const std::string &receivedData,
+					bool isExactly) {
+			size_t i = 0;
+			foreach (const std::string *const waitData, waitDataList) {
+				++i;
+				if (isExactly
+						?	*waitData == receivedData
+						:	boost::starts_with(receivedData, *waitData)) {
+					return i;
+				}
+			}
+			return 0;
+		}
+	
+	};
+
+
+}
+
+namespace {
+
+	const pt::milliseconds iterationSleepTime(1);
+
 }
 
 Server::Server() {
@@ -104,6 +131,37 @@ bool Server::WaitData(
 	return isExactly
 		?	waitData == GetReceivedAsString(connectionIndex)
 		:	boost::starts_with(GetReceivedAsString(connectionIndex), waitData);
+}
+
+size_t Server::WaitData(
+			size_t connectionIndex,
+			const std::list<const std::string *> &data,
+			bool isExactly)
+		const {
+
+	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
+	while (	Util::CheckReceivedData(data, GetReceivedAsString(connectionIndex), isExactly) == 0
+			&& pt::second_clock::local_time() <= toTime) {
+		boost::this_thread::sleep(iterationSleepTime);
+	}
+	return Util::CheckReceivedData(
+		data,
+		GetReceivedAsString(connectionIndex),
+		isExactly);
+
+}
+
+size_t Server::WaitAndTakeData(
+			size_t connectionIndex,
+			const std::list<const std::string *> &data,
+			bool isExactly) {
+	const size_t result = WaitData(connectionIndex, data, isExactly);
+	if (result != 0) {
+		std::list<const std::string *>::const_iterator pos = data.begin();
+		std::advance(pos, result - 1);
+		ClearReceived(connectionIndex, (**pos).size());
+	}
+	return result;
 }
 
 std::string Server::GetReceivedAsString(size_t connectionIndex) const {
@@ -203,30 +261,12 @@ size_t Client::WaitData(
 			bool isExactly)
 		const {
 
-	struct Util {
-		static size_t Check(
-					const std::list<const std::string *> &waitDataList,
-					const std::string &receivedData,
-					bool isExactly) {
-			size_t i = 0;
-			foreach (const std::string *const waitData, waitDataList) {
-				++i;
-				if (isExactly
-						?	*waitData == receivedData
-						:	boost::starts_with(receivedData, *waitData)) {
-					return i;
-				}
-			}
-			return 0;
-		}
-	};
-
 	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	Util::Check(data, GetReceivedAsString(), isExactly) == 0
+	while (	Util::CheckReceivedData(data, GetReceivedAsString(), isExactly) == 0
 			&& pt::second_clock::local_time() <= toTime) {
 		boost::this_thread::sleep(iterationSleepTime);
 	}
-	return Util::Check(data, GetReceivedAsString(), isExactly);
+	return Util::CheckReceivedData(data, GetReceivedAsString(), isExactly);
 
 }
 

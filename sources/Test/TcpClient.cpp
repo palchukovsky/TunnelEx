@@ -35,7 +35,7 @@ namespace {
 		
 		virtual void SetUp() {
 			m_client.reset(new TestUtil::TcpClient("localhost", testing::tcpServerPort));
-			m_client->SetWaitTime(testing::defaultClientWaitTime);
+			m_client->SetWaitTime(testing::defaultDataWaitTime);
 		}
 		
 		virtual void TearDown() {
@@ -44,53 +44,12 @@ namespace {
 
 	protected:
 
-		void TestActiveServer() {
-
-			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicBegin, false));
-			testing::PacketsNumber packets = 0;
-			ASSERT_NO_THROW(
-				packets = m_client->WaitAndTakeData<testing::PacketsNumber>(false));
-			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicEnd, false));
-			EXPECT_GT(packets, 0);
-
-			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				ReceiveTestPacket();
-				ASSERT_NO_THROW(m_client->Send(testing::clientMagicOk));
-				SendTestPacket(128);
-				ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicOk, false));
-			}
-
-			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicBay, true));
-			ASSERT_NO_THROW(m_client->Send(testing::clientMagicBay));
-			EXPECT_EQ(0, m_client->GetReceived().size());
-			EXPECT_TRUE(m_client->WaitDisconnect());
-			EXPECT_EQ(0, m_client->GetReceived().size());
-
+		void Connect(const std::string &mode) {
+			ASSERT_TRUE(m_client->WaitConnect());
+			ASSERT_NO_THROW(m_client->Send(testing::clientMagicHello));
+			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicHello, false));
+			ASSERT_NO_THROW(m_client->Send(mode));
 		}
-
-		void TestPassiveServer() {
-
-			const testing::PacketsNumber packets = 100;
-			ASSERT_NO_THROW(m_client->Send(testing::clientMagicBegin));
-			ASSERT_NO_THROW(m_client->SendVal(packets));
-			ASSERT_NO_THROW(m_client->Send(testing::clientMagicEnd));
-
-			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				SendTestPacket(128);
-				ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicOk, false));
-				ReceiveTestPacket();
-				ASSERT_NO_THROW(m_client->Send(testing::clientMagicOk));
-			}
-
-			ASSERT_NO_THROW(m_client->Send(testing::clientMagicBay));
-			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicBay, true));
-			EXPECT_EQ(0, m_client->GetReceivedSize());
-			EXPECT_TRUE(m_client->IsConnected());
-			ASSERT_NO_THROW(m_client->Disconnect());
-
-		}
-
-	private:
 
 		void SendTestPacket(testing::PacketSize size) {
 			ASSERT_NO_THROW(m_client->Send(testing::clientMagicBegin));
@@ -130,43 +89,53 @@ namespace {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	TEST_F(TcpClient, DataExchange) {
+	TEST_F(TcpClient, DataExchangeActive) {
 
-		ASSERT_TRUE(m_client->WaitConnect());
-		ASSERT_NO_THROW(m_client->Send(testing::clientMagicHello));
-		ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicHello, false));
-		
-		enum ServerMode {
-			SERVER_MODE_ACTIVE = 1,
-			SERVER_MODE_PASSIVE = 2,
-			SERVER_MODE_ONE_WAY_ACTIVE = 3,
-			SERVER_MODE_ONE_WAY_PASSIVE = 4
-		} serverMode = SERVER_MODE_ACTIVE;
-		
-		{
-			std::list<const std::string *> modes;
-			modes.push_back(&testing::serverMagicActiveMode);
-			modes.push_back(&testing::serverMagicPassiveMode);
-			modes.push_back(&testing::serverMagicOneWayActiveMode);
-			modes.push_back(&testing::serverMagicOneWayPassiveMode);
-			const int serverModePos = m_client->WaitAndTakeData(modes, false);
-			ASSERT_GT(serverModePos, 0);
-			ASSERT_LT(serverModePos, 5);
-			serverMode = ServerMode(serverModePos);
+		Connect(testing::serverMagicPassiveMode);
+
+		const testing::PacketsNumber packets = 100;
+		ASSERT_NO_THROW(m_client->Send(testing::clientMagicBegin));
+		ASSERT_NO_THROW(m_client->SendVal(packets));
+		ASSERT_NO_THROW(m_client->Send(testing::clientMagicEnd));
+
+		for (testing::PacketsNumber i = 0; i < packets; ++i) {
+			SendTestPacket(128);
+			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicOk, false));
+			ReceiveTestPacket();
+			ASSERT_NO_THROW(m_client->Send(testing::clientMagicOk));
 		}
 
-		switch (serverMode) {
-			case  SERVER_MODE_ACTIVE:
-				TestActiveServer();
-				break;
-			case SERVER_MODE_PASSIVE:
-				TestPassiveServer();
-				break;
-			case SERVER_MODE_ONE_WAY_ACTIVE:
-			case SERVER_MODE_ONE_WAY_PASSIVE:
-				FAIL() << "Doesn't implemented yet.";
-				break;
+		ASSERT_NO_THROW(m_client->Send(testing::clientMagicBay));
+		ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicBay, true));
+		EXPECT_EQ(0, m_client->GetReceivedSize());
+		EXPECT_TRUE(m_client->IsConnected());
+		ASSERT_NO_THROW(m_client->Disconnect());
+
+	}
+
+	TEST_F(TcpClient, DataExchangePassive) {
+
+		Connect(testing::serverMagicActiveMode);
+
+		ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicBegin, false));
+		testing::PacketsNumber packets = 0;
+		ASSERT_NO_THROW(
+			packets = m_client->WaitAndTakeData<testing::PacketsNumber>(false));
+		ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicEnd, false));
+		EXPECT_GT(packets, 0);
+
+		for (testing::PacketsNumber i = 0; i < packets; ++i) {
+			ReceiveTestPacket();
+			ASSERT_NO_THROW(m_client->Send(testing::clientMagicOk));
+			SendTestPacket(128);
+			ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicOk, false));
 		}
+
+		ASSERT_TRUE(m_client->WaitAndTakeData(testing::serverMagicBay, true));
+		ASSERT_NO_THROW(m_client->Send(testing::clientMagicBay));
+		EXPECT_EQ(0, m_client->GetReceived().size());
+		EXPECT_TRUE(m_client->WaitDisconnect());
+		EXPECT_EQ(0, m_client->GetReceived().size());
 
 	}
 

@@ -118,15 +118,20 @@ namespace TestUtil {
 		bool WaitConnect(size_t connectionsNumber, bool infiniteTimeout) const;
 		bool WaitDisconnect(size_t connectionIndex) const;
 
+	public:
+
 		Buffer WaitAnyData(
 				size_t connectionIndex,
 				Buffer::size_type size,
 				bool isExactly)
 			const;
+
 		Buffer WaitAndTakeAnyData(
 				size_t connectionIndex,
 				Buffer::size_type size,
 				bool isExactly);
+
+	public:
 
 		bool WaitData(
 				size_t connectionIndex,
@@ -140,6 +145,20 @@ namespace TestUtil {
 				bool isExactly)
 			const;
 
+		size_t WaitData(
+				size_t connectionIndex,
+				const std::list<const std::string *> &,
+				bool isExactly)
+			const;
+
+		template<typename T>
+		T WaitData(size_t connectionIndex, bool isExactly) const {
+			return reinterpret_cast<const T &>(
+				*&WaitAnyData(connectionIndex, sizeof(T), isExactly)[0]);
+		}
+
+	public:
+	
 		template<typename T>
 		bool WaitAndTakeData(size_t connectionIndex, const T &data, bool isExactly) {
 			if (!WaitData(connectionIndex, data, isExactly)) {
@@ -149,12 +168,11 @@ namespace TestUtil {
 			return true;
 		}
 		
-		template<typename T>
-		T WaitData(size_t connectionIndex, bool isExactly) const {
-			return reinterpret_cast<const T &>(
-				*&WaitAnyData(connectionIndex, sizeof(T), isExactly)[0]);
-		}
-
+		size_t WaitAndTakeData(
+					size_t connectionIndex,
+					const std::list<const std::string *> &,
+					bool isExactly);
+		
 		template<typename T>
 		T WaitAndTakeData(size_t connectionIndex, bool isExactly) {
 			const T result = WaitData<T>(connectionIndex, isExactly);
@@ -250,21 +268,33 @@ namespace TestUtil {
 		bool WaitConnect() const;
 		bool WaitDisconnect() const;
 
+	public:
+	
 		Buffer WaitAnyData(Buffer::size_type size, bool isExactly) const;
 		Buffer WaitAndTakeAnyData(Buffer::size_type size, bool isExactly);
 
+	public:
+	
 		bool WaitData(const Buffer &, bool isExactly) const;
+		
 		bool WaitData(const std::string &, bool isExactly) const;
+		
 		size_t WaitData(
 					const std::list<const std::string *> &,
 					bool isExactly)
 				const;
+		
+		template<typename T>
+		T WaitData(bool isExactly) const {
+			return reinterpret_cast<const T &>(*&WaitAnyData(sizeof(T), isExactly)[0]);
+		}
 
-
+	public:
+	
 		size_t WaitAndTakeData(
 					const std::list<const std::string *> &,
 					bool isExactly);
-
+		
 		template<typename T>
 		bool WaitAndTakeData(const T &data, bool isExactly) {
 			if (!WaitData(data, isExactly)) {
@@ -274,11 +304,6 @@ namespace TestUtil {
 			return true;
 		}
 		
-		template<typename T>
-		T WaitData(bool isExactly) const {
-			return reinterpret_cast<const T &>(*&WaitAnyData(sizeof(T), isExactly)[0]);
-		}
-
 		template<typename T>
 		T WaitAndTakeData(bool isExactly) {
 			const T result = WaitData<T>(isExactly);

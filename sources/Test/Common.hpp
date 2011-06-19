@@ -34,7 +34,7 @@ namespace testing {
 	extern const std::string serverMagicOneWayActiveMode;
 	extern const std::string serverMagicOneWayPassiveMode;
 
-	extern const boost::posix_time::time_duration defaultClientWaitTime;
+	extern const boost::posix_time::time_duration defaultDataWaitTime;
 
 	extern boost::mt19937 generator;
 

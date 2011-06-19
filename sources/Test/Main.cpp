@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
 		
 		if (testing::GTEST_FLAG(filter) == "*") {
 			testing::GTEST_FLAG(filter) = "TcpServer.*";
-			testing::GTEST_FLAG(shuffle) = 1;
 			testing::GTEST_FLAG(repeat) = -1;
 		}
 	
@@ -66,6 +65,9 @@ int main(int argc, char **argv) {
 		
 		if (testing::GTEST_FLAG(filter) == "*") {
 			testing::GTEST_FLAG(filter) = "TcpClient.*";
+#			ifndef DEV_VER 
+				testing::GTEST_FLAG(shuffle) = 1;
+#			endif
 		}
 
 	}

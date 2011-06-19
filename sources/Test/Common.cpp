@@ -31,7 +31,7 @@ namespace testing {
 	const std::string serverMagicOneWayActiveMode("{SERVER ONE WAY ACTIVE MODE}");
 	const std::string serverMagicOneWayPassiveMode("{SERVER ONE WAY PASSIVE MODE}");
 
-	const boost::posix_time::time_duration defaultClientWaitTime(0, 0, 3);
+	const boost::posix_time::time_duration defaultDataWaitTime(0, 0, 3);
 
 	boost::mt19937 generator;
 
