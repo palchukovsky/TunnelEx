@@ -104,8 +104,13 @@ private:
 			return m_received;
 		}
 
-		void ClearReceived() {
-			m_received.clear();
+		void ClearReceived(size_t bytesCount) {
+			if (bytesCount == 0 || bytesCount >= m_received.size()) {
+				m_received.clear();
+			} else {
+				Buffer(m_received.begin() + bytesCount, m_received.end())
+					.swap(m_received);
+			}
 		}
 
 	private:
@@ -223,12 +228,12 @@ public:
 		return m_connections[connectionIndex]->GetReceived();
 	}
 
-	void ClearReceived(size_t connectionIndex) {
+	void ClearReceived(size_t connectionIndex, size_t bytesCount) {
 		boost::mutex::scoped_lock lock(m_clientsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw ReceiveError("Could not clear data from pipe: connection diesn't exist.");
 		}
-		return m_connections[connectionIndex]->ClearReceived();
+		return m_connections[connectionIndex]->ClearReceived(bytesCount);
 	}
 
 private:
@@ -310,13 +315,13 @@ Buffer PipeServer::GetReceived(size_t connectionIndex) const {
 	return m_pimpl->GetReceived(connectionIndex);
 }
 
-void PipeServer::ClearReceived(size_t connectionIndex) {
-	m_pimpl->ClearReceived(connectionIndex);
+void PipeServer::ClearReceived(size_t connectionIndex, size_t bytesCount) {
+	m_pimpl->ClearReceived(connectionIndex, bytesCount);
 }
 
 //////////////////////////////////////////////////////////////////////////
 
-class PipeClient::Implementation : private boost::noncopyable {
+/* class PipeClient::Implementation : private boost::noncopyable {
 
 public:
 
@@ -384,6 +389,6 @@ Buffer PipeClient::Receive() {
 	Buffer result;
 	::Receive(m_pimpl->m_handle, result);
 	return result;
-}
+} */
 
 //////////////////////////////////////////////////////////////////////////

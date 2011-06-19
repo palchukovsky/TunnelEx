@@ -10,7 +10,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__Server_h__0801122134
 #define INCLUDED_FILE__TUNNELEX__Server_h__0801122134
 
-#include "Server.hpp"
+#include "ClientServer.hpp"
 
 namespace TestUtil {
 
@@ -34,20 +34,21 @@ namespace TestUtil {
 
 		/** @throw ReceiveError
 		  */
-		virtual Buffer GetReceived(std::size_t connectionIndex) const;
+		virtual Buffer::size_type GetReceivedSize(std::size_t connectionIndex) const;
 		/** @throw ReceiveError
 		  */
-		virtual void ClearReceived(std::size_t connectionIndex);
+		virtual Buffer GetReceived(std::size_t connectionIndex) const;
+
+		/** @throw ReceiveError
+		  */
+		virtual void ClearReceived(size_t connectionIndex, size_t bytesCount = 0);
 
 	public:
 
-		bool IsConnected() const;
-		bool WaitConnect(
-				const boost::posix_time::time_duration &sleepTime,
-				size_t connectionsNumber)
-			const;
-		unsigned int GetNumberOfAcceptedConnections() const;
-		void CloseConnection(size_t connectionIndex);
+		virtual bool IsConnected(bool onlyIfActive) const;
+		virtual bool IsConnected(size_t connectionId, bool onlyIfActive) const;
+		virtual unsigned int GetNumberOfAcceptedConnections(bool onlyIfActive) const;
+		virtual void CloseConnection(size_t connectionIndex);
 
 	private:
 
@@ -55,60 +56,6 @@ namespace TestUtil {
 		std::auto_ptr<Implementation> m_pimpl;
 
 	};
-
-	//////////////////////////////////////////////////////////////////////////
-
-	class InetClient : public TestUtil::Client {
-		//...//
-	};
-	
-	//////////////////////////////////////////////////////////////////////////
-	
-	class TcpClient : public InetClient {
-
-	public:
-
-		explicit TcpClient(unsigned short port);
-		virtual ~TcpClient();
-
-	public:
-
-		virtual void Send(const std::string &);
-		virtual void Send(const Buffer &);
-
-		virtual Buffer Receive();
-
-	private:
-
-		class Implementation;
-		std::auto_ptr<Implementation> m_pimpl;
-
-	};
-
-	//////////////////////////////////////////////////////////////////////////
-
-	class UdpClient : public InetClient {
-
-	public:
-
-		explicit UdpClient(unsigned short port);
-		virtual ~UdpClient();
-
-	public:
-
-		virtual void Send(const std::string &);
-		virtual void Send(const Buffer &);
-
-		virtual Buffer Receive();
-
-	private:
-
-		class Implementation;
-		std::auto_ptr<Implementation> m_pimpl;
-
-	};
-
-	//////////////////////////////////////////////////////////////////////////
 
 }
 

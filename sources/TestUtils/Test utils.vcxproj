@@ -16,13 +16,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DtorTester.hpp" />
+    <ClInclude Include="InetClient.hpp" />
+    <ClInclude Include="InetConnection.hpp" />
     <ClInclude Include="InetServer.hpp" />
     <ClInclude Include="PipeServer.hpp" />
     <ClInclude Include="Prec.h" />
-    <ClInclude Include="Server.hpp" />
+    <ClInclude Include="ClientServer.hpp" />
     <ClInclude Include="Wait.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="InetClient.cpp" />
+    <ClCompile Include="InetConnection.cpp" />
     <ClCompile Include="InetServer.cpp" />
     <ClCompile Include="PipeServer.cpp" />
     <ClCompile Include="Prec.cpp">
@@ -30,6 +34,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ClientServer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ECF10D21-3713-4E5D-B3BF-465F4D34F340}</ProjectGuid>

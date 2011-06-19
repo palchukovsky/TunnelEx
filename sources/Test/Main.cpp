@@ -14,6 +14,7 @@ namespace {
 
 	struct CloseStopper {
 		~CloseStopper() {
+			std::cout << "Press Enter to exit." << std::endl;
 			getchar();
 		}
 	};
@@ -53,7 +54,9 @@ int main(int argc, char **argv) {
 		testing::AddGlobalTestEnvironment(new ServerEnvironment);
 		
 		if (testing::GTEST_FLAG(filter) == "*") {
-			testing::GTEST_FLAG(filter) = "TcpServer.DataExchange";
+			testing::GTEST_FLAG(filter) = "TcpServer.*";
+			testing::GTEST_FLAG(shuffle) = 1;
+			testing::GTEST_FLAG(repeat) = -1;
 		}
 	
 	} else {
@@ -64,7 +67,7 @@ int main(int argc, char **argv) {
 		if (testing::GTEST_FLAG(filter) == "*") {
 			testing::GTEST_FLAG(filter) = "TcpClient.*";
 		}
-	
+
 	}
 
 	testing::InitGoogleTest(&argc, argv);

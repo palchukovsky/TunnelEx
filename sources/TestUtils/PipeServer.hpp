@@ -10,7 +10,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__PipeServer_hpp__0811270444
 #define INCLUDED_FILE__TUNNELEX__PipeServer_hpp__0811270444
 
-#include "Server.hpp"
+#include "ClientServer.hpp"
 
 namespace TestUtil {
 
@@ -43,8 +43,8 @@ namespace TestUtil {
 
 		/** @throw ReceiveError
 		  */
-		virtual Buffer GetReceived(std::size_t connectionIndex) const;
-		virtual void ClearReceived(std::size_t connectionIndex);
+		virtual Buffer GetReceived(size_t connectionIndex) const;
+		virtual void ClearReceived(size_t connectionIndex, size_t bytesCount);
 
 	private:
 
@@ -55,7 +55,7 @@ namespace TestUtil {
 	
 	//////////////////////////////////////////////////////////////////////////
 	
-	class PipeClient : public TestUtil::Client {
+	/* class PipeClient : public TestUtil::Client {
 
 	public:
 
@@ -75,7 +75,7 @@ namespace TestUtil {
 		class Implementation;
 		boost::shared_ptr<Implementation> m_pimpl;
 
-	};
+	}; */
 	
 	//////////////////////////////////////////////////////////////////////////
 

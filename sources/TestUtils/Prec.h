@@ -13,6 +13,7 @@
 #include "CompileConfig.h"
 #include "LocalAssert.h"
 #include "UseUnused.hpp"
+#include "Foreach.h"
 
 #include <Windows.h>
 
@@ -29,6 +30,7 @@
 #	include <boost/regex.hpp>
 #	include <boost/noncopyable.hpp>
 #	include <boost/date_time.hpp>
+#	include <boost/algorithm/string.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <memory>

@@ -28,15 +28,20 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool Environment::m_isGlobalInited = false;
+
 Environment::~Environment() {
 	//...//
 }
 
 void Environment::SetUp() {
-	SetLogParams();
-	xmlInitParser();
+	SetLogParams();	
 	OpenSSL_add_all_algorithms();
-	tex::Helpers::Xml::SetErrorsHandler(&XmlErrosNull);
+	if (!m_isGlobalInited) {
+		xmlInitParser();
+		tex::Helpers::Xml::SetErrorsHandler(&XmlErrosNull);
+		m_isGlobalInited = true;
+	}
 }
 
 void Environment::TearDown() {
