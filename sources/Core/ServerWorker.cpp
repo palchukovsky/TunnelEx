@@ -904,7 +904,7 @@ private:
 						"Failed to open endpoint for tunnel entrance: %1%.");
 					message % ConvertString<String>(ex.GetWhat()).GetCStr();
 					Log::GetInstance().AppendError(message.str());
-#					if defined(_DEBUG) || defined(TEST)
+#					ifdef DEV_VER
 						if (ruleToCheck.find(ruleInfo->rule->GetUuid().GetCStr()) != ruleToCheck.end()) {
 							Format message(
 								"Issue TEX-634: rule %1% already added to the checking list.");
@@ -1479,21 +1479,21 @@ private:
 		//! @todo: hardcoded and not checked value
 		if (m_tunnelOpeningThreadManager.count_threads() < 25) {
 			m_tunnelOpeningThreadManager.spawn(&TunnelOpeningThread, this);
-#			if defined(_DEBUG) || defined(TEST)
+#			ifdef DEV_VER
 			{
 				Log::GetInstance().AppendDebug(
 					"Started one more thread for tunnel opening (already started: %1%).",
 					m_tunnelOpeningThreadManager.count_threads());
 			}
-#			endif // #if defined(_DEBUG) || defined(TEST)
+#			endif
 		} else {
-#			if defined(_DEBUG) || defined(TEST)
+#			ifdef DEV_VER
 			{
 				Format message("Already %1% threads for tunnel opening started, could not start more.");
 				message % m_tunnelOpeningThreadManager.count_threads();
 				Log::GetInstance().AppendWarn(message.str().c_str());
 			}
-#			endif // #if defined(_DEBUG) || defined(TEST)
+#			endif
 		}
 	}
 

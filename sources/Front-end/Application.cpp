@@ -18,9 +18,9 @@ using namespace TunnelEx;
 IMPLEMENT_APP(Application)
 
 Application::Application()
-#	if defined(_DEBUG) || defined(TEST)
+#	ifdef DEV_VER
 		: m_isUnlimitedModeActive(false)
-#	endif // #if defined(_DEBUG) || defined(TEST)
+#	endif
 {
 	wxImage::AddHandler(new wxGIFHandler);
 	wxImage::AddHandler(new wxPNGHandler);
@@ -41,9 +41,9 @@ bool Application::OnInit() {
 		typedef std::map<std::wstring, boost::function<bool(void)> > Commands;
 		Commands commands;
 		commands[L"--migrateLocalService"] = boost::bind(&Application::Migrate, this);
-#		if defined(_DEBUG) || defined(TEST)
+#		ifdef DEV_VER
 			commands[L"--unlim"] = boost::bind(&Application::ActivateUnlimitedEditionMode, this);
-#		endif // #if defined(_DEBUG) || defined(TEST)
+#		endif
 		for (int i = 0; i < argc; ++i) {
 			const Commands::const_iterator commandPos = commands.find(argv[i]);
 			if (commandPos != commands.end()) {

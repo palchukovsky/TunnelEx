@@ -360,7 +360,7 @@ namespace TunnelEx { namespace Licensing {
 			if (!isExists) {
 				return false;
 			}
-#			if defined(_DEBUG) || defined(TEST)
+#			ifdef DEV_VER
 			{
 				boost::filesystem::path dumpPath
 					= Helpers::GetModuleFilePathA().branch_path();

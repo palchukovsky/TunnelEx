@@ -37,7 +37,7 @@ public:
 
 	bool Migrate();
 
-#	if defined(_DEBUG) || defined(TEST)
+#	ifdef DEV_VER
 		bool ActivateUnlimitedEditionMode() {
 			m_isUnlimitedModeActive = true;
 			return true;
@@ -45,11 +45,11 @@ public:
 		bool IsUnlimitedModeActive() const {
 			return m_isUnlimitedModeActive;
 		}
-#	else // #if defined(_DEBUG) || defined(TEST)
+#	else
 		inline bool IsUnlimitedModeActive() const {
 			return false;
 		}
-#	endif // #if defined(_DEBUG) || defined(TEST)
+#	endif
 
 public:
 
@@ -61,9 +61,9 @@ private:
 	Config m_config;
 	Theme m_theme;
 
-#	if defined(_DEBUG) || defined(TEST)
+#	ifdef DEV_VER
 		bool m_isUnlimitedModeActive;
-#	endif // #if defined(_DEBUG) || defined(TEST)
+#	endif
 
 };
 

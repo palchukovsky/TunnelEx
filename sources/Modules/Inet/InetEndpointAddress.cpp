@@ -1085,7 +1085,7 @@ const ProxyList & TcpEndpointAddress::GetProxyList() const {
 }
 
 void TcpEndpointAddress::SetProxyList(const ProxyList &newList) {
-#	if defined(_DEBUG) || defined(TEST)
+#	ifdef DEV_VER
 		BOOST_FOREACH(const Proxy &proxy, newList) {
 			assert(!proxy.host.empty());
 			assert(proxy.port > 0);

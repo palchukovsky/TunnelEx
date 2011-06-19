@@ -62,4 +62,8 @@
 
 #define NULL 0
 
+#ifdef DEV_VER
+#	define DEV_VER
+#endif
+
 #endif

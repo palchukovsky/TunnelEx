@@ -371,7 +371,7 @@ bool ServiceImpl::RequestProxy(
 	request.Reset();
 	lock.release();
 
-#	if defined(_DEBUG) || defined(TEST)
+#	ifdef DEV_VER
 	{
 		boost::filesystem::path dumpPath = GetModuleFilePathA().branch_path();
 		dumpPath /= "PathfindServiceAnswer.html";

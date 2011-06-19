@@ -10,7 +10,7 @@
 #ifndef INCLUDED_FILE__ObjectsDeletionCheck_hpp__0812111058
 #define INCLUDED_FILE__ObjectsDeletionCheck_hpp__0812111058
 
-#if defined(_DEBUG) || defined(TEST)
+#ifdef DEV_VER
 #	define TUNNELEX_OBJECTS_DELETION_CHECK
 #endif
 

@@ -16,6 +16,7 @@
 #define _XWSTR(a) _WSTR(a)
 
 #include "Version/Version.h"
+#include "CompileConfig.h"
 
 #define TUNNELEX_VERSION	\
 	_XSTR(TUNNELEX_VERSION_MAJOR_HIGH) \
@@ -69,7 +70,7 @@
 		L"." TUNNELEX_VERSION_GEN_UNIQUE_ID_STR_W
 #endif
 
-#if defined(_DEBUG) || defined(TEST)
+#ifdef DEV_VER
 #	define TUNNELEX_BUILD_IDENTITY_ADD		" [" TUNNELEX_BUILD_IDENTITY "]"
 #	define TUNNELEX_BUILD_IDENTITY_ADD_W	L" [" TUNNELEX_BUILD_IDENTITY_W L"]"
 #else

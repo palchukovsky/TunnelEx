@@ -1289,7 +1289,7 @@ namespace {
 				assert(answer.size() >= realAnswerSize);
 				answer.resize(realAnswerSize + 1);
 				answer[realAnswerSize] = 0;
-#				if defined(_DEBUG) || defined(TEST)
+#				ifdef DEV_VER
 				{
 					std::ofstream f("TrialRequestResult.txt", std::ios::trunc);
 					f << &answer[0];

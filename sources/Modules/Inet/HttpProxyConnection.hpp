@@ -78,7 +78,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			
 			std::string proxyAnswer;
 			proxyAnswer.swap(m_currentProxyAnswer);
-#			if defined(_DEBUG) || defined(TEST)
+#			ifdef DEV_VER
 			{
 				boost::filesystem::path dumpPath
 					= Helpers::GetModuleFilePathA().branch_path();
