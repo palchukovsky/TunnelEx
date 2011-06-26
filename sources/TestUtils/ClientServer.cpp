@@ -127,20 +127,18 @@ bool Server::WaitData(
 			const Buffer &waitData,
 			bool isExactly)
 		const {
-	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
-	Buffer data;
-	for ( ; ; ) {
-		GetReceived(
-			connectionIndex,
-			isExactly ? waitData.size() + 1 : waitData.size(),
-			data);
-		if (waitData == data) {
-			return true;
-		} else if (boost::get_system_time() > toTime) {
-			return false;
-		}
-		boost::this_thread::sleep(iterationSleepTime);
+	if (	!WaitDataReceiveEvent(
+				connectionIndex,
+				boost::get_system_time() + GetWaitTime(),
+				waitData.size())) {
+		return false;
 	}
+	Buffer data;
+	GetReceived(
+		connectionIndex,
+		isExactly ? waitData.size() + 1 : waitData.size(),
+		data);
+	return waitData == data;
 }
 
 bool Server::WaitData(
@@ -280,35 +278,25 @@ void Client::WaitAndTakeAnyData(
 }
 
 bool Client::WaitData(const Buffer &waitData, bool isExactly) const {
-	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
-	Buffer data;
-	for ( ; ; ) {
-		GetReceived(
-			isExactly ? waitData.size() + 1 : waitData.size(),
-			data);
-		if (waitData == data) {
-			return true;
-		} else if (boost::get_system_time() > toTime) {
-			return false;
-		}
-		boost::this_thread::sleep(iterationSleepTime);
+	if (!WaitDataReceiveEvent(boost::get_system_time() + GetWaitTime(), waitData.size())) {
+		return false;
 	}
+	Buffer data;
+	GetReceived(
+		isExactly ? waitData.size() + 1 : waitData.size(),
+		data);
+	return waitData == data;
 }
 
 bool Client::WaitData(const std::string &waitData, bool isExactly) const {
-	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
-	std::string data;
-	for ( ; ; ) {
-		GetReceived(
-			isExactly ? waitData.size() + 1 : waitData.size(),
-			data);
-		if (waitData == data) {
-			return true;
-		} else if (boost::get_system_time() > toTime) {
-			return false;
-		}
-		boost::this_thread::sleep(iterationSleepTime);
+	if (!WaitDataReceiveEvent(boost::get_system_time() + GetWaitTime(), waitData.size())) {
+		return false;
 	}
+	std::string data;
+	GetReceived(
+		isExactly ? waitData.size() + 1 : waitData.size(),
+		data);
+	return waitData == data;
 }
 
 size_t Client::WaitData(
