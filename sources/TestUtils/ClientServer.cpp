@@ -16,17 +16,32 @@ namespace pt = boost::posix_time;
 namespace {
 
 	struct Util {
+
+		static void GetMinMaxSize(
+					const std::list<const std::string *> &list,
+					size_t &minSize,
+					size_t &maxSize) {
+			size_t minTmp = std::numeric_limits<size_t>::max();
+			size_t maxTmp = std::numeric_limits<size_t>::min();
+			foreach (const std::string *const i, list) {
+				if (i->size() > maxTmp) {
+					maxTmp = i->size();
+				}
+				if (i->size() < minTmp) {
+					minTmp = i->size();
+				}
+			}
+			minSize = minTmp;
+			maxSize = maxTmp;
+		}
 	
 		static size_t CheckReceivedData(
 					const std::list<const std::string *> &waitDataList,
-					const std::string &receivedData,
-					bool isExactly) {
+					const std::string &receivedData) {
 			size_t i = 0;
 			foreach (const std::string *const waitData, waitDataList) {
 				++i;
-				if (isExactly
-						?	*waitData == receivedData
-						:	boost::starts_with(receivedData, *waitData)) {
+				if (*waitData == receivedData) {
 					return i;
 				}
 			}
@@ -53,50 +68,58 @@ Server::~Server() {
 }
 
 bool Server::WaitConnect(size_t connectionsNumber, bool infiniteTimeout) const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
 	while (
 			GetNumberOfAcceptedConnections(true) < connectionsNumber
-			&& (infiniteTimeout || pt::second_clock::local_time() <= toTime)) {
+			&& (infiniteTimeout || boost::get_system_time() <= toTime)) {
 		boost::this_thread::sleep(iterationSleepTime);
 	}
 	return GetNumberOfAcceptedConnections(true) >= connectionsNumber;
 }
 
 bool Server::WaitDisconnect(size_t connectionIndex) const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (IsConnected(connectionIndex, true) && pt::second_clock::local_time() <= toTime) {
-			boost::this_thread::sleep(iterationSleepTime);
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
+	while (	IsConnected(connectionIndex, true)
+			&& boost::get_system_time() <= toTime) {
+		boost::this_thread::sleep(iterationSleepTime);
 	}
 	return !IsConnected(connectionIndex, true);
 }
 
-Buffer Server::WaitAnyData(
+void Server::WaitAnyData(
 			size_t connectionIndex,
 			Buffer::size_type size,
-			bool isExactly)
+			bool isExactly,
+			Buffer &result)
 		const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	size > GetReceivedSize(connectionIndex)
-			&& pt::second_clock::local_time() <= toTime) {
-		boost::this_thread::sleep(iterationSleepTime);
-	}
-	Buffer result = GetReceived(connectionIndex);
-	if (size > result.size()) {
+
+	if (	!WaitDataReceiveEvent(
+				connectionIndex,
+				boost::get_system_time() + GetWaitTime(),
+				size)) {
 		throw Timeout();
-	} else if (isExactly && size != result.size()) {
+	}
+
+	Buffer resultTmp;
+	GetReceived(connectionIndex, size + 1, resultTmp);
+	if (isExactly && size != resultTmp.size()) {
+		assert(size < resultTmp.size());
 		throw TooMuchDataReceived();
 	}
-	result.resize(size);
-	return result;
+	resultTmp.resize(size);
+	resultTmp.swap(result);
+
 }
 
-Buffer Server::WaitAndTakeAnyData(
+void Server::WaitAndTakeAnyData(
 			size_t connectionIndex,
 			Buffer::size_type size,
-			bool isExactly) {
-	const Buffer result = WaitAnyData(connectionIndex, size, isExactly);
+			bool isExactly,
+			Buffer &result) {
+	Buffer resultTmp;
+	WaitAnyData(connectionIndex, size, isExactly, resultTmp);
 	ClearReceived(connectionIndex, size);
-	return result;
+	resultTmp.swap(result);
 }
 
 bool Server::WaitData(
@@ -104,16 +127,20 @@ bool Server::WaitData(
 			const Buffer &waitData,
 			bool isExactly)
 		const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	!(isExactly
-				?	waitData == GetReceived(connectionIndex)
-				:	boost::starts_with(GetReceived(connectionIndex), waitData))
-			&& pt::second_clock::local_time() <= toTime) {
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
+	Buffer data;
+	for ( ; ; ) {
+		GetReceived(
+			connectionIndex,
+			isExactly ? waitData.size() + 1 : waitData.size(),
+			data);
+		if (waitData == data) {
+			return true;
+		} else if (boost::get_system_time() > toTime) {
+			return false;
+		}
 		boost::this_thread::sleep(iterationSleepTime);
 	}
-	return isExactly
-		?	waitData == GetReceived(connectionIndex)
-		:	boost::starts_with(GetReceived(connectionIndex), waitData);
 }
 
 bool Server::WaitData(
@@ -121,34 +148,43 @@ bool Server::WaitData(
 			const std::string &waitData,
 			bool isExactly)
 		const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	!(isExactly
-				?	waitData == GetReceivedAsString(connectionIndex)
-				:	boost::starts_with(GetReceivedAsString(connectionIndex), waitData))
-			&& pt::second_clock::local_time() <= toTime) {
-		boost::this_thread::sleep(iterationSleepTime);
+	if (	!WaitDataReceiveEvent(
+				connectionIndex,
+				boost::get_system_time() + GetWaitTime(),
+				waitData.size())) {
+		return false;
 	}
-	return isExactly
-		?	waitData == GetReceivedAsString(connectionIndex)
-		:	boost::starts_with(GetReceivedAsString(connectionIndex), waitData);
+	std::string data;
+	GetReceived(
+		connectionIndex,
+		isExactly ? waitData.size() + 1 : waitData.size(),
+		data);
+	return waitData == data;
 }
 
 size_t Server::WaitData(
 			size_t connectionIndex,
-			const std::list<const std::string *> &data,
+			const std::list<const std::string *> &waitData,
 			bool isExactly)
 		const {
-
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	Util::CheckReceivedData(data, GetReceivedAsString(connectionIndex), isExactly) == 0
-			&& pt::second_clock::local_time() <= toTime) {
+	const pt::ptime waitUntil = boost::get_system_time() + GetWaitTime();
+	std::string data;
+	size_t minSize = 0;
+	size_t maxSize = 0;
+	Util::GetMinMaxSize(waitData, minSize, maxSize);
+	if (!WaitDataReceiveEvent(connectionIndex, waitUntil, minSize)) {
+		return 0;
+	}
+	for ( ; ; ) {
+		GetReceived(connectionIndex, isExactly ? maxSize + 1 : maxSize, data);
+		const auto result = Util::CheckReceivedData(waitData, data);
+		if (result != 0) {
+			return result;
+		} else if (boost::get_system_time() > waitUntil) {
+			return 0;
+		}
 		boost::this_thread::sleep(iterationSleepTime);
 	}
-	return Util::CheckReceivedData(
-		data,
-		GetReceivedAsString(connectionIndex),
-		isExactly);
-
 }
 
 size_t Server::WaitAndTakeData(
@@ -164,13 +200,18 @@ size_t Server::WaitAndTakeData(
 	return result;
 }
 
-std::string Server::GetReceivedAsString(size_t connectionIndex) const {
-	const Buffer data = GetReceived(connectionIndex);
-	std::string result(data.begin(), data.end());
-	if (result.size() && result[result.size() - 1] == 0) {
-		result.resize(result.size() - 1);
+void Server::GetReceived(
+			size_t connectionIndex,
+			size_t maxSize,
+			std::string &result)
+		const {
+	Buffer data;
+	GetReceived(connectionIndex, maxSize, data);
+	std::string resultTmp(data.begin(), data.end());
+	if (resultTmp.size() && resultTmp[resultTmp.size() - 1] == 0) {
+		resultTmp.resize(resultTmp.size() - 1);
 	}
-	return result;
+	resultTmp.swap(result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,91 +224,115 @@ Client::~Client() {
 	//...//
 }
 
-std::string Client::GetReceivedAsString() const {
-	const Buffer data = GetReceived();
-	std::string result(data.begin(), data.end());
-	if (result.size() && result[result.size() - 1] == 0) {
-		result.resize(result.size() - 1);
+void Client::GetReceived(size_t maxSize, std::string &result) const {
+	Buffer data;
+	GetReceived(maxSize, data);
+	std::string resultTmp(data.begin(), data.end());
+	if (resultTmp.size() && resultTmp[resultTmp.size() - 1] == 0) {
+		resultTmp.resize(resultTmp.size() - 1);
 	}
-	return result;
+	resultTmp.swap(result);
 }
 
-bool Client::WaitConnect() const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (!IsConnected() && pt::second_clock::local_time() <= toTime) {
+bool Client::WaitConnect(bool infiniteTimeout) const {
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
+	while (		!IsConnected()
+				&& (infiniteTimeout || boost::get_system_time() <= toTime)) {
 			boost::this_thread::sleep(iterationSleepTime);
 	}
 	return IsConnected();
 }
 
 bool Client::WaitDisconnect() const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (IsConnected() && pt::second_clock::local_time() <= toTime) {
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
+	while (IsConnected() && boost::get_system_time() <= toTime) {
 			boost::this_thread::sleep(iterationSleepTime);
 	}
 	return !IsConnected();
 }
 
-Buffer Client::WaitAnyData(Buffer::size_type size, bool isExactly) const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	size > GetReceivedSize()
-			&& pt::second_clock::local_time() <= toTime) {
-		boost::this_thread::sleep(iterationSleepTime);
-	}
-	Buffer result = GetReceived();
-	if (size > result.size()) {
+void Client::WaitAnyData(
+			Buffer::size_type size,
+			bool isExactly,
+			Buffer &result)
+		const {
+	if (!WaitDataReceiveEvent(boost::get_system_time() + GetWaitTime(), size)) {
 		throw Timeout();
-	} else if (isExactly && size != result.size()) {
+	}
+	Buffer resultTmp;
+	GetReceived(isExactly ? size + 1 : size, resultTmp);
+	if (isExactly && size != resultTmp.size()) {
+		assert(size > resultTmp.size());
 		throw TooMuchDataReceived();
 	}
-	result.resize(size);
-	return result;
+	resultTmp.resize(size);
+	resultTmp.swap(result);
 }
 
-Buffer Client::WaitAndTakeAnyData(Buffer::size_type size, bool isExactly) {
-	const Buffer result = WaitAnyData(size, isExactly);
+void Client::WaitAndTakeAnyData(
+			Buffer::size_type size,
+			bool isExactly,
+			Buffer &result) {
+	Buffer resultTmp;
+	WaitAnyData(size, isExactly, resultTmp);
 	ClearReceived(size);
-	return result;
+	resultTmp.swap(result);
 }
 
 bool Client::WaitData(const Buffer &waitData, bool isExactly) const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	!(isExactly
-				?	waitData == GetReceived()
-				:	boost::starts_with(GetReceived(), waitData))
-			&& pt::second_clock::local_time() <= toTime) {
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
+	Buffer data;
+	for ( ; ; ) {
+		GetReceived(
+			isExactly ? waitData.size() + 1 : waitData.size(),
+			data);
+		if (waitData == data) {
+			return true;
+		} else if (boost::get_system_time() > toTime) {
+			return false;
+		}
 		boost::this_thread::sleep(iterationSleepTime);
 	}
-	return isExactly
-		?	waitData == GetReceived()
-		:	boost::starts_with(GetReceived(), waitData);
 }
 
 bool Client::WaitData(const std::string &waitData, bool isExactly) const {
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	!(isExactly
-				?	waitData == GetReceivedAsString()
-				:	boost::starts_with(GetReceivedAsString(), waitData))
-			&& pt::second_clock::local_time() <= toTime) {
+	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
+	std::string data;
+	for ( ; ; ) {
+		GetReceived(
+			isExactly ? waitData.size() + 1 : waitData.size(),
+			data);
+		if (waitData == data) {
+			return true;
+		} else if (boost::get_system_time() > toTime) {
+			return false;
+		}
 		boost::this_thread::sleep(iterationSleepTime);
 	}
-	return isExactly
-		?	waitData == GetReceivedAsString()
-		:	boost::starts_with(GetReceivedAsString(), waitData);
 }
 
 size_t Client::WaitData(
-			const std::list<const std::string *> &data,
+			const std::list<const std::string *> &waitData,
 			bool isExactly)
 		const {
-
-	const pt::ptime toTime = pt::second_clock::local_time() + GetWaitTime();
-	while (	Util::CheckReceivedData(data, GetReceivedAsString(), isExactly) == 0
-			&& pt::second_clock::local_time() <= toTime) {
+	const pt::ptime waitUntil = boost::get_system_time() + GetWaitTime();
+	std::string data;
+	size_t minSize = 0;
+	size_t maxSize = 0;
+	Util::GetMinMaxSize(waitData, minSize, maxSize);
+	if (!WaitDataReceiveEvent(waitUntil, minSize)) {
+		return 0;
+	}
+	for ( ; ; ) {
+		GetReceived(isExactly ? maxSize + 1 : maxSize, data);
+		const auto result = Util::CheckReceivedData(waitData, data);
+		if (result != 0) {
+			return result;
+		} else if (boost::get_system_time() > waitUntil) {
+			return 0;
+		}
 		boost::this_thread::sleep(iterationSleepTime);
 	}
-	return Util::CheckReceivedData(data, GetReceivedAsString(), isExactly);
-
 }
 
 size_t Client::WaitAndTakeData(

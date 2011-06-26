@@ -62,7 +62,7 @@
 
 #define NULL 0
 
-#ifdef DEV_VER
+#if defined(_DEBUG) || defined(TEST)
 #	define DEV_VER
 #endif
 

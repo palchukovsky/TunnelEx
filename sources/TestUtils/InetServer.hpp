@@ -37,7 +37,11 @@ namespace TestUtil {
 		virtual Buffer::size_type GetReceivedSize(std::size_t connectionIndex) const;
 		/** @throw ReceiveError
 		  */
-		virtual Buffer GetReceived(std::size_t connectionIndex) const;
+		virtual void GetReceived(
+					std::size_t connectionIndex,
+					size_t maxSize,
+					Buffer &result)
+				const;
 
 		/** @throw ReceiveError
 		  */
@@ -49,6 +53,14 @@ namespace TestUtil {
 		virtual bool IsConnected(size_t connectionId, bool onlyIfActive) const;
 		virtual unsigned int GetNumberOfAcceptedConnections(bool onlyIfActive) const;
 		virtual void CloseConnection(size_t connectionIndex);
+
+	private:
+
+		virtual bool WaitDataReceiveEvent(
+				size_t connectionIndex,
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const;
 
 	private:
 

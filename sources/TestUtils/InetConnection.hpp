@@ -43,11 +43,16 @@ namespace TestUtil {
 		}
 
 		Buffer::size_type GetReceivedSize() const;
-		Buffer GetReceived() const;
+		void GetReceived(Buffer::size_type maxSize, Buffer &destination) const;
 
 		void ClearReceived(size_t bytesCount = 0);
 
 		bool IsActive() const;
+
+		bool WaitDataReceiveEvent(
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const;
 
 	private:
 
@@ -63,10 +68,17 @@ namespace TestUtil {
 	private:
 
 		boost::asio::ip::tcp::socket m_socket;
+		
 		Buffer m_dataBuffer;
+		Buffer::const_iterator m_dataBufferStart;
+		Buffer::size_type m_dataBufferSize;
 		boost::asio::streambuf m_inStreamBuffer;
+
 		mutable boost::mutex m_mutex;
+
 		bool m_isActive;
+
+		mutable boost::condition_variable m_dataReceivedCondition;
 	
 	};
 

@@ -12,8 +12,9 @@
 
 namespace testing {
 
-	typedef boost::uint16_t PacketsNumber;
+	typedef boost::uint32_t PacketsNumber;
 	typedef boost::uint16_t PacketSize;
+	typedef boost::uint16_t ConnectionsNumber;
 
 	extern const unsigned short tcpServerPort;
 	
@@ -33,24 +34,45 @@ namespace testing {
 	extern const std::string serverMagicPassiveMode;
 	extern const std::string serverMagicOneWayActiveMode;
 	extern const std::string serverMagicOneWayPassiveMode;
+	extern const std::string serverMagicSeveralConnectionsMode;
+	
+	extern const std::string serverMagicSubConnectionMode;
 
 	extern const boost::posix_time::time_duration defaultDataWaitTime;
 
 	extern boost::mt19937 generator;
 
 	template<typename Buffer>
-	void GeneratePacket(size_t size, Buffer &result, boost::crc_32_type &crc) {
+	void GeneratePacket(
+				Buffer &result,
+				boost::crc_32_type &crc,
+				size_t minSize,
+				size_t maxSize) {
+
+		assert(minSize != maxSize);
+		assert(minSize < maxSize);
+		testing::PacketSize size = 0;
+		{
+			const boost::uniform_int<> distance(minSize, maxSize);
+			boost::variate_generator<boost::mt19937 &, boost::uniform_int<>> die(
+				generator,
+				distance);
+			size = die();
+		}
+
 		const boost::uniform_int<> distance(
 			std::numeric_limits<Buffer::value_type>::min(),
 			std::numeric_limits<Buffer::value_type>::max());
 		boost::variate_generator<boost::mt19937 &, boost::uniform_int<>> die(
 			generator,
 			distance);
+
 		result.resize(size);
 		foreach (Buffer::value_type &i, result) {
 			i = die();
 			crc.process_byte(static_cast<unsigned char>(i));
 		}
+
 	}
 
 	template<typename Buffer>

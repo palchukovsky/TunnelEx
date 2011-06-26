@@ -120,16 +120,18 @@ namespace TestUtil {
 
 	public:
 
-		Buffer WaitAnyData(
+		void WaitAnyData(
 				size_t connectionIndex,
 				Buffer::size_type size,
-				bool isExactly)
+				bool isExactly,
+				Buffer &result)
 			const;
 
-		Buffer WaitAndTakeAnyData(
+		void WaitAndTakeAnyData(
 				size_t connectionIndex,
 				Buffer::size_type size,
-				bool isExactly);
+				bool isExactly,
+				Buffer &result);
 
 	public:
 
@@ -153,8 +155,9 @@ namespace TestUtil {
 
 		template<typename T>
 		T WaitData(size_t connectionIndex, bool isExactly) const {
-			return reinterpret_cast<const T &>(
-				*&WaitAnyData(connectionIndex, sizeof(T), isExactly)[0]);
+			Buffer buffer;
+			WaitAnyData(connectionIndex, sizeof(T), isExactly, buffer);
+			return reinterpret_cast<const T &>(*&buffer[0]);
 		}
 
 	public:
@@ -207,13 +210,30 @@ namespace TestUtil {
 		
 		/** @throw ReceiveError
 		  */
-		virtual Buffer GetReceived(size_t connectionIndex) const = 0;
+		virtual void GetReceived(
+				size_t connectionIndex,
+				size_t maxSize,
+				Buffer &result)
+			const = 0;
 
 		/** @throw ReceiveError
 		  */
-		std::string GetReceivedAsString(size_t connectionIndex) const;
+		void GetReceived(
+				size_t connectionIndex,
+				size_t maxSize,
+				std::string &result)
+			const;
 
 		virtual void ClearReceived(size_t connectionIndex, size_t bytesCount = 0) = 0;
+
+	protected:
+
+		virtual bool WaitDataReceiveEvent(
+				size_t connectionIndex,
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const
+			= 0;
 
 	};
 
@@ -253,10 +273,10 @@ namespace TestUtil {
 		virtual Buffer::size_type GetReceivedSize() const = 0;
 		/** @throw ReceiveError
 		  */
-		virtual Buffer GetReceived() const = 0;
+		virtual void GetReceived(size_t maxSize, Buffer &result) const = 0;
 		/** @throw ReceiveError
 		  */
-		std::string GetReceivedAsString() const;
+		void GetReceived(size_t maxSize, std::string &) const;
 
 		virtual bool IsConnected() const = 0;
 
@@ -265,13 +285,20 @@ namespace TestUtil {
 
 	public:
 
-		bool WaitConnect() const;
+		bool WaitConnect(bool infiniteTimeout) const;
 		bool WaitDisconnect() const;
 
 	public:
 	
-		Buffer WaitAnyData(Buffer::size_type size, bool isExactly) const;
-		Buffer WaitAndTakeAnyData(Buffer::size_type size, bool isExactly);
+		void WaitAnyData(
+				Buffer::size_type size,
+				bool isExactly,
+				Buffer &result)
+			const;
+		void WaitAndTakeAnyData(
+				Buffer::size_type size,
+				bool isExactly,
+				Buffer &result);
 
 	public:
 	
@@ -286,7 +313,9 @@ namespace TestUtil {
 		
 		template<typename T>
 		T WaitData(bool isExactly) const {
-			return reinterpret_cast<const T &>(*&WaitAnyData(sizeof(T), isExactly)[0]);
+			Buffer buffer;
+			WaitAnyData(sizeof(T), isExactly, buffer);
+			return reinterpret_cast<const T &>(*&buffer[0]);
 		}
 
 	public:
@@ -310,6 +339,14 @@ namespace TestUtil {
 			ClearReceived(sizeof(T));
 			return result;
 		}
+
+	protected:
+
+		virtual bool WaitDataReceiveEvent(
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const
+			= 0;
 
 	};
 

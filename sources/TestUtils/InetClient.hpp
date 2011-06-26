@@ -35,12 +35,22 @@ namespace TestUtil {
 		virtual void Send(const Buffer &);
 
 		virtual Buffer::size_type GetReceivedSize() const;
-		virtual Buffer GetReceived() const;
+		virtual void GetReceived(
+				Buffer::size_type maxSize,
+				Buffer &result)
+			const;
 
 		virtual bool IsConnected() const;
 
 		virtual void ClearReceived(size_t bytesCount = 0);
 		virtual void Disconnect();
+
+	protected:
+
+		virtual bool WaitDataReceiveEvent(
+					const boost::system_time &waitUntil,
+					Buffer::size_type minSize)
+				const;
 
 	private:
 

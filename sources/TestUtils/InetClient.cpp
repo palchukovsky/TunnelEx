@@ -65,10 +65,22 @@ public:
 	}
 
 	void Disconnect() {
+		boost::mutex::scoped_lock lock(m_mutex);
 		if (!m_connection.get()) {
 			throw ConnectionClosed();
 		}
 		m_connection.reset();
+	}
+
+	bool IsConnected() const {
+		return m_connection.get() && m_connection->IsActive();
+	}
+
+	bool WaitDataReceiveEvent(
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const {
+		return m_connection->WaitDataReceiveEvent(waitUntil, minSize);
 	}
 
 private:
@@ -76,6 +88,7 @@ private:
 	void HandleConnect(
 				const boost::system::error_code &error,
 				io::ip::tcp::resolver::iterator endpointIterator) {
+		boost::mutex::scoped_lock lock(m_mutex);
 		assert(!m_connection->IsActive());
 		if (!error) {
 			m_connection->Start();
@@ -103,6 +116,7 @@ private:
 private:
 
 	io::io_service m_ioService;
+	mutable boost::mutex m_mutex;
 	boost::shared_ptr<TcpConnection> m_connection;
 	boost::shared_ptr<boost::thread> m_thread;
 
@@ -124,8 +138,8 @@ Buffer::size_type TcpClient::GetReceivedSize() const {
 	return m_pimpl->GetConnection().GetReceivedSize();
 }
 
-Buffer TcpClient::GetReceived() const {
-	return m_pimpl->GetConnection().GetReceived();
+void TcpClient::GetReceived(Buffer::size_type maxSize, Buffer &result) const {
+	m_pimpl->GetConnection().GetReceived(maxSize, result);
 }
 
 void TcpClient::Send(const std::string &message) {
@@ -137,7 +151,7 @@ void TcpClient::Send(const Buffer &beffer) {
 }
 
 bool TcpClient::IsConnected() const {
-	return m_pimpl->GetConnection().IsActive();
+	return m_pimpl->IsConnected();
 }
 
 void TcpClient::ClearReceived(size_t bytesCount /*= 0*/) {
@@ -146,6 +160,13 @@ void TcpClient::ClearReceived(size_t bytesCount /*= 0*/) {
 
 void TcpClient::Disconnect() {
 	return m_pimpl->Disconnect();
+}
+
+bool TcpClient::WaitDataReceiveEvent(
+			const boost::system_time &waitUntil,
+			Buffer::size_type minSize)
+		const {
+	return m_pimpl->WaitDataReceiveEvent(waitUntil, minSize);
 }
 
 //////////////////////////////////////////////////////////////////////////

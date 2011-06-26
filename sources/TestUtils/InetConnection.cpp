@@ -28,30 +28,58 @@ void TcpConnection::Start() {
 }
 
 Buffer::size_type TcpConnection::GetReceivedSize() const {
-	size_t result;
+	Buffer::size_type result;
 	{
 		boost::mutex::scoped_lock lock(m_mutex);
-		result = m_dataBuffer.size();
+		result = m_dataBufferSize;
 	}
 	return result;
 }
 
-Buffer TcpConnection::GetReceived() const {
-	Buffer result;
+void TcpConnection::GetReceived(
+			Buffer::size_type maxSize,
+			Buffer &destination)
+		const {
+	Buffer destinationTmp;
 	{
 		boost::mutex::scoped_lock lock(m_mutex);
-		result = m_dataBuffer;
+		if (m_dataBufferSize > 0) {
+			assert(m_dataBufferStart != m_dataBuffer.end());
+			assert(
+				std::distance(
+					m_dataBufferStart,
+					const_cast<const TcpConnection *>(this)->m_dataBuffer.end())
+				== int(m_dataBufferSize));
+			const Buffer::size_type size = std::min(m_dataBufferSize, maxSize);
+			destinationTmp.reserve(size);
+			copy(
+				m_dataBufferStart,
+				m_dataBufferStart + size,
+				std::back_inserter(destinationTmp));
+		}
 	}
-	return result;
+	destinationTmp.swap(destination);
 }
 
 void TcpConnection::ClearReceived(size_t bytesCount /*= 0*/) {
 	boost::mutex::scoped_lock lock(m_mutex);
-	if (bytesCount == 0 || bytesCount >= m_dataBuffer.size()) {
-		m_dataBuffer.clear();
+	assert(bytesCount <= m_dataBufferSize);
+	assert(
+		int(bytesCount)
+		<= std::distance(
+			m_dataBufferStart,
+			const_cast<const TcpConnection *>(this)->m_dataBuffer.end()));
+	if (bytesCount == 0) {
+		m_dataBufferStart = m_dataBuffer.end();
+		m_dataBufferSize = 0;
 	} else {
-		Buffer(m_dataBuffer.begin() + bytesCount, m_dataBuffer.end())
-			.swap(m_dataBuffer);
+		std::advance(m_dataBufferStart, bytesCount);
+		m_dataBufferSize -= bytesCount;
+		assert(
+			std::distance(
+				m_dataBufferStart,
+				const_cast<const TcpConnection *>(this)->m_dataBuffer.end())
+			== int(m_dataBufferSize));
 	}
 }
 
@@ -66,8 +94,14 @@ bool TcpConnection::IsActive() const {
 
 TcpConnection::TcpConnection(io::io_service &ioService)
 		: m_socket(ioService),
+		m_dataBufferStart(m_dataBuffer.end()),
+		m_dataBufferSize(0),
 		m_isActive(false) {
-	//...//
+	assert(
+		std::distance(
+			m_dataBufferStart,
+			const_cast<const TcpConnection *>(this)->m_dataBuffer.end())
+		== int(m_dataBufferSize));
 }
 
 void TcpConnection::StartRead() {
@@ -86,19 +120,49 @@ void TcpConnection::HandleWrite(const boost::system::error_code &, size_t) {
 	//...//
 }
 
-void TcpConnection::HandleRead(const boost::system::error_code &error, size_t) {
-	boost::mutex::scoped_lock lock(m_mutex);
-	assert(m_isActive);
-	if (!error) {
-		std::istream is(&m_inStreamBuffer);
-		is.unsetf(std::ios::skipws);
-		std::copy(
-			std::istream_iterator<char>(is), 
-			std::istream_iterator<char>(), 
-			std::back_inserter(m_dataBuffer));
-		assert(!m_dataBuffer.empty());
-		StartRead();
-	} else {
-		m_isActive = false;
+void TcpConnection::HandleRead(const boost::system::error_code &error, size_t size) {
+	{
+		boost::mutex::scoped_lock lock(m_mutex);
+		assert(m_isActive);
+		if (!error) {
+			std::istream is(&m_inStreamBuffer);
+			is.unsetf(std::ios::skipws);
+			assert(m_dataBufferSize > 0 || m_dataBufferStart == m_dataBuffer.end());
+			m_dataBuffer.reserve(size);
+			std::copy(
+				std::istream_iterator<char>(is), 
+				std::istream_iterator<char>(), 
+				std::back_inserter(m_dataBuffer));
+			assert(!m_dataBuffer.empty());
+			m_dataBufferSize += size;
+			m_dataBufferStart
+				= m_dataBuffer.begin() + (m_dataBuffer.size() - m_dataBufferSize);
+			assert(size <= m_dataBuffer.size());
+			assert(size <= m_dataBufferSize);
+			assert(
+				std::distance(
+					m_dataBufferStart,
+					const_cast<const TcpConnection *>(this)->m_dataBuffer.end())
+				== int(m_dataBufferSize));
+			StartRead();
+		} else {
+			m_isActive = false;
+		}
+	}
+	m_dataReceivedCondition.notify_all();
+}
+
+bool TcpConnection::WaitDataReceiveEvent(
+			const boost::system_time &waitUntil,
+			Buffer::size_type size)
+		const {
+	for ( ; ; ) {
+		boost::mutex::scoped_lock lock(m_mutex);
+		if (m_dataBufferSize >= size) {
+			return true;
+		}
+		if (!m_dataReceivedCondition.timed_wait(lock, waitUntil)) {
+			return false;
+		}
 	}
 }

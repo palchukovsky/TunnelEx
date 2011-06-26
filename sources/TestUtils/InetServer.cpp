@@ -93,15 +93,30 @@ public:
 		return GetConnection(connectionIndex, lock).GetReceivedSize();
 	}
 
-	Buffer GetReceived(size_t connectionIndex) const {
+	void GetReceived(
+				size_t connectionIndex,
+				size_t maxSize,
+				Buffer &result)
+			const {
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock).GetReceived();
+		GetConnection(connectionIndex, lock).GetReceived(maxSize, result);
 	}
 
 	void ClearReceived(size_t connectionIndex, size_t bytesCount) {
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		return GetConnection(connectionIndex, lock).ClearReceived(bytesCount);
 	}
+
+	bool WaitDataReceiveEvent(
+				size_t connectionIndex,
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const {
+		boost::mutex::scoped_lock lock(m_connectionsMutex);
+		return GetConnection(connectionIndex, lock)
+			.WaitDataReceiveEvent(waitUntil, minSize);
+	}
+
 
 private:
 
@@ -204,12 +219,24 @@ Buffer::size_type TcpServer::GetReceivedSize(size_t connectionIndex) const {
 	return m_pimpl->GetReceivedSize(connectionIndex);
 }
 
-Buffer TcpServer::GetReceived(size_t connectionIndex) const {
-	return m_pimpl->GetReceived(connectionIndex);
+void TcpServer::GetReceived(
+			size_t connectionIndex,
+			size_t maxSize,
+			Buffer &result)
+		const {
+	m_pimpl->GetReceived(connectionIndex, maxSize, result);
 }
 
 void TcpServer::ClearReceived(size_t connectionIndex, size_t bytesCount) {
 	return m_pimpl->ClearReceived(connectionIndex, bytesCount);
+}
+
+bool TcpServer::WaitDataReceiveEvent(
+			size_t connectionIndex,
+			const boost::system_time &waitUntil,
+			Buffer::size_type minSize)
+		const {
+	return m_pimpl->WaitDataReceiveEvent(connectionIndex, waitUntil, minSize);
 }
 
 //////////////////////////////////////////////////////////////////////////
