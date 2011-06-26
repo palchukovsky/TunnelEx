@@ -116,10 +116,6 @@ void TcpConnection::StartRead() {
 			io::placeholders::bytes_transferred));
 }
 
-void TcpConnection::HandleWrite(const boost::system::error_code &, size_t) {
-	//...//
-}
-
 void TcpConnection::HandleRead(const boost::system::error_code &error, size_t size) {
 	{
 		boost::mutex::scoped_lock lock(m_mutex);

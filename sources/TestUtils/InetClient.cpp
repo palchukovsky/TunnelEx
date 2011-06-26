@@ -143,11 +143,12 @@ void TcpClient::GetReceived(Buffer::size_type maxSize, Buffer &result) const {
 }
 
 void TcpClient::Send(const std::string &message) {
-	m_pimpl->GetConnection().Send(message);
+	std::auto_ptr<Buffer> buffer(new Buffer(message.begin(), message.end()));
+	m_pimpl->GetConnection().Send(buffer);
 }
 
-void TcpClient::Send(const Buffer &beffer) {
-	m_pimpl->GetConnection().Send(beffer);
+void TcpClient::Send(std::auto_ptr<Buffer> buffer) {
+	m_pimpl->GetConnection().Send(buffer);
 }
 
 bool TcpClient::IsConnected() const {

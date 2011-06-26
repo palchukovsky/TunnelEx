@@ -29,17 +29,17 @@ namespace TestUtil {
 		void Start();
 
 		template<class T>
-		void Send(const T &data) {
+		void Send(std::auto_ptr<T> data) {
 			namespace io = boost::asio;
-			T *asd = new T(data);
 			async_write(
 				m_socket,
-				io::buffer(*asd),
+				io::buffer(*data),
 				boost::bind(
-					&TcpConnection::HandleWrite,
+					&TcpConnection::HandleWrite<T>,
 					shared_from_this(),
 					io::placeholders::error,
-					io::placeholders::bytes_transferred));
+					boost::ref(*data)));
+			data.release();
 		}
 
 		Buffer::size_type GetReceivedSize() const;
@@ -62,7 +62,11 @@ namespace TestUtil {
 
 		void StartRead();
 		
-		void HandleWrite(const boost::system::error_code &, size_t);
+		template<typename T>
+		void HandleWrite(const boost::system::error_code &, T &data) {
+			delete &data;
+		}
+		
 		void HandleRead(const boost::system::error_code &error, size_t);
 
 	private:

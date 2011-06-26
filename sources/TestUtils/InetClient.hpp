@@ -32,7 +32,7 @@ namespace TestUtil {
 	public:
 
 		virtual void Send(const std::string &);
-		virtual void Send(const Buffer &);
+		virtual void Send(std::auto_ptr<Buffer>);
 
 		virtual Buffer::size_type GetReceivedSize() const;
 		virtual void GetReceived(

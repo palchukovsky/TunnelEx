@@ -193,8 +193,8 @@ namespace TestUtil {
 		  */
 		template<typename T>
 		void SendVal(size_t connectionIndex, const T &val) {
-			Buffer buffer(sizeof(val), 0);
-			memcpy(&buffer[0], &val, sizeof(val));
+			std::auto_ptr<Buffer> buffer(new Buffer(sizeof(val), 0));
+			memcpy(&(*buffer)[0], &val, sizeof(val));
 			Send(connectionIndex, buffer);
 		}
 		/** @throw SendError 
@@ -202,7 +202,7 @@ namespace TestUtil {
 		virtual void Send(size_t connectionIndex, const std::string &) = 0;
 		/** @throw SendError 
 		  */
-		virtual void Send(size_t connectionIndex, const Buffer &) = 0;
+		virtual void Send(size_t connectionIndex, std::auto_ptr<Buffer>) = 0;
 
 		/** @throw ReceiveError
 		  */
@@ -258,13 +258,13 @@ namespace TestUtil {
 		virtual void Send(const std::string &) = 0;
 		/** @throw SendError
 		  */
-		virtual void Send(const Buffer &) = 0;
+		virtual void Send(std::auto_ptr<Buffer>) = 0;
 		/** @throw SendError 
 		  */
 		template<typename T>
 		void SendVal(const T &val) {
-			Buffer buffer(sizeof(val), 0);
-			memcpy(&buffer[0], &val, sizeof(val));
+			std::auto_ptr<Buffer> buffer(new Buffer(sizeof(val), 0));
+			memcpy(&(*buffer)[0], &val, sizeof(val));
 			Send(buffer);
 		}
 

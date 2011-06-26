@@ -74,11 +74,11 @@ namespace {
 			
 			ASSERT_NO_THROW(client.Send(testing::clientMagicBegin));
 			
-			TestUtil::Buffer packet;
+			std::auto_ptr<TestUtil::Buffer> packet(new TestUtil::Buffer);
 			boost::crc_32_type crc;
-			testing::GeneratePacket(packet, crc, size * 0.5, size * 1.5);
+			testing::GeneratePacket(*packet, crc, size * 0.5, size * 1.5);
 			
-			ASSERT_NO_THROW(client.SendVal(testing::PacketSize(packet.size())));
+			ASSERT_NO_THROW(client.SendVal(testing::PacketSize(packet->size())));
 			ASSERT_NO_THROW(client.Send(packet));
 			ASSERT_NO_THROW(client.SendVal(crc.checksum()));
 			ASSERT_NO_THROW(client.Send(testing::clientMagicEnd));

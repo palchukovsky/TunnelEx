@@ -30,7 +30,7 @@ namespace TestUtil {
 		virtual void Send(std::size_t connectionIndex, const std::string &);
 		/** @throw SendError
 		  */
-		virtual void Send(std::size_t connectionIndex, const Buffer &);
+		virtual void Send(std::size_t connectionIndex, std::auto_ptr<Buffer>);
 
 		/** @throw ReceiveError
 		  */

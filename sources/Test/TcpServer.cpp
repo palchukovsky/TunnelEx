@@ -250,12 +250,12 @@ namespace {
 
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
 
-			TestUtil::Buffer packet;
+			std::auto_ptr<TestUtil::Buffer> packet(new TestUtil::Buffer);
 			boost::crc_32_type crc;
-			testing::GeneratePacket(packet, crc, size * 0.5, size * 1.5);
+			testing::GeneratePacket(*packet, crc, size * 0.5, size * 1.5);
 
 			ASSERT_NO_THROW(
-				m_server->SendVal(connection, testing::PacketSize(packet.size())));
+				m_server->SendVal(connection, testing::PacketSize(packet->size())));
 			ASSERT_NO_THROW(m_server->Send(connection, packet));
 			ASSERT_NO_THROW(m_server->SendVal(connection, crc.checksum()));
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));

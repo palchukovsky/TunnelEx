@@ -78,11 +78,12 @@ public:
 
 	void Send(size_t connectionIndex, const std::string &message) {
 		assert(message.size());
+		std::auto_ptr<Buffer> buffer(new Buffer(message.begin(), message.end()));
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		GetConnection(connectionIndex, lock).Send(message);
+		GetConnection(connectionIndex, lock).Send(buffer);
 	}
 
-	void Send(size_t connectionIndex, const Buffer &data) {
+	void Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
 		assert(data.size());
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		GetConnection(connectionIndex, lock).Send(data);
@@ -211,7 +212,7 @@ void TcpServer::Send(size_t connectionIndex, const std::string &message)  {
 	m_pimpl->Send(connectionIndex, message);
 }
 
-void TcpServer::Send(size_t connectionIndex, const Buffer &data) {
+void TcpServer::Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
 	m_pimpl->Send(connectionIndex, data);
 }
 
