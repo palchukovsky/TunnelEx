@@ -175,15 +175,22 @@ namespace {
 					testing::clientMagicEnd,
 					false));
 
-			for (testing::ConnectionsNumber i = 0; i < connectionsNumber; ++i) {
-				const size_t connection = i + 1 + mainConnection;
+			for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
+				const size_t connection = i + mainConnection;
 				ASSERT_TRUE(m_server->WaitConnect(connection + 1, false))
-					<< "Failed to accept connection #" << connection << ".";
+					<< "Failed to accept sub connection #" << i << ".";
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicHello, false));
+				ASSERT_EQ(
+					i, 
+					m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
 				ASSERT_TRUE(
-					m_server->WaitAndTakeData(connection, testing::serverMagicSubConnectionMode, true));
+					m_server->WaitAndTakeData(
+						connection,
+						testing::serverMagicSubConnectionMode,
+						true));
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
+				ASSERT_NO_THROW(m_server->SendVal(connection, i));
 			}
 
 			testing::PacketsNumber packetsNumber = 0;
@@ -204,13 +211,17 @@ namespace {
 
 			for (size_t i = 0; i < 2; ++i) {
 				for (testing::PacketsNumber i = 0; i < packetsNumber; ++i) {
-					for (testing::ConnectionsNumber i = 0; i < connectionsNumber; ++i) {
-						const size_t connection = i + 1 + mainConnection;
+					for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
+						const size_t connection = i + mainConnection;
+						ASSERT_EQ(
+							i, 
+							m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
 						ReceiveTestPacket(connection);
 						ASSERT_NO_THROW(
 							m_server->Send(
 								connection,
 								testing::serverMagicOk));
+						ASSERT_NO_THROW(m_server->SendVal(connection, i));
 						SendTestPacket(connection, packetSize);
 						ASSERT_TRUE(
 							m_server->WaitAndTakeData(
@@ -221,16 +232,37 @@ namespace {
 				}
 			}
 
-			for (testing::ConnectionsNumber i = 0;  i < connectionsNumber; ++i) {
-				const size_t connection = i + 1 + mainConnection;
-				ASSERT_TRUE(
-					m_server->WaitAndTakeData(
-						connection,
-						testing::clientMagicBay,
-						true));
-				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
-				EXPECT_EQ(0, m_server->GetReceivedSize(connection));
-				m_server->WaitDisconnect(connection);
+			for (testing::ConnectionsNumber i = 1;  i <= connectionsNumber; ++i) {
+				const size_t connection = i + mainConnection;
+				const bool isActiveDisconnect = !(i % 2);
+				if (isActiveDisconnect) {
+					ASSERT_NO_THROW(m_server->SendVal(connection, i));
+					ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
+					ASSERT_EQ(
+						i, 
+						m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+					ASSERT_TRUE(
+						m_server->WaitAndTakeData(
+							connection,
+							testing::clientMagicBay,
+							true));
+					EXPECT_EQ(0, m_server->GetReceivedSize(connection));
+					ASSERT_NO_THROW(m_server->CloseConnection(connection));
+				} else {
+					ASSERT_EQ(
+						i, 
+						m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+					ASSERT_TRUE(
+						m_server->WaitAndTakeData(
+							connection,
+							testing::clientMagicBay,
+							true));
+					ASSERT_NO_THROW(m_server->SendVal(connection, i));
+					ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
+					EXPECT_EQ(0, m_server->GetReceivedSize(connection));
+ 					EXPECT_TRUE(m_server->WaitDisconnect(connection))
+ 						<< "Failed to receive DISCONNECT event from sub connection #" << i << ".";
+				}
 			}
 
 			ASSERT_TRUE(

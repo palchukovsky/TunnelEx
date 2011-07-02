@@ -17,6 +17,7 @@ namespace testing {
 	typedef boost::uint16_t ConnectionsNumber;
 
 	extern const unsigned short tcpServerPort;
+	extern const unsigned short udpServerPort;
 	
 	extern const std::string clientMagicHello;
 	extern const std::string clientMagicBay;

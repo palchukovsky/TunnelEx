@@ -31,6 +31,7 @@
 #	include <boost/noncopyable.hpp>
 #	include <boost/date_time.hpp>
 #	include <boost/algorithm/string.hpp>
+#	include <boost/optional.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <memory>

@@ -110,9 +110,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="LocalAssert.cpp" />
-    <ClCompile Include="TcpClient.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="Licensing.cpp" />
@@ -124,12 +124,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Rule.cpp" />
-    <ClCompile Include="TcpServer.cpp" />
     <ClCompile Include="ServiceConfiguration.cpp" />
     <ClCompile Include="SmartPtr.cpp" />
     <ClCompile Include="String.cpp" />
+    <ClCompile Include="TcpClient.cpp" />
+    <ClCompile Include="TcpServer.cpp" />
+    <ClCompile Include="UdpClient.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Client.hpp" />
     <ClInclude Include="Common.hpp" />
     <ClInclude Include="Environment.hpp" />
     <ClInclude Include="Prec.h" />

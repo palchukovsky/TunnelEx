@@ -12,17 +12,17 @@
 #define INCLUDED_FILE__TUNNELEX__UseUnused_hpp__1105021748
 
 template<typename T>
-inline void UseUnused(const T &) {
+inline void UseUnused(const T &) throw() {
 	//...//
 }
 
 template<typename T1, typename T2>
-inline void UseUnused(const T1 &, const T2 &) {
+inline void UseUnused(const T1 &, const T2 &) throw() {
 	//...//
 }
 
 template<typename T1, typename T2, typename T3>
-inline void UseUnused(const T1 &, const T2 &, const T3 &) {
+inline void UseUnused(const T1 &, const T2 &, const T3 &) throw() {
 	//...//
 }
 

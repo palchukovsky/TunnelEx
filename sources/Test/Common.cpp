@@ -13,6 +13,7 @@
 namespace testing {
 
 	const unsigned short tcpServerPort = 12332;
+	const unsigned short udpServerPort = 12333;
 
 	const std::string clientMagicHello("{CLENT HELLO 3DE5F96B-6BDD-4B8E-B7A2-68537DF874B7}");
 	const std::string clientMagicBay("{CLENT BAY 2F200986-C0CF-496E-A70B-EB567970ADC9}");

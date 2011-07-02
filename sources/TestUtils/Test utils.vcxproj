@@ -15,6 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientServerExceptions.hpp" />
     <ClInclude Include="DtorTester.hpp" />
     <ClInclude Include="InetClient.hpp" />
     <ClInclude Include="InetConnection.hpp" />
@@ -25,8 +26,6 @@
     <ClInclude Include="Wait.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="InetClient.cpp" />
-    <ClCompile Include="InetConnection.cpp" />
     <ClCompile Include="InetServer.cpp" />
     <ClCompile Include="PipeServer.cpp" />
     <ClCompile Include="Prec.cpp">

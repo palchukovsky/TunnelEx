@@ -47,4 +47,6 @@
 
 #endif
 
+#include "TestUtils/Prec.h"
+
 #include "LocalAssert.h"

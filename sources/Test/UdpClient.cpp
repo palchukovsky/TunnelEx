@@ -1,5 +1,5 @@
 /**************************************************************************
- *   Created: 2011/05/30 23:13
+ *   Created: 2011/06/27 0:10
  *    Author: Eugene V. Palchukovsky
  *    E-mail: eugene@palchukovsky.com
  * -------------------------------------------------------------------
@@ -7,17 +7,20 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
+#ifndef INCLUDED_FILE__TUNNELEX__UdpClientTest_cpp__1106270010
+#define INCLUDED_FILE__TUNNELEX__UdpClientTest_cpp__1106270010
+
 #include "Prec.h"
 #include "Client.hpp"
 #include "TestUtils/InetClient.hpp"
 
 namespace {
 
-	class TcpClient : public testing::Client {
+	class UdpClient : public testing::Client {
 	
 	public:
 	
-		virtual ~TcpClient() {
+		virtual ~UdpClient() {
 			//...//
 		}
 	
@@ -25,7 +28,7 @@ namespace {
 
 		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::TcpClient("localhost", testing::tcpServerPort));
+				new TestUtil::UdpClient("localhost", testing::tcpServerPort));
 			return result;
 		}
 
@@ -33,7 +36,7 @@ namespace {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	TEST_F(TcpClient, DataExchangeActive) {
+	TEST_F(UdpClient, DataExchangeActive) {
 
 		Connect(testing::serverMagicPassiveMode, false);
 		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, true));
@@ -58,7 +61,7 @@ namespace {
 
 	}
 
-	TEST_F(TcpClient, DataExchangePassive) {
+	TEST_F(UdpClient, DataExchangePassive) {
 
 		Connect(testing::serverMagicActiveMode, false);
 		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, false));
@@ -85,7 +88,7 @@ namespace {
 
 	}
 
-	TEST_F(TcpClient, DataExchangeOneWayActive) {
+	TEST_F(UdpClient, DataExchangeOneWayActive) {
 
 		const testing::PacketsNumber packets = 1024 * 3;
 		const testing::PacketSize packetSize = 1024;
@@ -110,7 +113,7 @@ namespace {
 
 	}
 
-	TEST_F(TcpClient, DataOneWayExchangePassive) {
+	TEST_F(UdpClient, DataOneWayExchangePassive) {
 
 		Connect(testing::serverMagicOneWayActiveMode, false);
 		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, false));
@@ -142,9 +145,9 @@ namespace {
 
 	}
 
-	TEST_F(TcpClient, SeveralConnetions) {
+	TEST_F(UdpClient, SeveralConnetions) {
 
-		const testing::ConnectionsNumber connectionsNumber = 200;
+		const testing::ConnectionsNumber connectionsNumber = 100;
 		const testing::PacketsNumber packetsNumber = 10;
 		const testing::PacketSize packetSize = 128;
 		
@@ -157,17 +160,12 @@ namespace {
 
 		typedef std::list<boost::shared_ptr<TestUtil::Client>> Connections;
 		Connections connections;
-		for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
+		for (size_t i = 0; i < connectionsNumber; ++i) {
 			boost::shared_ptr<TestUtil::Client> connection(CreateConnection());
 			Connect(*connection, false);
-			ASSERT_NO_THROW(connection->SendVal(i));
 			ASSERT_NO_THROW(connection->Send(testing::serverMagicSubConnectionMode));
-			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicHello, false))
-				<< "Failed to receive HELLO for sub connection #" << i << ".";
-			ASSERT_EQ(
-					i,
-					connection->WaitAndTakeData<testing::ConnectionsNumber>(true))
-				<< "Failed to receive sub connection number for sub connection #" << i << ".";
+			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicHello, true))
+				<< "Failed to receive HELLO for connection #" << (i + 1) << ".";
 			connections.push_back(connection);
 		}
 
@@ -177,54 +175,25 @@ namespace {
 
 		for (size_t i = 0; i < 2; ++i) {
 			for (testing::PacketsNumber i = 0; i < packetsNumber; ++i) {
-				testing::ConnectionsNumber connectionNumber = 1;
 				foreach (auto &connection, connections) {
-					ASSERT_NO_THROW(connection->SendVal(connectionNumber));
 					SendTestPacket(*connection, packetSize);
 					ASSERT_TRUE(
 						connection->WaitAndTakeData(
 							testing::serverMagicOk,
 							false));
-					ASSERT_EQ(
-						connectionNumber,
-						connection->WaitAndTakeData<testing::ConnectionsNumber>(false));
 					ReceiveTestPacket(*connection);
 					ASSERT_NO_THROW(connection->Send(testing::clientMagicOk));
-					++connectionNumber;
 				}
 			}
 		}
 
-		{
-			testing::ConnectionsNumber i = 1;
-			foreach (auto &connection, connections) {
-				const bool isActiveDisconnect = !!(i % 2);
-				if (isActiveDisconnect) {
-					ASSERT_NO_THROW(connection->SendVal(i));
-					ASSERT_NO_THROW(connection->Send(testing::clientMagicBay));
-					ASSERT_EQ(
-							i,
-							connection->WaitAndTakeData<testing::ConnectionsNumber>(false))
-						<< "Failed to receive server sub connection number from sub connection #" << i << " (active disconnect).";
-					ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicBay, true))
-						<< "Failed to receive server BAY from sub connection #" << i << " (active disconnect).";
-					EXPECT_TRUE(connection->IsConnected());
-					ASSERT_NO_THROW(connection->Disconnect());
-				} else {
-					ASSERT_EQ(
-							i,
-							connection->WaitAndTakeData<testing::ConnectionsNumber>(false))
-						<< "Failed to receive server sub connection number from sub connection #" << i << " (passive disconnect).";
-					ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicBay, true))
-						<< "Failed to receive server BAY from sub connection #" << i << " (passive disconnect).";
-					ASSERT_NO_THROW(connection->SendVal(i));
-					ASSERT_NO_THROW(connection->Send(testing::clientMagicBay));
-					EXPECT_TRUE(connection->WaitDisconnect());
-				}
-				++i;
-			}
-			connections.clear();
+		foreach (auto &connection, connections) {
+			ASSERT_NO_THROW(connection->Send(testing::clientMagicBay));
+			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicBay, true));
+			EXPECT_TRUE(connection->IsConnected());
+			ASSERT_NO_THROW(connection->Disconnect());
 		}
+		connections.clear();
 
 		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
 		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
@@ -234,3 +203,5 @@ namespace {
 	}
 
 }
+
+#endif // INCLUDED_FILE__TUNNELEX__UdpClientTest_cpp__1106270010

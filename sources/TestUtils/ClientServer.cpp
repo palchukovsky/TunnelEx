@@ -260,7 +260,7 @@ void Client::WaitAnyData(
 	Buffer resultTmp;
 	GetReceived(isExactly ? size + 1 : size, resultTmp);
 	if (isExactly && size != resultTmp.size()) {
-		assert(size > resultTmp.size());
+		assert(size < resultTmp.size());
 		throw TooMuchDataReceived();
 	}
 	resultTmp.resize(size);

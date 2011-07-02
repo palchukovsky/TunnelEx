@@ -35,11 +35,11 @@
     <ClInclude Include="InetConnection.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ClientServerExceptions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="InetServer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PipeServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,10 +49,7 @@
     <ClCompile Include="ClientServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="InetClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="InetConnection.cpp">
+    <ClCompile Include="InetServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
