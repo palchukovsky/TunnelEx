@@ -43,22 +43,20 @@ namespace testing {
 
 		std::auto_ptr<TestUtil::Client> CreateConnection() const;
 
-		void Connect(bool infiniteTimeout);
-		virtual void Connect(const std::string &mode, bool infiniteTimeout) = 0;
+		void Connect(const std::string &mode, bool infiniteTimeout);
 		void Connect(
 					TestUtil::Client &client,
 					bool infiniteTimeout)
 				const;
 
 		void SendTestPacket(testing::PacketSize size);
-		virtual void SendTestPacket(
+		void SendTestPacket(
 					TestUtil::Client &client,
 					testing::PacketSize size)
-				const
-				= 0;
+				const;
 			
 		void ReceiveTestPacket();
-		virtual void ReceiveTestPacket(TestUtil::Client &client) const = 0;
+		void ReceiveTestPacket(TestUtil::Client &client) const;
 
 	private:
 

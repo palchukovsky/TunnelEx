@@ -35,7 +35,7 @@ namespace testing {
 
 	const std::string serverMagicSubConnectionMode("{SERVER SUB CONNECTION MODE}");
 
-	const boost::posix_time::time_duration defaultDataWaitTime(0, 0, 10);
+	const boost::posix_time::time_duration defaultDataWaitTime(0, 0, 5);
 
 	boost::mt19937 generator;
 
