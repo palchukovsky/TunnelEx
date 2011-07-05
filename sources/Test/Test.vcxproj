@@ -130,6 +130,7 @@
     <ClCompile Include="TcpClient.cpp" />
     <ClCompile Include="TcpServer.cpp" />
     <ClCompile Include="UdpClient.cpp" />
+    <ClCompile Include="UdpServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.hpp" />

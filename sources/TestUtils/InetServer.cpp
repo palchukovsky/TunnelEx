@@ -34,8 +34,15 @@ public:
 	}
 
 	~Implementation() {
-		m_ioService.stop();
-		m_thread->join();
+		try {
+			foreach (auto &c, m_connections) {
+				c->Stop();
+			}
+			m_ioService.stop();
+			m_thread->join();
+		} catch (...) {
+			assert(false);
+		}
 	}
 
 public:
@@ -263,14 +270,22 @@ public:
 
 	Implementation(const unsigned short port)
 			: m_acceptConnection(Connection::Create(m_ioService, port)) {
+		StartRead();
 		m_thread.reset(
 			new boost::thread(
 				boost::bind(&Implementation::ServiceThreadMain, this)));
 	}
 
 	~Implementation() {
-		m_ioService.stop();
-		m_thread->join();
+		try {
+			foreach (auto &c, m_connections) {
+				c->Stop();
+			}
+			m_ioService.stop();
+			m_thread->join();
+		} catch (...) {
+			assert(false);
+		}
 	}
 
 public:
@@ -304,17 +319,7 @@ public:
 	void Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
 		assert(data->size());
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		m_acceptConnection->GetSocket().async_send_to(
-			io::buffer(*data, data->size()),
-			GetConnection(connectionIndex, lock).GetEndpoint(),
-			boost::bind(
-				&Self::HandleWrite,
-				this,
-				io::placeholders::error,
-				io::placeholders::bytes_transferred,
-				boost::ref(*data),
-				GetConnection(connectionIndex, lock).GetEndpoint()));
-		data.release();
+		GetConnection(connectionIndex, lock).Send(data);
 	}
 
 	Buffer::size_type GetReceivedSize(size_t connectionIndex) const {
@@ -341,16 +346,18 @@ public:
 				const boost::system_time &waitUntil,
 				Buffer::size_type minSize)
 			const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock)
-			.WaitDataReceiveEvent(waitUntil, minSize);
+		const boost::shared_ptr<const Connection> connection
+			= TakeConnection(connectionIndex, boost::mutex::scoped_lock(m_connectionsMutex));
+		return connection->WaitDataReceiveEvent(waitUntil, minSize);
 	}
 
 
 private:
 
 	void StartRead() {
-		std::auto_ptr<Buffer> buffer(new Buffer(128));
+		std::auto_ptr<Buffer> buffer(
+			new Buffer(
+				Connection::Trait::GetReceiveBufferSize()));
 		m_acceptConnection->GetSocket().async_receive_from(
 			io::buffer(*buffer, buffer->size()),
 			m_endpoint,
@@ -361,15 +368,46 @@ private:
 				boost::asio::placeholders::bytes_transferred,
 				boost::ref(*buffer)));
 		buffer.release();
+		{
+			std::auto_ptr<Buffer> buffer(
+				new Buffer(
+				Connection::Trait::GetReceiveBufferSize()));
+			m_acceptConnection->GetSocket().async_receive_from(
+				io::buffer(*buffer, buffer->size()),
+				m_endpoint,
+				boost::bind(
+					&Self::HandleRead,
+					this,
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred,
+					boost::ref(*buffer)));
+			buffer.release();
+		}
 	}
 
-	Connection & GetConnection(
+	boost::shared_ptr<Connection> TakeConnection(
 				size_t connectionIndex,
 				const boost::mutex::scoped_lock &) {
 		if (connectionIndex >= m_connections.size()) {
 			throw std::logic_error("Could not find connection by index");
 		}
-		return *m_connections[connectionIndex];
+		return m_connections[connectionIndex];
+	}
+
+	boost::shared_ptr<const Connection> TakeConnection(
+				size_t connectionIndex,
+				const boost::mutex::scoped_lock &)
+			const {
+		if (connectionIndex >= m_connections.size()) {
+			throw std::logic_error("Could not find connection by index");
+		}
+		return m_connections[connectionIndex];
+	}
+
+	Connection & GetConnection(
+				size_t connectionIndex,
+				const boost::mutex::scoped_lock &lock) {
+		return *TakeConnection(connectionIndex, lock);
 	}
 
 	const Connection & GetConnection(
@@ -411,20 +449,31 @@ private:
 				const boost::system::error_code &error,
 				size_t size,
 				Buffer &buffer) {
+		
 		std::auto_ptr<const Buffer> bufferHolder(&buffer);
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
+		
+		bool isConnectionExists = false;
 		foreach (auto &c, m_connections) {
-			if (m_endpoint == c->GetEndpoint()) {
-				c->HandleRead(error, size, buffer);
+			assert(!isConnectionExists);
+			isConnectionExists = m_endpoint == c->GetEndpoint();
+			if (isConnectionExists) {
+				c->HandleRead(error, size, buffer, m_endpoint, false);
 				bufferHolder.release();
-				return;
+				break;
 			}
 		}
-		boost::shared_ptr<Connection> connection
-			= Connection::Create(*m_acceptConnection, m_endpoint);
-		connection->HandleRead(error, size, buffer);
-		bufferHolder.release();
-		m_connections.push_back(connection);
+		
+		if (!isConnectionExists) {
+			boost::shared_ptr<Connection> connection
+				= Connection::Create(*m_acceptConnection, m_endpoint);
+			connection->HandleRead(error, size, buffer, m_endpoint, false);
+			bufferHolder.release();
+			m_connections.push_back(connection);
+		}
+		
+		StartRead();
+
 	}
 
 private:

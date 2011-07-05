@@ -13,11 +13,11 @@
 
 namespace {
 
-	class TcpServer : public testing::Test  {
+	class UdpServer : public testing::Test  {
 	
 	public:
 	
-		virtual ~TcpServer() {
+		virtual ~UdpServer() {
 			//...//
 		}
 	
@@ -32,8 +32,8 @@ namespace {
 		}
 		
 		virtual void SetUp() {
-			m_server.reset(new TestUtil::TcpServer(testing::tcpServerPort));
-			m_server->SetWaitTime(testing::defaultDataWaitTime);
+			m_server.reset(new TestUtil::UdpServer(testing::udpServerPort));
+			m_server->SetWaitTime(testing::defaultDataWaitTime * 10);
 			const bool waitResult = m_server->WaitConnect(1, true);
 			assert(waitResult);
 			UseUnused(waitResult);
@@ -48,23 +48,19 @@ namespace {
 		void TestActiveServer(size_t connection) {
 
 			const testing::PacketsNumber packets = 100;
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
 			ASSERT_NO_THROW(m_server->SendVal(connection, packets));
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
+			ASSERT_TRUE(
+					m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
 
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				SendTestPacket(connection, 512);
-				ASSERT_TRUE(
-					m_server->WaitAndTakeData(connection, testing::clientMagicOk, false));
+				SendTestPacket(connection, 4096);
 				ReceiveTestPacket(connection);
-				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			}
 
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
 			ASSERT_TRUE(
 				m_server->WaitAndTakeData(connection, testing::clientMagicBay, true));
 			EXPECT_EQ(0, m_server->GetReceivedSize(connection));
-			m_server->CloseConnection(connection);
 
 		}
 
@@ -82,7 +78,7 @@ namespace {
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
 				ReceiveTestPacket(connection);
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
-				SendTestPacket(connection, 512);
+				SendTestPacket(connection, 16);
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicOk, false));
 			}
@@ -103,7 +99,7 @@ namespace {
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
 
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				SendTestPacket(connection, 1024);
+				SendTestPacket(connection, 4096);
 			}
 
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
@@ -276,42 +272,37 @@ namespace {
 
 	private:
 
-		void SendTestPacket(size_t connection, testing::PacketSize size) {
-
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
-
+		void SendTestPacket(size_t connection, testing::PacketSize size) const  {
+			
 			std::auto_ptr<TestUtil::Buffer> packet(new TestUtil::Buffer);
 			boost::crc_32_type crc;
 			testing::GeneratePacket(*packet, crc, size * 0.5, size * 1.5);
-
-			ASSERT_NO_THROW(
-				m_server->SendVal(connection, testing::PacketSize(packet->size())));
+			
+			ASSERT_NO_THROW(m_server->SendVal(connection, testing::PacketSize(packet->size())));
+			ASSERT_TRUE(m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
 			ASSERT_NO_THROW(m_server->Send(connection, packet));
+			ASSERT_TRUE(m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
 			ASSERT_NO_THROW(m_server->SendVal(connection, crc.checksum()));
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
+			ASSERT_TRUE(m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
 
 		}
 
-		void ReceiveTestPacket(size_t connection) {
+		void ReceiveTestPacket(size_t connection) const {
 			testing::PacketSize size = 0;
-			ASSERT_TRUE(
-				m_server->WaitAndTakeData(connection, testing::clientMagicBegin, false));
 			ASSERT_NO_THROW(
-				size = m_server->WaitAndTakeData<testing::PacketSize>(connection, false));
+				size = m_server->WaitAndTakeData<testing::PacketSize>(connection, true));
 			EXPECT_GT(size, 0);
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			TestUtil::Buffer packet;
-			ASSERT_NO_THROW(
-				m_server->WaitAndTakeAnyData(connection, size, false, packet));
+			ASSERT_NO_THROW(m_server->WaitAndTakeAnyData(connection, size, true, packet));
 			boost::crc_32_type realCrc;
 			testing::Calc(packet, realCrc);
 			boost::crc_32_type::value_type remoteCrc;
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			ASSERT_NO_THROW(
-				remoteCrc = m_server->WaitAndTakeData<boost::crc_32_type::value_type>(
-					connection,
-					false));
+				remoteCrc = m_server->WaitAndTakeData<boost::crc_32_type::value_type>(connection, true));
 			EXPECT_EQ(realCrc.checksum(), remoteCrc);
-			ASSERT_TRUE(
-				m_server->WaitAndTakeData(connection, testing::clientMagicEnd, false));
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 		}
 
 	protected:
@@ -322,13 +313,26 @@ namespace {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	TEST_F(TcpServer, Any) {
+	TEST_F(UdpServer,  Simple) {
+		ASSERT_EQ(size_t(1), m_server->GetNumberOfAcceptedConnections(false));
+		ASSERT_TRUE(
+			m_server->WaitAndTakeData(0, testing::clientMagicHello, false));
+		for (testing::PacketsNumber i = 0; i < 1000; ++i) {
+			std::ostringstream oss;
+			oss << std::setfill('#') << std::setw(100) << i << '|';
+			EXPECT_TRUE(m_server->WaitAndTakeData(0, oss.str(), false))
+				<< "Failed receive on #" << i << ".";
+		}
+	}
+
+	TEST_F(UdpServer, DISABLED_Any) {
 
 		ASSERT_EQ(size_t(1), m_server->GetNumberOfAcceptedConnections(false));
 		const size_t connection = 0;
 
 		ASSERT_TRUE(
-			m_server->WaitAndTakeData(connection, testing::clientMagicHello, false));
+			m_server->WaitAndTakeData(connection, testing::clientMagicHello, true));
+		ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
 		
 		enum ServerMode {
 			SERVER_MODE_ACTIVE = 1,
@@ -355,8 +359,6 @@ namespace {
 			std::advance(serverModeItPos, serverModePos - 1);
 			std::cout << **serverModeItPos << " (" << serverModePos << ")";
 		}
-
-		ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
 
 		switch (serverMode) {
 			case  SERVER_MODE_ACTIVE:

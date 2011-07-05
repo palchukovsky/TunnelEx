@@ -17,26 +17,49 @@ namespace TestUtil {
 	////////////////////////////////////////////////////////////////////////////////
 
 	struct TcpInetConnectionTrait {
+		
 		typedef boost::asio::ip::tcp Proto;
+
+		struct AdditionalState {
+			boost::asio::streambuf inStreamBuffer;
+		};
+
 	};
+	
 	struct UdpInetConnectionTrait {
+	
 		typedef boost::asio::ip::udp Proto;
+
+		struct AdditionalState {
+			AdditionalState()
+					: sendingNow(false) {
+				//...//
+			}
+			bool sendingNow;
+			mutable boost::condition_variable dataSentCondition;
+			Proto::endpoint actualRemoteEndpoint;
+		};
+
+		static size_t GetReceiveBufferSize() {
+			return 256;
+		}
+
 	};
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	template<typename ConnectionTraitT>
+	template<typename TraitT>
 	class InetConnection
-		:  public boost::enable_shared_from_this<InetConnection<ConnectionTraitT>>,
+		:  public boost::enable_shared_from_this<InetConnection<TraitT>>,
 		private boost::noncopyable {
 
 	public:
 
-		typedef ConnectionTraitT ConnectionTrait;
-		typedef typename ConnectionTrait::Proto Proto;
+		typedef TraitT Trait;
+		typedef typename Trait::Proto Proto;
 		typedef typename Proto::socket Socket;
 		typedef typename Proto::endpoint Endpoint;
-		typedef InetConnection<ConnectionTrait> Self;
+		typedef InetConnection<Trait> Self;
 
 	public:
 
@@ -123,11 +146,11 @@ namespace TestUtil {
 					m_dataBufferStart,
 					const_cast<const Self *>(this)->m_dataBuffer.end()));
 			if (bytesCount == 0) {
-				m_dataBufferStart = m_dataBuffer.end();
 				m_dataBufferSize = 0;
+				UpdateBufferState();
 			} else {
-				std::advance(m_dataBufferStart, bytesCount);
 				m_dataBufferSize -= bytesCount;
+				UpdateBufferState();
 				assert(
 					std::distance(
 						m_dataBufferStart,
@@ -145,8 +168,8 @@ namespace TestUtil {
 					const boost::system_time &waitUntil,
 					Buffer::size_type minSize)
 				const {
+			boost::mutex::scoped_lock lock(m_mutex);
 			for ( ; ; ) {
-				boost::mutex::scoped_lock lock(m_mutex);
 				if (m_dataBufferSize >= minSize) {
 					return true;
 				}
@@ -160,7 +183,8 @@ namespace TestUtil {
 			return *m_socket;
 		}
 
-		const Endpoint & GetEndpoint() const {
+		Endpoint GetEndpoint() const {
+			boost::mutex::scoped_lock lock(m_mutex);
 			return *m_endpoint;
 		}
 
@@ -168,10 +192,19 @@ namespace TestUtil {
 		void HandleWrite(
 					const boost::system::error_code &error,
 					size_t size,
-					T &data)
-				const {
-			assert(!error);
-			assert(data.size() == size);
+					T &data) {
+			OnDataWrite();
+			assert(data.size() == size || (error && size == 0));
+			{
+				std::ostringstream oss;
+				oss << "A:\\" << this << ".write";
+				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+				if (size > 0) {
+					of.write(&data[0], size);
+				} else {
+					of << "[ZERO]";
+				}
+			}
 			UseUnused(error, size);
 			delete &data;
 		}
@@ -179,25 +212,78 @@ namespace TestUtil {
 		void HandleRead(
 					const boost::system::error_code &error,
 					size_t size,
-					Buffer &buffer) {
+					Buffer &buffer,
+					Endpoint &actualRemoteEndpoint,
+					bool startNextRead) {
 			{
+				
 				const std::auto_ptr<const Buffer> bufferHolder(&buffer);
 				boost::mutex::scoped_lock lock(m_mutex);
-				assert(m_endpoint);
-				if (!error) {
+
+				{
+					std::ostringstream oss;
+					oss << "A:\\" << this << ".read";
+					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
+					if (size > 0) {
+						of.write(&buffer[0], size);
+					} else {
+						of << "[ZERO]";
+					}
+					if (!m_endpoint) {
+						of << "[CLOSED]";
+					}
+				}
+
+				if (!m_endpoint) {
+					return;
+				}
+
+				assert(actualRemoteEndpoint == m_endpoint);
+				if (actualRemoteEndpoint != *m_endpoint) {
+					throw std::logic_error("Wrong endpoint used");
+				}
+
+				if (!error || size == buffer.size()) {
+					
 					assert(size <= buffer.size());
 					assert(m_dataBufferSize > 0 || m_dataBufferStart == m_dataBuffer.end());
+
+#					ifdef DEV_VER
+						if (error) {
+							const std::string message = error.message();
+							const char *const messagePch = message.c_str();
+							UseUnused(messagePch);
+						}
+#					endif
+
 					m_dataBuffer.reserve(size);
 					std::copy(
 						buffer.begin(),
-						buffer.end(),
+						buffer.begin() + size,
 						std::back_inserter(m_dataBuffer));
 					UpdateBufferState(size);
+				
+					if (startNextRead) {
+						StartRead();
+					}
+				
 				} else {
-					Close();
+
+#					ifdef DEV_VER
+						const std::string message = error.message();
+						const char *const messagePch = message.c_str();
+						UseUnused(messagePch);
+#					endif
+					
+					assert(size == 0);
+					OnZeroReceived();
+
 				}
+			
 			}
+			
 			m_dataReceivedCondition.notify_all();
+		
 		}
 
 	private:
@@ -211,6 +297,7 @@ namespace TestUtil {
 					m_dataBufferStart,
 					const_cast<const Self *>(this)->m_dataBuffer.end())
 				== int(m_dataBufferSize));
+			UpdateBufferState();
 		}
 
 		explicit InetConnection(boost::asio::io_service &ioService, unsigned short port)
@@ -222,6 +309,7 @@ namespace TestUtil {
 					m_dataBufferStart,
 					const_cast<const Self *>(this)->m_dataBuffer.end())
 				== int(m_dataBufferSize));
+			UpdateBufferState();
 		}
 
 		explicit InetConnection(
@@ -236,9 +324,14 @@ namespace TestUtil {
 					m_dataBufferStart,
 					const_cast<const Self *>(this)->m_dataBuffer.end())
 				== int(m_dataBufferSize));
+			UpdateBufferState();
 		}
 
 	private:
+
+		void OnDataWrite() {
+			//...//
+		}
 
 		void Close() {
 			if (!m_endpoint) {
@@ -250,12 +343,16 @@ namespace TestUtil {
 			m_endpoint.reset();
 		}
 
+		void OnZeroReceived() {
+			Close();
+		}
+
 		void HandleRead(const boost::system::error_code &error, size_t size) {
 			{
 				boost::mutex::scoped_lock lock(m_mutex);
 				assert(m_endpoint || size == 0);
 				if (!error) {
-					std::istream is(&m_inStreamBuffer);
+					std::istream is(&m_additionalState.inStreamBuffer);
 					is.unsetf(std::ios::skipws);
 					assert(m_dataBufferSize > 0 || m_dataBufferStart == m_dataBuffer.end());
 					m_dataBuffer.reserve(size);
@@ -264,8 +361,9 @@ namespace TestUtil {
 						std::istream_iterator<char>(), 
 						std::back_inserter(m_dataBuffer));
 					UpdateBufferState(size);
+					StartRead();
 				} else {
-					Close();
+					OnZeroReceived();
 				}
 			}
 			m_dataReceivedCondition.notify_all();
@@ -275,18 +373,26 @@ namespace TestUtil {
 			static_assert(false, "Method must have explicit specialization.");
 		}
 
+		void UpdateBufferState() {
+			UpdateBufferState(0);
+		}
+
 		void UpdateBufferState(size_t addSize) {
-			assert(!m_dataBuffer.empty());
+			assert(!m_dataBuffer.empty() || addSize == 0);
 			m_dataBufferSize += addSize;
 			m_dataBufferStart
 				= m_dataBuffer.begin() + (m_dataBuffer.size() - m_dataBufferSize);
+#			ifdef DEV_VER
+				m_dataBufferPch = !m_dataBuffer.empty() ? &m_dataBuffer[0] : 0;
+				m_dataBufferFullSize = m_dataBuffer.size();
+				m_dataBufferStartPch = m_dataBufferStart != m_dataBuffer.end() ? &m_dataBufferStart[0] : 0;
+#			endif
 			assert(addSize <= m_dataBuffer.size());
 			assert(
 				std::distance(
 					m_dataBufferStart,
 					const_cast<const Self *>(this)->m_dataBuffer.end())
 				== int(m_dataBufferSize));
-			StartRead();
 		}
 
 	private:
@@ -295,15 +401,21 @@ namespace TestUtil {
 		
 		Buffer m_dataBuffer;
 		Buffer::const_iterator m_dataBufferStart;
+#		ifdef DEV_VER
+			const char *m_dataBufferPch;
+			size_t m_dataBufferFullSize;
+			const char *m_dataBufferStartPch;
+#		endif
 		Buffer::size_type m_dataBufferSize;
-		boost::asio::streambuf m_inStreamBuffer;
 
 		boost::optional<Endpoint> m_endpoint;
 
 		mutable boost::mutex m_mutex;
 
 		mutable boost::condition_variable m_dataReceivedCondition;
-	
+
+		typename Trait::AdditionalState m_additionalState;
+
 	};
 
 	template<>
@@ -312,7 +424,7 @@ namespace TestUtil {
 		assert(m_endpoint);
 		io::async_read_until(
 			GetSocket(),
-			m_inStreamBuffer,
+			m_additionalState.inStreamBuffer,
 			boost::regex(".+"),
 			boost::bind(
 				&Self::HandleRead,
@@ -345,15 +457,18 @@ namespace TestUtil {
 	void InetConnection<UdpInetConnectionTrait>::StartRead() {
 		namespace io = boost::asio;
 		assert(m_endpoint);
-		std::auto_ptr<Buffer> buffer(new Buffer(128));
-		GetSocket().async_receive(
+		std::auto_ptr<Buffer> buffer(new Buffer(Trait::GetReceiveBufferSize()));
+		GetSocket().async_receive_from(
 			io::buffer(*buffer, buffer->size()),
+			m_additionalState.actualRemoteEndpoint,
 			boost::bind(
 				&Self::HandleRead,
 				shared_from_this(),
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::bytes_transferred,
-				boost::ref(*buffer)));
+				boost::ref(*buffer),
+				boost::ref(m_additionalState.actualRemoteEndpoint),
+				true));
 		buffer.release();
 	}
 
@@ -362,6 +477,10 @@ namespace TestUtil {
 	void InetConnection<UdpInetConnectionTrait>::Send(std::auto_ptr<T> data) {
 		namespace io = boost::asio;
 		boost::mutex::scoped_lock lock(m_mutex);
+		assert(data->size() > 0);
+// 		while (m_additionalState.sendingNow) {
+// 			m_additionalState.dataSentCondition.wait(lock);
+// 		}
 		if (!m_endpoint) {
 			throw TestUtil::ConnectionClosed();
 		}
@@ -375,8 +494,21 @@ namespace TestUtil {
 				io::placeholders::bytes_transferred,
 				boost::ref(*data)));
 		data.release();
+		m_additionalState.sendingNow = true;
 	}
 
+	template<>
+	void InetConnection<UdpInetConnectionTrait>::OnZeroReceived() {
+		//...//
+	}
+
+// 	template<>
+// 	void InetConnection<UdpInetConnectionTrait>::OnDataWrite() {
+// 		boost::mutex::scoped_lock lock(m_mutex);
+// 		assert(m_additionalState.sendingNow);
+// 		m_additionalState.sendingNow = false;
+// 		m_additionalState.dataSentCondition.notify_all();
+// 	}
 
 }
 
