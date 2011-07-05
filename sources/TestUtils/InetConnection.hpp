@@ -195,16 +195,16 @@ namespace TestUtil {
 					T &data) {
 			OnDataWrite();
 			assert(data.size() == size || (error && size == 0));
-//			{
-//				std::ostringstream oss;
-//				oss << "A:\\" << this << ".write";
-//				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-//				if (size > 0) {
-//					of.write(&data[0], size);
-//				} else {
-//					of << "[ZERO]";
-//				}
-//			}
+			{
+				std::ostringstream oss;
+				oss << "A:\\" << this << ".write";
+				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+				if (size > 0) {
+					of.write(&data[0], size);
+				} else {
+					of << "[ZERO]";
+				}
+			}
 			UseUnused(error, size);
 			delete &data;
 		}
@@ -220,19 +220,19 @@ namespace TestUtil {
 				const std::auto_ptr<const Buffer> bufferHolder(&buffer);
 				boost::mutex::scoped_lock lock(m_mutex);
 
-//				{
-//					std::ostringstream oss;
-//					oss << "A:\\" << this << ".read";
-//					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
-//					if (size > 0) {
-//						of.write(&buffer[0], size);
-//					} else {
-//						of << "[ZERO]";
-//					}
-//					if (!m_endpoint) {
-//						of << "[CLOSED]";
-//					}
-//				}
+				{
+					std::ostringstream oss;
+					oss << "A:\\" << this << ".read";
+					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
+					if (size > 0) {
+						of.write(&buffer[0], size);
+					} else {
+						of << "[ZERO]";
+					}
+					if (!m_endpoint) {
+						of << "[CLOSED]";
+					}
+				}
 
 				if (!m_endpoint) {
 					return;

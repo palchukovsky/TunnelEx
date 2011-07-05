@@ -33,7 +33,7 @@ namespace {
 		
 		virtual void SetUp() {
 			m_server.reset(new TestUtil::UdpServer(testing::udpServerPort));
-			m_server->SetWaitTime(testing::defaultDataWaitTime * 10);
+			m_server->SetWaitTime(testing::defaultDataWaitTime);
 			const bool waitResult = m_server->WaitConnect(1, true);
 			assert(waitResult);
 			UseUnused(waitResult);
@@ -48,13 +48,16 @@ namespace {
 		void TestActiveServer(size_t connection) {
 
 			const testing::PacketsNumber packets = 100;
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
 			ASSERT_NO_THROW(m_server->SendVal(connection, packets));
-			ASSERT_TRUE(
-					m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
 
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				SendTestPacket(connection, 4096);
+				SendTestPacket(connection, 512);
+				ASSERT_TRUE(
+					m_server->WaitAndTakeData(connection, testing::clientMagicOk, false));
 				ReceiveTestPacket(connection);
+				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			}
 
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
@@ -78,7 +81,7 @@ namespace {
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
 				ReceiveTestPacket(connection);
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
-				SendTestPacket(connection, 16);
+				SendTestPacket(connection, 4096);
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicOk, false));
 			}
@@ -272,37 +275,42 @@ namespace {
 
 	private:
 
-		void SendTestPacket(size_t connection, testing::PacketSize size) const  {
-			
+		void SendTestPacket(size_t connection, testing::PacketSize size) {
+
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
+
 			std::auto_ptr<TestUtil::Buffer> packet(new TestUtil::Buffer);
 			boost::crc_32_type crc;
 			testing::GeneratePacket(*packet, crc, size * 0.5, size * 1.5);
-			
-			ASSERT_NO_THROW(m_server->SendVal(connection, testing::PacketSize(packet->size())));
-			ASSERT_TRUE(m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
+
+			ASSERT_NO_THROW(
+				m_server->SendVal(connection, testing::PacketSize(packet->size())));
 			ASSERT_NO_THROW(m_server->Send(connection, packet));
-			ASSERT_TRUE(m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
 			ASSERT_NO_THROW(m_server->SendVal(connection, crc.checksum()));
-			ASSERT_TRUE(m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
 
 		}
 
-		void ReceiveTestPacket(size_t connection) const {
+		void ReceiveTestPacket(size_t connection) {
 			testing::PacketSize size = 0;
+			ASSERT_TRUE(
+				m_server->WaitAndTakeData(connection, testing::clientMagicBegin, false));
 			ASSERT_NO_THROW(
-				size = m_server->WaitAndTakeData<testing::PacketSize>(connection, true));
+				size = m_server->WaitAndTakeData<testing::PacketSize>(connection, false));
 			EXPECT_GT(size, 0);
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			TestUtil::Buffer packet;
-			ASSERT_NO_THROW(m_server->WaitAndTakeAnyData(connection, size, true, packet));
+			ASSERT_NO_THROW(
+				m_server->WaitAndTakeAnyData(connection, size, false, packet));
 			boost::crc_32_type realCrc;
 			testing::Calc(packet, realCrc);
 			boost::crc_32_type::value_type remoteCrc;
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			ASSERT_NO_THROW(
-				remoteCrc = m_server->WaitAndTakeData<boost::crc_32_type::value_type>(connection, true));
+				remoteCrc = m_server->WaitAndTakeData<boost::crc_32_type::value_type>(
+					connection,
+					false));
 			EXPECT_EQ(realCrc.checksum(), remoteCrc);
-			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
+			ASSERT_TRUE(
+				m_server->WaitAndTakeData(connection, testing::clientMagicEnd, false));
 		}
 
 	protected:
@@ -313,26 +321,13 @@ namespace {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	TEST_F(UdpServer,  Simple) {
-		ASSERT_EQ(size_t(1), m_server->GetNumberOfAcceptedConnections(false));
-		ASSERT_TRUE(
-			m_server->WaitAndTakeData(0, testing::clientMagicHello, false));
-		for (testing::PacketsNumber i = 0; i < 1000; ++i) {
-			std::ostringstream oss;
-			oss << std::setfill('#') << std::setw(100) << i << '|';
-			EXPECT_TRUE(m_server->WaitAndTakeData(0, oss.str(), false))
-				<< "Failed receive on #" << i << ".";
-		}
-	}
-
-	TEST_F(UdpServer, DISABLED_Any) {
+	TEST_F(UdpServer, Any) {
 
 		ASSERT_EQ(size_t(1), m_server->GetNumberOfAcceptedConnections(false));
 		const size_t connection = 0;
 
 		ASSERT_TRUE(
-			m_server->WaitAndTakeData(connection, testing::clientMagicHello, true));
-		ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
+			m_server->WaitAndTakeData(connection, testing::clientMagicHello, false));
 		
 		enum ServerMode {
 			SERVER_MODE_ACTIVE = 1,
@@ -359,6 +354,8 @@ namespace {
 			std::advance(serverModeItPos, serverModePos - 1);
 			std::cout << **serverModeItPos << " (" << serverModePos << ")";
 		}
+
+		ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
 
 		switch (serverMode) {
 			case  SERVER_MODE_ACTIVE:
