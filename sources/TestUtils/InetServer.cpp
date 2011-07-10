@@ -75,56 +75,17 @@ public:
 		return result;
 	}
 
-	void CloseConnection(size_t connectionIndex) {
+	boost::shared_ptr<Connection> GetConnection(size_t connectionIndex) {
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw std::logic_error("Could not find connection by index");
 		}
-		GetConnection(connectionIndex, lock).Stop();
+		return m_connections[connectionIndex];
 	}
 
-	void Send(size_t connectionIndex, const std::string &message) {
-		assert(message.size());
-		std::auto_ptr<Buffer> buffer(new Buffer(message.begin(), message.end()));
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		GetConnection(connectionIndex, lock).Send(buffer);
+	boost::shared_ptr<const Connection> GetConnection(size_t connectionIndex) const {
+		return const_cast<Implementation *>(this)->GetConnection(connectionIndex);
 	}
-
-	void Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
-		assert(data->size());
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		GetConnection(connectionIndex, lock).Send(data);
-	}
-
-	Buffer::size_type GetReceivedSize(size_t connectionIndex) const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock).GetReceivedSize();
-	}
-
-	void GetReceived(
-				size_t connectionIndex,
-				size_t maxSize,
-				Buffer &result)
-			const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		GetConnection(connectionIndex, lock).GetReceived(maxSize, result);
-	}
-
-	void ClearReceived(size_t connectionIndex, size_t bytesCount) {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock).ClearReceived(bytesCount);
-	}
-
-	bool WaitDataReceiveEvent(
-				size_t connectionIndex,
-				const boost::system_time &waitUntil,
-				Buffer::size_type minSize)
-			const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock)
-			.WaitDataReceiveEvent(waitUntil, minSize);
-	}
-
 
 private:
 
@@ -157,23 +118,6 @@ private:
 			}
 			StartAccept();
 		}
-	}
-
-	Connection & GetConnection(
-				size_t connectionIndex,
-				const boost::mutex::scoped_lock &) {
-		if (connectionIndex >= m_connections.size()) {
-			throw std::logic_error("Could not find connection by index");
-		}
-		return *m_connections[connectionIndex];
-	}
-
-	const Connection & GetConnection(
-				size_t connectionIndex,
-				const boost::mutex::scoped_lock &lock)
-			const {
-		return const_cast<Implementation *>(this)
-			->GetConnection(connectionIndex, lock);
 	}
 
 	void ServiceThreadMain() {
@@ -218,19 +162,22 @@ unsigned int TcpServer::GetNumberOfAcceptedConnections(bool onlyIfActive) const 
 }
 
 void TcpServer::CloseConnection(size_t connectionIndex) {
-	m_pimpl->CloseConnection(connectionIndex);
+	m_pimpl->GetConnection(connectionIndex)->Stop();
 }
 
 void TcpServer::Send(size_t connectionIndex, const std::string &message)  {
-	m_pimpl->Send(connectionIndex, message);
+	assert(!message.empty());
+	std::auto_ptr<Buffer> buffer(new Buffer(message.begin(), message.end()));
+	Send(connectionIndex, buffer);
 }
 
 void TcpServer::Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
-	m_pimpl->Send(connectionIndex, data);
+	assert(!data->empty());
+	m_pimpl->GetConnection(connectionIndex)->Send(data);
 }
 
 Buffer::size_type TcpServer::GetReceivedSize(size_t connectionIndex) const {
-	return m_pimpl->GetReceivedSize(connectionIndex);
+	return m_pimpl->GetConnection(connectionIndex)->GetReceivedSize();
 }
 
 void TcpServer::GetReceived(
@@ -238,11 +185,11 @@ void TcpServer::GetReceived(
 			size_t maxSize,
 			Buffer &result)
 		const {
-	m_pimpl->GetReceived(connectionIndex, maxSize, result);
+	m_pimpl->GetConnection(connectionIndex)->GetReceived(maxSize, result);
 }
 
 void TcpServer::ClearReceived(size_t connectionIndex, size_t bytesCount) {
-	return m_pimpl->ClearReceived(connectionIndex, bytesCount);
+	return m_pimpl->GetConnection(connectionIndex)->ClearReceived(bytesCount);
 }
 
 bool TcpServer::WaitDataReceiveEvent(
@@ -250,7 +197,9 @@ bool TcpServer::WaitDataReceiveEvent(
 			const boost::system_time &waitUntil,
 			Buffer::size_type minSize)
 		const {
-	return m_pimpl->WaitDataReceiveEvent(connectionIndex, waitUntil, minSize);
+	return m_pimpl
+		->GetConnection(connectionIndex)
+		->WaitDataReceiveEvent(waitUntil, minSize);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -303,54 +252,17 @@ public:
 		return m_connections.size();
 	}
 
-	void CloseConnection(size_t connectionIndex) {
+	boost::shared_ptr<Connection> GetConnection(size_t connectionIndex) {
 		boost::mutex::scoped_lock lock(m_connectionsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw std::logic_error("Could not find connection by index");
 		}
+		return m_connections[connectionIndex];
 	}
 
-	void Send(size_t connectionIndex, const std::string &message) {
-		assert(message.size());
-		std::auto_ptr<Buffer> buffer(new Buffer(message.begin(), message.end()));
-		Send(connectionIndex, buffer);
+	boost::shared_ptr<const Connection> GetConnection(size_t connectionIndex) const {
+		return const_cast<Implementation *>(this)->GetConnection(connectionIndex);
 	}
-
-	void Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
-		assert(data->size());
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		GetConnection(connectionIndex, lock).Send(data);
-	}
-
-	Buffer::size_type GetReceivedSize(size_t connectionIndex) const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock).GetReceivedSize();
-	}
-
-	void GetReceived(
-				size_t connectionIndex,
-				size_t maxSize,
-				Buffer &result)
-			const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		GetConnection(connectionIndex, lock).GetReceived(maxSize, result);
-	}
-
-	void ClearReceived(size_t connectionIndex, size_t bytesCount) {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
-		return GetConnection(connectionIndex, lock).ClearReceived(bytesCount);
-	}
-
-	bool WaitDataReceiveEvent(
-				size_t connectionIndex,
-				const boost::system_time &waitUntil,
-				Buffer::size_type minSize)
-			const {
-		const boost::shared_ptr<const Connection> connection
-			= TakeConnection(connectionIndex, boost::mutex::scoped_lock(m_connectionsMutex));
-		return connection->WaitDataReceiveEvent(waitUntil, minSize);
-	}
-
 
 private:
 
@@ -383,39 +295,6 @@ private:
 					boost::ref(*buffer)));
 			buffer.release();
 		}
-	}
-
-	boost::shared_ptr<Connection> TakeConnection(
-				size_t connectionIndex,
-				const boost::mutex::scoped_lock &) {
-		if (connectionIndex >= m_connections.size()) {
-			throw std::logic_error("Could not find connection by index");
-		}
-		return m_connections[connectionIndex];
-	}
-
-	boost::shared_ptr<const Connection> TakeConnection(
-				size_t connectionIndex,
-				const boost::mutex::scoped_lock &)
-			const {
-		if (connectionIndex >= m_connections.size()) {
-			throw std::logic_error("Could not find connection by index");
-		}
-		return m_connections[connectionIndex];
-	}
-
-	Connection & GetConnection(
-				size_t connectionIndex,
-				const boost::mutex::scoped_lock &lock) {
-		return *TakeConnection(connectionIndex, lock);
-	}
-
-	const Connection & GetConnection(
-				size_t connectionIndex,
-				const boost::mutex::scoped_lock &lock)
-			const {
-		return const_cast<Implementation *>(this)
-			->GetConnection(connectionIndex, lock);
 	}
 
 	void ServiceThreadMain() {
@@ -511,19 +390,22 @@ unsigned int UdpServer::GetNumberOfAcceptedConnections(bool onlyIfActive) const 
 }
 
 void UdpServer::CloseConnection(size_t connectionIndex) {
-	m_pimpl->CloseConnection(connectionIndex);
+	m_pimpl->GetConnection(connectionIndex);
 }
 
 void UdpServer::Send(size_t connectionIndex, const std::string &message)  {
-	m_pimpl->Send(connectionIndex, message);
+	assert(!message.empty());
+	std::auto_ptr<Buffer> buffer(new Buffer(message.begin(), message.end()));
+	Send(connectionIndex, buffer);
 }
 
 void UdpServer::Send(size_t connectionIndex, std::auto_ptr<Buffer> data) {
-	m_pimpl->Send(connectionIndex, data);
+	assert(!data->empty());
+	m_pimpl->GetConnection(connectionIndex)->Send(data);
 }
 
 Buffer::size_type UdpServer::GetReceivedSize(size_t connectionIndex) const {
-	return m_pimpl->GetReceivedSize(connectionIndex);
+	return m_pimpl->GetConnection(connectionIndex)->GetReceivedSize();
 }
 
 void UdpServer::GetReceived(
@@ -531,11 +413,11 @@ void UdpServer::GetReceived(
 			size_t maxSize,
 			Buffer &result)
 		const {
-	m_pimpl->GetReceived(connectionIndex, maxSize, result);
+	m_pimpl->GetConnection(connectionIndex)->GetReceived(maxSize, result);
 }
 
 void UdpServer::ClearReceived(size_t connectionIndex, size_t bytesCount) {
-	return m_pimpl->ClearReceived(connectionIndex, bytesCount);
+	return m_pimpl->GetConnection(connectionIndex)->ClearReceived(bytesCount);
 }
 
 bool UdpServer::WaitDataReceiveEvent(
@@ -543,7 +425,7 @@ bool UdpServer::WaitDataReceiveEvent(
 			const boost::system_time &waitUntil,
 			Buffer::size_type minSize)
 		const {
-	return m_pimpl->WaitDataReceiveEvent(connectionIndex, waitUntil, minSize);
+	return m_pimpl->GetConnection(connectionIndex)->WaitDataReceiveEvent(waitUntil, minSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

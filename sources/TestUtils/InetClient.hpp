@@ -61,7 +61,10 @@ namespace TestUtil {
 		
 		virtual ~InetClient() {
 			try {
-				m_connection->Stop();
+				if (m_connection) {
+					m_connection->Stop();
+					m_connection.reset();
+				}
 				m_ioService.stop();
 				m_thread->join();
 			} catch (...) {

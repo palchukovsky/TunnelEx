@@ -35,7 +35,9 @@ namespace testing {
 
 	const std::string serverMagicSubConnectionMode("{SERVER SUB CONNECTION MODE}");
 
-	const boost::posix_time::time_duration defaultDataWaitTime(0, 0, 5);
+	const std::string serverMagicDummyMode("{SERVER DUMMY CONNECTION MODE}");
+
+	const boost::posix_time::time_duration defaultDataWaitTime(0, 0, 3);
 
 	boost::mt19937 generator;
 

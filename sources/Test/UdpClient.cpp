@@ -17,6 +17,10 @@
 namespace {
 
 	class UdpClient : public testing::Client {
+
+	public:
+
+		typedef testing::Client Base;
 	
 	public:
 	
@@ -26,179 +30,170 @@ namespace {
 	
 	protected:
 
+		virtual void TearDown() {
+			const auto waitTime = GetClient().GetWaitTime();
+			Base::TearDown();
+			boost::thread::sleep(boost::get_system_time() + waitTime);
+		}
+
 		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
 			std::auto_ptr<TestUtil::Client> result(
 				new TestUtil::UdpClient("localhost", testing::udpServerPort));
 			return result;
 		}
 
+		virtual void DoConnect(
+					TestUtil::Client &client,
+					const std::string &mode,
+					bool infiniteTimeout,
+					bool &result)
+				const {
+			ASSERT_TRUE(Connect(client, infiniteTimeout));
+			ASSERT_TRUE(client.WaitAndTakeData(testing::serverMagicHello, true));
+			ASSERT_NO_THROW(client.Send(mode));
+			result = true;
+		}
+
+		bool SendTestPacket(testing::PacketSize size, bool answers, double widthRatio) {
+			return SendTestPacket(GetClient(), size, answers, widthRatio);
+		}
+
+		bool SendTestPacket(
+					TestUtil::Client &client,
+					testing::PacketSize size,
+					bool answers,
+					double widthRatio)
+				const  {
+			bool result = false;
+			DoSendTestPacket(client, size, answers, widthRatio, result);
+			return result;
+		}
+
+		void DoSendTestPacket(
+					TestUtil::Client &client,
+					testing::PacketSize size,
+					bool answers,
+					double widthRatio,
+					bool &result)
+				const  {
+			
+			std::auto_ptr<TestUtil::Buffer> packet(new TestUtil::Buffer);
+			boost::crc_32_type crc;
+			testing::GeneratePacket(*packet, crc, size - (size * widthRatio), size + (size * widthRatio));
+			
+			ASSERT_NO_THROW(client.SendVal(testing::PacketSize(packet->size())));
+			if (answers) {
+				ASSERT_TRUE(client.WaitAndTakeData(testing::serverMagicOk, true));
+			}
+			ASSERT_NO_THROW(client.Send(packet));
+			if (answers) {
+				ASSERT_TRUE(client.WaitAndTakeData(testing::serverMagicOk, true));
+			}
+			ASSERT_NO_THROW(client.SendVal(crc.checksum()));
+
+			result = true;
+
+		}
+
+		bool ReceiveTestPacket(bool answers) {
+			return ReceiveTestPacket(GetClient(), answers);
+		}
+
+		bool ReceiveTestPacket(TestUtil::Client &client, bool answers) const {
+			bool result = false;
+			DoReceiveTestPacket(client, answers, result);
+			return result;
+		}
+
+		void DoReceiveTestPacket(TestUtil::Client &client, bool answers, bool &result) const {
+			testing::PacketSize size = 0;
+			ASSERT_NO_THROW(size = client.WaitAndTakeData<testing::PacketSize>(answers));
+			EXPECT_GT(size, 0);
+			if (answers) {
+				ASSERT_NO_THROW(client.Send(testing::clientMagicOk));
+			}
+			TestUtil::Buffer packet;
+			ASSERT_NO_THROW(client.WaitAndTakeAnyData(size, answers, packet));
+			boost::crc_32_type realCrc;
+			testing::Calc(packet, realCrc);
+			boost::crc_32_type::value_type remoteCrc;
+			if (answers) {
+				ASSERT_NO_THROW(client.Send(testing::clientMagicOk));
+			}
+			ASSERT_NO_THROW(
+				remoteCrc = client.WaitAndTakeData<boost::crc_32_type::value_type>(answers));
+			EXPECT_EQ(realCrc.checksum(), remoteCrc);
+			result = true;
+		}
+
 	};
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	TEST_F(UdpClient, DataExchangeActive) {
-
-		Connect(testing::serverMagicPassiveMode, false);
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, true));
-
-		const testing::PacketsNumber packets = 100;
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBegin));
-		ASSERT_NO_THROW(GetClient().SendVal(packets));
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicEnd));
-
-		for (testing::PacketsNumber i = 0; i < packets; ++i) {
-			SendTestPacket(128);
-			ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, false));
-			ReceiveTestPacket();
-			ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk));
-		}
-
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
-		EXPECT_EQ(0, GetClient().GetReceivedSize());
-		EXPECT_TRUE(GetClient().IsConnected());
-		ASSERT_NO_THROW(GetClient().Disconnect());
-
-	}
-
 	TEST_F(UdpClient, DataExchangePassive) {
 
-		Connect(testing::serverMagicActiveMode, false);
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, false));
+		ASSERT_TRUE(Connect(testing::serverMagicActiveMode, false));
 
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBegin, false));
 		testing::PacketsNumber packets = 0;
 		ASSERT_NO_THROW(
-			packets = GetClient().WaitAndTakeData<testing::PacketsNumber>(false));
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicEnd, false));
+			packets = GetClient().WaitAndTakeData<testing::PacketsNumber>(true));
 		EXPECT_GT(packets, testing::PacketsNumber(0));
+		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk));
 
 		for (testing::PacketsNumber i = 0; i < packets; ++i) {
-			ReceiveTestPacket();
+			ASSERT_TRUE(ReceiveTestPacket(true));
 			ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk));
-			SendTestPacket(128);
-			ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, false));
+			ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
+			ASSERT_TRUE(SendTestPacket(128, true, .5));
+			ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
+			ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk));
 		}
 
 		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
 		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
 		EXPECT_EQ(0, GetClient().GetReceivedSize());
-		EXPECT_TRUE(GetClient().WaitDisconnect());
-		EXPECT_EQ(0, GetClient().GetReceivedSize());
 
 	}
 
-	TEST_F(UdpClient, DISABLED_DataExchangeOneWayActive) {
+	TEST_F(UdpClient, DataOneWayExchangePassive) {
 
-		const testing::PacketsNumber packets = 1024 * 3;
-		const testing::PacketSize packetSize = 1024;
+		ASSERT_TRUE(Connect(testing::serverMagicOneWayActiveMode, false));
 
-		Connect(testing::serverMagicOneWayPassiveMode, false);
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, true));
-
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBegin));
-		ASSERT_NO_THROW(GetClient().SendVal(packets));
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicEnd));
-
-		for (testing::PacketsNumber i = 0; i < packets; ++i) {
-			SendTestPacket(packetSize);
-		}
-
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
-		const auto waitTime = GetClient().GetWaitTime();
-		GetClient().SetWaitTime(waitTime * 3);
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
-		GetClient().SetWaitTime(waitTime);
-		ASSERT_NO_THROW(GetClient().Disconnect());
-
-	}
-
-	TEST_F(UdpClient, DISABLED_DataOneWayExchangePassive) {
-
-		Connect(testing::serverMagicOneWayActiveMode, false);
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, false));
-
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBegin, false));
 		testing::PacketsNumber packets = 0;
 		ASSERT_NO_THROW(
 			packets = GetClient().WaitAndTakeData<testing::PacketsNumber>(false));
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicEnd, false));
 		EXPECT_GT(packets, testing::PacketsNumber(0));
 
-		int lastPersents = 0;
 		for (testing::PacketsNumber i = 0; i < packets; ++i) {
-			ReceiveTestPacket();
-			const int persents = (((i + 1) * 100) / packets);
-			if (!(persents % 10) && persents > lastPersents) {
-				std::cout
-					<< "received "
-					<< (i + 1) << " from " << packets
-					<< " (" << persents << "%)"
-					<< std::endl;
-				lastPersents = persents;
+			ASSERT_TRUE(ReceiveTestPacket(false));
+			if (!(i % 25)) {
+				ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk));
 			}
 		}
 
 		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
-		ASSERT_NO_THROW(GetClient().Disconnect());
+		EXPECT_EQ(0, GetClient().GetReceivedSize());
 
 	}
 
-	TEST_F(UdpClient, DISABLED_SeveralConnetions) {
+	TEST_F(UdpClient, DataOneWayExchangeActive) {
 
-		const testing::ConnectionsNumber connectionsNumber = 100;
-		const testing::PacketsNumber packetsNumber = 10;
-		const testing::PacketSize packetSize = 128;
-		
-		Connect(testing::serverMagicSeveralConnectionsMode, false);
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicHello, true));
+		testing::PacketsNumber packets = 5000;
 
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBegin));
-		ASSERT_NO_THROW(GetClient().SendVal(connectionsNumber));
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicEnd));
+		ASSERT_TRUE(Connect(testing::serverMagicOneWayPassiveMode, false));
+		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
 
-		typedef std::list<boost::shared_ptr<TestUtil::Client>> Connections;
-		Connections connections;
-		for (size_t i = 0; i < connectionsNumber; ++i) {
-			boost::shared_ptr<TestUtil::Client> connection(CreateConnection());
-			Connect(*connection, false);
-			ASSERT_NO_THROW(connection->Send(testing::serverMagicSubConnectionMode));
-			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicHello, true))
-				<< "Failed to receive HELLO for connection #" << (i + 1) << ".";
-			connections.push_back(connection);
-		}
+		ASSERT_NO_THROW(GetClient().SendVal(packets));
 
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBegin));
-		ASSERT_NO_THROW(GetClient().SendVal(packetsNumber));
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicEnd));
-
-		for (size_t i = 0; i < 2; ++i) {
-			for (testing::PacketsNumber i = 0; i < packetsNumber; ++i) {
-				foreach (auto &connection, connections) {
-					SendTestPacket(*connection, packetSize);
-					ASSERT_TRUE(
-						connection->WaitAndTakeData(
-							testing::serverMagicOk,
-							false));
-					ReceiveTestPacket(*connection);
-					ASSERT_NO_THROW(connection->Send(testing::clientMagicOk));
-				}
+		for (testing::PacketsNumber i = 0; i < packets; ++i) {
+			ASSERT_TRUE(SendTestPacket(128, false, .95));
+			if (!(i % 25)) {
+				ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
 			}
 		}
 
-		foreach (auto &connection, connections) {
-			ASSERT_NO_THROW(connection->Send(testing::clientMagicBay));
-			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicBay, true));
-			EXPECT_TRUE(connection->IsConnected());
-			ASSERT_NO_THROW(connection->Disconnect());
-		}
-		connections.clear();
-
-		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
-		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
-		EXPECT_TRUE(GetClient().IsConnected());
-		ASSERT_NO_THROW(GetClient().Disconnect());
+		EXPECT_NO_THROW(GetClient().Send(testing::clientMagicBay));
+		EXPECT_EQ(0, GetClient().GetReceivedSize());
 
 	}
 

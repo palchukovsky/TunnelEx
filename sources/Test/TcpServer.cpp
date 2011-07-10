@@ -45,7 +45,39 @@ namespace {
 
 	protected:
 
-		void TestActiveServer(size_t connection) {
+		bool TestActiveServer(size_t mainConnection) {
+			bool result = false;
+			DoTestActiveServer(mainConnection, result);
+			return result;
+		}
+
+		bool TestPassiveServer(size_t mainConnection) {
+			bool result = false;
+			DoTestPassiveServer(mainConnection, result);
+			return result;
+		}
+
+		bool TestOneWayActiveServer(size_t mainConnection) {
+			bool result = false;
+			DoTestOneWayActiveServer(mainConnection, result);
+			return result;
+		}
+
+		bool TestOneWayPassiveServer(size_t mainConnection) {
+			bool result = false;
+			DoTestOneWayPassiveServer(mainConnection, result);
+			return result;
+		}
+
+		bool TestSeveralConnections(size_t mainConnection) {
+			bool result = false;
+			DoTestSeveralConnections(mainConnection, result);
+			return result;
+		}
+
+	private:
+
+		void DoTestActiveServer(size_t connection, bool &result) {
 
 			const testing::PacketsNumber packets = 100;
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
@@ -53,10 +85,10 @@ namespace {
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
 
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				SendTestPacket(connection, 512);
+				ASSERT_TRUE(SendTestPacket(connection, 256, 0.5));
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicOk, false));
-				ReceiveTestPacket(connection);
+				ASSERT_TRUE(ReceiveTestPacket(connection));
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 			}
 
@@ -66,9 +98,11 @@ namespace {
 			EXPECT_EQ(0, m_server->GetReceivedSize(connection));
 			m_server->CloseConnection(connection);
 
+			result = true;
+
 		}
 
-		void TestPassiveServer(size_t connection) {
+		void DoTestPassiveServer(size_t connection, bool &result) {
 
 			testing::PacketsNumber packets = 0;
 			ASSERT_TRUE(
@@ -80,9 +114,9 @@ namespace {
 				m_server->WaitAndTakeData(connection, testing::clientMagicEnd, false));
 
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				ReceiveTestPacket(connection);
+				ASSERT_TRUE(ReceiveTestPacket(connection));
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
-				SendTestPacket(connection, 512);
+				ASSERT_TRUE(SendTestPacket(connection, 512, 0.5));
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicOk, false));
 			}
@@ -93,9 +127,11 @@ namespace {
 			EXPECT_EQ(0, m_server->GetReceivedSize(connection));
 			ASSERT_TRUE(m_server->WaitDisconnect(connection));
 
+			result = true;
+
 		}
 
-		void TestOneWayActiveServer(size_t connection) {
+		void DoTestOneWayActiveServer(size_t connection, bool &result) {
 
 			const testing::PacketsNumber packets = 1024 * 3;
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
@@ -103,7 +139,7 @@ namespace {
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
 
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				SendTestPacket(connection, 1024);
+				ASSERT_TRUE(SendTestPacket(connection, 1024, 0.95));
 			}
 
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
@@ -117,9 +153,11 @@ namespace {
 			m_server->SetWaitTime(waitTime);
 			m_server->CloseConnection(connection);
 
+			result = true;
+
 		}
 
-		void TestOneWayPassiveServer(size_t connection) {
+		void DoTestOneWayPassiveServer(size_t connection, bool &result) {
 
 			testing::PacketsNumber packets = 0;
 			ASSERT_TRUE(
@@ -132,7 +170,7 @@ namespace {
 
 			int lastPersents = 0;
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
-				ReceiveTestPacket(connection);
+				ASSERT_TRUE(ReceiveTestPacket(connection));
 				const int persents = (((i + 1) * 100) / packets);
 				if (!(persents % 10) && persents > lastPersents) {
 					std::cout
@@ -150,9 +188,11 @@ namespace {
 			EXPECT_EQ(0, m_server->GetReceivedSize(connection));
 			m_server->CloseConnection(connection);
 
+			result = true;
+
 		}
 
-		void TestSeveralConnections(size_t mainConnection) {
+		void DoTestSeveralConnections(size_t mainConnection, bool &result) {
 
 			testing::PacketSize packetSize = 128;
 
@@ -214,13 +254,13 @@ namespace {
 						ASSERT_EQ(
 							i, 
 							m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
-						ReceiveTestPacket(connection);
+						ASSERT_TRUE(ReceiveTestPacket(connection));
 						ASSERT_NO_THROW(
 							m_server->Send(
 								connection,
 								testing::serverMagicOk));
 						ASSERT_NO_THROW(m_server->SendVal(connection, i));
-						SendTestPacket(connection, packetSize);
+						ASSERT_TRUE(SendTestPacket(connection, packetSize, 0.5));
 						ASSERT_TRUE(
 							m_server->WaitAndTakeData(
 								connection,
@@ -272,17 +312,32 @@ namespace {
 			EXPECT_EQ(0, m_server->GetReceivedSize(mainConnection));
 			ASSERT_TRUE(m_server->WaitDisconnect(mainConnection));
 
+			result = true;
+
 		}
 
 	private:
 
-		void SendTestPacket(size_t connection, testing::PacketSize size) {
+		bool SendTestPacket(
+					size_t connection,
+					testing::PacketSize size,
+					double widthRatio) {
+			bool result = false;
+			DoSendTestPacket(connection, size, widthRatio, result);
+			return result;
+		}
+
+		void DoSendTestPacket(
+					size_t connection,
+					testing::PacketSize size,
+					double widthRatio,
+					bool &result) {
 
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBegin));
 
 			std::auto_ptr<TestUtil::Buffer> packet(new TestUtil::Buffer);
 			boost::crc_32_type crc;
-			testing::GeneratePacket(*packet, crc, size * 0.5, size * 1.5);
+			testing::GeneratePacket(*packet, crc, size - (size * widthRatio), size + (size * widthRatio));
 
 			ASSERT_NO_THROW(
 				m_server->SendVal(connection, testing::PacketSize(packet->size())));
@@ -290,9 +345,17 @@ namespace {
 			ASSERT_NO_THROW(m_server->SendVal(connection, crc.checksum()));
 			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicEnd));
 
+			result = true;
+
 		}
 
-		void ReceiveTestPacket(size_t connection) {
+		bool ReceiveTestPacket(size_t connection) {
+			bool result = false;
+			DoReceiveTestPacket(connection, result);
+			return result;
+		}
+
+		void DoReceiveTestPacket(size_t connection, bool &result) {
 			testing::PacketSize size = 0;
 			ASSERT_TRUE(
 				m_server->WaitAndTakeData(connection, testing::clientMagicBegin, false));
@@ -312,6 +375,7 @@ namespace {
 			EXPECT_EQ(realCrc.checksum(), remoteCrc);
 			ASSERT_TRUE(
 				m_server->WaitAndTakeData(connection, testing::clientMagicEnd, false));
+			result = true;
 		}
 
 	protected:
@@ -324,7 +388,7 @@ namespace {
 
 	TEST_F(TcpServer, Any) {
 
-		ASSERT_EQ(size_t(1), m_server->GetNumberOfAcceptedConnections(false));
+		ASSERT_GT(m_server->GetNumberOfAcceptedConnections(false), size_t(0));
 		const size_t connection = 0;
 
 		ASSERT_TRUE(
@@ -346,8 +410,9 @@ namespace {
 			modes.push_back(&testing::serverMagicOneWayActiveMode);
 			modes.push_back(&testing::serverMagicOneWayPassiveMode);
 			modes.push_back(&testing::serverMagicSeveralConnectionsMode);
-			const int serverModePos
-				= m_server->WaitAndTakeData(connection, modes, true);
+			int serverModePos = 0;
+			ASSERT_NO_THROW( 
+				serverModePos = m_server->WaitAndTakeData(connection, modes, true));
 			ASSERT_GT(serverModePos, 0);
 			ASSERT_LT(serverModePos, 6);
 			serverMode = ServerMode(serverModePos);
@@ -361,23 +426,23 @@ namespace {
 		switch (serverMode) {
 			case  SERVER_MODE_ACTIVE:
 				std::cout << " - server active mode" << std::endl;
-				TestActiveServer(connection);
+				ASSERT_TRUE(TestActiveServer(connection));
 				break;
 			case SERVER_MODE_PASSIVE:
 				std::cout << " - server passive mode" << std::endl;
-				TestPassiveServer(connection);
+				ASSERT_TRUE(TestPassiveServer(connection));
 				break;
 			case SERVER_MODE_ONE_WAY_ACTIVE:
 				std::cout << " - server one-way active mode" << std::endl;
-				TestOneWayActiveServer(connection);
+				ASSERT_TRUE(TestOneWayActiveServer(connection));
 				break;
 			case SERVER_MODE_ONE_WAY_PASSIVE:
 				std::cout << " - server one-way passive mode" << std::endl;
-				TestOneWayPassiveServer(connection);
+				ASSERT_TRUE(TestOneWayPassiveServer(connection));
 				break;
 			case SERVER_MODE_SEVERAL_CONNECTIONS:
 				std::cout << " - server several connections mode" << std::endl;
-				TestSeveralConnections(connection);
+				ASSERT_TRUE(TestSeveralConnections(connection));
 				break;
 			default:
 				FAIL() << "Doesn't implemented yet.";

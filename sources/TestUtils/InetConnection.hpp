@@ -62,12 +62,6 @@ namespace TestUtil {
 		typedef InetConnection<Trait> Self;
 
 	public:
-
-		~InetConnection() {
-			assert(!m_endpoint);
-		}
-
-	public:
 		
 		static boost::shared_ptr<Self> Create(
 					boost::asio::io_service &ioService) {
@@ -98,7 +92,7 @@ namespace TestUtil {
 			if (!IsActive()) {
 				return;
 			}
-			GetSocket().get_io_service().post(boost::bind(&Self::Close, shared_from_this()));
+			GetSocket().get_io_service().post(boost::bind(&Self::HandleClose, shared_from_this()));
 		}
 
 		template<class T>
@@ -174,7 +168,7 @@ namespace TestUtil {
 					return true;
 				}
 				if (!m_dataReceivedCondition.timed_wait(lock, waitUntil)) {
-					return false;
+					return m_dataBufferSize >= minSize;
 				}
 			}
 		}
@@ -185,6 +179,9 @@ namespace TestUtil {
 
 		Endpoint GetEndpoint() const {
 			boost::mutex::scoped_lock lock(m_mutex);
+			if (!m_endpoint) {
+				throw ConnectionClosed();
+			}
 			return *m_endpoint;
 		}
 
@@ -193,18 +190,17 @@ namespace TestUtil {
 					const boost::system::error_code &error,
 					size_t size,
 					T &data) {
-			OnDataWrite();
 			assert(data.size() == size || (error && size == 0));
-			{
-				std::ostringstream oss;
-				oss << "A:\\" << this << ".write";
-				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-				if (size > 0) {
-					of.write(&data[0], size);
-				} else {
-					of << "[ZERO]";
-				}
-			}
+// 			{
+// 				std::ostringstream oss;
+// 				oss << "A:\\" << this << ".write";
+// 				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+// 				if (size > 0) {
+// 					of.write(&data[0], size);
+// 				} else {
+// 					of << "[ZERO]";
+// 				}
+// 			}
 			UseUnused(error, size);
 			delete &data;
 		}
@@ -220,25 +216,25 @@ namespace TestUtil {
 				const std::auto_ptr<const Buffer> bufferHolder(&buffer);
 				boost::mutex::scoped_lock lock(m_mutex);
 
-				{
-					std::ostringstream oss;
-					oss << "A:\\" << this << ".read";
-					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
-					if (size > 0) {
-						of.write(&buffer[0], size);
-					} else {
-						of << "[ZERO]";
-					}
-					if (!m_endpoint) {
-						of << "[CLOSED]";
-					}
-				}
+// 				{
+// 					std::ostringstream oss;
+// 					oss << "A:\\" << this << ".read";
+// 					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
+// 					if (size > 0) {
+// 						of.write(&buffer[0], size);
+// 					} else {
+// 						of << "[ZERO]";
+// 					}
+// 					if (!m_endpoint) {
+// 						of << "[CLOSED]";
+// 					}
+// 				}
 
-				if (!m_endpoint) {
+				if (!m_endpoint || size == 0) {
 					return;
 				}
 
-				assert(actualRemoteEndpoint == m_endpoint);
+				assert(actualRemoteEndpoint == *m_endpoint);
 				if (actualRemoteEndpoint != *m_endpoint) {
 					throw std::logic_error("Wrong endpoint used");
 				}
@@ -276,7 +272,7 @@ namespace TestUtil {
 #					endif
 					
 					assert(size == 0);
-					OnZeroReceived();
+					OnZeroReceived(lock);
 
 				}
 			
@@ -329,11 +325,11 @@ namespace TestUtil {
 
 	private:
 
-		void OnDataWrite() {
-			//...//
+		void HandleClose() {
+			Close(boost::mutex::scoped_lock(m_mutex));
 		}
 
-		void Close() {
+		void Close(const boost::mutex::scoped_lock &) {
 			if (!m_endpoint) {
 				assert(!GetSocket().is_open());
 				return;
@@ -343,8 +339,8 @@ namespace TestUtil {
 			m_endpoint.reset();
 		}
 
-		void OnZeroReceived() {
-			Close();
+		void OnZeroReceived(const boost::mutex::scoped_lock &lock) {
+			Close(lock);
 		}
 
 		void HandleRead(const boost::system::error_code &error, size_t size) {
@@ -361,9 +357,23 @@ namespace TestUtil {
 						std::istream_iterator<char>(), 
 						std::back_inserter(m_dataBuffer));
 					UpdateBufferState(size);
+// 					{
+// 						std::ostringstream oss;
+// 						oss << "A:\\" << this << ".read";
+// 						std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+// 						assert(m_dataBufferSize >= size);
+// 						if (size > 0) {
+// 							of.write(&m_dataBufferStart[0] + m_dataBufferSize - size, size);
+// 						} else {
+// 							of << "[ZERO]";
+// 						}
+// 						if (!m_endpoint) {
+// 							of << "[CLOSED]";
+// 						}
+// 					}
 					StartRead();
 				} else {
-					OnZeroReceived();
+					OnZeroReceived(lock);
 				}
 			}
 			m_dataReceivedCondition.notify_all();
@@ -478,9 +488,6 @@ namespace TestUtil {
 		namespace io = boost::asio;
 		boost::mutex::scoped_lock lock(m_mutex);
 		assert(data->size() > 0);
-// 		while (m_additionalState.sendingNow) {
-// 			m_additionalState.dataSentCondition.wait(lock);
-// 		}
 		if (!m_endpoint) {
 			throw TestUtil::ConnectionClosed();
 		}
@@ -498,17 +505,10 @@ namespace TestUtil {
 	}
 
 	template<>
-	void InetConnection<UdpInetConnectionTrait>::OnZeroReceived() {
+	void InetConnection<UdpInetConnectionTrait>::OnZeroReceived(
+				const boost::mutex::scoped_lock &) {
 		//...//
 	}
-
-// 	template<>
-// 	void InetConnection<UdpInetConnectionTrait>::OnDataWrite() {
-// 		boost::mutex::scoped_lock lock(m_mutex);
-// 		assert(m_additionalState.sendingNow);
-// 		m_additionalState.sendingNow = false;
-// 		m_additionalState.dataSentCondition.notify_all();
-// 	}
 
 }
 

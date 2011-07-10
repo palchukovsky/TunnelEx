@@ -39,6 +39,8 @@ namespace testing {
 	
 	extern const std::string serverMagicSubConnectionMode;
 
+	extern const std::string serverMagicDummyMode;
+
 	extern const boost::posix_time::time_duration defaultDataWaitTime;
 
 	extern boost::mt19937 generator;
