@@ -197,6 +197,73 @@ namespace {
 
 	}
 
+	TEST_F(UdpClient, SeveralConnetions) {
+
+		const testing::ConnectionsNumber connectionsNumber = 200;
+		const testing::PacketsNumber packetsNumber = 10;
+		const testing::PacketSize packetSize = 128;
+
+		ASSERT_TRUE(Connect(testing::serverMagicSeveralConnectionsMode, false));
+		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
+
+		ASSERT_NO_THROW(GetClient().SendVal(connectionsNumber));
+		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
+		
+		typedef std::list<boost::shared_ptr<TestUtil::Client>> Connections;
+		Connections connections;
+		for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
+
+			boost::shared_ptr<TestUtil::Client> connection(CreateConnection());
+			ASSERT_TRUE(Connect(*connection, testing::serverMagicSubConnectionMode, false));
+			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicOk, true));
+			
+			ASSERT_NO_THROW(connection->SendVal(i));
+			testing::ConnectionsNumber remoteI = 0;
+			ASSERT_NO_THROW(remoteI = connection->WaitAndTakeData<testing::ConnectionsNumber>(true));
+			EXPECT_EQ(i, remoteI);
+
+			connections.push_back(connection);
+
+		}
+
+		ASSERT_NO_THROW(GetClient().SendVal(packetsNumber));
+
+		for (size_t i = 0; i < 2; ++i) {
+			
+			for (testing::PacketsNumber i = 0; i < packetsNumber; ++i) {
+				
+				testing::ConnectionsNumber connectionNumber = 1;
+				
+				foreach (auto &connection, connections) {
+					
+					ASSERT_NO_THROW(connection->SendVal(connectionNumber));
+					testing::ConnectionsNumber remoteConnectionIndex = 0;
+					ASSERT_NO_THROW(
+						remoteConnectionIndex
+						= connection->WaitAndTakeData<testing::ConnectionsNumber>(true));
+					EXPECT_EQ(connectionNumber, remoteConnectionIndex);
+					
+					ASSERT_TRUE(SendTestPacket(*connection, 128, true, .5));	
+					ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicOk, true));
+					ASSERT_NO_THROW(connection->Send(testing::clientMagicOk));
+					
+					ASSERT_TRUE(ReceiveTestPacket(*connection, true));
+					ASSERT_NO_THROW(connection->Send(testing::clientMagicOk));
+					ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicOk, true));
+					
+					++connectionNumber;
+				
+				}
+			
+			}
+		
+		}
+
+		ASSERT_NO_THROW(GetClient().Send(testing::clientMagicBay));
+		ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicBay, true));
+
+	}
+
 }
 
 #endif // INCLUDED_FILE__TUNNELEX__UdpClientTest_cpp__1106270010

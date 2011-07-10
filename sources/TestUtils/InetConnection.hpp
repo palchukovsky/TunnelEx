@@ -84,8 +84,10 @@ namespace TestUtil {
 
 		void Start(const Endpoint &endpoint) {
 			assert(!m_endpoint);
+			assert(!m_isActive);
 			m_endpoint = endpoint;
 			StartRead();
+			BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1);
 		}
 
 		void Stop() {
@@ -154,8 +156,7 @@ namespace TestUtil {
 		}
 
 		bool IsActive() const {
-			boost::mutex::scoped_lock lock(m_mutex);
-			return m_endpoint ? true : false;
+			return m_isActive != 0;
 		}
 
 		bool WaitDataReceiveEvent(
@@ -179,6 +180,7 @@ namespace TestUtil {
 
 		Endpoint GetEndpoint() const {
 			boost::mutex::scoped_lock lock(m_mutex);
+			assert(m_endpoint);
 			if (!m_endpoint) {
 				throw ConnectionClosed();
 			}
@@ -225,12 +227,13 @@ namespace TestUtil {
 // 					} else {
 // 						of << "[ZERO]";
 // 					}
-// 					if (!m_endpoint) {
+// 					if (!m_isActive) {
 // 						of << "[CLOSED]";
 // 					}
 // 				}
 
-				if (!m_endpoint || size == 0) {
+				assert(m_endpoint);
+				if (!m_isActive || size == 0) {
 					return;
 				}
 
@@ -287,7 +290,8 @@ namespace TestUtil {
 		explicit InetConnection(boost::asio::io_service &ioService)
 				: m_socket(new Socket(ioService)),
 				m_dataBufferStart(m_dataBuffer.end()),
-				m_dataBufferSize(0) {
+				m_dataBufferSize(0),
+				m_isActive(false) {
 			assert(
 				std::distance(
 					m_dataBufferStart,
@@ -299,7 +303,8 @@ namespace TestUtil {
 		explicit InetConnection(boost::asio::io_service &ioService, unsigned short port)
 				: m_socket(new Socket(ioService, Endpoint(Proto::v4(), port))),
 				m_dataBufferStart(m_dataBuffer.end()),
-				m_dataBufferSize(0) {
+				m_dataBufferSize(0),
+				m_isActive(false) {
 			assert(
 				std::distance(
 					m_dataBufferStart,
@@ -314,7 +319,8 @@ namespace TestUtil {
 				: m_socket(socket),
 				m_dataBufferStart(m_dataBuffer.end()),
 				m_dataBufferSize(0),
-				m_endpoint(endpoint) {
+				m_endpoint(endpoint),
+				m_isActive(true) {
 			assert(
 				std::distance(
 					m_dataBufferStart,
@@ -330,13 +336,12 @@ namespace TestUtil {
 		}
 
 		void Close(const boost::mutex::scoped_lock &) {
-			if (!m_endpoint) {
+			if (!m_isActive) {
 				assert(!GetSocket().is_open());
 				return;
 			}
-			assert(GetSocket().is_open());
 			GetSocket().close();
-			m_endpoint.reset();
+			BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0);
 		}
 
 		void OnZeroReceived(const boost::mutex::scoped_lock &lock) {
@@ -346,7 +351,8 @@ namespace TestUtil {
 		void HandleRead(const boost::system::error_code &error, size_t size) {
 			{
 				boost::mutex::scoped_lock lock(m_mutex);
-				assert(m_endpoint || size == 0);
+				assert(m_endpoint);
+				assert(m_isActive || size == 0);
 				if (!error) {
 					std::istream is(&m_additionalState.inStreamBuffer);
 					is.unsetf(std::ios::skipws);
@@ -367,7 +373,7 @@ namespace TestUtil {
 // 						} else {
 // 							of << "[ZERO]";
 // 						}
-// 						if (!m_endpoint) {
+// 						if (!m_isActive) {
 // 							of << "[CLOSED]";
 // 						}
 // 					}
@@ -420,6 +426,8 @@ namespace TestUtil {
 
 		boost::optional<Endpoint> m_endpoint;
 
+		volatile long m_isActive;
+
 		mutable boost::mutex m_mutex;
 
 		mutable boost::condition_variable m_dataReceivedCondition;
@@ -448,7 +456,8 @@ namespace TestUtil {
 	void InetConnection<TcpInetConnectionTrait>::Send(std::auto_ptr<T> data) {
 		namespace io = boost::asio;
 		boost::mutex::scoped_lock lock(m_mutex);
-		if (!m_endpoint) {
+		assert(m_endpoint);
+		if (!m_isActive) {
 			throw TestUtil::ConnectionClosed();
 		}
 		async_write(
@@ -488,7 +497,7 @@ namespace TestUtil {
 		namespace io = boost::asio;
 		boost::mutex::scoped_lock lock(m_mutex);
 		assert(data->size() > 0);
-		if (!m_endpoint) {
+		if (!m_isActive) {
 			throw TestUtil::ConnectionClosed();
 		}
 		GetSocket().async_send_to(

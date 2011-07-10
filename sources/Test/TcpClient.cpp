@@ -270,10 +270,11 @@ namespace {
 			ASSERT_NO_THROW(connection->Send(testing::serverMagicSubConnectionMode));
 			ASSERT_TRUE(connection->WaitAndTakeData(testing::serverMagicHello, false))
 				<< "Failed to receive HELLO for sub connection #" << i << ".";
-			ASSERT_EQ(
-					i,
-					connection->WaitAndTakeData<testing::ConnectionsNumber>(true))
+			testing::ConnectionsNumber remoteI = 0;
+			ASSERT_NO_THROW(
+					remoteI = connection->WaitAndTakeData<testing::ConnectionsNumber>(true))
 				<< "Failed to receive sub connection number for sub connection #" << i << ".";
+			ASSERT_EQ(i, remoteI);
 			connections.push_back(connection);
 		}
 
@@ -294,9 +295,10 @@ namespace {
 						connection->WaitAndTakeData(
 							testing::serverMagicOk,
 							false));
-					ASSERT_EQ(
-						connectionNumber,
-						connection->WaitAndTakeData<testing::ConnectionsNumber>(false));
+					testing::ConnectionsNumber remoteI = 0;
+					ASSERT_NO_THROW(
+						remoteI = connection->WaitAndTakeData<testing::ConnectionsNumber>(false));
+					ASSERT_EQ(connectionNumber, remoteI);
 					ASSERT_TRUE(ReceiveTestPacket(*connection));
 					ASSERT_NO_THROW(connection->Send(testing::clientMagicOk));
 					++connectionNumber;

@@ -194,7 +194,7 @@ namespace {
 
 		void DoTestSeveralConnections(size_t mainConnection, bool &result) {
 
-			testing::PacketSize packetSize = 128;
+			const testing::PacketSize packetSize = 128;
 
 			testing::ConnectionsNumber connectionsNumber = 0;
 			ASSERT_TRUE(
@@ -219,9 +219,10 @@ namespace {
 					<< "Failed to accept sub connection #" << i << ".";
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicHello, false));
-				ASSERT_EQ(
-					i, 
-					m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+				testing::ConnectionsNumber remoteI = 0;
+				ASSERT_NO_THROW(
+					remoteI = m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+				ASSERT_EQ(i, remoteI);
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(
 						connection,
@@ -251,15 +252,17 @@ namespace {
 				for (testing::PacketsNumber i = 0; i < packetsNumber; ++i) {
 					for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
 						const size_t connection = i + mainConnection;
-						ASSERT_EQ(
-							i, 
-							m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+						testing::ConnectionsNumber remoteI = 0;
+						ASSERT_NO_THROW(
+							remoteI = m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+						EXPECT_EQ(i, remoteI);
 						ASSERT_TRUE(ReceiveTestPacket(connection));
 						ASSERT_NO_THROW(
 							m_server->Send(
 								connection,
 								testing::serverMagicOk));
-						ASSERT_NO_THROW(m_server->SendVal(connection, i));
+						ASSERT_NO_THROW(
+m_server->SendVal(connection, testing::ConnectionsNumber(i)));
 						ASSERT_TRUE(SendTestPacket(connection, packetSize, 0.5));
 						ASSERT_TRUE(
 							m_server->WaitAndTakeData(
@@ -273,12 +276,13 @@ namespace {
 			for (testing::ConnectionsNumber i = 1;  i <= connectionsNumber; ++i) {
 				const size_t connection = i + mainConnection;
 				const bool isActiveDisconnect = !(i % 2);
+				testing::ConnectionsNumber remoteI = 0;
 				if (isActiveDisconnect) {
 					ASSERT_NO_THROW(m_server->SendVal(connection, i));
 					ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicBay));
-					ASSERT_EQ(
-						i, 
-						m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+					ASSERT_NO_THROW(
+						remoteI = m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+					ASSERT_EQ(i, remoteI);
 					ASSERT_TRUE(
 						m_server->WaitAndTakeData(
 							connection,
@@ -287,9 +291,9 @@ namespace {
 					EXPECT_EQ(0, m_server->GetReceivedSize(connection));
 					ASSERT_NO_THROW(m_server->CloseConnection(connection));
 				} else {
-					ASSERT_EQ(
-						i, 
-						m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+					ASSERT_NO_THROW(
+						remoteI = m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+					ASSERT_EQ(i, remoteI);
 					ASSERT_TRUE(
 						m_server->WaitAndTakeData(
 							connection,
