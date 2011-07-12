@@ -87,6 +87,9 @@
     <ClInclude Include="Client.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ConnectClient.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Test.rc">

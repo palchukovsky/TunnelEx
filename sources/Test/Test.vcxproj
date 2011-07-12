@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClInclude Include="Client.hpp" />
     <ClInclude Include="Common.hpp" />
+    <ClInclude Include="ConnectClient.hpp" />
     <ClInclude Include="Environment.hpp" />
     <ClInclude Include="Prec.h" />
     <ClInclude Include="resource.h" />
