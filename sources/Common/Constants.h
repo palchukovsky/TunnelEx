@@ -50,7 +50,7 @@
 		L"DEBUG " \
 		TUNNELEX_VERSION_FULL_W \
 		L"." TUNNELEX_VERSION_GEN_UNIQUE_ID_STR_W
-#elif defined(TEST)
+#elif defined(_TEST)
 #	define TUNNELEX_BUILD_IDENTITY \
 		"TEST " \
 		TUNNELEX_VERSION_FULL \
@@ -59,7 +59,7 @@
 		L"TEST " \
 		TUNNELEX_VERSION_FULL_W \
 		L"." TUNNELEX_VERSION_GEN_UNIQUE_ID_STR_W
-#elif defined(TEST)
+#elif defined(_TEST)
 #	define TUNNELEX_BUILD_IDENTITY \
 		"RELEASE " \
 		TUNNELEX_VERSION_FULL \
@@ -80,13 +80,13 @@
 
 #ifdef _DEBUG
 #	define TUNNELEX_FILE_MODIFICATOR		"_dbg"
-#else // #ifdef _DEBUG
-#	ifdef TEST
+#else
+#	ifdef _TEST
 #		define TUNNELEX_FILE_MODIFICATOR	"_test"
-#	else // #ifdef TEST
+#	else
 #		define TUNNELEX_FILE_MODIFICATOR
 #	endif
-#endif // #ifdef _DEBUG
+#endif
 
 #define TUNNELEX_CORE_DLL_FILE_NAME					TUNNELEX_SERVICE_FILE_NAME TUNNELEX_FILE_MODIFICATOR ".dll"
 #define TUNNELEX_SERVICE_EXE_FILE_NAME				TUNNELEX_SERVICE_FILE_NAME TUNNELEX_FILE_MODIFICATOR ".exe"
