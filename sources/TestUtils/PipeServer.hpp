@@ -53,32 +53,6 @@ namespace TestUtil {
 
 	};
 	
-	//////////////////////////////////////////////////////////////////////////
-	
-	/* class PipeClient : public TestUtil::Client {
-
-	public:
-
-		explicit PipeClient(const std::wstring &pipeName);
-
-	public:
-
-		virtual void Send(const std::string &);
-		virtual void Send(const Buffer &);
-		
-		void Send(const char *data, size_t size);
-
-		virtual Buffer Receive();
-
-	private:
-
-		class Implementation;
-		boost::shared_ptr<Implementation> m_pimpl;
-
-	}; */
-	
-	//////////////////////////////////////////////////////////////////////////
-
 }
 
 #endif // INCLUDED_FILE__TUNNELEX__PipeServer_hpp__0811270444

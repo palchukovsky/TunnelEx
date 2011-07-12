@@ -1,5 +1,5 @@
 /**************************************************************************
- *   Created: 2011/05/30 23:13
+ *   Created: 2011/07/13 0:03
  *    Author: Eugene V. Palchukovsky
  *    E-mail: eugene@palchukovsky.com
  * -------------------------------------------------------------------
@@ -9,40 +9,40 @@
 
 #include "Prec.h"
 #include "ConnectClient.hpp"
-#include "TestUtils/InetClient.hpp"
+#include "TestUtils/PipeClient.hpp"
 
 template<>
 std::auto_ptr<TestUtil::Client>
-testing::ConnectClient<TestUtil::TcpClient>::CreateClient()
+testing::ConnectClient<TestUtil::PipeClient>::CreateClient()
 		const {
 	std::auto_ptr<TestUtil::Client> result(
-		new Client("localhost", testing::tcpServerPort));
+		new Client(L"localhost"));
 	return result;
 }
 
 namespace {
 
-	class TcpClient : public testing::ConnectClient<TestUtil::TcpClient> {
+	class PipeClient : public testing::ConnectClient<TestUtil::PipeClient> {
 		//...//
 	};
 
-	TEST_F(TcpClient, DataExchangeActive) {
+	TEST_F(PipeClient, DataExchangeActive) {
 		ASSERT_TRUE(TestDataExchangeActive());
 	}
 
-	TEST_F(TcpClient, DataExchangePassive) {
+	TEST_F(PipeClient, DataExchangePassive) {
 		ASSERT_TRUE(TestDataExchangePassive());
 	}
 
-	TEST_F(TcpClient, DataExchangeOneWayActive) {
+	TEST_F(PipeClient, DataExchangeOneWayActive) {
 		ASSERT_TRUE(TestDataExchangeOneWayActive());
 	}
 
-	TEST_F(TcpClient, DataOneWayExchangePassive) {
+	TEST_F(PipeClient, DataOneWayExchangePassive) {
 		ASSERT_TRUE(TestDataOneWayExchangePassive());
 	}
 
-	TEST_F(TcpClient, SeveralConnetions) {
+	TEST_F(PipeClient, SeveralConnetions) {
 		ASSERT_TRUE(TestSeveralConnetions());
 	}
 

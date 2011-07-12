@@ -20,6 +20,8 @@
     <ClInclude Include="InetClient.hpp" />
     <ClInclude Include="InetConnection.hpp" />
     <ClInclude Include="InetServer.hpp" />
+    <ClInclude Include="PipeClient.hpp" />
+    <ClInclude Include="PipeConnection.hpp" />
     <ClInclude Include="PipeServer.hpp" />
     <ClInclude Include="Prec.h" />
     <ClInclude Include="ClientServer.hpp" />
@@ -27,6 +29,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="InetServer.cpp" />
+    <ClCompile Include="PipeClient.cpp" />
+    <ClCompile Include="PipeConnection.cpp" />
     <ClCompile Include="PipeServer.cpp" />
     <ClCompile Include="Prec.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Create</PrecompiledHeader>

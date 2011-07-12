@@ -68,7 +68,10 @@ namespace testing {
 		}
 
 		std::auto_ptr<TestUtil::Client> CreateCloseControlConnection() const {
-			static_assert(false, "Failed to find specialization.");
+			std::auto_ptr<TestUtil::Client> result(CreateClient());
+			result->SetWaitTime(GetClient().GetWaitTime());
+			Connect(*result, testing::serverMagicDummyMode, false);
+			return result;
 		}
 
 		virtual void DoConnect(

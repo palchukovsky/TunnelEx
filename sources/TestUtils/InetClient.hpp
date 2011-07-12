@@ -77,7 +77,7 @@ namespace TestUtil {
 		virtual void Send(const std::string &message) {
 			std::auto_ptr<Buffer> buffer(
 				new Buffer(message.begin(), message.end()));
-			GetConnection().Send(buffer);
+			Send(buffer);
 		}
 
 		virtual void Send(std::auto_ptr<Buffer> buffer) {
