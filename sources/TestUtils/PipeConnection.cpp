@@ -17,7 +17,7 @@ PipeConnection::PipeConnection(HANDLE handle)
 		m_dataBufferStart(m_dataBuffer.end()),
 		m_dataBufferSize(0),
 		m_isActive(true),
-		m_receiveBuffer(256, 0) {
+		m_receiveBuffer(GetBufferSize(), 0) {
 	assert(
 		std::distance(
 			m_dataBufferStart,
@@ -31,11 +31,15 @@ PipeConnection::PipeConnection(HANDLE handle)
 PipeConnection::~PipeConnection() {
 	try {
 		Close();
-		assert(m_handle == NULL);
+		assert(m_handle == INVALID_HANDLE_VALUE);
 		m_readThread->join();
 	} catch (...) {
 		assert(false);
 	}
+}
+
+size_t PipeConnection::GetBufferSize() {
+	return 256;
 }
 
 void PipeConnection::Close() {
@@ -44,11 +48,13 @@ void PipeConnection::Close() {
 	}
 	boost::mutex::scoped_lock lock(m_mutex);
 	assert(!m_isActive);
-	if (m_handle == NULL) {
+	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
+	FlushFileBuffers(m_handle); 
+	DisconnectNamedPipe(m_handle); 
 	CloseHandle(m_handle);
-	m_handle = NULL;
+	m_handle = INVALID_HANDLE_VALUE;
 }
 
 Buffer::size_type PipeConnection::GetReceivedSize() const {
@@ -121,7 +127,7 @@ bool PipeConnection::WaitDataReceiveEvent(
 
 void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 	boost::mutex::scoped_lock lock(m_mutex);
-	if (m_handle == NULL) {
+	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
 	DWORD sent = 0;
@@ -139,7 +145,7 @@ void PipeConnection::ReadThreadMain() {
 	for ( ; m_isActive; ) {
 
 		DWORD received = 0;
-		assert(m_handle != NULL);
+		assert(m_handle != INVALID_HANDLE_VALUE);
 		const BOOL readFileResult = ReadFile(
 			m_handle,
 			&m_receiveBuffer[0],

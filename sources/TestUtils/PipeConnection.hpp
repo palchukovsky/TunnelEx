@@ -27,6 +27,10 @@ namespace TestUtil {
 
 	public:
 
+		static size_t GetBufferSize();
+
+	public:
+
 		void Close();
 
 	public:

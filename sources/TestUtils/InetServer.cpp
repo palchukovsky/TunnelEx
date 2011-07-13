@@ -36,7 +36,7 @@ public:
 	~Implementation() {
 		try {
 			foreach (auto &c, m_connections) {
-				c->Stop();
+				c->Close();
 			}
 			m_ioService.stop();
 			m_thread->join();
@@ -162,7 +162,7 @@ unsigned int TcpServer::GetNumberOfAcceptedConnections(bool onlyIfActive) const 
 }
 
 void TcpServer::CloseConnection(size_t connectionIndex) {
-	m_pimpl->GetConnection(connectionIndex)->Stop();
+	m_pimpl->GetConnection(connectionIndex)->Close();
 }
 
 void TcpServer::Send(size_t connectionIndex, const std::string &message)  {
@@ -228,7 +228,7 @@ public:
 	~Implementation() {
 		try {
 			foreach (auto &c, m_connections) {
-				c->Stop();
+				c->Close();
 			}
 			m_ioService.stop();
 			m_thread->join();

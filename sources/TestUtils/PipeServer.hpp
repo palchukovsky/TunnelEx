@@ -19,18 +19,9 @@ namespace TestUtil {
 	class PipeServer : public TestUtil::Server {
 
 	public:
-		
-		explicit PipeServer(const std::wstring &pipeName);
-		virtual ~PipeServer();
-	
-	public:
-	
-		virtual bool IsConnected() const;
-		virtual std::size_t GetNumberOfAcceptedConnections() const;
 
-	public:
-
-		void CloseConnection(std::size_t connectionIndex);
+		explicit PipeServer(const std::wstring &path);
+		virtual ~PipeServer() throw();
 
 	public:
 
@@ -39,17 +30,42 @@ namespace TestUtil {
 		virtual void Send(std::size_t connectionIndex, const std::string &);
 		/** @throw SendError
 		  */
-		virtual void Send(std::size_t connectionIndex, const Buffer &);
+		virtual void Send(std::size_t connectionIndex, std::auto_ptr<Buffer>);
 
 		/** @throw ReceiveError
 		  */
-		virtual Buffer GetReceived(size_t connectionIndex) const;
-		virtual void ClearReceived(size_t connectionIndex, size_t bytesCount);
+		virtual Buffer::size_type GetReceivedSize(std::size_t connectionIndex) const;
+		/** @throw ReceiveError
+		  */
+		virtual void GetReceived(
+					std::size_t connectionIndex,
+					size_t maxSize,
+					Buffer &result)
+				const;
+
+		/** @throw ReceiveError
+		  */
+		virtual void ClearReceived(size_t connectionIndex, size_t bytesCount = 0);
+
+	public:
+
+		virtual bool IsConnected(bool onlyIfActive) const;
+		virtual bool IsConnected(size_t connectionId, bool onlyIfActive) const;
+		virtual unsigned int GetNumberOfAcceptedConnections(bool onlyIfActive) const;
+		virtual void CloseConnection(size_t connectionIndex);
+
+	private:
+
+		virtual bool WaitDataReceiveEvent(
+				size_t connectionIndex,
+				const boost::system_time &waitUntil,
+				Buffer::size_type minSize)
+			const;
 
 	private:
 
 		class Implementation;
-		boost::shared_ptr<Implementation> m_pimpl;
+		std::auto_ptr<Implementation> m_pimpl;
 
 	};
 	

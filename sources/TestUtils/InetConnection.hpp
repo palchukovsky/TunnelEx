@@ -90,7 +90,7 @@ namespace TestUtil {
 			BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1);
 		}
 
-		void Stop() {
+		void Close() {
 			if (!IsActive()) {
 				return;
 			}

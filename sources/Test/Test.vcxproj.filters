@@ -79,6 +79,9 @@
     <ClCompile Include="ConnectClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PipeServer.cpp">
+      <Filter>Source Files\Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Environment.hpp">

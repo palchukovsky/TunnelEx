@@ -62,7 +62,7 @@ namespace TestUtil {
 		virtual ~InetClient() {
 			try {
 				if (m_connection) {
-					m_connection->Stop();
+					m_connection->Close();
 					m_connection.reset();
 				}
 				m_ioService.stop();
@@ -108,7 +108,7 @@ namespace TestUtil {
 			if (!m_connection.get()) {
 				throw ConnectionClosed();
 			}
-			m_connection->Stop();
+			m_connection->Close();
 			m_connection.reset();
 		}
 
