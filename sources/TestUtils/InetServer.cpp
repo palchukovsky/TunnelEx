@@ -35,6 +35,7 @@ public:
 
 	~Implementation() {
 		try {
+			m_acceptor.close();
 			foreach (auto &c, m_connections) {
 				c->Close();
 			}
@@ -227,6 +228,7 @@ public:
 
 	~Implementation() {
 		try {
+			m_acceptConnection->Close();
 			foreach (auto &c, m_connections) {
 				c->Close();
 			}
