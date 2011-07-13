@@ -11,20 +11,24 @@
 #include "ConnectClient.hpp"
 #include "TestUtils/PipeClient.hpp"
 
-template<>
-std::auto_ptr<TestUtil::Client>
-testing::ConnectClient<TestUtil::PipeClient>::CreateClient()
-		const {
-	std::auto_ptr<TestUtil::Client> result(
-		new Client(L"localhost"));
-	return result;
-}
-
 namespace {
 
-	class PipeClient : public testing::ConnectClient<TestUtil::PipeClient> {
-		//...//
+	//////////////////////////////////////////////////////////////////////////
+
+	class PipeClient : public testing::ConnectClient {
+	public:
+		virtual ~PipeClient() {
+			//...//
+		}
+	protected:
+		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
+			std::auto_ptr<TestUtil::Client> result(
+				new TestUtil::PipeClient(L"localhost"));
+			return result;
+		}
 	};
+
+	//////////////////////////////////////////////////////////////////////////
 
 	TEST_F(PipeClient, DataExchangeActive) {
 		ASSERT_TRUE(TestDataExchangeActive());
@@ -45,5 +49,7 @@ namespace {
 	TEST_F(PipeClient, SeveralConnetions) {
 		ASSERT_TRUE(TestSeveralConnetions());
 	}
+
+	//////////////////////////////////////////////////////////////////////////
 
 }

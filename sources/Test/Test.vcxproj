@@ -112,6 +112,8 @@
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="ConnectClient.cpp" />
+    <ClCompile Include="ConnectServer.cpp" />
     <ClCompile Include="LocalAssert.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Environment.cpp" />
@@ -137,6 +139,7 @@
     <ClInclude Include="Client.hpp" />
     <ClInclude Include="Common.hpp" />
     <ClInclude Include="ConnectClient.hpp" />
+    <ClInclude Include="ConnectServer.hpp" />
     <ClInclude Include="Environment.hpp" />
     <ClInclude Include="Prec.h" />
     <ClInclude Include="resource.h" />

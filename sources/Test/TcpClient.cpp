@@ -11,20 +11,24 @@
 #include "ConnectClient.hpp"
 #include "TestUtils/InetClient.hpp"
 
-template<>
-std::auto_ptr<TestUtil::Client>
-testing::ConnectClient<TestUtil::TcpClient>::CreateClient()
-		const {
-	std::auto_ptr<TestUtil::Client> result(
-		new Client("localhost", testing::tcpServerPort));
-	return result;
-}
-
 namespace {
 
-	class TcpClient : public testing::ConnectClient<TestUtil::TcpClient> {
-		//...//
+	//////////////////////////////////////////////////////////////////////////
+
+	class TcpClient : public testing::ConnectClient {
+	public:
+		virtual ~TcpClient() {
+			//...//
+		}
+	protected:
+		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
+			std::auto_ptr<TestUtil::Client> result(
+				new TestUtil::TcpClient("localhost", testing::tcpServerPort));
+			return result;
+		}
 	};
+
+	//////////////////////////////////////////////////////////////////////////
 
 	TEST_F(TcpClient, DataExchangeActive) {
 		ASSERT_TRUE(TestDataExchangeActive());
@@ -45,5 +49,7 @@ namespace {
 	TEST_F(TcpClient, SeveralConnetions) {
 		ASSERT_TRUE(TestSeveralConnetions());
 	}
+
+	//////////////////////////////////////////////////////////////////////////
 
 }
