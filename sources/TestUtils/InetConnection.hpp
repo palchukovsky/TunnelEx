@@ -279,10 +279,13 @@ namespace TestUtil {
 					}
 				
 				} else {
-					std::cerr
-						<< "TestUtil::InetConnection::HandleRead: "
-						<< error.message() << " (" << error.value() << ")."
-						<< std::endl;
+					if (	error.value() != WSAECONNRESET
+							&& error.value() != WSA_OPERATION_ABORTED) {
+						std::cerr
+							<< "TestUtil::InetConnection::HandleRead: "
+							<< error.message() << " (" << error.value() << ")."
+							<< std::endl;
+					}
 					assert(size == 0);
 					OnZeroReceived(lock);
 
@@ -390,10 +393,13 @@ namespace TestUtil {
 #					endif
 					StartRead();
 				} else {
-					std::cerr
-						<< "TestUtil::InetConnection::HandleRead: "
-						<< error.message() << " (" << error.value() << ")."
-						<< std::endl;
+					if (	error.value() != WSAECONNRESET
+							&& error.value() != WSA_OPERATION_ABORTED) {
+						std::cerr
+							<< "TestUtil::InetConnection::HandleRead: "
+							<< error.message() << " (" << error.value() << ")."
+							<< std::endl;
+					}
 					OnZeroReceived(lock);
 				}
 			}
