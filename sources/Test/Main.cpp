@@ -24,21 +24,17 @@ namespace {
 int main(int argc, char **argv) {
 
 	const bool isTcpServer
-		= argc < 2
-		|| boost::iequals(argv[1], "tcpserver")
-		|| boost::iequals(argv[1], "tcp-server");
+		= argc >= 2
+		&& (boost::iequals(argv[1], "tcpserver") || boost::iequals(argv[1], "tcp-server"));
 	const bool isTcpClient
-		= argc < 2
-		|| boost::iequals(argv[1], "tcpclient")
-		|| boost::iequals(argv[1], "tcp-client");
+		= argc >= 2
+		&& (boost::iequals(argv[1], "tcpclient") || boost::iequals(argv[1], "tcp-client"));
 	const bool isUdpServer
-		= argc < 2
-		|| boost::iequals(argv[1], "udpserver")
-		|| boost::iequals(argv[1], "udp-server");
+		= argc >= 2
+		&& (boost::iequals(argv[1], "udpserver") || boost::iequals(argv[1], "udp-server"));
 	const bool isUdpClient
-		= argc < 2
-		|| boost::iequals(argv[1], "udpclient")
-		|| boost::iequals(argv[1], "udp-client");
+		= argc >= 2
+		&& (boost::iequals(argv[1], "udpclient") || boost::iequals(argv[1], "udp-client"));
 	assert(!isTcpServer || isTcpServer != isTcpClient);
 	assert(!isUdpServer || isUdpServer != isUdpClient);
 

@@ -23,7 +23,7 @@ namespace xml = tex::Helpers::Xml;
 
 namespace {
 
-	TEST(Migration, ules_1_0) {
+	TEST(Migration, Rules_1_0) {
 
 		const tex::String ruleSetXmlVer_1_0
 			=	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -463,8 +463,7 @@ namespace {
 		ServiceConfiguration::GetDefault()->Save();
 
 		{
-			fs::wpath ruleSetPath = L"Resource";
-			ruleSetPath /= L"RuleSet_1_3.xml";
+			fs::wpath ruleSetPath = L"RuleSet_1_3.xml";
 			std::ifstream orig(ruleSetPath.string().c_str());
 			ASSERT_TRUE(orig ? true : false);
 			std::ofstream test(ServiceConfiguration().GetRulesPath().c_str(), std::ios::trunc);

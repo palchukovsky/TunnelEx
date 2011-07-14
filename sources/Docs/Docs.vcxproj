@@ -28,11 +28,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..\output\doc\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <PreBuildEvent>
-      <Command>%40echo on
-%40echo off
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
     <PostBuildEvent>
       <Command>
       </Command>
@@ -42,12 +38,12 @@
     <CustomBuild Include="Core.Doxyfile">
       <FileType>Document</FileType>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building docs for core sources...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%40echo on
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">@echo on
 set Dir=$(OutDir)sources\Core\
 rmdir /Q /S "%Dir%"
 mkdir "%Dir%"
 doxygen "%(Filename)%(Extension)"
-%40echo off
+@echo off
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)sources\Core\*;%(Outputs)</Outputs>
     </CustomBuild>

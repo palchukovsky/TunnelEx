@@ -35,9 +35,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CustomBuild Include="TunnelExService.h">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%40echo on
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">@echo on
 "$(SolutionDir)..\output\bin\tools\soapcpp2.exe" -L -w -x -d "%(RootDir)%(Directory)." -I "$(SolutionDir)..\externals\gSOAP\import" "%(FullPath)"
-%40echo off
+@echo off
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\soapTunnelExServiceProxy.h;%(Outputs)</Outputs>
     </CustomBuild>

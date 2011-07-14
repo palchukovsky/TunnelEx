@@ -111,4 +111,18 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resource\RuleSet_1_3.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resource\LicenseKeyValid.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resource\LocalAsymmetricPrivateKey.pem">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resource\LocalAsymmetricPublicKey.pem">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

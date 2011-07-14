@@ -157,6 +157,44 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
+    <ProjectReference Include="..\Legacy\Legacy support.vcxproj">
+      <Project>{cdca539c-f37d-4df4-9473-39c561b92ba0}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Inet\Inet.vcxproj">
+      <Project>{bf7a25bf-7f5d-4fd3-bf5c-889361eac5a2}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Pathfinder\Pathfinder.vcxproj">
+      <Project>{c458a337-2bbb-45bd-82ff-fc9cf13931a9}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Pipe\Pipe.vcxproj">
+      <Project>{7d76c72f-a36d-46f6-aee7-87acf19ba606}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Serial\Module Serial.vcxproj">
+      <Project>{487c6572-1ce5-40fc-8a0a-ace48f162f57}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Modules\Upnp\Module Upnp.vcxproj">
+      <Project>{c30530f5-b52d-4e6b-aa2c-713c05c263f8}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
     <ProjectReference Include="..\ServiceControl\Service control.vcxproj">
       <Project>{be5696f9-ffa0-47d3-bf5a-66dc28236ce5}</Project>
       <Private>true</Private>
@@ -173,6 +211,20 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
+    <ProjectReference Include="..\Version\Version.vcxproj">
+      <Project>{6884dfb9-d84c-4f37-853f-79565671a1e3}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resource\LicenseKeyValid.xml" />
+    <None Include="Resource\LocalAsymmetricPrivateKey.pem" />
+    <None Include="Resource\LocalAsymmetricPublicKey.pem" />
+    <None Include="Resource\RuleSet_1_3.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
