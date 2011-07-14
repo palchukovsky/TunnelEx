@@ -14,7 +14,7 @@
 using namespace TestUtil;
 
 PipeClient::PipeClient(const std::string &path) {
-	//...//
+	m_connection.reset();
 }
 
 PipeClient::~PipeClient() {
