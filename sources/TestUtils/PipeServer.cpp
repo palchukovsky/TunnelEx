@@ -10,6 +10,7 @@
 #include "Prec.h"
 #include "PipeServer.hpp"
 #include "PipeConnection.hpp"
+#include "Core/Error.hpp"
  
 using namespace TestUtil;
 
@@ -24,8 +25,8 @@ private:
 
 public:
 
-	Implementation(const std::wstring &path)
-			: m_path(path) {
+	Implementation(const std::string &path)
+			: m_path("\\\\.\\pipe\\" + path) {
 		m_acceptThread.reset(
 			new boost::thread(
 				boost::bind(&Implementation::AcceptThreadMain, this)));
@@ -101,12 +102,17 @@ private:
 			}
 		} ;
 		
-		for ( ; ; ) {
+		for (size_t i = 1; ; ++i) {
 
 			AutoHandle handleHolder;
-			handleHolder.handle = CreateNamedPipeW( 
+
+			DWORD pipeOpenMode = PIPE_ACCESS_DUPLEX;
+			if (i == i) {
+				pipeOpenMode |= FILE_FLAG_FIRST_PIPE_INSTANCE;
+			}
+			handleHolder.handle = CreateNamedPipeA( 
 				m_path.c_str(),
-				PIPE_ACCESS_DUPLEX,
+				pipeOpenMode,
 				PIPE_TYPE_MESSAGE				// message type pipe 
 					| PIPE_READMODE_MESSAGE		// message-read mode 
 					| PIPE_WAIT,                // blocking mode 
@@ -116,6 +122,11 @@ private:
 				0,                        // client time-out 
 				NULL);
 			if (handleHolder.handle == INVALID_HANDLE_VALUE) {
+				TunnelEx::Error error(GetLastError());
+				std::cerr
+					<< "Failed to create pipe: "
+					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< " (" << error.GetErrorNo() << ")." << std::endl;
 				throw std::exception("Failed to create pipe");
 			}
 
@@ -123,6 +134,11 @@ private:
 				= ConnectNamedPipe(handleHolder.handle, NULL)
 				|| GetLastError() == ERROR_PIPE_CONNECTED;
 			if (!isConnect) {
+				TunnelEx::Error error(GetLastError());
+				std::cerr
+					<< "Failed to create pipe: "
+					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< " (" << error.GetErrorNo() << ")." << std::endl;
 				break;
 			}
 
@@ -139,7 +155,7 @@ private:
 
 private:
 
-	const std::wstring m_path;
+	const std::string m_path;
 	Connections m_connections;
 	boost::shared_ptr<boost::thread> m_acceptThread;
 	mutable boost::mutex m_connectionsMutex;
@@ -148,7 +164,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 
-PipeServer::PipeServer(const std::wstring &path)
+PipeServer::PipeServer(const std::string &path)
 		: m_pimpl(new Implementation(path)) {
 	//...//
 }

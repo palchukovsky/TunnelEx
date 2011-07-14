@@ -13,7 +13,7 @@
 
 using namespace TestUtil;
 
-PipeClient::PipeClient(const std::wstring &/*path*/) {
+PipeClient::PipeClient(const std::string &path) {
 	//...//
 }
 

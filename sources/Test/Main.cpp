@@ -94,6 +94,20 @@ int main(int argc, char **argv) {
 #				endif
 			}
 			break;
+		case MODE_PIPE_SERVER:
+			testing::AddGlobalTestEnvironment(new ServerEnvironment);
+			testing::GTEST_FLAG(filter) = "PipeServer.*";
+			testing::GTEST_FLAG(repeat) = -1;
+			break;
+		case MODE_PIPE_CLIENT:
+			testing::AddGlobalTestEnvironment(new ClientEnvironment);
+			if (testing::GTEST_FLAG(filter) == "*") {
+				testing::GTEST_FLAG(filter) = "PipeClient.*";
+#				ifndef DEV_VER 
+					testing::GTEST_FLAG(shuffle) = 1;
+#				endif
+			}
+			break;
 		default:
 			assert(false);
 	}

@@ -23,7 +23,7 @@ namespace {
 	protected:
 		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::PipeClient(L"localhost"));
+				new TestUtil::PipeClient(testing::pipeServerPath));
 			return result;
 		}
 	};

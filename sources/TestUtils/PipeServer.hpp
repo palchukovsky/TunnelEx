@@ -20,7 +20,7 @@ namespace TestUtil {
 
 	public:
 
-		explicit PipeServer(const std::wstring &path);
+		explicit PipeServer(const std::string &path);
 		virtual ~PipeServer() throw();
 
 	public:

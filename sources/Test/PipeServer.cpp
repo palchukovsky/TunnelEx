@@ -23,7 +23,7 @@ namespace {
 	protected:
 		virtual std::auto_ptr<TestUtil::Server> CreateServer() const {
 			std::auto_ptr<TestUtil::Server> result(
-				new TestUtil::PipeServer(L"localhost"));
+				new TestUtil::PipeServer(testing::pipeServerPath));
 			return result;
 		}
 	};

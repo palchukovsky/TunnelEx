@@ -40,7 +40,7 @@
 ---------
     тест-сервер: TexTest.exe pipe-server [ pipe ]
     тест-клиент: TexTest.exe pipe-client pipe
-    имя пайпа тест-сервера по умолчанию: TunnelEx/Test/89326B80-AE04-11E0-9F1C-0800200C9A66
+    имя пайпа тест-сервера по умолчанию: TunnelEx\Test\89326B80-AE04-11E0-9F1C-0800200C9A66
 
 
 

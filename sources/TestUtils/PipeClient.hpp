@@ -28,7 +28,7 @@ namespace TestUtil {
 
 	public:
 	
-		explicit PipeClient(const std::wstring &path);
+		explicit PipeClient(const std::string &path);
 		virtual ~PipeClient();
 
 	public:

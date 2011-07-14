@@ -39,6 +39,11 @@
     </ClCompile>
     <ClCompile Include="ClientServer.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{db90fdfc-2f4c-4f37-9203-a87eec39b4d4}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ECF10D21-3713-4E5D-B3BF-465F4D34F340}</ProjectGuid>
   </PropertyGroup>
