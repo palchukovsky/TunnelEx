@@ -282,21 +282,6 @@ private:
 				boost::asio::placeholders::bytes_transferred,
 				boost::ref(*buffer)));
 		buffer.release();
-		{
-			std::auto_ptr<Buffer> buffer(
-				new Buffer(
-				Connection::Trait::GetReceiveBufferSize()));
-			m_acceptConnection->GetSocket().async_receive_from(
-				io::buffer(*buffer, buffer->size()),
-				m_endpoint,
-				boost::bind(
-					&Self::HandleRead,
-					this,
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred,
-					boost::ref(*buffer)));
-			buffer.release();
-		}
 	}
 
 	void ServiceThreadMain() {
@@ -339,7 +324,12 @@ private:
 			assert(!isConnectionExists);
 			isConnectionExists = m_endpoint == c->GetEndpoint();
 			if (isConnectionExists) {
-				c->HandleRead(error, size, buffer, m_endpoint, false);
+				try {
+					c->HandleRead(error, size, buffer, m_endpoint, false);
+				} catch (...) {
+					bufferHolder.release();
+					throw;
+				}
 				bufferHolder.release();
 				break;
 			}
