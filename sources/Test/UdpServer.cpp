@@ -82,7 +82,8 @@ namespace {
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
-				ASSERT_TRUE(ReceiveTestPacket(connection, true));
+				ASSERT_TRUE(ReceiveTestPacket(connection, true))
+					<< "Failed to receive test packet #" << (i + 1) << ".";
 				ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
 				ASSERT_TRUE(
 					m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
