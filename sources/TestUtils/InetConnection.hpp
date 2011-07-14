@@ -12,6 +12,8 @@
 
 #include "ClientServer.hpp"
 
+#define TEST_UTIL_TRAFFIC_INET_CONNECTION_LOGGIN 0
+
 namespace TestUtil {
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -192,19 +194,27 @@ namespace TestUtil {
 					const boost::system::error_code &error,
 					size_t size,
 					T &data) {
+			const std::auto_ptr<T> dataHolder(&data);
 			assert(data.size() == size || (error && size == 0));
-// 			{
-// 				std::ostringstream oss;
-// 				oss << "A:\\" << this << ".write";
-// 				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-// 				if (size > 0) {
-// 					of.write(&data[0], size);
-// 				} else {
-// 					of << "[ZERO]";
-// 				}
-// 			}
+#			if TEST_UTIL_TRAFFIC_INET_CONNECTION_LOGGIN != 0
+			{
+				std::ostringstream oss;
+				oss << this << ".InetConnection.write";
+				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+				if (size > 0) {
+					of.write(&data[0], size);
+				} else {
+					of << "[ZERO]";
+				}
+			}
+#			endif
 			UseUnused(error, size);
-			delete &data;
+			if (error) {
+				std::cerr
+					<< "TestUtil::InetConnection::HandleWrite: "
+					<< error.message() << " (" << error.value() << ")."
+					<< std::endl;
+			}
 		}
 		
 		void HandleRead(
@@ -218,22 +228,24 @@ namespace TestUtil {
 				const std::auto_ptr<const Buffer> bufferHolder(&buffer);
 				boost::mutex::scoped_lock lock(m_mutex);
 
-// 				{
-// 					std::ostringstream oss;
-// 					oss << "A:\\" << this << ".read";
-// 					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
-// 					if (size > 0) {
-// 						of.write(&buffer[0], size);
-// 					} else {
-// 						of << "[ZERO]";
-// 					}
-// 					if (!m_isActive) {
-// 						of << "[CLOSED]";
-// 					}
-// 				}
+#				if TEST_UTIL_TRAFFIC_INET_CONNECTION_LOGGIN
+				{
+					std::ostringstream oss;
+					oss << this << ".InetConnection.1.read";
+					std::ofstream of(oss.str().c_str(), std::ios::binary|  std::ios::app);
+					if (size > 0) {
+						of.write(&buffer[0], size);
+					} else {
+						of << "[ZERO]";
+					}
+					if (!m_isActive) {
+						of << "[CLOSED]";
+					}
+				}
+#				endif
 
 				assert(m_endpoint);
-				if (!m_isActive || size == 0) {
+				if (!m_isActive) {
 					return;
 				}
 
@@ -267,13 +279,10 @@ namespace TestUtil {
 					}
 				
 				} else {
-
-#					ifdef DEV_VER
-						const std::string message = error.message();
-						const char *const messagePch = message.c_str();
-						UseUnused(messagePch);
-#					endif
-					
+					std::cerr
+						<< "TestUtil::InetConnection::HandleRead: "
+						<< error.message() << " (" << error.value() << ")."
+						<< std::endl;
 					assert(size == 0);
 					OnZeroReceived(lock);
 
@@ -363,22 +372,28 @@ namespace TestUtil {
 						std::istream_iterator<char>(), 
 						std::back_inserter(m_dataBuffer));
 					UpdateBufferState(size);
-// 					{
-// 						std::ostringstream oss;
-// 						oss << "A:\\" << this << ".read";
-// 						std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-// 						assert(m_dataBufferSize >= size);
-// 						if (size > 0) {
-// 							of.write(&m_dataBufferStart[0] + m_dataBufferSize - size, size);
-// 						} else {
-// 							of << "[ZERO]";
-// 						}
-// 						if (!m_isActive) {
-// 							of << "[CLOSED]";
-// 						}
-// 					}
+#					if TEST_UTIL_TRAFFIC_LOGGIN != 0
+					{
+						std::ostringstream oss;
+						oss << this << ".InetConnection.2.read";
+						std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+						assert(m_dataBufferSize >= size);
+						if (size > 0) {
+							of.write(&m_dataBufferStart[0] + m_dataBufferSize - size, size);
+						} else {
+							of << "[ZERO]";
+						}
+						if (!m_isActive) {
+							of << "[CLOSED]";
+						}
+					}
+#					endif
 					StartRead();
 				} else {
+					std::cerr
+						<< "TestUtil::InetConnection::HandleRead: "
+						<< error.message() << " (" << error.value() << ")."
+						<< std::endl;
 					OnZeroReceived(lock);
 				}
 			}
