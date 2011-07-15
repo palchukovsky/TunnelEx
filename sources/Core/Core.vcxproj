@@ -196,6 +196,7 @@
     <ClInclude Include="Tunnel.hpp" />
     <ClInclude Include="TunnelBuffer.hpp" />
     <ClInclude Include="TunnelConnectionSignal.hpp" />
+    <ClInclude Include="Unique.hpp" />
     <ClInclude Include="UniquePtr.hpp" />
     <ClInclude Include="RuleSet.h">
       <DependentUpon>RuleSet.xsd</DependentUpon>

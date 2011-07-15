@@ -10,66 +10,52 @@
 #ifndef INCLUDED_FILE__UniquePtr_h__0708160154
 #define INCLUDED_FILE__UniquePtr_h__0708160154
 
+#include "Unique.hpp"
+#include "LocalAssert.h"
+
 namespace TunnelEx {
 
 	namespace Helpers {
 
-		//! Abstract pointer holder for TunnelEx::UniquePtr.
-		class UniquePtrHolderBase {
-		public:
-			UniquePtrHolderBase() throw() {
-				//...//
+		template<typename T>
+		struct UniquePtrTrait {
+		
+			template<typename T>
+			struct RemoveConst {
+				typedef T Type;
+			};
+			template<typename T>
+			struct RemoveConst<const T> {
+				typedef T Type;
+			};
+
+			typedef T * Ptr;
+			typedef typename RemoveConst<T>::Type * MutablePtr;
+
+			static inline void Delete(MutablePtr ptr) {
+				typedef char TypeMustBeComplete[sizeof(T)? 1: -1];
+				sizeof(TypeMustBeComplete);
+				delete ptr;
 			}
-		protected:
-			virtual ~UniquePtrHolderBase() throw() {
-				//...//
-			}
-		private:
-			UniquePtrHolderBase(const UniquePtrHolderBase &);
-			const UniquePtrHolderBase & operator =(const UniquePtrHolderBase &);
-		public:
-			virtual void Release() throw() = 0;
-			virtual void Delete() throw() = 0;
+
+			struct Ref : public ::TunnelEx::Helpers::UniqueRef<Ptr, void(MutablePtr)> {
+				typedef UniqueRef<Ptr, void(MutablePtr)> Base;
+				typedef typename Base::Dtor Dtor;
+				explicit Ref(
+							Element element,
+							Dtor dtor,
+							::TunnelEx::Helpers::UniqueHolderBase *const holder = 0)
+						: Base(element, dtor, holder) {
+					//...//
+				}
+				explicit Ref(const Base &base)
+						: Base(base) {
+					//...//
+				}
+			};
+		
 		};
 
-		//! Pointer holder implementation for TunnelEx::UniquePtr.
-		template<class T>
-		class UniquePtrHolder : public ::TunnelEx::Helpers::UniquePtrHolderBase {
-		public:
-			explicit UniquePtrHolder(T *const ptr) throw()
-					: m_ptr(ptr) {
-				//...//
-			}
-		protected:
-			~UniquePtrHolder() {
-				delete m_ptr;
-			}
-		public:
-			virtual void Release() throw() {
-				m_ptr = 0;
-			}
-			virtual void Delete() throw() {
-				delete this;
-			}
-		private:
-			T *m_ptr;
-		};
-
-		//! Proxy reference for TunnelEx::UniquePtr copying.
-		/** @sa: TunnelEx::UniquePtr
-		*/
-		template<class Y>
-		struct UniquePtrRef {	
-			explicit UniquePtrRef(
-						Y *ptr,
-						::TunnelEx::Helpers::UniquePtrHolderBase *const holder = 0)
-					: m_ptr(ptr),
-					m_holder(holder) {
-				//...//
-			}
-			Y *m_ptr;
-			::TunnelEx::Helpers::UniquePtrHolderBase *m_holder;
-		};
 
 	}
 
@@ -77,178 +63,144 @@ namespace TunnelEx {
 	/** Uses in case of work with TunnelEx's core pointers.
 	  * @sa TunnelEx::SharedPtr
 	  */
-	template<class T>
-	class UniquePtr {
+	template<typename T>
+	class UniquePtr
+		: public ::TunnelEx::Unique<
+			typename Helpers::UniquePtrTrait<T>::Ptr,
+			typename Helpers::UniquePtrTrait<T>::MutablePtr,
+			0> {
 
-		template<class Other>
+		template<typename Other>
 		friend class UniquePtr;
 
 	public:
 
 		typedef T ElementType;
+		typedef UniquePtr<ElementType> Self;
+		typedef Helpers::UniquePtrTrait<ElementType> Trait;
+		typedef typename Trait::Ref Ref;
+		typedef Unique<ElementType *, typename Trait::MutablePtr, 0> Base;
 
 	public:
 
-		UniquePtr() throw()
-				: m_ptr(0),
-				m_holder(0) {
+		UniquePtr() throw() {
 			//...//
 		}
 
-		explicit UniquePtr(T *const ptr)
-				: m_ptr(ptr) {
-			InitHolder();
-		}
-
-		UniquePtr(UniquePtr<T> &rhs) throw()
-				: m_ptr(rhs.m_ptr),
-				m_holder(rhs.m_holder) {
-			rhs.m_holder = 0;
-			rhs.m_ptr = 0;
-		}
-
-		UniquePtr(::TunnelEx::Helpers::UniquePtrRef<T> rhs)
-				: m_ptr(rhs.m_ptr),
-				m_holder(rhs.m_holder) {
-			if (m_ptr != 0 && m_holder == 0) {
-				InitHolder();
-			}
-		}
-
-		template<class Other>
-		UniquePtr(UniquePtr<Other> &rhs) throw()
-				: m_ptr(rhs.m_ptr),
-				m_holder(rhs.m_holder) {
-			rhs.m_holder = 0;
-			rhs.m_ptr = 0;
-		}
-
-		~UniquePtr() {
-			if (m_holder) {
-				m_holder->Delete();
-			}
+		explicit UniquePtr(ElementType *const ptr)
+				: Base(ptr, &Trait::Delete) {
+			//...//
 		}
 
 	public:
 
-		template<class Other>
-		const UniquePtr<T> & operator =(UniquePtr<Other> &rhs) throw() {
-			UniquePtr<T>(rhs).Swap(*this);
+		UniquePtr(Self &rhs) throw()
+				: Base(rhs) {
+			//...//
+		}
+
+		template<typename Other>
+		UniquePtr(typename ::TunnelEx::UniquePtr<Other>::Ref ref)
+				: Base(ref) {
+			//...//
+		}
+
+		template<typename Other>
+		UniquePtr(UniquePtr<Other> &rhs) throw()
+				: Base(rhs) {
+			//...//
+		}
+
+	public:
+
+		template<typename Other>
+		const Self & operator =(UniquePtr<Other> &rhs) throw() {
+			Base::operator =(rhs);
 			return *this;
 		}
 
-		const UniquePtr<T> & operator =(UniquePtr<T> &rhs) throw() {
-			UniquePtr<T>(rhs).Swap(*this);
+		const Self & operator =(Self &rhs) throw() {
+			Base::operator =(rhs);
 			return *this;
 		}
 
-		template<class Other>
-		operator ::TunnelEx::Helpers::UniquePtrRef<Other>() throw() {
-			const ::TunnelEx::Helpers::UniquePtrRef<Other> result(m_ptr, m_holder);
-			m_holder = 0;
-			m_ptr = 0;
-			return result;
+		template<typename Other>
+		operator typename ::TunnelEx::UniquePtr<Other>::Ref() throw() {
+			typedef ::TunnelEx::UniquePtr<Other>::Ref Ref;
+			return Ref(Base::operator ::TunnelEx::Helpers::UniqueRef<Other *, Ref::Dtor>());
 		}
 
-		const UniquePtr<T> & operator =(
-					::TunnelEx::Helpers::UniquePtrRef<T> rhs)
-				throw() {
-			UniquePtr<T>(rhs).Swap(*this);
-			return *this;
+		ElementType & operator *() const throw() {
+			assert(Get() != 0);
+			return *Get();
 		}
 
-		T & operator *() const throw() {
-			return *m_ptr;
-		}
-
-		T * operator ->() const throw() {
-			return m_ptr;
+		ElementType * operator ->() const throw() {
+			return Get();
 		}
 
 		operator bool() const throw() {
-			return m_ptr != 0;
+			return Base::operator bool();
 		}
 
 		bool operator !() const throw() {
-			return m_ptr == 0;
+			return Base::operator !();
 		}
 
-		T * Get() const throw() {
-			return m_ptr;
+		ElementType * Get() const throw() {
+			return Base::Get();
 		}
 
 		void Reset() {
-			UniquePtr<T>().Swap(*this);
+			Base::Reset();
 		}
 
-		void Reset(T *const ptr) {
-			UniquePtr<T>(ptr).Swap(*this);
+		void Reset(ElementType * ptr) {
+			Self(ptr).Swap(*this);
 		}
 
-		T * Release() throw() {
-			T *const tmpPtr = m_ptr;
-			if (m_holder) {
-				m_holder->Release();
-				UniquePtr().Swap(*this);
-			}
-			return tmpPtr;
+		ElementType * Release() throw() {
+			return Base::Release();
 		}
 
-		void Swap(UniquePtr<T> &rhs) throw() {
-			T *const tmpPtr = rhs.m_ptr;
-			::TunnelEx::Helpers::UniquePtrHolderBase *tmpHolder = rhs.m_holder;
-			rhs.m_ptr = m_ptr;
-			rhs.m_holder = m_holder;
-			m_ptr = tmpPtr;
-			m_holder = tmpHolder;
+		void Swap(Self &rhs) throw() {
+			Base::Swap(rhs);
 		}
-
-	private:
-
-		void InitHolder() {
-			try {
-				m_holder = new ::TunnelEx::Helpers::UniquePtrHolder<T>(m_ptr);
-			} catch (...) {
-				delete m_ptr;
-				throw;
-			}
-		}
-
-	private:
-
-		T *m_ptr;
-		::TunnelEx::Helpers::UniquePtrHolderBase *m_holder;
 
 	};
 
-	template<class T, class U>
-	inline bool operator ==(
-				::TunnelEx::UniquePtr<T> const &a,
-				::TunnelEx::UniquePtr<U> const &b) {
-		return a.Get() == b.Get();
-	}
+}
 
-	template<class T, class U>
-	inline bool operator !=(
-				const ::TunnelEx::UniquePtr<T> &a,
-				const ::TunnelEx::UniquePtr<U> &b) {
-		return a.Get() != b.Get();
-	}
+template<typename T, typename U>
+inline bool operator ==(
+			::TunnelEx::UniquePtr<T> const &a,
+			::TunnelEx::UniquePtr<U> const &b) {
+	assert(&a != &b);
+	return a.Get() == b.Get();
+}
 
-	template<class T, class U>
-	inline bool operator <(
-				const ::TunnelEx::UniquePtr<T> &a,
-				const ::TunnelEx::UniquePtr<U> &b) {
-		return a.Get() < b.Get();
-	}
+template<typename T, typename U>
+inline bool operator !=(
+			const ::TunnelEx::UniquePtr<T> &a,
+			const ::TunnelEx::UniquePtr<U> &b) {
+	assert(&a != &b);
+	return a.Get() != b.Get();
+}
 
-	template<class T, class U>
-	inline bool operator >(
-				const ::TunnelEx::UniquePtr<T> &a,
-				const ::TunnelEx::UniquePtr<U> &b) {
-		return a.Get() > b.Get();
-	}
+template<typename T, typename U>
+inline bool operator <(
+			const ::TunnelEx::UniquePtr<T> &a,
+			const ::TunnelEx::UniquePtr<U> &b) {
+	assert(&a != &b);
+	return a.Get() < b.Get();
+}
 
+template<typename T, typename U>
+inline bool operator >(
+			const ::TunnelEx::UniquePtr<T> &a,
+			const ::TunnelEx::UniquePtr<U> &b) {
+	assert(&a != &b);
+	return a.Get() > b.Get();
 }
 
 #endif // INCLUDED_FILE__UniquePtr_h__0708160154

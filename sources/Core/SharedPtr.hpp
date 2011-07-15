@@ -13,6 +13,7 @@
 
 #include "Api.h"
 #include "Locking.hpp"
+#include "LocalAssert.h"
 
 namespace TunnelEx {
 
@@ -62,7 +63,7 @@ namespace TunnelEx {
 				delete m_ptr;
 			}
 		public:
-			void Delete() {
+			virtual void Delete() {
 				delete this;
 			}
 		private:
@@ -163,6 +164,7 @@ namespace TunnelEx {
 		}
 
 		T & operator *() const throw() {
+			assert(m_ptr != 0);
 			return *m_ptr;
 		}
 
@@ -198,38 +200,42 @@ namespace TunnelEx {
 
 	};
 
-	template<class T, class U>
-	inline bool operator ==(
-				::TunnelEx::SharedPtr<T> const &a,
-				::TunnelEx::SharedPtr<U> const &b)
-			throw() {
-		return a.Get() == b.Get();
-	}
+}
 
-	template<class T, class U>
-	inline bool operator !=(
-				const ::TunnelEx::SharedPtr<T> &a,
-				const ::TunnelEx::SharedPtr<U> &b)
-			throw() {
-		return a.Get() != b.Get();
-	}
+template<class T, class U>
+inline bool operator ==(
+			::TunnelEx::SharedPtr<T> const &a,
+			::TunnelEx::SharedPtr<U> const &b)
+		throw() {
+	assert(&a != &b);
+	return a.Get() == b.Get();
+}
 
-	template<class T, class U>
-	inline bool operator <(
-				const ::TunnelEx::SharedPtr<T> &a,
-				const ::TunnelEx::SharedPtr<U> &b)
-			throw() {
-		return a.Get() < b.Get();
-	}
+template<class T, class U>
+inline bool operator !=(
+			const ::TunnelEx::SharedPtr<T> &a,
+			const ::TunnelEx::SharedPtr<U> &b)
+		throw() {
+	assert(&a != &b);
+	return a.Get() != b.Get();
+}
 
-	template<class T, class U>
-	inline bool operator >(
-				const ::TunnelEx::SharedPtr<T> &a,
-				const ::TunnelEx::SharedPtr<U> &b)
-			throw() {
-		return a.Get() > b.Get();
-	}
+template<class T, class U>
+inline bool operator <(
+			const ::TunnelEx::SharedPtr<T> &a,
+			const ::TunnelEx::SharedPtr<U> &b)
+		throw() {
+	assert(&a != &b);
+	return a.Get() < b.Get();
+}
 
+template<class T, class U>
+inline bool operator >(
+			const ::TunnelEx::SharedPtr<T> &a,
+			const ::TunnelEx::SharedPtr<U> &b)
+		throw() {
+	assert(&a != &b);
+	return a.Get() > b.Get();
 }
 
 #endif // INCLUDED_FILE__TUNNELEX__SharedPtr_h__0803201737
