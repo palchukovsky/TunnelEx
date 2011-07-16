@@ -10,6 +10,8 @@
 #ifndef INCLUDED_FILE__UniquePtr_h__0708160154
 #define INCLUDED_FILE__UniquePtr_h__0708160154
 
+#include "LocalAssert.h"
+
 namespace TunnelEx {
 
 	namespace Helpers {
@@ -41,7 +43,7 @@ namespace TunnelEx {
 				//...//
 			}
 		protected:
-			~UniquePtrHolder() {
+			virtual ~UniquePtrHolder() {
 				delete m_ptr;
 			}
 		public:
@@ -158,6 +160,7 @@ namespace TunnelEx {
 		}
 
 		T & operator *() const throw() {
+			assert(m_ptr != 0);
 			return *m_ptr;
 		}
 
@@ -206,6 +209,7 @@ namespace TunnelEx {
 	private:
 
 		void InitHolder() {
+			assert(m_holder == 0);
 			try {
 				m_holder = new ::TunnelEx::Helpers::UniquePtrHolder<T>(m_ptr);
 			} catch (...) {
@@ -221,34 +225,38 @@ namespace TunnelEx {
 
 	};
 
-	template<class T, class U>
-	inline bool operator ==(
-				::TunnelEx::UniquePtr<T> const &a,
-				::TunnelEx::UniquePtr<U> const &b) {
-		return a.Get() == b.Get();
-	}
+}
 
-	template<class T, class U>
-	inline bool operator !=(
-				const ::TunnelEx::UniquePtr<T> &a,
-				const ::TunnelEx::UniquePtr<U> &b) {
-		return a.Get() != b.Get();
-	}
+template<typename T, typename U>
+inline bool operator ==(
+			::TunnelEx::UniquePtr<T> const &a,
+			::TunnelEx::UniquePtr<U> const &b) {
+	assert(&a != &b);
+	return a.Get() == b.Get();
+}
 
-	template<class T, class U>
-	inline bool operator <(
-				const ::TunnelEx::UniquePtr<T> &a,
-				const ::TunnelEx::UniquePtr<U> &b) {
-		return a.Get() < b.Get();
-	}
+template<typename T, typename U>
+inline bool operator !=(
+			const ::TunnelEx::UniquePtr<T> &a,
+			const ::TunnelEx::UniquePtr<U> &b) {
+	assert(&a != &b);
+	return a.Get() != b.Get();
+}
 
-	template<class T, class U>
-	inline bool operator >(
-				const ::TunnelEx::UniquePtr<T> &a,
-				const ::TunnelEx::UniquePtr<U> &b) {
-		return a.Get() > b.Get();
-	}
+template<typename T, typename U>
+inline bool operator <(
+			const ::TunnelEx::UniquePtr<T> &a,
+			const ::TunnelEx::UniquePtr<U> &b) {
+	assert(&a != &b);
+	return a.Get() < b.Get();
+}
 
+template<typename T, typename U>
+inline bool operator >(
+			const ::TunnelEx::UniquePtr<T> &a,
+			const ::TunnelEx::UniquePtr<U> &b) {
+	assert(&a != &b);
+	return a.Get() > b.Get();
 }
 
 #endif // INCLUDED_FILE__UniquePtr_h__0708160154

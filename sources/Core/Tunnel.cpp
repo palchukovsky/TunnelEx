@@ -504,8 +504,8 @@ void Tunnel::ReportOpened() const {
 			const Endpoint &ruleEndpoint = connection.GetRuleEndpoint();
 			const WString &identifier = !ruleEndpoint.IsCombined()
 				? isRead
-				? ruleEndpoint.GetReadResourceIdentifier()
-				: ruleEndpoint.GetWriteResourceIdentifier()
+					? ruleEndpoint.GetReadResourceIdentifier()
+					: ruleEndpoint.GetWriteResourceIdentifier()
 				: ruleEndpoint.GetCombinedResourceIdentifier();
 			stream << ConvertString(identifier, buffer).GetCStr();
 		}
