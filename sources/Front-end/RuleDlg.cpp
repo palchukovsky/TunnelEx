@@ -360,5 +360,7 @@ void RuleDlg::Cancel() {
 }
 
 void RuleDlg::OnHelp(wxCommandEvent &) {
-	wxGetApp().DisplayHelp(GetHelpPath());
+	wxString path = wxT("rule-set/");
+	path += GetHelpPath();
+	wxGetApp().DisplayHelp(path);
 }

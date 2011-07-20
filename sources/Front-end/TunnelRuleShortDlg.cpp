@@ -851,7 +851,26 @@ std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 }
 
 const wxChar * TunnelRuleShortDlg::GetHelpPath() const {
-	return wxT("rule");
+	switch (m_step) {
+		case 2:
+			if (m_typeTcp->GetValue()) {
+				return wxT("rule/tcp");	
+			} else if (m_typeUdp->GetValue()) {
+				return wxT("rule/udp");	
+			} else if (m_typeFtp->GetValue()) {
+				return wxT("rule/ftp");	
+			} else if (m_typePipe->GetValue()) {
+				return wxT("rule/pipe");	
+			} else if (m_typeSerial->GetValue()) {
+				return wxT("rule/serial");	
+			} else {
+				assert(false);
+			}
+		default:
+			assert(false);
+		case 1:
+			return wxT("rule");
+	}
 }
 
 bool TunnelRuleShortDlg::Save(TunnelEx::Rule &newAbstractRule) const {
@@ -1408,21 +1427,28 @@ void TunnelRuleShortDlg::UpdateVisibleNewRule() {
 			{
 				ShowGeneralSettings();
 				m_typeBox->Show();
-				if (m_typeTcp->GetValue() || m_typeUdp->GetValue()) {
+				if (m_typeTcp->GetValue()) {
 					m_typeDescription->SetLabel(
-						wxT("Redirects an network traffic to another port")
-							wxT(" on local or remote system."));
+						wxT("TCP connections reception and redirecting data")
+							wxT(" from them to another computer and/or port. "));
+					m_typeFtpLink->Hide();
+				} else if (m_typeUdp->GetValue()) {
+					m_typeDescription->SetLabel(
+						wxT("UDP datagrams reception and redirecting them to another")
+							wxT(" computer and/or port."));
 					m_typeFtpLink->Hide();
 				} else if (m_typeFtp->GetValue()) {
 					m_typeDescription->SetLabel(
-						wxT("Forwards an FTP connection to another host,")
-							wxT(" to a real FTP server."));
+						wxT("Redirection of FTP and FTPS requests of clients")
+							wxT(" to the real FTP server."));
 					m_typeFtpLink->Show();
 				} else if (m_typePipe->GetValue()) {
-					m_typeDescription->SetLabel(wxT("Redirects Windows Named Pipe traffic."));
+					m_typeDescription->SetLabel(
+						wxT("Reception and redirection of data via named pipes."));
 					m_typeFtpLink->Hide();
 				} else if (m_typeSerial->GetValue()) {
-					m_typeDescription->SetLabel(wxT("Redirects Serial Port (COM) traffic."));
+					m_typeDescription->SetLabel(
+						wxT("Reception and redirection of data from serial port (COM-port)."));
 					m_typeFtpLink->Hide();
 				} else {
 					assert(false);

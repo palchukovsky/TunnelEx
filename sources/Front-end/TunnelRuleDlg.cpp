@@ -494,8 +494,8 @@ wxString TunnelRuleDlg::GetRuleTitle() const {
 
 const wxChar * TunnelRuleDlg::GetHelpPath() const {
 	return !m_isFtpTunnel
-		?	wxT("dialogs/rule-advanced")
-		:	wxT("dialogs/ftp-tunnel-rule");
+		?	wxT("rule-advanced")
+		:	wxT("ftp-tunnel-rule");
 }
 
 wxString TunnelRuleDlg::ConvertEndpointToStrings(
