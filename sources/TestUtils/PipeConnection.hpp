@@ -14,6 +14,8 @@
 
 namespace TestUtil {
 
+	////////////////////////////////////////////////////////////////////////////////
+
 	class PipeConnection : private boost::noncopyable {
 
 	public:
@@ -23,7 +25,7 @@ namespace TestUtil {
 	public:
 
 		explicit PipeConnection(HANDLE handle);
-		~PipeConnection();
+		virtual ~PipeConnection();
 
 	public:
 
@@ -34,6 +36,8 @@ namespace TestUtil {
 		void Close();
 
 	public:
+
+		void Start();
 
 		void Send(std::auto_ptr<Buffer>);
 
@@ -50,9 +54,14 @@ namespace TestUtil {
 					Buffer::size_type minSize)
 				const;
 
-	private:
+	protected:
 
-		void ReadThreadMain();
+		void SetHandle(HANDLE handle) throw() {
+			m_handle = handle;
+		}
+		virtual void ReadThreadMain();
+
+	private:
 
 		void UpdateBufferState();
 		void UpdateBufferState(size_t addSize);
@@ -78,6 +87,33 @@ namespace TestUtil {
 		Buffer m_receiveBuffer;
 
 		std::auto_ptr<boost::thread> m_readThread;
+
+	};
+
+	////////////////////////////////////////////////////////////////////////////////
+
+	class PipeClientConnection : public PipeConnection {
+
+	public:
+
+		typedef PipeClientConnection Self;
+		typedef PipeConnection Base;
+
+	public:
+
+		explicit PipeClientConnection(
+				const std::string &path,
+				const boost::posix_time::time_duration &waitTimeout);
+		virtual ~PipeClientConnection();
+
+	protected:
+
+		virtual void ReadThreadMain();
+
+	private:
+
+		const std::string m_path;
+		const DWORD m_waitTimeout;
 
 	};
 

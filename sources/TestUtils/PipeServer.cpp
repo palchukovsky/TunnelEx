@@ -100,55 +100,64 @@ private:
 			void Release() throw() {
 				handle = INVALID_HANDLE_VALUE;
 			}
-		} ;
+		};
 		
-		for (size_t i = 1; ; ++i) {
+		try {
 
-			AutoHandle handleHolder;
+			for (size_t i = 1; ; ++i) {
 
-			DWORD pipeOpenMode = PIPE_ACCESS_DUPLEX;
-			if (i == i) {
-				pipeOpenMode |= FILE_FLAG_FIRST_PIPE_INSTANCE;
-			}
-			handleHolder.handle = CreateNamedPipeA( 
-				m_path.c_str(),
-				pipeOpenMode,
-				PIPE_TYPE_MESSAGE				// message type pipe 
-					| PIPE_READMODE_MESSAGE		// message-read mode 
-					| PIPE_WAIT,                // blocking mode 
-				PIPE_UNLIMITED_INSTANCES,
-				Connection::GetBufferSize(),
-				Connection::GetBufferSize(),
-				0,                        // client time-out 
-				NULL);
-			if (handleHolder.handle == INVALID_HANDLE_VALUE) {
-				TunnelEx::Error error(GetLastError());
-				std::cerr
-					<< "Failed to create pipe: "
-					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-					<< " (" << error.GetErrorNo() << ")." << std::endl;
-				throw std::exception("Failed to create pipe");
-			}
+				AutoHandle handleHolder;
 
-			const BOOL isConnect
-				= ConnectNamedPipe(handleHolder.handle, NULL)
-				|| GetLastError() == ERROR_PIPE_CONNECTED;
-			if (!isConnect) {
-				TunnelEx::Error error(GetLastError());
-				std::cerr
-					<< "Failed to create pipe: "
-					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-					<< " (" << error.GetErrorNo() << ")." << std::endl;
-				break;
-			}
+				DWORD pipeOpenMode = PIPE_ACCESS_DUPLEX;
+				if (i == 1) {
+					pipeOpenMode |= FILE_FLAG_FIRST_PIPE_INSTANCE;
+				}
+				handleHolder.handle = CreateNamedPipeA( 
+					m_path.c_str(),
+					pipeOpenMode,
+					PIPE_TYPE_MESSAGE				// message type pipe 
+						| PIPE_READMODE_MESSAGE		// message-read mode 
+						| PIPE_WAIT,                // blocking mode 
+					PIPE_UNLIMITED_INSTANCES,
+					Connection::GetBufferSize(),
+					Connection::GetBufferSize(),
+					0,                        // client time-out 
+					NULL);
+				if (handleHolder.handle == INVALID_HANDLE_VALUE) {
+					TunnelEx::Error error(GetLastError());
+					std::cerr
+						<< "Failed to create pipe: "
+						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+						<< " (" << error.GetErrorNo() << ")." << std::endl;
+					throw std::exception("Failed to create pipe");
+				}
 
-			boost::shared_ptr<Connection> connection(
-				new Connection(handleHolder.handle));
-			handleHolder.Release();
+				const BOOL isConnect
+					= ConnectNamedPipe(handleHolder.handle, NULL)
+					|| GetLastError() == ERROR_PIPE_CONNECTED;
+				if (!isConnect) {
+					TunnelEx::Error error(GetLastError());
+					std::cerr
+						<< "Failed to create pipe: "
+						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+						<< " (" << error.GetErrorNo() << ")." << std::endl;
+					break;
+				}
 
-			boost::mutex::scoped_lock lock(m_connectionsMutex);
-			m_connections.push_back(connection);
+				boost::shared_ptr<Connection> connection(
+					new Connection(handleHolder.handle));
+				handleHolder.Release();
+				connection->Start();
+
+				boost::mutex::scoped_lock lock(m_connectionsMutex);
+				m_connections.push_back(connection);
 			
+			}
+
+		} catch (const std::exception &ex) {
+			std::cerr << "Error in pipe server thread: " << ex.what() << "." << std::endl;
+		} catch (...) {
+			std::cerr << "Unknown error in pipe server thread." << std::endl;
 		}
 
 	}

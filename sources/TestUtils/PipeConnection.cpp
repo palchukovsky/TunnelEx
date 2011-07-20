@@ -9,6 +9,7 @@
 
 #include "Prec.h"
 #include "PipeConnection.hpp"
+#include "Core/Error.hpp"
 
 using namespace TestUtil;
 
@@ -16,7 +17,7 @@ PipeConnection::PipeConnection(HANDLE handle)
 		: m_handle(handle),
 		m_dataBufferStart(m_dataBuffer.end()),
 		m_dataBufferSize(0),
-		m_isActive(true),
+		m_isActive(false),
 		m_receiveBuffer(GetBufferSize(), 0) {
 	assert(
 		std::distance(
@@ -24,8 +25,6 @@ PipeConnection::PipeConnection(HANDLE handle)
 			const_cast<const Self *>(this)->m_dataBuffer.end())
 		== int(m_dataBufferSize));
 	UpdateBufferState();
-	m_readThread.reset(
-		new boost::thread(boost::bind(&Self::ReadThreadMain, this)));
 }
 
 PipeConnection::~PipeConnection() {
@@ -38,8 +37,15 @@ PipeConnection::~PipeConnection() {
 	}
 }
 
+void PipeConnection::Start() {
+	assert(!m_isActive);
+	m_isActive = true;
+	m_readThread.reset(
+		new boost::thread(boost::bind(&Self::ReadThreadMain, this)));
+}
+
 size_t PipeConnection::GetBufferSize() {
-	return 256;
+	return 1024;
 }
 
 void PipeConnection::Close() {
@@ -142,37 +148,45 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 
 void PipeConnection::ReadThreadMain() {
 
-	for ( ; m_isActive; ) {
+	try {
 
-		DWORD received = 0;
-		assert(m_handle != INVALID_HANDLE_VALUE);
-		const BOOL readFileResult = ReadFile(
-			m_handle,
-			&m_receiveBuffer[0],
-			DWORD(m_receiveBuffer.size()),
-			&received,
-			NULL);
-		assert(received <= m_receiveBuffer.size());
-		assert(readFileResult || received == 0);
+		for ( ; m_isActive; ) {
+
+			DWORD received = 0;
+			assert(m_handle != INVALID_HANDLE_VALUE);
+			const BOOL readFileResult = ReadFile(
+				m_handle,
+				&m_receiveBuffer[0],
+				DWORD(m_receiveBuffer.size()),
+				&received,
+				NULL);
+			assert(received <= m_receiveBuffer.size());
+			assert(readFileResult || received == 0);
 		
-		if (received == 0) {
-			Close();
+			if (received == 0) {
+				Close();
+				m_dataReceivedCondition.notify_all();
+				break;
+			}
+
+			{
+				boost::mutex::scoped_lock lock(m_mutex);
+				m_dataBuffer.reserve(received);
+				std::copy(
+					m_receiveBuffer.begin(),
+					m_receiveBuffer.begin() + received,
+					std::back_inserter(m_dataBuffer));
+				UpdateBufferState(received);
+			}
+
 			m_dataReceivedCondition.notify_all();
-			break;
+
 		}
 
-		{
-			boost::mutex::scoped_lock lock(m_mutex);
-			m_dataBuffer.reserve(received);
-			std::copy(
-				m_receiveBuffer.begin(),
-				m_receiveBuffer.begin() + received,
-				std::back_inserter(m_dataBuffer));
-			UpdateBufferState(received);
-		}
-
-		m_dataReceivedCondition.notify_all();
-
+	} catch (const std::exception &ex) {
+		std::cerr << "Error in pipe read thread: " << ex.what() << "." << std::endl;
+	} catch (...) {
+		std::cerr << "Unknown error in pipe read thread." << std::endl;
 	}
 
 }
@@ -197,4 +211,103 @@ void PipeConnection::UpdateBufferState(size_t addSize) {
 			m_dataBufferStart,
 			const_cast<const Self *>(this)->m_dataBuffer.end())
 		== int(m_dataBufferSize));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipeClientConnection::PipeClientConnection(
+			const std::string &path,
+			const boost::posix_time::time_duration &waitTimeout)
+		: Base(INVALID_HANDLE_VALUE),
+		m_path(path),
+		m_waitTimeout(DWORD(waitTimeout.total_milliseconds())) {
+	//...//
+}
+
+PipeClientConnection::~PipeClientConnection() {
+	//...//
+}
+
+void PipeClientConnection::ReadThreadMain() {
+
+	struct AutoHandle {
+		HANDLE handle;
+		AutoHandle(HANDLE handle = INVALID_HANDLE_VALUE)
+				: handle(handle) {
+			//...//
+		}
+		~AutoHandle() {
+			if (handle != INVALID_HANDLE_VALUE) {
+				CloseHandle(handle);
+			}
+		}
+		bool IsValid() const {
+			return handle != INVALID_HANDLE_VALUE;
+		}
+		HANDLE Release() throw() {
+			const auto result = handle;
+			handle = INVALID_HANDLE_VALUE;
+			return result;
+		}
+	} handle;
+
+	try {
+
+		for ( ; ; ) {
+
+			handle.handle = CreateFileA( 
+				m_path.c_str(),
+				GENERIC_READ | GENERIC_WRITE,
+				0,
+				NULL,
+				OPEN_EXISTING,
+				0,
+				NULL);
+			if (handle.IsValid()) {
+				break;
+			} else {
+				TunnelEx::Error error(GetLastError());
+				if (error.GetErrorNo() != ERROR_PIPE_BUSY) {
+					std::cerr
+						<< "Failed to open pipe \"" << m_path <<"\": "
+						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+						<< " (" << error.GetErrorNo() << ")." << std::endl;
+					return;
+				}
+			}
+
+			if (!WaitNamedPipeA(m_path.c_str(), m_waitTimeout)) { 
+				TunnelEx::Error error(GetLastError());
+				std::cerr
+					<< "Failed to wait pipe \"" << m_path <<"\": "
+					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< " (" << error.GetErrorNo() << ")." << std::endl;
+				return;
+			}
+
+		}
+
+		DWORD mode = PIPE_READMODE_MESSAGE; 
+		if (!SetNamedPipeHandleState( 
+				handle.handle,
+				&mode,
+				NULL,
+				NULL)) {
+			TunnelEx::Error error(GetLastError());
+			std::cerr
+				<< "Failed to set pipe mode for \"" << m_path <<"\": "
+				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< " (" << error.GetErrorNo() << ")." << std::endl;
+			return;
+		}
+
+	} catch (const std::exception &ex) {
+		std::cerr << "Error in client pipe read thread: " << ex.what() << "." << std::endl;
+	} catch (...) {
+		std::cerr << "Unknown error in client pipe read thread." << std::endl;
+	}
+
+	SetHandle(handle.Release());
+	Base::ReadThreadMain();
+
 }

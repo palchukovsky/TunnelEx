@@ -14,7 +14,7 @@
 
 namespace TestUtil {
 
-	class PipeConnection;
+	class PipeClientConnection;
 
 	class PipeClient : public TestUtil::Client {
 
@@ -24,7 +24,7 @@ namespace TestUtil {
 
 	private:
 
-		typedef PipeConnection Connection;
+		typedef PipeClientConnection Connection;
 
 	public:
 	

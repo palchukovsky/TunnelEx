@@ -10,11 +10,13 @@
 #include "Prec.h"
 #include "PipeClient.hpp"
 #include "PipeConnection.hpp"
+#include "Core/Error.hpp"
 
 using namespace TestUtil;
 
-PipeClient::PipeClient(const std::string &path) {
-	m_connection.reset();
+PipeClient::PipeClient(const std::string &path)
+		: m_connection(new Connection(path, GetWaitTime())) {
+	m_connection->Start();
 }
 
 PipeClient::~PipeClient() {
