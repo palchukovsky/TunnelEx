@@ -15,7 +15,7 @@
 using namespace TestUtil;
 
 PipeClient::PipeClient(const std::string &path)
-		: m_connection(new Connection(path, GetWaitTime())) {
+		: m_connection(new Connection("\\\\.\\pipe\\" + path, GetWaitTime())) {
 	m_connection->Start();
 }
 

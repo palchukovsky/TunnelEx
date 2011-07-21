@@ -39,7 +39,6 @@ PipeConnection::~PipeConnection() {
 
 void PipeConnection::Start() {
 	assert(!m_isActive);
-	m_isActive = true;
 	m_readThread.reset(
 		new boost::thread(boost::bind(&Self::ReadThreadMain, this)));
 }
@@ -52,7 +51,7 @@ void PipeConnection::Close() {
 	if (!BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0)) {
 		return;
 	}
-	boost::mutex::scoped_lock lock(m_mutex);
+	boost::mutex::scoped_lock lock(m_stateMutex);
 	assert(!m_isActive);
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
@@ -64,14 +63,14 @@ void PipeConnection::Close() {
 }
 
 Buffer::size_type PipeConnection::GetReceivedSize() const {
-	boost::mutex::scoped_lock lock(m_mutex);
+	boost::mutex::scoped_lock lock(m_stateMutex);
 	return m_dataBufferSize;
 }
 
 void PipeConnection::GetReceived(Buffer::size_type maxSize, Buffer &destination) const {
 	Buffer destinationTmp;
 	{
-		boost::mutex::scoped_lock lock(m_mutex);
+		boost::mutex::scoped_lock lock(m_stateMutex);
 		if (m_dataBufferSize > 0) {
 			assert(m_dataBufferStart != m_dataBuffer.end());
 			assert(
@@ -91,7 +90,7 @@ void PipeConnection::GetReceived(Buffer::size_type maxSize, Buffer &destination)
 }
 
 void PipeConnection::ClearReceived(size_t bytesCount /*= 0*/) {
-	boost::mutex::scoped_lock lock(m_mutex);
+	boost::mutex::scoped_lock lock(m_stateMutex);
 	assert(bytesCount <= m_dataBufferSize);
 	assert(
 		int(bytesCount)
@@ -120,7 +119,7 @@ bool PipeConnection::WaitDataReceiveEvent(
 			const boost::system_time &waitUntil,
 			Buffer::size_type minSize)
 		const {
-	boost::mutex::scoped_lock lock(m_mutex);
+	boost::mutex::scoped_lock lock(m_stateMutex);
 	for ( ; ; ) {
 		if (m_dataBufferSize >= minSize) {
 			return true;
@@ -132,11 +131,23 @@ bool PipeConnection::WaitDataReceiveEvent(
 }
 
 void PipeConnection::Send(std::auto_ptr<Buffer> data) {
-	boost::mutex::scoped_lock lock(m_mutex);
+	boost::mutex::scoped_lock stateLock(m_stateMutex);
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
+	if (!CancelSynchronousIo(m_readThread->native_handle())) {
+		const TunnelEx::Error error(GetLastError());
+		if (error.GetErrorNo() != ERROR_NOT_FOUND) {
+			std::cerr
+				<< "Failed to cancel pipe IO: "
+				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< " (" << error.GetErrorNo() << ")." << std::endl;
+			throw std::exception("Failed to cancel pipe IO");
+		}
+	}
+	boost::mutex::scoped_lock ioLock(m_ioMutex);
 	DWORD sent = 0;
+	assert(data->size() > 0);
 	if (!WriteFile(m_handle, &(*data)[0], DWORD(data->size()), &sent, NULL)) {
 		throw SendError(
 			"Could not send data to pipe: WriteFile returns FALSE.");
@@ -148,38 +159,59 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 
 void PipeConnection::ReadThreadMain() {
 
+	{
+		const long prevActiveState = BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1);
+		assert(!prevActiveState);
+		UseUnused(prevActiveState);
+	}
+
 	try {
 
 		for ( ; m_isActive; ) {
 
 			DWORD received = 0;
-			assert(m_handle != INVALID_HANDLE_VALUE);
-			const BOOL readFileResult = ReadFile(
-				m_handle,
-				&m_receiveBuffer[0],
-				DWORD(m_receiveBuffer.size()),
-				&received,
-				NULL);
-			assert(received <= m_receiveBuffer.size());
-			assert(readFileResult || received == 0);
+			{
+				boost::mutex::scoped_lock lock(m_ioMutex);
+				ReadFile(
+					m_handle,
+					&m_receiveBuffer[0],
+					DWORD(m_receiveBuffer.size()),
+					&received,
+					NULL);
+				assert(received <= m_receiveBuffer.size());
+			}
 		
-			if (received == 0) {
-				Close();
-				m_dataReceivedCondition.notify_all();
-				break;
+			const TunnelEx::Error error(GetLastError());
+			if (error.IsError()) {
+				bool isError = true;
+				if (error.GetErrorNo() == ERROR_OPERATION_ABORTED) {
+					boost::mutex::scoped_lock lock(m_stateMutex);
+					isError = m_handle == INVALID_HANDLE_VALUE;
+				}
+				if (isError) {
+					assert(received == 0);
+					Close();
+					m_dataReceivedCondition.notify_all();
+					break;
+				}
 			}
 
 			{
-				boost::mutex::scoped_lock lock(m_mutex);
-				m_dataBuffer.reserve(received);
-				std::copy(
-					m_receiveBuffer.begin(),
-					m_receiveBuffer.begin() + received,
-					std::back_inserter(m_dataBuffer));
-				UpdateBufferState(received);
+				// should be locked in any case, for Send method
+				boost::mutex::scoped_lock lock(m_stateMutex);
+				if (received > 0) {
+					m_dataBuffer.reserve(received);
+					std::copy(
+						m_receiveBuffer.begin(),
+						m_receiveBuffer.begin() + received,
+						std::back_inserter(m_dataBuffer));
+					UpdateBufferState(received);
+				}
 			}
 
-			m_dataReceivedCondition.notify_all();
+			if (received > 0) {
+				m_dataReceivedCondition.notify_all();
+			}
 
 		}
 

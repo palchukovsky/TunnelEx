@@ -81,7 +81,8 @@ namespace TestUtil {
 
 		volatile long m_isActive;
 
-		mutable boost::mutex m_mutex;
+		mutable boost::mutex m_stateMutex;
+		mutable boost::mutex m_ioMutex;
 		mutable boost::condition_variable m_dataReceivedCondition;
 
 		Buffer m_receiveBuffer;
