@@ -13,6 +13,39 @@
 
 using namespace TestUtil;
 
+#define TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN 0
+
+namespace {
+
+	struct AutoHandle {
+
+		HANDLE handle;
+
+		AutoHandle(HANDLE handle = INVALID_HANDLE_VALUE)
+				: handle(handle) {
+			//...//
+		}
+
+		~AutoHandle() {
+			if (handle != INVALID_HANDLE_VALUE) {
+				CloseHandle(handle);
+			}
+		}
+
+		bool IsValid() const {
+			return handle != INVALID_HANDLE_VALUE;
+		}
+
+		HANDLE Release() throw() {
+			const auto result = handle;
+			handle = INVALID_HANDLE_VALUE;
+			return result;
+		}
+
+	};
+
+}
+
 PipeConnection::PipeConnection(HANDLE handle)
 		: m_handle(handle),
 		m_dataBufferStart(m_dataBuffer.end()),
@@ -44,7 +77,7 @@ void PipeConnection::Start() {
 }
 
 size_t PipeConnection::GetBufferSize() {
-	return 1024;
+	return 64;
 }
 
 void PipeConnection::Close() {
@@ -56,10 +89,17 @@ void PipeConnection::Close() {
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
-	FlushFileBuffers(m_handle); 
-	DisconnectNamedPipe(m_handle); 
-	CloseHandle(m_handle);
+	AutoHandle handle(m_handle);
 	m_handle = INVALID_HANDLE_VALUE;
+	std::auto_ptr<boost::mutex::scoped_lock> ioLock;
+	try {
+		ioLock = CancelSyncIo();
+	} catch (...) {
+		m_handle = handle.Release();
+		throw;
+	}
+	FlushFileBuffers(handle.handle); 
+	DisconnectNamedPipe(handle.handle); 
 }
 
 Buffer::size_type PipeConnection::GetReceivedSize() const {
@@ -130,31 +170,66 @@ bool PipeConnection::WaitDataReceiveEvent(
 	}
 }
 
+std::auto_ptr<boost::mutex::scoped_lock> PipeConnection::CancelSyncIo() {
+	while (!m_ioMutex.try_lock()) {
+		if (!CancelSynchronousIo(m_readThread->native_handle())) {
+			const TunnelEx::Error error(GetLastError());
+			if (error.GetErrorNo() != ERROR_NOT_FOUND) {
+				std::cerr
+					<< "Failed to cancel pipe IO: "
+					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< " (" << error.GetErrorNo() << ")." << std::endl;
+				throw std::exception("Failed to cancel pipe IO");
+			}
+		}
+	}
+	std::auto_ptr<boost::mutex::scoped_lock> ioLock;
+	try {
+		ioLock.reset(new boost::mutex::scoped_lock(m_ioMutex, boost::adopt_lock_t()));
+	} catch (...) {
+		m_ioMutex.unlock();
+		throw;
+	}
+	return ioLock;
+}
+
 void PipeConnection::Send(std::auto_ptr<Buffer> data) {
+
 	boost::mutex::scoped_lock stateLock(m_stateMutex);
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
-	if (!CancelSynchronousIo(m_readThread->native_handle())) {
-		const TunnelEx::Error error(GetLastError());
-		if (error.GetErrorNo() != ERROR_NOT_FOUND) {
-			std::cerr
-				<< "Failed to cancel pipe IO: "
-				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-				<< " (" << error.GetErrorNo() << ")." << std::endl;
-			throw std::exception("Failed to cancel pipe IO");
-		}
-	}
-	boost::mutex::scoped_lock ioLock(m_ioMutex);
+
+	const auto ioLock = CancelSyncIo();
+
 	DWORD sent = 0;
 	assert(data->size() > 0);
 	if (!WriteFile(m_handle, &(*data)[0], DWORD(data->size()), &sent, NULL)) {
+		const TunnelEx::Error error(GetLastError());
+		std::cerr
+			<< "Failed to send data to pipe: "
+			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<< " (" << error.GetErrorNo() << ")." << std::endl;
 		throw SendError(
 			"Could not send data to pipe: WriteFile returns FALSE.");
 	} else if (sent != data->size()) {
 		throw SendError(
 			"Could not send data to pipe: sent not equal size");
 	}
+
+#	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+	{
+		std::ostringstream oss;
+		oss << this << ".PipeConnection.write";
+		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+		if (!data->empty()) {
+			of.write(&(*data)[0], data->size());
+		} else {
+			of << "[ZERO]";
+		}
+	}
+#	endif
+
 }
 
 void PipeConnection::ReadThreadMain() {
@@ -171,22 +246,54 @@ void PipeConnection::ReadThreadMain() {
 
 			DWORD received = 0;
 			{
-				boost::mutex::scoped_lock lock(m_ioMutex);
+				boost::mutex::scoped_lock stateLock(m_stateMutex);
+				boost::mutex::scoped_lock ioLock(m_ioMutex);
+				if (m_handle == INVALID_HANDLE_VALUE) {
+					break;
+				}
+				stateLock.unlock();
 				ReadFile(
 					m_handle,
 					&m_receiveBuffer[0],
 					DWORD(m_receiveBuffer.size()),
 					&received,
 					NULL);
-				assert(received <= m_receiveBuffer.size());
 			}
-		
 			const TunnelEx::Error error(GetLastError());
+
+			assert(received <= m_receiveBuffer.size());
+
+#			if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+			{
+				std::ostringstream oss;
+				oss << this << ".PipeConnection.read";
+				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+				if (received > 0) {
+					of.write(&m_receiveBuffer[0], received);
+				} else {
+					of << "[ZERO]";
+				}
+				if (m_handle == INVALID_HANDLE_VALUE) {
+					of << "[CLOSED]";
+				}
+			}
+#			endif
+
 			if (error.IsError()) {
 				bool isError = true;
-				if (error.GetErrorNo() == ERROR_OPERATION_ABORTED) {
-					boost::mutex::scoped_lock lock(m_stateMutex);
-					isError = m_handle == INVALID_HANDLE_VALUE;
+				switch (error.GetErrorNo()) {
+					case ERROR_OPERATION_ABORTED:
+						{
+							boost::mutex::scoped_lock lock(m_stateMutex);
+							isError = m_handle == INVALID_HANDLE_VALUE;
+						}
+						break;
+					case ERROR_ALREADY_EXISTS:
+						//! @todo: research!
+					case ERROR_MORE_DATA:
+						isError = false;
+						assert(m_handle != INVALID_HANDLE_VALUE);
+						break;
 				}
 				if (isError) {
 					assert(received == 0);
@@ -262,26 +369,7 @@ PipeClientConnection::~PipeClientConnection() {
 
 void PipeClientConnection::ReadThreadMain() {
 
-	struct AutoHandle {
-		HANDLE handle;
-		AutoHandle(HANDLE handle = INVALID_HANDLE_VALUE)
-				: handle(handle) {
-			//...//
-		}
-		~AutoHandle() {
-			if (handle != INVALID_HANDLE_VALUE) {
-				CloseHandle(handle);
-			}
-		}
-		bool IsValid() const {
-			return handle != INVALID_HANDLE_VALUE;
-		}
-		HANDLE Release() throw() {
-			const auto result = handle;
-			handle = INVALID_HANDLE_VALUE;
-			return result;
-		}
-	} handle;
+	AutoHandle handle;
 
 	try {
 

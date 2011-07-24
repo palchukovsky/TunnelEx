@@ -66,6 +66,8 @@ namespace TestUtil {
 		void UpdateBufferState();
 		void UpdateBufferState(size_t addSize);
 
+		std::auto_ptr<boost::mutex::scoped_lock> CancelSyncIo();
+
 	private:
 
 		HANDLE m_handle;

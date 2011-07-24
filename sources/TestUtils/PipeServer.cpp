@@ -26,7 +26,8 @@ private:
 public:
 
 	Implementation(const std::string &path)
-			: m_path("\\\\.\\pipe\\" + path) {
+			: m_path("\\\\.\\pipe\\" + path),
+			m_isClosingMode(false) {
 		m_acceptThread.reset(
 			new boost::thread(
 				boost::bind(&Implementation::AcceptThreadMain, this)));
@@ -34,6 +35,12 @@ public:
 
 	~Implementation() {
 		try {
+			{
+				boost::mutex::scoped_lock lock(m_stateMutex);
+				assert(!m_isClosingMode);
+				m_isClosingMode = true;
+				CancelAccept();
+			}
 			m_acceptThread->join();
 		} catch (...) {
 			assert(false);
@@ -84,6 +91,29 @@ public:
 
 private:
 
+	std::auto_ptr<boost::mutex::scoped_lock> CancelAccept() {
+		while (!m_ioMutex.try_lock()) {
+			if (!CancelSynchronousIo(m_acceptThread->native_handle())) {
+				const TunnelEx::Error error(GetLastError());
+				if (error.GetErrorNo() != ERROR_NOT_FOUND) {
+					std::cerr
+						<< "Failed to cancel pipe accepting: "
+						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+						<< " (" << error.GetErrorNo() << ")." << std::endl;
+					throw std::exception("Failed to cancel pipe accepting");
+				}
+			}
+		}
+		std::auto_ptr<boost::mutex::scoped_lock> ioLock;
+		try {
+			ioLock.reset(new boost::mutex::scoped_lock(m_ioMutex, boost::adopt_lock_t()));
+		} catch (...) {
+			m_ioMutex.unlock();
+			throw;
+		}
+		return ioLock;
+	}
+
 	void AcceptThreadMain() {
 
 		struct AutoHandle {
@@ -108,22 +138,33 @@ private:
 
 				AutoHandle handleHolder;
 
-				DWORD pipeOpenMode = PIPE_ACCESS_DUPLEX;
-				if (i == 1) {
-					pipeOpenMode |= FILE_FLAG_FIRST_PIPE_INSTANCE;
+				{
+					boost::mutex::scoped_lock stateLock(m_stateMutex);
+					boost::mutex::scoped_lock ioLock(m_ioMutex);
+					if (m_isClosingMode) {
+						return;
+					}
+					stateLock.unlock();
+					DWORD pipeOpenMode = PIPE_ACCESS_DUPLEX;
+					handleHolder.handle = CreateNamedPipeA( 
+						m_path.c_str(),
+						pipeOpenMode,
+						PIPE_TYPE_MESSAGE				// message type pipe 
+							| PIPE_READMODE_MESSAGE		// message-read mode 
+							| PIPE_WAIT,                // blocking mode 
+						PIPE_UNLIMITED_INSTANCES,
+						Connection::GetBufferSize(),
+						Connection::GetBufferSize(),
+						0,                        // client time-out 
+						NULL);
 				}
-				handleHolder.handle = CreateNamedPipeA( 
-					m_path.c_str(),
-					pipeOpenMode,
-					PIPE_TYPE_MESSAGE				// message type pipe 
-						| PIPE_READMODE_MESSAGE		// message-read mode 
-						| PIPE_WAIT,                // blocking mode 
-					PIPE_UNLIMITED_INSTANCES,
-					Connection::GetBufferSize(),
-					Connection::GetBufferSize(),
-					0,                        // client time-out 
-					NULL);
 				if (handleHolder.handle == INVALID_HANDLE_VALUE) {
+					{
+						boost::mutex::scoped_lock lock(m_stateMutex);
+						if (m_isClosingMode) {
+							return;
+						}
+					}
 					TunnelEx::Error error(GetLastError());
 					std::cerr
 						<< "Failed to create pipe: "
@@ -132,16 +173,34 @@ private:
 					throw std::exception("Failed to create pipe");
 				}
 
-				const BOOL isConnect
-					= ConnectNamedPipe(handleHolder.handle, NULL)
-					|| GetLastError() == ERROR_PIPE_CONNECTED;
-				if (!isConnect) {
-					TunnelEx::Error error(GetLastError());
-					std::cerr
-						<< "Failed to create pipe: "
-						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-						<< " (" << error.GetErrorNo() << ")." << std::endl;
-					break;
+				{
+					BOOL isConnect = false;
+					DWORD lastError = ERROR_SUCCESS;
+					{
+						boost::mutex::scoped_lock stateLock(m_stateMutex);
+						boost::mutex::scoped_lock ioLock(m_ioMutex);
+						if (m_isClosingMode) {
+							return;
+						}
+						stateLock.unlock();
+						isConnect = ConnectNamedPipe(handleHolder.handle, NULL);
+						lastError = GetLastError();
+					}
+					{
+						boost::mutex::scoped_lock stateLock(m_stateMutex);
+						if (m_isClosingMode) {
+							return;
+						}
+					}
+					isConnect = isConnect || lastError == ERROR_PIPE_CONNECTED;
+					if (!isConnect) {
+						TunnelEx::Error error(GetLastError());
+						std::cerr
+							<< "Failed to create pipe: "
+							<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+							<< " (" << error.GetErrorNo() << ")." << std::endl;
+						break;
+					}
 				}
 
 				boost::shared_ptr<Connection> connection(
@@ -168,6 +227,10 @@ private:
 	Connections m_connections;
 	boost::shared_ptr<boost::thread> m_acceptThread;
 	mutable boost::mutex m_connectionsMutex;
+
+	mutable boost::mutex m_stateMutex;
+	bool m_isClosingMode;
+	mutable boost::mutex m_ioMutex;
 
 };
 

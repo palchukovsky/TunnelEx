@@ -375,7 +375,7 @@ namespace TestUtil {
 						std::istream_iterator<char>(), 
 						std::back_inserter(m_dataBuffer));
 					UpdateBufferState(size);
-#					if TEST_UTIL_TRAFFIC_LOGGIN != 0
+#					if TEST_UTIL_TRAFFIC_INET_CONNECTION_LOGGIN != 0
 					{
 						std::ostringstream oss;
 						oss << this << ".InetConnection.2.read";
