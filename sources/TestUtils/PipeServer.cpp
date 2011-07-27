@@ -20,37 +20,39 @@ class PipeServer::Implementation : private boost::noncopyable {
 
 private:
 
-	typedef PipeConnection Connection;
-	typedef std::vector<boost::shared_ptr<Connection>> Connections;
+	typedef std::vector<boost::shared_ptr<PipeConnection>> Connections;
+	typedef boost::mutex ConnectionsMutex;
+	typedef ConnectionsMutex::scoped_lock ConnectionsReadLock;
+	typedef ConnectionsMutex::scoped_lock ConnectionsWriteLock;
 
 public:
 
 	Implementation(const std::string &path)
 			: m_path("\\\\.\\pipe\\" + path),
-			m_isClosingMode(false) {
-		m_acceptThread.reset(
-			new boost::thread(
-				boost::bind(&Implementation::AcceptThreadMain, this)));
+			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)) {
+		try {
+			m_thread.reset(
+				new boost::thread(boost::bind(&Implementation::ServerThreadMain, this)));
+		} catch (...) {
+			CloseHandle(m_stopEvent);
+			throw;
+		}
 	}
 
 	~Implementation() {
+		SetEvent(m_stopEvent);
 		try {
-			{
-				boost::mutex::scoped_lock lock(m_stateMutex);
-				assert(!m_isClosingMode);
-				m_isClosingMode = true;
-				CancelAccept();
-			}
-			m_acceptThread->join();
+			m_thread->join();
 		} catch (...) {
 			assert(false);
 		}
+		CloseHandle(m_stopEvent);
 	}
 
 public:
 
 	bool IsConnected(bool onlyIfActive) const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
+		ConnectionsReadLock lock(m_connectionsMutex);
 		foreach (const Connections::value_type &c, m_connections) {
 			if (!onlyIfActive || c->IsActive()) {
 				return true;
@@ -60,7 +62,7 @@ public:
 	}
 
 	bool IsConnected(size_t connectionIndex, bool onlyIfActive) const {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
+		ConnectionsReadLock lock(m_connectionsMutex);
 		return
 			connectionIndex < m_connections.size()
 			&& (!onlyIfActive || m_connections[connectionIndex]->IsActive());
@@ -68,7 +70,7 @@ public:
 
 	unsigned int GetNumberOfAcceptedConnections(bool onlyIfActive) const {
 		unsigned int result = 0;
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
+		ConnectionsReadLock lock(m_connectionsMutex);
 		foreach (const Connections::value_type &c, m_connections) {
 			if (!onlyIfActive || c->IsActive()) {
 				++result;
@@ -77,146 +79,81 @@ public:
 		return result;
 	}
 
-	boost::shared_ptr<Connection> GetConnection(size_t connectionIndex) {
-		boost::mutex::scoped_lock lock(m_connectionsMutex);
+	boost::shared_ptr<PipeConnection> GetConnection(size_t connectionIndex) {
+		ConnectionsReadLock lock(m_connectionsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw std::logic_error("Could not find connection by index");
 		}
 		return m_connections[connectionIndex];
 	}
 
-	boost::shared_ptr<const Connection> GetConnection(size_t connectionIndex) const {
+	boost::shared_ptr<const PipeConnection> GetConnection(size_t connectionIndex) const {
 		return const_cast<Implementation *>(this)->GetConnection(connectionIndex);
 	}
 
 private:
 
-	std::auto_ptr<boost::mutex::scoped_lock> CancelAccept() {
-		while (!m_ioMutex.try_lock()) {
-			if (!CancelSynchronousIo(m_acceptThread->native_handle())) {
-				const TunnelEx::Error error(GetLastError());
-				if (error.GetErrorNo() != ERROR_NOT_FOUND) {
-					std::cerr
-						<< "Failed to cancel pipe accepting: "
-						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-						<< " (" << error.GetErrorNo() << ")." << std::endl;
-					throw std::exception("Failed to cancel pipe accepting");
-				}
-			}
-		}
-		std::auto_ptr<boost::mutex::scoped_lock> ioLock;
+	void ServerThreadMain() {
+
+		typedef std::vector<HANDLE> Events;
+		Events events;
+		events.push_back(m_stopEvent);
+
+		boost::shared_ptr<PipeServerConnection> serverConnection;
 		try {
-			ioLock.reset(new boost::mutex::scoped_lock(m_ioMutex, boost::adopt_lock_t()));
+			serverConnection.reset(new PipeServerConnection(m_path));
+		} catch (const std::exception &ex) {
+			std::cerr << "Failed to start pipe server: " << ex.what() << "." << std::endl;
+			return;
 		} catch (...) {
-			m_ioMutex.unlock();
-			throw;
+			std::cerr << "Failed to start pipe server: unknown error." << std::endl;
+			return;
 		}
-		return ioLock;
-	}
+		events.push_back(serverConnection->GetEvent());
 
-	void AcceptThreadMain() {
 
-		struct AutoHandle {
-			HANDLE handle;
-			AutoHandle()
-					: handle(INVALID_HANDLE_VALUE) {
-				//...//
-			}
-			~AutoHandle() {
-				if (handle != INVALID_HANDLE_VALUE) {
-					CloseHandle(handle);
-				}
-			}
-			void Release() throw() {
-				handle = INVALID_HANDLE_VALUE;
-			}
-		};
+		for ( ; ; ) {
+
+			const auto object = WaitForMultipleObjects(
+				events.size(),
+				&events[0],
+				FALSE,
+				INFINITE);
+			if (object == WAIT_OBJECT_0) {
 		
-		try {
+				break;
+			
+			} else if (object - WAIT_OBJECT_0 >= events.size() - 1) {
 
-			for (size_t i = 1; ; ++i) {
-
-				AutoHandle handleHolder;
-
-				{
-					boost::mutex::scoped_lock stateLock(m_stateMutex);
-					boost::mutex::scoped_lock ioLock(m_ioMutex);
-					if (m_isClosingMode) {
-						return;
-					}
-					stateLock.unlock();
-					DWORD pipeOpenMode = PIPE_ACCESS_DUPLEX;
-					handleHolder.handle = CreateNamedPipeA( 
-						m_path.c_str(),
-						pipeOpenMode,
-						PIPE_TYPE_MESSAGE				// message type pipe 
-							| PIPE_READMODE_MESSAGE		// message-read mode 
-							| PIPE_WAIT,                // blocking mode 
-						PIPE_UNLIMITED_INSTANCES,
-						Connection::GetBufferSize(),
-						Connection::GetBufferSize(),
-						0,                        // client time-out 
-						NULL);
-				}
-				if (handleHolder.handle == INVALID_HANDLE_VALUE) {
+				assert(object - WAIT_OBJECT_0 ==  events.size() - 1);
+			
+				try {
+					serverConnection->Start();
+					auto newConnection = serverConnection;
+					serverConnection.reset(new PipeServerConnection(m_path));
 					{
-						boost::mutex::scoped_lock lock(m_stateMutex);
-						if (m_isClosingMode) {
-							return;
-						}
+						ConnectionsWriteLock lock(m_connectionsMutex);
+						m_connections.push_back(newConnection);
+						events.push_back(serverConnection->GetEvent());
 					}
-					TunnelEx::Error error(GetLastError());
-					std::cerr
-						<< "Failed to create pipe: "
-						<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-						<< " (" << error.GetErrorNo() << ")." << std::endl;
-					throw std::exception("Failed to create pipe");
+				} catch (const std::exception &ex) {
+					std::cerr << "Failed to accept pipe connection: " << ex.what() << "." << std::endl;
+				} catch (...) {
+					std::cerr << "Failed to accept pipe connection: unknown error." << std::endl;
 				}
+			
+			} else {
 
-				{
-					BOOL isConnect = false;
-					DWORD lastError = ERROR_SUCCESS;
-					{
-						boost::mutex::scoped_lock stateLock(m_stateMutex);
-						boost::mutex::scoped_lock ioLock(m_ioMutex);
-						if (m_isClosingMode) {
-							return;
-						}
-						stateLock.unlock();
-						isConnect = ConnectNamedPipe(handleHolder.handle, NULL);
-						lastError = GetLastError();
-					}
-					{
-						boost::mutex::scoped_lock stateLock(m_stateMutex);
-						if (m_isClosingMode) {
-							return;
-						}
-					}
-					isConnect = isConnect || lastError == ERROR_PIPE_CONNECTED;
-					if (!isConnect) {
-						TunnelEx::Error error(GetLastError());
-						std::cerr
-							<< "Failed to create pipe: "
-							<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-							<< " (" << error.GetErrorNo() << ")." << std::endl;
-						break;
-					}
+				try {
+					GetConnection(object - WAIT_OBJECT_0 - 1)->Read();
+				} catch (const std::exception &ex) {
+					std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
+				} catch (...) {
+					std::cerr << "to read pipe data: unknown error." << std::endl;
 				}
-
-				boost::shared_ptr<Connection> connection(
-					new Connection(handleHolder.handle));
-				handleHolder.Release();
-				connection->Start();
-
-				boost::mutex::scoped_lock lock(m_connectionsMutex);
-				m_connections.push_back(connection);
 			
 			}
-
-		} catch (const std::exception &ex) {
-			std::cerr << "Error in pipe server thread: " << ex.what() << "." << std::endl;
-		} catch (...) {
-			std::cerr << "Unknown error in pipe server thread." << std::endl;
+		
 		}
 
 	}
@@ -224,13 +161,12 @@ private:
 private:
 
 	const std::string m_path;
-	Connections m_connections;
-	boost::shared_ptr<boost::thread> m_acceptThread;
-	mutable boost::mutex m_connectionsMutex;
 
-	mutable boost::mutex m_stateMutex;
-	bool m_isClosingMode;
-	mutable boost::mutex m_ioMutex;
+	Connections m_connections;
+	mutable ConnectionsMutex m_connectionsMutex;
+
+	HANDLE m_stopEvent;
+	boost::shared_ptr<boost::thread> m_thread;
 
 };
 
