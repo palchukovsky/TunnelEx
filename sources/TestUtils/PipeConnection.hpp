@@ -25,7 +25,7 @@ namespace TestUtil {
 	public:
 
 		explicit PipeConnection(HANDLE handle);
-		virtual ~PipeConnection();
+		~PipeConnection();
 
 	public:
 
@@ -37,9 +37,8 @@ namespace TestUtil {
 
 	public:
 
-		void Start();
-
 		void Send(std::auto_ptr<Buffer>);
+		void Read();
 
 		Buffer::size_type GetReceivedSize() const;
 
@@ -54,19 +53,24 @@ namespace TestUtil {
 					Buffer::size_type minSize)
 				const;
 
+	public:
+
+		HANDLE GetEvent();
+
 	protected:
 
 		void SetHandle(HANDLE handle) throw() {
 			m_handle = handle;
 		}
-		virtual void ReadThreadMain();
+
+		OVERLAPPED & GetOverlaped();
 
 	private:
 
 		void UpdateBufferState();
 		void UpdateBufferState(size_t addSize);
 
-		std::auto_ptr<boost::mutex::scoped_lock> CancelSyncIo();
+		void Close(const boost::mutex::scoped_lock &);
 
 	private:
 
@@ -79,17 +83,14 @@ namespace TestUtil {
 			size_t m_dataBufferFullSize;
 			const char *m_dataBufferStartPch;
 #		endif
-		Buffer::size_type m_dataBufferSize;
-
-		volatile long m_isActive;
+		volatile long m_dataBufferSize;
 
 		mutable boost::mutex m_stateMutex;
-		mutable boost::mutex m_ioMutex;
 		mutable boost::condition_variable m_dataReceivedCondition;
 
 		Buffer m_receiveBuffer;
 
-		std::auto_ptr<boost::thread> m_readThread;
+		OVERLAPPED m_overlaped;
 
 	};
 
@@ -104,19 +105,29 @@ namespace TestUtil {
 
 	public:
 
-		explicit PipeClientConnection(
-				const std::string &path,
-				const boost::posix_time::time_duration &waitTimeout);
-		virtual ~PipeClientConnection();
-
-	protected:
-
-		virtual void ReadThreadMain();
+		explicit PipeClientConnection(const std::string &path);
+		~PipeClientConnection();
 
 	private:
 
 		const std::string m_path;
 		const DWORD m_waitTimeout;
+
+	};
+
+	////////////////////////////////////////////////////////////////////////////////
+
+	class PipeServerConnection : public PipeConnection {
+
+	public:
+
+		typedef PipeClientConnection Self;
+		typedef PipeConnection Base;
+
+	public:
+
+		explicit PipeServerConnection(const std::string &path);
+		~PipeServerConnection();
 
 	};
 

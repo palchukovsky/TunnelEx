@@ -58,22 +58,20 @@ PipeConnection::PipeConnection(HANDLE handle)
 			const_cast<const Self *>(this)->m_dataBuffer.end())
 		== int(m_dataBufferSize));
 	UpdateBufferState();
+	
+	m_overlaped.hHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(m_overlaped.hHandle != INVALID_HANDLE_VALUE);
+
 }
 
 PipeConnection::~PipeConnection() {
 	try {
 		Close();
 		assert(m_handle == INVALID_HANDLE_VALUE);
-		m_readThread->join();
 	} catch (...) {
 		assert(false);
 	}
-}
-
-void PipeConnection::Start() {
-	assert(!m_isActive);
-	m_readThread.reset(
-		new boost::thread(boost::bind(&Self::ReadThreadMain, this)));
+	CloseHandle(m_overlaped.hEvent);
 }
 
 size_t PipeConnection::GetBufferSize() {
@@ -81,29 +79,20 @@ size_t PipeConnection::GetBufferSize() {
 }
 
 void PipeConnection::Close() {
-	if (!BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0)) {
-		return;
-	}
-	boost::mutex::scoped_lock lock(m_stateMutex);
-	assert(!m_isActive);
+	Close(boost::mutex::scoped_lock(m_stateMutex));
+}
+
+void PipeConnection::Close(const boost::mutex::scoped_lock &) {
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
 	AutoHandle handle(m_handle);
 	m_handle = INVALID_HANDLE_VALUE;
-	std::auto_ptr<boost::mutex::scoped_lock> ioLock;
-	try {
-		ioLock = CancelSyncIo();
-	} catch (...) {
-		m_handle = handle.Release();
-		throw;
-	}
 	FlushFileBuffers(handle.handle); 
-	DisconnectNamedPipe(handle.handle); 
+	DisconnectNamedPipe(handle.handle);
 }
 
 Buffer::size_type PipeConnection::GetReceivedSize() const {
-	boost::mutex::scoped_lock lock(m_stateMutex);
 	return m_dataBufferSize;
 }
 
@@ -138,10 +127,10 @@ void PipeConnection::ClearReceived(size_t bytesCount /*= 0*/) {
 			m_dataBufferStart,
 			const_cast<const Self *>(this)->m_dataBuffer.end()));
 	if (bytesCount == 0) {
-		m_dataBufferSize = 0;
+		BOOST_INTERLOCKED_EXCHANGE(&m_dataBufferSize, 0);
 		UpdateBufferState();
 	} else {
-		m_dataBufferSize -= bytesCount;
+		BOOST_INTERLOCKED_EXCHANGE(&m_dataBufferSize, m_dataBufferSize - bytesCount);
 		UpdateBufferState();
 		assert(
 			std::distance(
@@ -200,8 +189,6 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 		return;
 	}
 
-	const auto ioLock = CancelSyncIo();
-
 	DWORD sent = 0;
 	assert(data->size() > 0);
 	if (!WriteFile(m_handle, &(*data)[0], DWORD(data->size()), &sent, NULL)) {
@@ -232,101 +219,58 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 
 }
 
-void PipeConnection::ReadThreadMain() {
+void PipeConnection::Read() {
 
-	{
-		const long prevActiveState = BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1);
-		assert(!prevActiveState);
-		UseUnused(prevActiveState);
+	boost::mutex::scoped_lock lock(m_stateMutex);
+	if (m_handle == INVALID_HANDLE_VALUE) {
+		return;
 	}
 
-	try {
+	DWORD received = 0;
+	ReadFile(
+		m_handle,
+		&m_receiveBuffer[0],
+		DWORD(m_receiveBuffer.size()),
+		&received,
+		&m_overlaped);
+	const TunnelEx::Error error(GetLastError());
+	assert(received <= m_receiveBuffer.size());
 
-		for ( ; m_isActive; ) {
-
-			DWORD received = 0;
-			{
-				boost::mutex::scoped_lock stateLock(m_stateMutex);
-				boost::mutex::scoped_lock ioLock(m_ioMutex);
-				if (m_handle == INVALID_HANDLE_VALUE) {
-					break;
-				}
-				stateLock.unlock();
-				ReadFile(
-					m_handle,
-					&m_receiveBuffer[0],
-					DWORD(m_receiveBuffer.size()),
-					&received,
-					NULL);
-			}
-			const TunnelEx::Error error(GetLastError());
-
-			assert(received <= m_receiveBuffer.size());
-
-#			if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
-			{
-				std::ostringstream oss;
-				oss << this << ".PipeConnection.read";
-				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-				if (received > 0) {
-					of.write(&m_receiveBuffer[0], received);
-				} else {
-					of << "[ZERO]";
-				}
-				if (m_handle == INVALID_HANDLE_VALUE) {
-					of << "[CLOSED]";
-				}
-			}
-#			endif
-
-			if (error.IsError()) {
-				bool isError = true;
-				switch (error.GetErrorNo()) {
-					case ERROR_OPERATION_ABORTED:
-						{
-							boost::mutex::scoped_lock lock(m_stateMutex);
-							isError = m_handle == INVALID_HANDLE_VALUE;
-						}
-						break;
-					case ERROR_ALREADY_EXISTS:
-						//! @todo: research!
-					case ERROR_MORE_DATA:
-						isError = false;
-						assert(m_handle != INVALID_HANDLE_VALUE);
-						break;
-				}
-				if (isError) {
-					assert(received == 0);
-					Close();
-					m_dataReceivedCondition.notify_all();
-					break;
-				}
-			}
-
-			{
-				// should be locked in any case, for Send method
-				boost::mutex::scoped_lock lock(m_stateMutex);
-				if (received > 0) {
-					m_dataBuffer.reserve(received);
-					std::copy(
-						m_receiveBuffer.begin(),
-						m_receiveBuffer.begin() + received,
-						std::back_inserter(m_dataBuffer));
-					UpdateBufferState(received);
-				}
-			}
-
-			if (received > 0) {
-				m_dataReceivedCondition.notify_all();
-			}
-
+	if (error.IsError()) {
+		assert(received == 0);
+		Close(lock);
+	} else {
+		if (received > 0) {
+			m_dataBuffer.reserve(received);
+			std::copy(
+				m_receiveBuffer.begin(),
+				m_receiveBuffer.begin() + received,
+				std::back_inserter(m_dataBuffer));
+			UpdateBufferState(received);
 		}
-
-	} catch (const std::exception &ex) {
-		std::cerr << "Error in pipe read thread: " << ex.what() << "." << std::endl;
-	} catch (...) {
-		std::cerr << "Unknown error in pipe read thread." << std::endl;
 	}
+
+	lock.unlock();
+	m_dataReceivedCondition.notify_all();
+
+#	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+	{
+		std::ostringstream oss;
+		oss << this << ".PipeConnection.read";
+		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+		if (received > 0) {
+			of.write(&m_receiveBuffer[0], received);
+		} else {
+			of << "[ZERO]";
+		}
+		if (m_handle == INVALID_HANDLE_VALUE) {
+			of << "[CLOSED]";
+		}
+		if (error.IsError()) {
+			of << "[ERROR " << error.GetErrorNo() << "]";
+		}
+	}
+#	endif
 
 }
 
@@ -337,7 +281,7 @@ void PipeConnection::UpdateBufferState() {
 void PipeConnection::UpdateBufferState(size_t addSize) {
 	assert(!m_dataBuffer.empty() || addSize == 0);
 	assert(m_dataBuffer.size() - m_dataBufferSize >= 0);
-	m_dataBufferSize += addSize;
+	BOOST_INTERLOCKED_EXCHANGE(&m_dataBufferSize, m_dataBufferSize += addSize);
 	m_dataBufferStart = m_dataBuffer.begin() + (m_dataBuffer.size() - m_dataBufferSize);
 #	ifdef DEV_VER
 		m_dataBufferPch = !m_dataBuffer.empty() ? &m_dataBuffer[0] : 0;
@@ -350,6 +294,14 @@ void PipeConnection::UpdateBufferState(size_t addSize) {
 			m_dataBufferStart,
 			const_cast<const Self *>(this)->m_dataBuffer.end())
 		== int(m_dataBufferSize));
+}
+
+HANDLE PipeConnection::GetEvent() {
+	return m_overlaped.hEvent;
+}
+
+OVERLAPPED & PipeConnection::GetOverlaped() {
+	return m_overlaped;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -428,6 +380,59 @@ void PipeClientConnection::ReadThreadMain() {
 	}
 
 	SetHandle(handle.Release());
-	Base::ReadThreadMain();
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipeServerConnection::PipeServerConnection(const std::string &path)
+		: Base(INVALID_HANDLE_VALUE) {
+
+	AutoHandle handle = CreateNamedPipeA(
+		path.c_str(),
+		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+		PIPE_TYPE_MESSAGE
+			| PIPE_READMODE_MESSAGE
+			| PIPE_WAIT,
+		PIPE_UNLIMITED_INSTANCES,
+		Connection::GetBufferSize(),
+		Connection::GetBufferSize(),
+		0,
+		NULL);
+	if (!handle.IsValid()) {
+		TunnelEx::Error error(GetLastError());
+		std::cerr
+			<< "Failed to create pipe: "
+			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<< " (" << error.GetErrorNo() << ")." << std::endl;
+		throw std::exception("Failed to create pipe");
+	}
+
+	const auto connectResult
+		= ConnectNamedPipe(handle.handle, &GetOverlaped());
+	assert(connectResult == 0);
+	UseUnused(connectResult);
+
+	bool isPending = false;
+	switch (GetLastError()) { 
+		case ERROR_IO_PENDING: 
+			isPending = true;
+			break;
+		case ERROR_PIPE_CONNECTED:
+			isPending = false;
+			break;
+		default:
+			{
+				TunnelEx::Error error(GetLastError());
+				std::cerr
+					<< "Failed to create pipe: "
+					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< " (" << error.GetErrorNo() << ")." << std::endl;
+				throw std::exception("An error occurs during the pipe connect operation.");
+			}
+	}
+
+	SetHandle(handle.Release());
+
+}
+
