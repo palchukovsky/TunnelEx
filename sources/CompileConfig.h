@@ -10,13 +10,6 @@
 #ifndef INCLUDED_FILE__CommonDefinition_h__0702110651
 #define INCLUDED_FILE__CommonDefinition_h__0702110651
 
-#ifdef _WINDOWS
-#	define WINVER 0x0501
-#	define _WIN32_WINNT WINVER
-#	define WIN32_LEAN_AND_MEAN
-#	define NOMINMAX
-#endif // _WINDOWS
-
 #if defined(_MSC_VER)
 
 #	if _MSC_VER <= 1600 // The Visual C++ 2010 compiler version is 1600.
@@ -54,11 +47,6 @@
 	//!  Visual C++ accepts exception specification but does not implement.
 #	pragma warning(disable : 4290)
 #endif // !defined(__cplusplus_cli) && defined(_MSC_VER) && _MSC_VER <= 1400
-
-#if !defined(__cplusplus_cli) && defined(_MSC_VER) && _MSC_VER == 1400 // The Visual C++ 2005 compiler version is 1400.
-#	define _CRT_SECURE_NO_WARNINGS
-#	define _SCL_SECURE_NO_WARNINGS
-#endif // !defined(__cplusplus_cli) && defined(_MSC_VER) && _MSC_VER == 1400
 
 #define NULL 0
 
