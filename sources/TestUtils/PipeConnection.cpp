@@ -208,6 +208,7 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 void PipeConnection::Read() {
 
 	const auto overlappedResult = ReadOverlappedResult();
+	assert(overlappedResult <= m_receiveBuffer.size());
 	if (!overlappedResult) {
 		return;
 	}
@@ -215,7 +216,7 @@ void PipeConnection::Read() {
 	assert(overlappedResult == 0 || m_isReadingStarted);
 
 	if (overlappedResult > 0) {
-		assert(!m_isReadingStarted);
+		assert(m_isReadingStarted);
 		m_isReadingStarted = false;
 		{
 			boost::mutex::scoped_lock lock(m_stateMutex);
@@ -256,9 +257,9 @@ void PipeConnection::StartRead() {
 		&m_overlaped);
 	
 	const TunnelEx::Error error(GetLastError());
-	if (!error.IsError()) {
+	if (!error.IsError() || error.GetErrorNo() == ERROR_IO_PENDING) {
 		m_isReadingStarted = true;
-	} else if (error.GetErrorNo() != ERROR_IO_PENDING) {
+	} else {
 		std::cerr
 			<< "Failed to start read from pipe: "
 			<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()

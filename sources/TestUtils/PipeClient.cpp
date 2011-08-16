@@ -74,6 +74,7 @@ namespace {
 			Lock lock(m_mutex);
 			assert(std::find(m_clients.begin(), m_clients.end(), &client) == m_clients.end());
 			m_clients.push_back(&client);
+			CreateEvents();
 		}
 
 		void UnregisterClient(Client &client) {
@@ -82,6 +83,7 @@ namespace {
 			const auto pos = std::find(m_clients.begin(), m_clients.end(), &client);
 			assert(pos != m_clients.end());
 			m_clients.erase(pos);
+			CreateEvents();
 		}
 
 	private:
@@ -109,8 +111,9 @@ namespace {
 					} else if (object == (WAIT_OBJECT_0 + 1)) {
 						continue;
 					} else {
-						assert(object < m_clients.size() + WAIT_OBJECT_0 + 2);
-						m_clients[object - 2 - m_clients.size()]->Read();
+						assert(object + m_clients.size() >= WAIT_OBJECT_0 + 2);
+						assert(object + WAIT_OBJECT_0 - 2 < m_clients.size());
+						m_clients[object + WAIT_OBJECT_0 - 2]->Read();
 					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to handle pipe client: " << ex.what() << "." << std::endl;
@@ -178,7 +181,7 @@ bool PipeClient::IsConnected() const {
 	return m_connection.get() && m_connection->IsActive();
 }
 
-void PipeClient::ClearReceived(size_t bytesCount /* = 0*/) {
+void PipeClient::ClearReceived(size_t bytesCount /*= 0*/) {
 	GetConnection().ClearReceived(bytesCount);
 }
 
