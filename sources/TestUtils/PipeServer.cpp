@@ -111,7 +111,6 @@ private:
 		}
 		events.push_back(serverConnection->GetEvent());
 
-
 		for ( ; ; ) {
 
 			const auto object = WaitForMultipleObjects(
@@ -119,41 +118,58 @@ private:
 				&events[0],
 				FALSE,
 				INFINITE);
+
 			if (object == WAIT_OBJECT_0) {
-		
+				
 				break;
 			
-			} else if (object - WAIT_OBJECT_0 >= events.size() - 1) {
+			} else if (object >= WAIT_OBJECT_0  + events.size() - 1) {
 
 				assert(object - WAIT_OBJECT_0 ==  events.size() - 1);
 			
 				try {
-					serverConnection->Start();
-					auto newConnection = serverConnection;
-					serverConnection.reset(new PipeServerConnection(m_path));
-					{
-						ConnectionsWriteLock lock(m_connectionsMutex);
-						m_connections.push_back(newConnection);
+					const auto readOverlappedResult
+						= serverConnection->ReadOverlappedResult();
+					assert(!readOverlappedResult || serverConnection->IsConnectionState());
+					if (readOverlappedResult || serverConnection->IsConnectionState()) {
+						{
+							ConnectionsWriteLock lock(m_connectionsMutex);
+							m_connections.push_back(serverConnection);
+						}
+						if (serverConnection->IsConnectionState()) {
+							serverConnection->SetAsConnected();
+						} else {
+							serverConnection->Read();
+						}
+						serverConnection.reset(new PipeServerConnection(m_path));
 						events.push_back(serverConnection->GetEvent());
+					} else {
+						serverConnection.reset(new PipeServerConnection(m_path));
 					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to accept pipe connection: " << ex.what() << "." << std::endl;
 				} catch (...) {
 					std::cerr << "Failed to accept pipe connection: unknown error." << std::endl;
 				}
-			
+
 			} else {
 
+				assert(object > WAIT_OBJECT_0);
+				assert(object < WAIT_OBJECT_0 + events.size() - 1);
+
 				try {
-					GetConnection(object - WAIT_OBJECT_0 - 1)->Read();
+					const auto connection = GetConnection(object - WAIT_OBJECT_0 - 1);
+					if (connection->ReadOverlappedResult()) {
+						connection->Read();
+					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
 				} catch (...) {
-					std::cerr << "to read pipe data: unknown error." << std::endl;
+					std::cerr << "Filed to read pipe data: unknown error." << std::endl;
 				}
-			
+
 			}
-		
+			
 		}
 
 	}

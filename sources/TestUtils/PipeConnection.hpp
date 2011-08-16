@@ -25,7 +25,7 @@ namespace TestUtil {
 	public:
 
 		explicit PipeConnection(HANDLE handle);
-		~PipeConnection();
+		virtual ~PipeConnection();
 
 	public:
 
@@ -33,11 +33,20 @@ namespace TestUtil {
 
 	public:
 
+		bool IsConnectionState() const {
+			return m_isConnectionState;
+		}
+		virtual void SetAsConnected() {
+			assert(m_isConnectionState);
+			m_isConnectionState = false;
+		}
+
 		void Close();
 
 	public:
 
 		void Send(std::auto_ptr<Buffer>);
+		bool ReadOverlappedResult();
 		void Read();
 
 		Buffer::size_type GetReceivedSize() const;
@@ -62,8 +71,14 @@ namespace TestUtil {
 		void SetHandle(HANDLE handle) throw() {
 			m_handle = handle;
 		}
+		HANDLE GetHandle() {
+			assert(m_handle != INVALID_HANDLE_VALUE);
+			return m_handle;
+		}
 
 		OVERLAPPED & GetOverlaped();
+
+		void ReadConnectionState();
 
 	private:
 
@@ -88,9 +103,13 @@ namespace TestUtil {
 		mutable boost::mutex m_stateMutex;
 		mutable boost::condition_variable m_dataReceivedCondition;
 
+		volatile long m_isActive;
+
 		Buffer m_receiveBuffer;
 
 		OVERLAPPED m_overlaped;
+
+		bool m_isConnectionState;
 
 	};
 
@@ -106,12 +125,11 @@ namespace TestUtil {
 	public:
 
 		explicit PipeClientConnection(const std::string &path);
-		~PipeClientConnection();
+		virtual ~PipeClientConnection();
 
-	private:
+	public:
 
-		const std::string m_path;
-		const DWORD m_waitTimeout;
+		virtual void SetAsConnected();
 
 	};
 
