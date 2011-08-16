@@ -25,7 +25,7 @@ namespace TestUtil {
 	public:
 
 		explicit PipeConnection(HANDLE handle);
-		virtual ~PipeConnection();
+		~PipeConnection();
 
 	public:
 
@@ -33,20 +33,11 @@ namespace TestUtil {
 
 	public:
 
-		bool IsConnectionState() const {
-			return m_isConnectionState;
-		}
-		virtual void SetAsConnected() {
-			assert(m_isConnectionState);
-			m_isConnectionState = false;
-		}
-
 		void Close();
 
 	public:
 
 		void Send(std::auto_ptr<Buffer>);
-		bool ReadOverlappedResult();
 		void Read();
 
 		Buffer::size_type GetReceivedSize() const;
@@ -68,6 +59,13 @@ namespace TestUtil {
 
 	protected:
 
+		void SetAsConnected() {
+			assert(m_isActive == 0);
+			if (BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1) == 0) {
+				StartRead();
+			}
+		}
+
 		void SetHandle(HANDLE handle) throw() {
 			m_handle = handle;
 		}
@@ -76,9 +74,13 @@ namespace TestUtil {
 			return m_handle;
 		}
 
-		OVERLAPPED & GetOverlaped();
+		OVERLAPPED & GetOverlaped() {
+			return m_overlaped;
+		}
 
-		void ReadConnectionState();
+		DWORD ReadOverlappedResult();
+
+		void StartRead();
 
 	private:
 
@@ -109,7 +111,7 @@ namespace TestUtil {
 
 		OVERLAPPED m_overlaped;
 
-		bool m_isConnectionState;
+		bool m_isReadingStarted;
 
 	};
 
@@ -125,11 +127,6 @@ namespace TestUtil {
 	public:
 
 		explicit PipeClientConnection(const std::string &path);
-		virtual ~PipeClientConnection();
-
-	public:
-
-		virtual void SetAsConnected();
 
 	};
 
@@ -145,9 +142,10 @@ namespace TestUtil {
 	public:
 
 		explicit PipeServerConnection(const std::string &path);
-		~PipeServerConnection();
 
 	};
+
+	////////////////////////////////////////////////////////////////////////////////
 
 }
 

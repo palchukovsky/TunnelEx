@@ -110,17 +110,7 @@ namespace {
 						continue;
 					} else {
 						assert(object < m_clients.size() + WAIT_OBJECT_0 + 2);
-						const auto connection = m_clients[object - 2 - m_clients.size()];
-						const auto readOverlappedResult
-							= connection->ReadOverlappedResult();
-						assert(!readOverlappedResult || connection->IsConnectionState());
-						if (readOverlappedResult || connection->IsConnectionState()) {
-							if (connection->IsConnectionState()) {
-								connection->SetAsConnected();
-							} else {
-								connection->Read();
-							}
-						}
+						m_clients[object - 2 - m_clients.size()]->Read();
 					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to handle pipe client: " << ex.what() << "." << std::endl;

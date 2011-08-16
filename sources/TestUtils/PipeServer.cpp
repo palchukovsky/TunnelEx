@@ -128,24 +128,13 @@ private:
 				assert(object - WAIT_OBJECT_0 ==  events.size() - 1);
 			
 				try {
-					const auto readOverlappedResult
-						= serverConnection->ReadOverlappedResult();
-					assert(!readOverlappedResult || serverConnection->IsConnectionState());
-					if (readOverlappedResult || serverConnection->IsConnectionState()) {
-						{
-							ConnectionsWriteLock lock(m_connectionsMutex);
-							m_connections.push_back(serverConnection);
-						}
-						if (serverConnection->IsConnectionState()) {
-							serverConnection->SetAsConnected();
-						} else {
-							serverConnection->Read();
-						}
-						serverConnection.reset(new PipeServerConnection(m_path));
-						events.push_back(serverConnection->GetEvent());
-					} else {
-						serverConnection.reset(new PipeServerConnection(m_path));
+					{
+						ConnectionsWriteLock lock(m_connectionsMutex);
+						m_connections.push_back(serverConnection);
 					}
+					serverConnection->Read();
+					serverConnection.reset(new PipeServerConnection(m_path));
+					events.push_back(serverConnection->GetEvent());
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to accept pipe connection: " << ex.what() << "." << std::endl;
 				} catch (...) {
@@ -158,10 +147,7 @@ private:
 				assert(object < WAIT_OBJECT_0 + events.size() - 1);
 
 				try {
-					const auto connection = GetConnection(object - WAIT_OBJECT_0 - 1);
-					if (connection->ReadOverlappedResult()) {
-						connection->Read();
-					}
+					GetConnection(object - WAIT_OBJECT_0 - 1)->Read();
 				} catch (const std::exception &ex) {
 					std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
 				} catch (...) {
