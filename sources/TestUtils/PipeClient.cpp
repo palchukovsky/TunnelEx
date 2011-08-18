@@ -118,14 +118,14 @@ namespace {
 						&m_events[0],
 						FALSE,
 						INFINITE);
-					if (object == WAIT_OBJECT_0) {
+					const auto signaledEvent = m_events[object - WAIT_OBJECT_0];
+					if (signaledEvent == m_stopEvent) {
 						break;
-					} else if (object == (WAIT_OBJECT_0 + 1)) {
+					} else if (signaledEvent == m_clientsEvent) {
 						continue;
 					} else {
-						HANDLE evt = m_events[object - WAIT_OBJECT_0];
-						assert(m_clients.find(evt) != m_clients.end());
-						m_clients.find(evt)->second->HandleEvent(evt);
+						assert(m_clients.find(signaledEvent) != m_clients.end());
+						m_clients.find(signaledEvent)->second->HandleEvent(signaledEvent);
 					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to handle pipe client: " << ex.what() << "." << std::endl;

@@ -256,20 +256,21 @@ void PipeConnection::HandleWrite() {
 	}
 	boost::mutex::scoped_lock stateLock(m_stateMutex);
 	assert(!m_sentBuffers.empty());
-	assert(sent == (**m_sentBuffers.begin()).size());
+	auto &sentBuffer = *m_sentBuffers.begin();
+	assert(!sentBuffer.buffer->empty());
+	assert(sentBuffer.sentBytes + sent <= sentBuffer.buffer->size());
 #	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
 	{
 		std::ostringstream oss;
 		oss << this << ".PipeConnection.write";
 		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-		if (!(*m_sentBuffers.begin())->empty()) {
-			of.write(&(**m_sentBuffers.begin())[0], (*m_sentBuffers.begin())->size());
-		} else {
-			of << "[ZERO]";
-		}
+		of.write(&(*sentBuffer.buffer)[sentBuffer.sentBytes], sent);
 	}
 #	endif
-	m_sentBuffers.pop_front();
+	sentBuffer.sentBytes += sent;
+	if (sentBuffer.sentBytes >= sentBuffer.buffer->size()) {
+		m_sentBuffers.pop_front();
+	}
 }
 
 void PipeConnection::StartRead() {

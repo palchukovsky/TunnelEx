@@ -22,6 +22,26 @@ namespace TestUtil {
 
 		typedef PipeConnection Self;
 
+	private:
+
+		struct SentBuffer {
+			
+			size_t sentBytes;
+			boost::shared_ptr<Buffer> buffer;
+
+			SentBuffer()
+					: sentBytes(0) {
+				//...//
+			}
+			SentBuffer(boost::shared_ptr<Buffer> buffer)
+					: sentBytes(0),
+					buffer(buffer) {
+				//...//
+			}
+
+		};
+		typedef std::list<SentBuffer> SentBuffers;
+
 	public:
 
 		explicit PipeConnection(HANDLE handle);
@@ -123,7 +143,7 @@ namespace TestUtil {
 
 		bool m_isReadingStarted;
 
-		std::list<boost::shared_ptr<Buffer>> m_sentBuffers;
+		SentBuffers m_sentBuffers;
 
 	};
 
