@@ -22,7 +22,7 @@ namespace {
 	private:
 
 		typedef ClientT Client;
-		typedef std::vector<Client *> Clients;
+		typedef std::map<HANDLE, Client *> Clients;
 
 		typedef boost::mutex Mutex;
 		typedef Mutex::scoped_lock Lock;
@@ -38,7 +38,7 @@ namespace {
 				m_thread.reset(
 					new boost::thread(
 						boost::bind(&ClientsHandler::ThreadMain, this)));
-				CreateEvents();
+				CreateEvents(m_clients, m_events);
 			} catch (...) {
 				assert(false);
 				CloseHandle(m_stopEvent);
@@ -72,35 +72,47 @@ namespace {
 		void RegisterClient(Client &client) {
 			SetEvent(m_clientsEvent);
 			Lock lock(m_mutex);
-			assert(std::find(m_clients.begin(), m_clients.end(), &client) == m_clients.end());
-			m_clients.push_back(&client);
-			CreateEvents();
+			auto clients(m_clients);
+			assert(clients.find(client.GetReadEvent()) == clients.end());
+			clients.insert(std::make_pair(client.GetReadEvent(), &client));
+			assert(clients.find(client.GetWriteEvent()) == clients.end());
+			clients.insert(std::make_pair(client.GetWriteEvent(), &client));
+			CreateEvents(clients, m_events);
+			clients.swap(m_clients);
+			ResetEvent(m_clientsEvent);
 		}
 
 		void UnregisterClient(Client &client) {
 			SetEvent(m_clientsEvent);
 			Lock lock(m_mutex);
-			const auto pos = std::find(m_clients.begin(), m_clients.end(), &client);
-			assert(pos != m_clients.end());
-			m_clients.erase(pos);
-			CreateEvents();
+			auto clients(m_clients);
+			assert(clients.find(client.GetReadEvent()) != clients.end());
+			clients.erase(client.GetReadEvent());
+			assert(clients.find(client.GetReadEvent()) == clients.end());
+			assert(clients.find(client.GetWriteEvent()) != clients.end());
+			clients.erase(client.GetWriteEvent());
+			assert(clients.find(client.GetWriteEvent()) == clients.end());
+			CreateEvents(clients, m_events);
+			clients.swap(m_clients);
+			ResetEvent(m_clientsEvent);
 		}
 
 	private:
 
-		void CreateEvents() {
+		void CreateEvents(const Clients &clients, Events &result) {
 			Events events;
 			events.push_back(m_stopEvent);
-			events.push_back(m_stopEvent);
-			foreach (auto c, m_clients) {
-				events.push_back(c->GetEvent());
+			events.push_back(m_clientsEvent);
+			foreach (auto c, clients) {
+				events.push_back(c.first);
 			}
-			events.swap(m_events);
+			events.swap(result);
 		}
 
 		void ThreadMain() {
 			for ( ; ; ) {
 				try {
+					Lock lock(m_mutex);
 					const auto object = WaitForMultipleObjects(
 						m_events.size(),
 						&m_events[0],
@@ -111,9 +123,9 @@ namespace {
 					} else if (object == (WAIT_OBJECT_0 + 1)) {
 						continue;
 					} else {
-						assert(object + m_clients.size() >= WAIT_OBJECT_0 + 2);
-						assert(object + WAIT_OBJECT_0 - 2 < m_clients.size());
-						m_clients[object + WAIT_OBJECT_0 - 2]->Read();
+						HANDLE evt = m_events[object - WAIT_OBJECT_0];
+						assert(m_clients.find(evt) != m_clients.end());
+						m_clients.find(evt)->second->HandleEvent(evt);
 					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to handle pipe client: " << ex.what() << "." << std::endl;
@@ -128,16 +140,11 @@ namespace {
 	private:
 
 		Mutex m_mutex;
-
 		Clients m_clients;
 		HANDLE m_clientsEvent;
-
 		HANDLE m_stopEvent;
-
 		Events m_events;
-
 		boost::shared_ptr<boost::thread> m_thread;
-		
 
 	};
 

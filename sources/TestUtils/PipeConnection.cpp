@@ -61,24 +61,30 @@ PipeConnection::PipeConnection(HANDLE handle)
 		== int(m_dataBufferSize));
 	UpdateBufferState();
 	
-	ZeroMemory(&m_overlaped, sizeof(m_overlaped));
-	m_overlaped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	assert(m_overlaped.hEvent != INVALID_HANDLE_VALUE);
+	ZeroMemory(&m_readOverlaped, sizeof(m_readOverlaped));
+	m_readOverlaped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(m_readOverlaped.hEvent != INVALID_HANDLE_VALUE);
+
+	ZeroMemory(&m_writeOverlaped, sizeof(m_writeOverlaped));
+	m_writeOverlaped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(m_writeOverlaped.hEvent != INVALID_HANDLE_VALUE);
 
 }
 
 PipeConnection::~PipeConnection() {
+	assert(m_sentBuffers.empty());
 	try {
 		Close();
 		assert(m_handle == INVALID_HANDLE_VALUE);
 	} catch (...) {
 		assert(false);
 	}
-	CloseHandle(m_overlaped.hEvent);
+	CloseHandle(m_writeOverlaped.hEvent);
+	CloseHandle(m_readOverlaped.hEvent);
 }
 
 size_t PipeConnection::GetBufferSize() {
-	return 64;
+	return 128;
 }
 
 void PipeConnection::Close() {
@@ -177,37 +183,38 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 
 	DWORD sent = 0;
 	assert(data->size() > 0);
-	if (!WriteFile(m_handle, &(*data)[0], DWORD(data->size()), &sent, NULL)) {
+	if (!WriteFile(m_handle, &(*data)[0], DWORD(data->size()), &sent, &GetWriteOverlaped())) {
 		const TunnelEx::Error error(GetLastError());
-		std::cerr
-			<< "Failed to send data to pipe: "
-			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-			<< " (" << error.GetErrorNo() << ")." << std::endl;
-		throw SendError(
-			"Could not send data to pipe: WriteFile returns FALSE.");
+		assert(error.IsError());
+		if (error.GetErrorNo() != ERROR_IO_PENDING) {
+			std::cerr
+				<< "Failed to send data to pipe: "
+				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< " (" << error.GetErrorNo() << ")." << std::endl;
+			throw SendError(
+				"Could not send data to pipe: WriteFile returns FALSE.");
+		}
 	} else if (sent != data->size()) {
 		throw SendError(
 			"Could not send data to pipe: sent not equal size");
 	}
-
-#	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
-	{
-		std::ostringstream oss;
-		oss << this << ".PipeConnection.write";
-		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-		if (!data->empty()) {
-			of.write(&(*data)[0], data->size());
-		} else {
-			of << "[ZERO]";
-		}
-	}
-#	endif
+	m_sentBuffers.push_back(boost::shared_ptr<Buffer>(data));
 
 }
 
-void PipeConnection::Read() {
+void PipeConnection::HandleEvent(HANDLE evt) {
+	if (evt == GetReadOverlaped().hEvent) {
+		 HandleRead();
+	} else if (evt == GetWriteOverlaped().hEvent) {
+		HandleWrite();
+	} else {
+		assert(false);
+	}
+}
 
-	const auto overlappedResult = ReadOverlappedResult();
+void PipeConnection::HandleRead() {
+
+	const auto overlappedResult = ReadOverlappedReadResult();
 	assert(overlappedResult <= m_receiveBuffer.size());
 	if (!overlappedResult) {
 		return;
@@ -225,22 +232,44 @@ void PipeConnection::Read() {
 				m_receiveBuffer.begin(),
 				m_receiveBuffer.begin() + overlappedResult,
 				std::back_inserter(m_dataBuffer));
+#			if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+			{
+				std::ostringstream oss;
+				oss << this << ".PipeConnection.read";
+				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+				of.write(&m_receiveBuffer[0], overlappedResult);
+			}
+#			endif
 			UpdateBufferState(overlappedResult);
 		}
 		m_dataReceivedCondition.notify_all();
 	}
 
-#	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
-	if (overlappedResult > 0) {
-		std::ostringstream oss;
-		oss << this << ".PipeConnection.read";
-		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-		of.write(&m_receiveBuffer[0], overlappedResult);
-	}
-#	endif
-
 	StartRead();
 
+}
+
+void PipeConnection::HandleWrite() {
+	const DWORD sent = ReadOverlappedWriteResult();
+	if (!sent) {
+		return;
+	}
+	boost::mutex::scoped_lock stateLock(m_stateMutex);
+	assert(!m_sentBuffers.empty());
+	assert(sent == (**m_sentBuffers.begin()).size());
+#	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+	{
+		std::ostringstream oss;
+		oss << this << ".PipeConnection.write";
+		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+		if (!(*m_sentBuffers.begin())->empty()) {
+			of.write(&(**m_sentBuffers.begin())[0], (*m_sentBuffers.begin())->size());
+		} else {
+			of << "[ZERO]";
+		}
+	}
+#	endif
+	m_sentBuffers.pop_front();
 }
 
 void PipeConnection::StartRead() {
@@ -254,7 +283,7 @@ void PipeConnection::StartRead() {
 		&m_receiveBuffer[0],
 		DWORD(m_receiveBuffer.size()),
 		NULL,
-		&m_overlaped);
+		&GetReadOverlaped());
 	
 	const TunnelEx::Error error(GetLastError());
 	if (!error.IsError() || error.GetErrorNo() == ERROR_IO_PENDING) {
@@ -292,27 +321,57 @@ void PipeConnection::UpdateBufferState(size_t addSize) {
 		== int(m_dataBufferSize));
 }
 
-HANDLE PipeConnection::GetEvent() {
-	return m_overlaped.hEvent;
+HANDLE PipeConnection::GetReadEvent() {
+	return GetReadOverlaped().hEvent;
 }
 
-DWORD PipeConnection::ReadOverlappedResult() {
-	DWORD bytesToRead = 0;
-	boost::mutex::scoped_lock lock(m_stateMutex);
+HANDLE PipeConnection::GetWriteEvent() {
+	return GetWriteOverlaped().hEvent;
+}
+
+DWORD PipeConnection::ReadOverlappedWriteResult() {
+	DWORD bytesSent = 0;
 	const auto isSuccess = GetOverlappedResult( 
 		m_handle,
-		&m_overlaped,
+		&GetWriteOverlaped(),
+		&bytesSent,
+		FALSE);
+	if (!isSuccess) {
+		const TunnelEx::Error error(GetLastError());
+		std::cerr
+			<< "Failed to read pipe overlapped write result: "
+			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<< " (" << error.GetErrorNo() << ")." << std::endl;
+		throw std::exception("Failed to read pipe overlapped write result");
+	} else if (bytesSent > 0) {
+		return bytesSent;
+	} else {
+		Close();
+		return 0;
+	}
+}
+
+DWORD PipeConnection::ReadOverlappedReadResult() {
+	DWORD bytesToRead = 0;
+	const auto isSuccess = GetOverlappedResult( 
+		m_handle,
+		&GetReadOverlaped(),
 		&bytesToRead,
 		FALSE);
 	if (!isSuccess) {
-		throw std::exception("Failed to read pipe overlapped result");
+		const TunnelEx::Error error(GetLastError());
+		std::cerr
+			<< "Failed to read pipe overlapped read result: "
+			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<< " (" << error.GetErrorNo() << ")." << std::endl;
+		throw std::exception("Failed to read pipe overlapped read result");
 	} else if (bytesToRead > 0) {
 		return bytesToRead;
 	} else if (!m_isActive) {
 		SetAsConnected();
 		return 0;
 	} else {
-		Close(lock);
+		Close();
 		return 0;
 	}
 }
@@ -404,7 +463,7 @@ PipeServerConnection::PipeServerConnection(const std::string &path)
 	}
 
 	const auto connectResult
-		= ConnectNamedPipe(handle.handle, &GetOverlaped());
+		= ConnectNamedPipe(handle.handle, &GetReadOverlaped());
 	assert(connectResult == 0);
 	UseUnused(connectResult);
 

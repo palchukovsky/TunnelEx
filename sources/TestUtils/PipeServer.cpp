@@ -99,6 +99,9 @@ private:
 		Events events;
 		events.push_back(m_stopEvent);
 
+		typedef std::map<HANDLE, size_t> EventToConnection;
+		EventToConnection eventToConnection;
+
 		boost::shared_ptr<PipeServerConnection> serverConnection;
 		try {
 			serverConnection.reset(new PipeServerConnection(m_path));
@@ -109,7 +112,7 @@ private:
 			std::cerr << "Failed to start pipe server: unknown error." << std::endl;
 			return;
 		}
-		events.push_back(serverConnection->GetEvent());
+		events.push_back(serverConnection->GetReadEvent());
 
 		for ( ; ; ) {
 
@@ -128,13 +131,33 @@ private:
 				assert(object - WAIT_OBJECT_0 ==  events.size() - 1);
 			
 				try {
+
+					HANDLE evt = *events.rbegin();
+
+					events.push_back(serverConnection->GetWriteEvent());
+					size_t index = 0;
 					{
 						ConnectionsWriteLock lock(m_connectionsMutex);
+						index = m_connections.size();
 						m_connections.push_back(serverConnection);
 					}
-					serverConnection->Read();
+					
+					assert(
+						eventToConnection.find(serverConnection->GetReadEvent())
+						== eventToConnection.end());
+					eventToConnection.insert(
+						std::make_pair(serverConnection->GetReadEvent(), index));
+					assert(
+						eventToConnection.find(serverConnection->GetWriteEvent())
+						== eventToConnection.end());
+					eventToConnection.insert(
+						std::make_pair(serverConnection->GetWriteEvent(), index));
+
+					serverConnection->HandleEvent(evt);
+					
 					serverConnection.reset(new PipeServerConnection(m_path));
-					events.push_back(serverConnection->GetEvent());
+					events.push_back(serverConnection->GetReadEvent());
+				
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to accept pipe connection: " << ex.what() << "." << std::endl;
 				} catch (...) {
@@ -147,7 +170,9 @@ private:
 				assert(object < WAIT_OBJECT_0 + events.size() - 1);
 
 				try {
-					GetConnection(object - WAIT_OBJECT_0 - 1)->Read();
+					HANDLE evt = events[object - WAIT_OBJECT_0];
+					assert(eventToConnection.find(evt) != eventToConnection.end());
+					GetConnection(eventToConnection.find(evt)->second)->HandleEvent(evt);
 				} catch (const std::exception &ex) {
 					std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
 				} catch (...) {

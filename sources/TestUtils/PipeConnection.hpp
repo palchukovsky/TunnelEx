@@ -38,7 +38,6 @@ namespace TestUtil {
 	public:
 
 		void Send(std::auto_ptr<Buffer>);
-		void Read();
 
 		Buffer::size_type GetReceivedSize() const;
 
@@ -55,7 +54,10 @@ namespace TestUtil {
 
 	public:
 
-		HANDLE GetEvent();
+		HANDLE GetReadEvent();
+		HANDLE GetWriteEvent();
+		
+		void HandleEvent(HANDLE);
 
 	protected:
 
@@ -74,15 +76,22 @@ namespace TestUtil {
 			return m_handle;
 		}
 
-		OVERLAPPED & GetOverlaped() {
-			return m_overlaped;
+		OVERLAPPED & GetReadOverlaped() {
+			return m_readOverlaped;
+		}
+		OVERLAPPED & GetWriteOverlaped() {
+			return m_writeOverlaped;
 		}
 
-		DWORD ReadOverlappedResult();
+	private:
 
 		void StartRead();
 
-	private:
+		void HandleRead();
+		void HandleWrite();
+
+		DWORD ReadOverlappedWriteResult();
+		DWORD ReadOverlappedReadResult();
 
 		void UpdateBufferState();
 		void UpdateBufferState(size_t addSize);
@@ -109,9 +118,12 @@ namespace TestUtil {
 
 		Buffer m_receiveBuffer;
 
-		OVERLAPPED m_overlaped;
+		OVERLAPPED m_readOverlaped;
+		OVERLAPPED m_writeOverlaped;
 
 		bool m_isReadingStarted;
+
+		std::list<boost::shared_ptr<Buffer>> m_sentBuffers;
 
 	};
 
