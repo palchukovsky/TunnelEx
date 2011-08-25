@@ -50,6 +50,7 @@ namespace {
 
 		~ClientsHandler() {
 			assert(m_clients.empty());
+			assert(m_events.size() == 2);
 			SetEvent(m_stopEvent);
 			try {
 				m_thread->join();

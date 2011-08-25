@@ -51,8 +51,7 @@ PipeConnection::PipeConnection(HANDLE handle)
 		m_dataBufferStart(m_dataBuffer.end()),
 		m_dataBufferSize(0),
 		m_isActive(false),
-		m_receiveBuffer(GetBufferSize(), 0),
-		m_isReadingStarted(false) {
+		m_receiveBuffer(GetBufferSize(), 0) {
 
 	assert(
 		std::distance(
@@ -88,16 +87,11 @@ size_t PipeConnection::GetBufferSize() {
 }
 
 void PipeConnection::Close() {
-	if (!BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0)) {
-		return;
-	}
 	Close(boost::mutex::scoped_lock(m_stateMutex));
 }
 
 void PipeConnection::Close(const boost::mutex::scoped_lock &) {
-	if (!BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0)) {
-		return;
-	}
+	BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0);
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
@@ -177,7 +171,7 @@ bool PipeConnection::WaitDataReceiveEvent(
 void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 
 	boost::mutex::scoped_lock stateLock(m_stateMutex);
-	if (m_handle == INVALID_HANDLE_VALUE) {
+	if (IsActive()) {
 		return;
 	}
 
@@ -214,47 +208,51 @@ void PipeConnection::HandleEvent(HANDLE evt) {
 
 void PipeConnection::HandleRead() {
 
-	const auto overlappedResult = ReadOverlappedReadResult();
-	assert(overlappedResult <= m_receiveBuffer.size());
-	if (!overlappedResult) {
-		return;
-	}
+	DWORD overlappedResult = 0;
 
-	assert(overlappedResult == 0 || m_isReadingStarted);
+	{
+
+		boost::mutex::scoped_lock lock(m_stateMutex);
+
+		overlappedResult = ReadOverlappedReadResult(lock);
+		assert(overlappedResult <= m_receiveBuffer.size());
+
+		if (overlappedResult > 0) {
+			{
+				boost::mutex::scoped_lock lock(m_stateMutex);
+				m_dataBuffer.reserve(overlappedResult);
+				std::copy(
+					m_receiveBuffer.begin(),
+					m_receiveBuffer.begin() + overlappedResult,
+					std::back_inserter(m_dataBuffer));
+#				if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+				{
+					std::ostringstream oss;
+					oss << this << ".PipeConnection.read";
+					std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+					of.write(&m_receiveBuffer[0], overlappedResult);
+				}
+#				endif
+				UpdateBufferState(overlappedResult);
+			}
+		}
+
+		StartRead(lock);
+
+	}
 
 	if (overlappedResult > 0) {
-		assert(m_isReadingStarted);
-		m_isReadingStarted = false;
-		{
-			boost::mutex::scoped_lock lock(m_stateMutex);
-			m_dataBuffer.reserve(overlappedResult);
-			std::copy(
-				m_receiveBuffer.begin(),
-				m_receiveBuffer.begin() + overlappedResult,
-				std::back_inserter(m_dataBuffer));
-#			if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
-			{
-				std::ostringstream oss;
-				oss << this << ".PipeConnection.read";
-				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-				of.write(&m_receiveBuffer[0], overlappedResult);
-			}
-#			endif
-			UpdateBufferState(overlappedResult);
-		}
 		m_dataReceivedCondition.notify_all();
 	}
-
-	StartRead();
 
 }
 
 void PipeConnection::HandleWrite() {
-	const DWORD sent = ReadOverlappedWriteResult();
+	boost::mutex::scoped_lock lock(m_stateMutex);
+	const DWORD sent = ReadOverlappedWriteResult(lock);
 	if (!sent) {
 		return;
 	}
-	boost::mutex::scoped_lock stateLock(m_stateMutex);
 	assert(!m_sentBuffers.empty());
 	auto &sentBuffer = *m_sentBuffers.begin();
 	assert(!sentBuffer.buffer->empty());
@@ -273,11 +271,10 @@ void PipeConnection::HandleWrite() {
 	}
 }
 
-void PipeConnection::StartRead() {
+void PipeConnection::StartRead(const boost::mutex::scoped_lock &lock) {
 
 	assert(m_isActive);
 	assert(m_handle != INVALID_HANDLE_VALUE);
-	assert(!m_isReadingStarted);
 
 	ReadFile(
 		m_handle,
@@ -287,15 +284,13 @@ void PipeConnection::StartRead() {
 		&GetReadOverlaped());
 	
 	const TunnelEx::Error error(GetLastError());
-	if (!error.IsError() || error.GetErrorNo() == ERROR_IO_PENDING) {
-		m_isReadingStarted = true;
-	} else {
+	if (error.IsError() && error.GetErrorNo() != ERROR_IO_PENDING) {
 		std::cerr
 			<< "Failed to start read from pipe: "
 			<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
 			<< " (" << error.GetErrorNo() << ")."
 			<< std::endl;
-		Close();
+		Close(lock);
 	}
 
 }
@@ -330,7 +325,7 @@ HANDLE PipeConnection::GetWriteEvent() {
 	return GetWriteOverlaped().hEvent;
 }
 
-DWORD PipeConnection::ReadOverlappedWriteResult() {
+DWORD PipeConnection::ReadOverlappedWriteResult(const boost::mutex::scoped_lock &lock) {
 	DWORD bytesSent = 0;
 	const auto isSuccess = GetOverlappedResult( 
 		m_handle,
@@ -347,12 +342,12 @@ DWORD PipeConnection::ReadOverlappedWriteResult() {
 	} else if (bytesSent > 0) {
 		return bytesSent;
 	} else {
-		Close();
+		Close(lock);
 		return 0;
 	}
 }
 
-DWORD PipeConnection::ReadOverlappedReadResult() {
+DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &lock) {
 	DWORD bytesToRead = 0;
 	const auto isSuccess = GetOverlappedResult( 
 		m_handle,
@@ -369,10 +364,10 @@ DWORD PipeConnection::ReadOverlappedReadResult() {
 	} else if (bytesToRead > 0) {
 		return bytesToRead;
 	} else if (!m_isActive) {
-		SetAsConnected();
+		SetAsConnected(lock);
 		return 0;
 	} else {
-		Close();
+		Close(lock);
 		return 0;
 	}
 }

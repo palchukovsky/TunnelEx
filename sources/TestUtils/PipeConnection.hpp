@@ -82,10 +82,7 @@ namespace TestUtil {
 	protected:
 
 		void SetAsConnected() {
-			assert(m_isActive == 0);
-			if (BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1) == 0) {
-				StartRead();
-			}
+			SetAsConnected(boost::mutex::scoped_lock(m_stateMutex));
 		}
 
 		void SetHandle(HANDLE handle) throw() {
@@ -105,13 +102,23 @@ namespace TestUtil {
 
 	private:
 
-		void StartRead();
+		void SetAsConnected(const boost::mutex::scoped_lock &lock) {
+			assert(m_isActive == 0);
+			assert(m_handle != INVALID_HANDLE_VALUE);
+			if (BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1) == 0) {
+				StartRead(lock);
+			} else {
+				assert(false);
+			}
+		}
+
+		void StartRead(const boost::mutex::scoped_lock &);
 
 		void HandleRead();
 		void HandleWrite();
 
-		DWORD ReadOverlappedWriteResult();
-		DWORD ReadOverlappedReadResult();
+		DWORD ReadOverlappedWriteResult(const boost::mutex::scoped_lock &);
+		DWORD ReadOverlappedReadResult(const boost::mutex::scoped_lock &);
 
 		void UpdateBufferState();
 		void UpdateBufferState(size_t addSize);
@@ -140,8 +147,6 @@ namespace TestUtil {
 
 		OVERLAPPED m_readOverlaped;
 		OVERLAPPED m_writeOverlaped;
-
-		bool m_isReadingStarted;
 
 		SentBuffers m_sentBuffers;
 
