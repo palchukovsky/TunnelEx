@@ -38,14 +38,21 @@ namespace testing {
 
 		TestUtil::Client & GetClient();
 		const TestUtil::Client & GetClient() const;
-
-		virtual std::auto_ptr<TestUtil::Client> CreateClient() const = 0;
+		
+		virtual std::auto_ptr<TestUtil::Client> CreateClient(
+				const boost::posix_time::time_duration &)
+			const
+			= 0;
 
 		std::auto_ptr<TestUtil::Client> CreateConnection() const;
 
 		bool Connect(bool infiniteTimeout);
 		bool Connect(const std::string &mode, bool infiniteTimeout);
-		bool Connect(TestUtil::Client &client, const std::string &mode, bool infiniteTimeout) const;
+		bool Connect(
+					TestUtil::Client &client,
+					const std::string &mode,
+					bool infiniteTimeout)
+				const;
 		bool Connect(
 					TestUtil::Client &client,
 					bool infiniteTimeout)

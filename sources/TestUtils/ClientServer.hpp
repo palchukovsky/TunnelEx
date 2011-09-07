@@ -24,8 +24,8 @@ namespace TestUtil {
 
 	public:
 
-		Connector()
-				: m_waitTime(0, 0, 0) {
+		Connector(const boost::posix_time::time_duration &waitTime)
+				: m_waitTime(waitTime) {
 			//...//
 		}
 
@@ -51,7 +51,7 @@ namespace TestUtil {
 
 	public:
 
-		Server();
+		Server(const boost::posix_time::time_duration &waitTime);
 		virtual ~Server();
 
 	private:
@@ -195,7 +195,7 @@ namespace TestUtil {
 
 	public:
 
-		Client();
+		Client(const boost::posix_time::time_duration &timeOut);
 		virtual ~Client();
 
 	private:

@@ -36,9 +36,11 @@ namespace {
 			boost::thread::sleep(boost::get_system_time() + waitTime);
 		}
 
-		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
+		virtual std::auto_ptr<TestUtil::Client> CreateClient(
+					const boost::posix_time::time_duration &waitTime)
+				const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::UdpClient("localhost", testing::udpServerPort));
+				new TestUtil::UdpClient("localhost", testing::udpServerPort, waitTime));
 			return result;
 		}
 

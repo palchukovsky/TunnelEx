@@ -46,12 +46,13 @@ namespace {
 
 }
 
-PipeConnection::PipeConnection(HANDLE handle)
+PipeConnection::PipeConnection(HANDLE handle, const boost::posix_time::time_duration &waitTime)
 		: m_handle(handle),
 		m_dataBufferStart(m_dataBuffer.end()),
 		m_dataBufferSize(0),
 		m_isActive(false),
-		m_receiveBuffer(GetBufferSize(), 0) {
+		m_receiveBuffer(GetBufferSize(), 0),
+		m_waitTime(waitTime) {
 
 	assert(
 		std::distance(
@@ -92,6 +93,7 @@ void PipeConnection::Close() {
 
 void PipeConnection::Close(const boost::mutex::scoped_lock &) {
 	BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0);
+	m_dataSentCondition.notify_all();
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
@@ -171,8 +173,18 @@ bool PipeConnection::WaitDataReceiveEvent(
 void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 
 	boost::mutex::scoped_lock stateLock(m_stateMutex);
-	if (IsActive()) {
+	if (!IsActive()) {
 		return;
+	} else if (!m_sentBuffers.empty()) {
+		m_dataSentCondition.timed_wait(
+			stateLock,
+			boost::get_system_time() + m_waitTime);
+		if (!IsActive()) {
+			return;
+		} else if (!m_sentBuffers.empty()) {
+			std::cerr << "Failed to send data to pipe: send data timeout." << std::endl;
+			throw SendError("Failed to send data to pipe: send data timeout");
+		}
 	}
 
 	DWORD sent = 0;
@@ -185,12 +197,10 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 				<< "Failed to send data to pipe: "
 				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
 				<< " (" << error.GetErrorNo() << ")." << std::endl;
-			throw SendError(
-				"Could not send data to pipe: WriteFile returns FALSE.");
+			throw SendError("Could not send data to pipe: WriteFile returns FALSE");
 		}
 	} else if (sent != data->size()) {
-		throw SendError(
-			"Could not send data to pipe: sent not equal size");
+		throw SendError("Could not send data to pipe: sent not equal size");
 	}
 	m_sentBuffers.push_back(boost::shared_ptr<Buffer>(data));
 
@@ -218,23 +228,20 @@ void PipeConnection::HandleRead() {
 		assert(overlappedResult <= m_receiveBuffer.size());
 
 		if (overlappedResult > 0) {
+			m_dataBuffer.reserve(overlappedResult);
+			std::copy(
+				m_receiveBuffer.begin(),
+				m_receiveBuffer.begin() + overlappedResult,
+				std::back_inserter(m_dataBuffer));
+#			if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
 			{
-				boost::mutex::scoped_lock lock(m_stateMutex);
-				m_dataBuffer.reserve(overlappedResult);
-				std::copy(
-					m_receiveBuffer.begin(),
-					m_receiveBuffer.begin() + overlappedResult,
-					std::back_inserter(m_dataBuffer));
-#				if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
-				{
-					std::ostringstream oss;
-					oss << this << ".PipeConnection.read";
-					std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-					of.write(&m_receiveBuffer[0], overlappedResult);
-				}
-#				endif
-				UpdateBufferState(overlappedResult);
+				std::ostringstream oss;
+				oss << this << ".PipeConnection.read";
+				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+				of.write(&m_receiveBuffer[0], overlappedResult);
 			}
+#			endif
+			UpdateBufferState(overlappedResult);
 		}
 
 		StartRead(lock);
@@ -268,6 +275,7 @@ void PipeConnection::HandleWrite() {
 	sentBuffer.sentBytes += sent;
 	if (sentBuffer.sentBytes >= sentBuffer.buffer->size()) {
 		m_sentBuffers.pop_front();
+		m_dataSentCondition.notify_all();
 	}
 }
 
@@ -284,7 +292,11 @@ void PipeConnection::StartRead(const boost::mutex::scoped_lock &lock) {
 		&GetReadOverlaped());
 	
 	const TunnelEx::Error error(GetLastError());
-	if (error.IsError() && error.GetErrorNo() != ERROR_IO_PENDING) {
+	if (!error.IsError()) {
+		
+		std::cerr << "SSSSS";
+
+	} else if (error.GetErrorNo() != ERROR_IO_PENDING) {
 		std::cerr
 			<< "Failed to start read from pipe: "
 			<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
@@ -374,8 +386,10 @@ DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipeClientConnection::PipeClientConnection(const std::string &path)
-		: Base(INVALID_HANDLE_VALUE) {
+PipeClientConnection::PipeClientConnection(
+			const std::string &path,
+			const boost::posix_time::time_duration &timeOut)
+		: Base(INVALID_HANDLE_VALUE, timeOut) {
 
 	AutoHandle handle;
 
@@ -435,8 +449,10 @@ PipeClientConnection::PipeClientConnection(const std::string &path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipeServerConnection::PipeServerConnection(const std::string &path)
-		: Base(INVALID_HANDLE_VALUE) {
+PipeServerConnection::PipeServerConnection(
+			const std::string &path,
+			const boost::posix_time::time_duration &timeOut)
+		: Base(INVALID_HANDLE_VALUE, timeOut) {
 
 	AutoHandle handle = CreateNamedPipeA(
 		path.c_str(),

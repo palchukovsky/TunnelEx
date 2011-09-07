@@ -151,8 +151,11 @@ namespace {
 
 }
 
-PipeClient::PipeClient(const std::string &path)
-		: m_connection(new Connection("\\\\.\\pipe\\" + path)) {
+PipeClient::PipeClient(
+			const std::string &path,
+			const boost::posix_time::time_duration &waitTime)
+		: Client(waitTime),
+		m_connection(new Connection("\\\\.\\pipe\\" + path, GetWaitTime())) {
 	ClientsHandler<Connection>::GetInstance().RegisterClient(*m_connection);
 }
 

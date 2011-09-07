@@ -32,8 +32,10 @@ namespace {
 		}
 		
 		virtual void SetUp() {
-			m_server.reset(new TestUtil::UdpServer(testing::udpServerPort));
-			m_server->SetWaitTime(testing::defaultDataWaitTime);
+			m_server.reset(
+				new TestUtil::UdpServer(
+					testing::udpServerPort,
+					testing::defaultDataWaitTime));
 			const bool waitResult = m_server->WaitConnect(1, true);
 			assert(waitResult);
 			UseUnused(waitResult);

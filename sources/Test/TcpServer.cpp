@@ -21,9 +21,11 @@ namespace {
 			//...//
 		}
 	protected:
-		virtual std::auto_ptr<TestUtil::Server> CreateServer() const {
+		virtual std::auto_ptr<TestUtil::Server> CreateServer(
+					const boost::posix_time::time_duration &waitTime)
+				const {
 			std::auto_ptr<TestUtil::Server> result(
-				new TestUtil::TcpServer(testing::tcpServerPort));
+				new TestUtil::TcpServer(testing::tcpServerPort, waitTime));
 			return result;
 		}
 	};

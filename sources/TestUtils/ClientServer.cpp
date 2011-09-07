@@ -59,7 +59,8 @@ namespace {
 
 }
 
-Server::Server() {
+Server::Server(const boost::posix_time::time_duration &waitTime)
+		: Connector(waitTime) {
 	//...//
 }
 
@@ -214,7 +215,8 @@ void Server::GetReceived(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Client::Client() {
+Client::Client(const boost::posix_time::time_duration &waitTime)
+		: Connector(waitTime) {
 	//...//
 }
 

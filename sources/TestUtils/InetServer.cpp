@@ -141,8 +141,9 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 
-TcpServer::TcpServer(unsigned short port)
-		: m_pimpl(new Implementation(port)) {
+TcpServer::TcpServer(unsigned short port, const boost::posix_time::time_duration &waitTime)
+		: Server(waitTime),
+		m_pimpl(new Implementation(port)) {
 	//...//
 }
 
@@ -360,8 +361,11 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UdpServer::UdpServer(unsigned short port)
-		: m_pimpl(new Implementation(port)) {
+UdpServer::UdpServer(
+			unsigned short port,
+			const boost::posix_time::time_duration &waitTime)
+		: Server(waitTime),
+		m_pimpl(new Implementation(port)) {
 	//...//
 }
 

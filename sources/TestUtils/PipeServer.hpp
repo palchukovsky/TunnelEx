@@ -20,7 +20,7 @@ namespace TestUtil {
 
 	public:
 
-		explicit PipeServer(const std::string &path);
+		explicit PipeServer(const std::string &path, const boost::posix_time::time_duration &waitTime);
 		virtual ~PipeServer() throw();
 
 	public:

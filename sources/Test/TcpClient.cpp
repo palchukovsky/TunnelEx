@@ -21,9 +21,11 @@ namespace {
 			//...//
 		}
 	protected:
-		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
+		virtual std::auto_ptr<TestUtil::Client> CreateClient(
+					const boost::posix_time::time_duration &waitTime)
+				const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::TcpClient("localhost", testing::tcpServerPort));
+				new TestUtil::TcpClient("localhost", testing::tcpServerPort, waitTime));
 			return result;
 		}
 	};

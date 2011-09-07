@@ -26,8 +26,7 @@ void ConnectServer::TearDownTestCase() {
 		
 void ConnectServer::SetUp() {
 	assert(!m_server.get());
-	std::auto_ptr<TestUtil::Server> server(CreateServer());
-	server->SetWaitTime(testing::defaultDataWaitTime);
+	std::auto_ptr<TestUtil::Server> server(CreateServer(testing::defaultDataWaitTime));
 	const bool waitResult = server->WaitConnect(1, true);
 	assert(waitResult);
 	UseUnused(waitResult);

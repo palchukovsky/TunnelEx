@@ -35,8 +35,12 @@ namespace TestUtil {
 
 	public:
 	
-		explicit InetClient(const std::string &host, unsigned short port)
-				: m_connection(Connection::Create(m_ioService)),
+		explicit InetClient(
+					const std::string &host,
+					unsigned short port,
+					const boost::posix_time::time_duration &waitTime)
+				: Client(waitTime),
+				m_connection(Connection::Create(m_ioService)),
 				m_resolver(m_ioService) {
 
 			namespace io = boost::asio;
@@ -209,8 +213,11 @@ namespace TestUtil {
 
 	public:
 
-		explicit TcpClient(const std::string &host, unsigned short port)
-				: Base(host, port) {
+		explicit TcpClient(
+					const std::string &host,
+					unsigned short port,
+					const boost::posix_time::time_duration &waitTime)
+				: Base(host, port, waitTime) {
 			//...//
 		}
 
@@ -226,8 +233,11 @@ namespace TestUtil {
 
 	public:
 
-		explicit UdpClient(const std::string &host, unsigned short port)
-				: Base(host, port) {
+		explicit UdpClient(
+					const std::string &host,
+					unsigned short port,
+					const boost::posix_time::time_duration &waitTime)
+				: Base(host, port, waitTime) {
 			//...//
 		}
 

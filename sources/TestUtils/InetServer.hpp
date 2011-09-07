@@ -20,7 +20,7 @@ namespace TestUtil {
 
 	public:
 
-		explicit TcpServer(unsigned short port);
+		explicit TcpServer(unsigned short port, const boost::posix_time::time_duration &waitTime);
 		virtual ~TcpServer() throw();
 
 	public:
@@ -75,7 +75,9 @@ namespace TestUtil {
 
 	public:
 
-		explicit UdpServer(unsigned short port);
+		explicit UdpServer(
+			unsigned short port,
+			const boost::posix_time::time_duration &waitTime);
 		virtual ~UdpServer() throw();
 
 	public:

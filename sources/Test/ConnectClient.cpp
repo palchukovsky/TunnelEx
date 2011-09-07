@@ -48,8 +48,7 @@ bool ConnectClient::TestSeveralConnetions() {
 }
 
 std::auto_ptr<TestUtil::Client> ConnectClient::CreateCloseControlConnection() const {
-	std::auto_ptr<TestUtil::Client> result(CreateClient());
-	result->SetWaitTime(GetClient().GetWaitTime());
+	std::auto_ptr<TestUtil::Client> result(CreateClient(GetClient().GetWaitTime()));
 	Connect(*result, testing::serverMagicDummyMode, false);
 	return result;
 }

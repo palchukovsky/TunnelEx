@@ -21,9 +21,11 @@ namespace {
 			//...//
 		}
 	protected:
-		virtual std::auto_ptr<TestUtil::Client> CreateClient() const {
+		virtual std::auto_ptr<TestUtil::Client> CreateClient(
+					const boost::posix_time::time_duration &waitTime)
+				const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::PipeClient(testing::pipeServerPath));
+				new TestUtil::PipeClient(testing::pipeServerPath, waitTime));
 			return result;
 		}
 	};

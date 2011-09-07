@@ -41,8 +41,7 @@ const TestUtil::Client & Client::GetClient() const {
 }
 
 std::auto_ptr<TestUtil::Client> Client::CreateConnection() const {
-	std::auto_ptr<TestUtil::Client> result = CreateClient();
-	result->SetWaitTime(testing::defaultDataWaitTime);
+	std::auto_ptr<TestUtil::Client> result = CreateClient(testing::defaultDataWaitTime);
 	return result;
 }
 

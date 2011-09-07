@@ -27,9 +27,10 @@ private:
 
 public:
 
-	Implementation(const std::string &path)
+	Implementation(const std::string &path, const boost::posix_time::time_duration &waitTime)
 			: m_path("\\\\.\\pipe\\" + path),
-			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)) {
+			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
+			m_waitTime(waitTime) {
 		try {
 			m_thread.reset(
 				new boost::thread(boost::bind(&Implementation::ServerThreadMain, this)));
@@ -104,7 +105,7 @@ private:
 
 		boost::shared_ptr<PipeServerConnection> serverConnection;
 		try {
-			serverConnection.reset(new PipeServerConnection(m_path));
+			serverConnection.reset(new PipeServerConnection(m_path, m_waitTime));
 		} catch (const std::exception &ex) {
 			std::cerr << "Failed to start pipe server: " << ex.what() << "." << std::endl;
 			return;
@@ -155,7 +156,7 @@ private:
 
 					serverConnection->HandleEvent(evt);
 					
-					serverConnection.reset(new PipeServerConnection(m_path));
+					serverConnection.reset(new PipeServerConnection(m_path, m_waitTime));
 					events.push_back(serverConnection->GetReadEvent());
 				
 				} catch (const std::exception &ex) {
@@ -194,13 +195,17 @@ private:
 
 	HANDLE m_stopEvent;
 	boost::shared_ptr<boost::thread> m_thread;
+	const boost::posix_time::time_duration m_waitTime;
 
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-PipeServer::PipeServer(const std::string &path)
-		: m_pimpl(new Implementation(path)) {
+PipeServer::PipeServer(
+			const std::string &path,
+			const boost::posix_time::time_duration &waitTime)
+		: Server(waitTime),
+		m_pimpl(new Implementation(path, GetWaitTime())) {
 	//...//
 }
 

@@ -28,7 +28,7 @@ namespace TestUtil {
 
 	public:
 	
-		explicit PipeClient(const std::string &path);
+		explicit PipeClient(const std::string &path, const boost::posix_time::time_duration &waitTime);
 		virtual ~PipeClient();
 
 	public:

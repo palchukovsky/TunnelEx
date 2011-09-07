@@ -44,7 +44,9 @@ namespace TestUtil {
 
 	public:
 
-		explicit PipeConnection(HANDLE handle);
+		explicit PipeConnection(
+				HANDLE handle,
+				const boost::posix_time::time_duration &waitTime);
 		~PipeConnection();
 
 	public:
@@ -140,6 +142,7 @@ namespace TestUtil {
 
 		mutable boost::mutex m_stateMutex;
 		mutable boost::condition_variable m_dataReceivedCondition;
+		mutable boost::condition_variable m_dataSentCondition;
 
 		volatile long m_isActive;
 
@@ -149,6 +152,8 @@ namespace TestUtil {
 		OVERLAPPED m_writeOverlaped;
 
 		SentBuffers m_sentBuffers;
+
+		const boost::posix_time::time_duration m_waitTime;
 
 	};
 
@@ -163,7 +168,9 @@ namespace TestUtil {
 
 	public:
 
-		explicit PipeClientConnection(const std::string &path);
+		explicit PipeClientConnection(
+				const std::string &path,
+				const boost::posix_time::time_duration &waitTime);
 
 	};
 
@@ -178,7 +185,9 @@ namespace TestUtil {
 
 	public:
 
-		explicit PipeServerConnection(const std::string &path);
+		explicit PipeServerConnection(
+				const std::string &path,
+				const boost::posix_time::time_duration &waitTime);
 
 	};
 

@@ -35,7 +35,10 @@ namespace testing {
 
 	protected:
 		
-		virtual std::auto_ptr<TestUtil::Server> CreateServer() const = 0;
+		virtual std::auto_ptr<TestUtil::Server> CreateServer(
+				const boost::posix_time::time_duration &waitTime)
+			const
+			= 0;
 
 	private:
 
