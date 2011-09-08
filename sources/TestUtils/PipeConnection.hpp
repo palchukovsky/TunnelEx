@@ -115,8 +115,10 @@ namespace TestUtil {
 		}
 
 		void StartRead(const boost::mutex::scoped_lock &);
+		bool StartReadAndRead(const boost::mutex::scoped_lock &);
 
 		void HandleRead();
+		void ReadReceived(DWORD bytesNumber, const boost::mutex::scoped_lock &);
 		void HandleWrite();
 
 		DWORD ReadOverlappedWriteResult(const boost::mutex::scoped_lock &);

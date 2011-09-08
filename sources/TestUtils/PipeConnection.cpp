@@ -51,7 +51,6 @@ PipeConnection::PipeConnection(HANDLE handle, const boost::posix_time::time_dura
 		m_dataBufferStart(m_dataBuffer.end()),
 		m_dataBufferSize(0),
 		m_isActive(false),
-		m_receiveBuffer(GetBufferSize(), 0),
 		m_waitTime(waitTime) {
 
 	assert(
@@ -228,20 +227,7 @@ void PipeConnection::HandleRead() {
 		assert(overlappedResult <= m_receiveBuffer.size());
 
 		if (overlappedResult > 0) {
-			m_dataBuffer.reserve(overlappedResult);
-			std::copy(
-				m_receiveBuffer.begin(),
-				m_receiveBuffer.begin() + overlappedResult,
-				std::back_inserter(m_dataBuffer));
-#			if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
-			{
-				std::ostringstream oss;
-				oss << this << ".PipeConnection.read";
-				std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
-				of.write(&m_receiveBuffer[0], overlappedResult);
-			}
-#			endif
-			UpdateBufferState(overlappedResult);
+			ReadReceived(overlappedResult, lock);
 		}
 
 		StartRead(lock);
@@ -252,6 +238,25 @@ void PipeConnection::HandleRead() {
 		m_dataReceivedCondition.notify_all();
 	}
 
+}
+
+void PipeConnection::ReadReceived(DWORD bytesNumber, const boost::mutex::scoped_lock &) {
+	assert(bytesNumber > 0);
+	m_dataBuffer.reserve(bytesNumber);
+	std::copy(
+		m_receiveBuffer.begin(),
+		m_receiveBuffer.begin() + bytesNumber,
+		std::back_inserter(m_dataBuffer));
+#	if TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN != 0
+	{
+		std::ostringstream oss;
+		oss << this << ".PipeConnection.read";
+		std::ofstream of(oss.str().c_str(), std::ios::binary |  std::ios::app);
+		of.write(&m_receiveBuffer[0], bytesNumber);
+	}
+#	endif
+	m_receiveBuffer.clear();
+	UpdateBufferState(bytesNumber);
 }
 
 void PipeConnection::HandleWrite() {
@@ -280,22 +285,33 @@ void PipeConnection::HandleWrite() {
 }
 
 void PipeConnection::StartRead(const boost::mutex::scoped_lock &lock) {
+	while (StartReadAndRead(lock));
+}
+
+bool PipeConnection::StartReadAndRead(const boost::mutex::scoped_lock &lock) {
 
 	assert(m_isActive);
 	assert(m_handle != INVALID_HANDLE_VALUE);
+	
+	if (!m_receiveBuffer.empty()) {
+		return false;
+	}
 
+	m_receiveBuffer.resize(GetBufferSize());
+	DWORD numberOfBytesRead = 0;
 	ReadFile(
 		m_handle,
 		&m_receiveBuffer[0],
 		DWORD(m_receiveBuffer.size()),
-		NULL,
+		&numberOfBytesRead,
 		&GetReadOverlaped());
 	
 	const TunnelEx::Error error(GetLastError());
 	if (!error.IsError()) {
-		
+		assert(numberOfBytesRead > 0);
 		std::cerr << "SSSSS";
-
+		ReadReceived(numberOfBytesRead, lock);
+		return true;
 	} else if (error.GetErrorNo() != ERROR_IO_PENDING) {
 		std::cerr
 			<< "Failed to start read from pipe: "
@@ -304,6 +320,8 @@ void PipeConnection::StartRead(const boost::mutex::scoped_lock &lock) {
 			<< std::endl;
 		Close(lock);
 	}
+
+	return false;
 
 }
 
