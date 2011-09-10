@@ -246,7 +246,7 @@ bool Client::WaitConnect(bool infiniteTimeout) const {
 bool Client::WaitDisconnect() const {
 	const pt::ptime toTime = boost::get_system_time() + GetWaitTime();
 	while (IsConnected() && boost::get_system_time() <= toTime) {
-			boost::this_thread::sleep(iterationSleepTime);
+		boost::this_thread::sleep(iterationSleepTime);
 	}
 	return !IsConnected();
 }

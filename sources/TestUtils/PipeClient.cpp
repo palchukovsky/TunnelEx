@@ -130,7 +130,6 @@ namespace {
 					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to handle pipe client: " << ex.what() << "." << std::endl;
-					assert(false);
 				} catch (...) {
 					std::cerr << "Failed to handle pipe client: unknown error." << std::endl;
 					assert(false);
