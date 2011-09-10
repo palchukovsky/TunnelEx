@@ -299,26 +299,28 @@ bool PipeConnection::StartReadAndRead(const boost::mutex::scoped_lock &lock) {
 
 	m_receiveBuffer.resize(GetBufferSize());
 	DWORD numberOfBytesRead = 0;
-	ReadFile(
+	const auto readStartResult = ReadFile(
 		m_handle,
 		&m_receiveBuffer[0],
 		DWORD(m_receiveBuffer.size()),
 		&numberOfBytesRead,
 		&GetReadOverlaped());
-	
-	const TunnelEx::Error error(GetLastError());
-	if (!error.IsError()) {
+	assert(readStartResult || TunnelEx::Error(GetLastError()).IsError());
+
+	if (readStartResult) {
 		assert(numberOfBytesRead > 0);
-		std::cerr << "SSSSS";
 		ReadReceived(numberOfBytesRead, lock);
 		return true;
-	} else if (error.GetErrorNo() != ERROR_IO_PENDING) {
-		std::cerr
-			<< "Failed to start read from pipe: "
-			<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-			<< " (" << error.GetErrorNo() << ")."
-			<< std::endl;
-		Close(lock);
+	} else {
+		const TunnelEx::Error error(GetLastError());
+		if (error.GetErrorNo() != ERROR_IO_PENDING) {
+			std::cerr
+				<< "Failed to start read from pipe: "
+				<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< " (" << error.GetErrorNo() << ")."
+				<< std::endl;
+			Close(lock);
+		}
 	}
 
 	return false;
@@ -384,14 +386,19 @@ DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &
 		&GetReadOverlaped(),
 		&bytesToRead,
 		FALSE);
+	assert(isSuccess || TunnelEx::Error(GetLastError()).IsError());
 	if (!isSuccess) {
 		const TunnelEx::Error error(GetLastError());
-		std::cerr
-			<< "Failed to read pipe overlapped read result: "
-			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-			<< " (" << error.GetErrorNo() << ")." << std::endl;
-		throw std::exception("Failed to read pipe overlapped read result");
-	} else if (bytesToRead > 0) {
+		if (error.GetErrorNo() != ERROR_ALREADY_EXISTS) {
+			std::cerr
+				<< "Failed to read pipe overlapped read result: "
+				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< " (" << error.GetErrorNo() << ")." << std::endl;
+			throw std::exception("Failed to read pipe overlapped read result");
+		}
+	}
+	
+	if (bytesToRead > 0) {
 		return bytesToRead;
 	} else if (!m_isActive) {
 		SetAsConnected(lock);
@@ -400,6 +407,7 @@ DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &
 		Close(lock);
 		return 0;
 	}
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
