@@ -78,6 +78,9 @@ int main(int argc, char **argv) {
 #				ifndef DEV_VER 
 					testing::GTEST_FLAG(shuffle) = 1;
 #				endif
+			} else {
+				testing::GTEST_FLAG(filter)
+					= std::string("TcpClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
 			break;
 		case MODE_UDP_SERVER:
@@ -92,6 +95,9 @@ int main(int argc, char **argv) {
 #				ifndef DEV_VER 
 					testing::GTEST_FLAG(shuffle) = 1;
 #				endif
+			} else {
+				testing::GTEST_FLAG(filter)
+					= std::string("UdpClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
 			break;
 		case MODE_PIPE_SERVER:
@@ -106,6 +112,9 @@ int main(int argc, char **argv) {
 #				ifndef DEV_VER 
 					testing::GTEST_FLAG(shuffle) = 1;
 #				endif
+			} else {
+				testing::GTEST_FLAG(filter)
+					= std::string("PipeClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
 			break;
 		default:

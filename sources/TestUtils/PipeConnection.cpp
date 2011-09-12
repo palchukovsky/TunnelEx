@@ -13,7 +13,7 @@
 
 using namespace TestUtil;
 
-#define TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN 1
+#define TEST_UTIL_TRAFFIC_PIPE_CONNECTION_LOGGIN 0
 
 namespace {
 
@@ -78,8 +78,8 @@ PipeConnection::~PipeConnection() {
 	} catch (...) {
 		assert(false);
 	}
-	CloseHandle(m_writeOverlaped.hEvent);
-	CloseHandle(m_readOverlaped.hEvent);
+	verify(CloseHandle(m_writeOverlaped.hEvent));
+	verify(CloseHandle(m_readOverlaped.hEvent));
 }
 
 size_t PipeConnection::GetBufferSize() {

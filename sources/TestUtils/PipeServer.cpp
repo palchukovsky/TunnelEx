@@ -30,12 +30,14 @@ public:
 	Implementation(const std::string &path, const boost::posix_time::time_duration &waitTime)
 			: m_path("\\\\.\\pipe\\" + path),
 			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
+			m_closeConnectionEvent(CreateEvent(NULL, TRUE, FALSE, NULL)),
 			m_waitTime(waitTime) {
 		try {
 			m_thread.reset(
 				new boost::thread(boost::bind(&Implementation::ServerThreadMain, this)));
 		} catch (...) {
 			CloseHandle(m_stopEvent);
+			CloseHandle(m_closeConnectionEvent);
 			throw;
 		}
 	}
@@ -47,7 +49,8 @@ public:
 		} catch (...) {
 			assert(false);
 		}
-		CloseHandle(m_stopEvent);
+		verify(CloseHandle(m_stopEvent));
+		verify(CloseHandle(m_closeConnectionEvent));
 	}
 
 public:
@@ -99,6 +102,7 @@ private:
 		typedef std::vector<HANDLE> Events;
 		Events events;
 		events.push_back(m_stopEvent);
+		events.push_back(m_closeConnectionEvent);
 
 		typedef std::map<HANDLE, size_t> EventToConnection;
 		EventToConnection eventToConnection;
@@ -123,13 +127,29 @@ private:
 				FALSE,
 				INFINITE);
 
-			if (object == WAIT_OBJECT_0) {
+			assert(object != WAIT_TIMEOUT);
+
+			if (object == WAIT_FAILED) {
+
+				const TunnelEx::Error error(GetLastError());
+				std::cerr
+					<< "Server events wait failed: \""
+					<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< "\" (" << error.GetErrorNo() << ")."
+					<< std::endl;
+				throw std::exception("Server events wait failed");
+
+			} else if (object == WAIT_OBJECT_0) {
 				
 				break;
-			
+
+			} else if (object >= WAIT_ABANDONED_0 && object <= WAIT_ABANDONED_0  + events.size() - 1) {
+
+				throw std::exception("Server events wait abandoned");
+		
 			} else if (object >= WAIT_OBJECT_0  + events.size() - 1) {
 
-				assert(object - WAIT_OBJECT_0 ==  events.size() - 1);
+				assert(object - WAIT_OBJECT_0 == events.size() - 1);
 			
 				try {
 
@@ -194,6 +214,7 @@ private:
 	mutable ConnectionsMutex m_connectionsMutex;
 
 	HANDLE m_stopEvent;
+	HANDLE m_closeConnectionEvent;
 	boost::shared_ptr<boost::thread> m_thread;
 	const boost::posix_time::time_duration m_waitTime;
 
