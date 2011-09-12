@@ -83,7 +83,7 @@ PipeConnection::~PipeConnection() {
 }
 
 size_t PipeConnection::GetBufferSize() {
-	return 128;
+	return 512;
 }
 
 void PipeConnection::Close() {
@@ -469,7 +469,7 @@ PipeClientConnection::PipeClientConnection(
 			}
 		}
 			
-		if (!WaitNamedPipeA(path.c_str(), 500)) { 
+		if (!WaitNamedPipeA(path.c_str(), DWORD(GetWaitTime().total_milliseconds()))) { 
 			TunnelEx::Error error(GetLastError());
 			std::cerr
 				<< "Failed to wait pipe \"" << path <<"\": "

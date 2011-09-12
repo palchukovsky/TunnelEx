@@ -74,6 +74,10 @@ namespace TestUtil {
 					Buffer::size_type minSize)
 				const;
 
+		const boost::posix_time::time_duration & GetWaitTime() const {
+			return m_waitTime;
+		}
+
 	public:
 
 		HANDLE GetReadEvent();
