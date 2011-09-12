@@ -17,6 +17,8 @@
 #endif
 #define assert(expr) BOOST_ASSERT(expr)
 
+#define verify(expr) BOOST_VERIFY(expr)
+
 #ifndef INCLUDED_FILE__TUNNELEX__LocalAssert_h__1105130132
 #define INCLUDED_FILE__TUNNELEX__LocalAssert_h__1105130132
 
