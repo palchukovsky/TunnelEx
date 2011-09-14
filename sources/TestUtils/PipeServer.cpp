@@ -30,14 +30,12 @@ public:
 	Implementation(const std::string &path, const boost::posix_time::time_duration &waitTime)
 			: m_path("\\\\.\\pipe\\" + path),
 			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
-			m_closeConnectionEvent(CreateEvent(NULL, TRUE, FALSE, NULL)),
 			m_waitTime(waitTime) {
 		try {
 			m_thread.reset(
 				new boost::thread(boost::bind(&Implementation::ServerThreadMain, this)));
 		} catch (...) {
 			CloseHandle(m_stopEvent);
-			CloseHandle(m_closeConnectionEvent);
 			throw;
 		}
 	}
@@ -50,7 +48,6 @@ public:
 			assert(false);
 		}
 		verify(CloseHandle(m_stopEvent));
-		verify(CloseHandle(m_closeConnectionEvent));
 	}
 
 public:
@@ -102,7 +99,6 @@ private:
 		typedef std::vector<HANDLE> Events;
 		Events events;
 		events.push_back(m_stopEvent);
-		events.push_back(m_closeConnectionEvent);
 
 		typedef std::map<HANDLE, size_t> EventToConnection;
 		EventToConnection eventToConnection;
@@ -173,6 +169,11 @@ private:
 						== eventToConnection.end());
 					eventToConnection.insert(
 						std::make_pair(serverConnection->GetWriteEvent(), index));
+					assert(
+						eventToConnection.find(serverConnection->GetCloseEvent())
+						== eventToConnection.end());
+					eventToConnection.insert(
+						std::make_pair(serverConnection->GetCloseEvent(), index));
 
 					serverConnection->HandleEvent(evt);
 					
@@ -193,7 +194,31 @@ private:
 				try {
 					HANDLE evt = events[object - WAIT_OBJECT_0];
 					assert(eventToConnection.find(evt) != eventToConnection.end());
-					GetConnection(eventToConnection.find(evt)->second)->HandleEvent(evt);
+					auto connection = GetConnection(eventToConnection.find(evt)->second);
+					connection->HandleEvent(evt);
+					if (!connection->IsActive()) {
+						assert(
+							eventToConnection.find(connection->GetReadEvent())
+							!= eventToConnection.end());
+						eventToConnection.erase(connection->GetReadEvent());
+						assert(
+							eventToConnection.find(connection->GetReadEvent())
+							== eventToConnection.end());
+						assert(
+							eventToConnection.find(connection->GetWriteEvent())
+							!= eventToConnection.end());
+						eventToConnection.erase(connection->GetWriteEvent());
+						assert(
+							eventToConnection.find(connection->GetWriteEvent())
+							== eventToConnection.end());
+						assert(
+							eventToConnection.find(connection->GetCloseEvent())
+							!= eventToConnection.end());
+						eventToConnection.erase(connection->GetCloseEvent());
+						assert(
+							eventToConnection.find(connection->GetCloseEvent())
+							== eventToConnection.end());
+					}
 				} catch (const std::exception &ex) {
 					std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
 				} catch (...) {
@@ -214,7 +239,6 @@ private:
 	mutable ConnectionsMutex m_connectionsMutex;
 
 	HANDLE m_stopEvent;
-	HANDLE m_closeConnectionEvent;
 	boost::shared_ptr<boost::thread> m_thread;
 	const boost::posix_time::time_duration m_waitTime;
 

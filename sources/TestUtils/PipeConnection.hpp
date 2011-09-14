@@ -82,6 +82,7 @@ namespace TestUtil {
 
 		HANDLE GetReadEvent();
 		HANDLE GetWriteEvent();
+		HANDLE GetCloseEvent();
 		
 		void HandleEvent(HANDLE);
 
@@ -124,6 +125,9 @@ namespace TestUtil {
 		void HandleRead();
 		void ReadReceived(DWORD bytesNumber, const boost::mutex::scoped_lock &);
 		void HandleWrite();
+		virtual void HandleClose() {
+			//...//
+		}
 
 		DWORD ReadOverlappedWriteResult(const boost::mutex::scoped_lock &);
 		DWORD ReadOverlappedReadResult(const boost::mutex::scoped_lock &);
@@ -132,6 +136,7 @@ namespace TestUtil {
 		void UpdateBufferState(size_t addSize);
 
 		void Close(const boost::mutex::scoped_lock &);
+		virtual void CloseHandles();
 
 	private:
 
@@ -194,6 +199,16 @@ namespace TestUtil {
 		explicit PipeServerConnection(
 				const std::string &path,
 				const boost::posix_time::time_duration &waitTime);
+		virtual ~PipeServerConnection();
+
+	private:
+
+		virtual void HandleClose();
+		virtual void CloseHandles();
+
+	private:
+
+		HANDLE m_closeEvent;
 
 	};
 

@@ -93,6 +93,10 @@ void PipeConnection::Close() {
 void PipeConnection::Close(const boost::mutex::scoped_lock &) {
 	BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0);
 	m_dataSentCondition.notify_all();
+	CloseHandles();	
+}
+
+void PipeConnection::CloseHandles() {
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
@@ -211,7 +215,9 @@ void PipeConnection::HandleEvent(HANDLE evt) {
 	} else if (evt == GetWriteOverlaped().hEvent) {
 		HandleWrite();
 	} else {
-		assert(false);
+		assert(evt == GetCloseEvent());
+		assert(!IsActive());
+		HandleClose();
 	}
 }
 
@@ -368,6 +374,10 @@ HANDLE PipeConnection::GetReadEvent() {
 
 HANDLE PipeConnection::GetWriteEvent() {
 	return GetWriteOverlaped().hEvent;
+}
+
+HANDLE PipeConnection::GetCloseEvent() {
+	return m_closeEvent;
 }
 
 DWORD PipeConnection::ReadOverlappedWriteResult(const boost::mutex::scoped_lock &lock) {
@@ -551,5 +561,21 @@ PipeServerConnection::PipeServerConnection(
 				throw std::exception("An error occurs during the pipe connect operation.");
 			}
 	}
+
+	m_closeEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	assert(m_closeEvent != INVALID_HANDLE_VALUE);
+
+}
+
+PipeServerConnection::~PipeServerConnection() {
+	verify(CloseHandle(m_closeEvent));
+}
+
+void PipeServerConnection::CloseHandles() {
+	verify(SetEvent(m_closeEvent));
+	PipeConnection::CloseHandles();
+}
+
+void PipeServerConnection::HandleClose() {
 
 }
