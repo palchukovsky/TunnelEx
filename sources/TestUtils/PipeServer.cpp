@@ -20,7 +20,7 @@ class PipeServer::Implementation : private boost::noncopyable {
 
 private:
 
-	typedef std::vector<boost::shared_ptr<PipeConnection>> Connections;
+	typedef std::vector<boost::shared_ptr<PipeServerConnection>> Connections;
 	typedef boost::mutex ConnectionsMutex;
 	typedef ConnectionsMutex::scoped_lock ConnectionsReadLock;
 	typedef ConnectionsMutex::scoped_lock ConnectionsWriteLock;
@@ -80,7 +80,7 @@ public:
 		return result;
 	}
 
-	boost::shared_ptr<PipeConnection> GetConnection(size_t connectionIndex) {
+	boost::shared_ptr<PipeServerConnection> GetConnection(size_t connectionIndex) {
 		ConnectionsReadLock lock(m_connectionsMutex);
 		if (connectionIndex >= m_connections.size()) {
 			throw std::logic_error("Could not find connection by index");

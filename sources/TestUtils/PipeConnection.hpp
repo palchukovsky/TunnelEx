@@ -82,7 +82,6 @@ namespace TestUtil {
 
 		HANDLE GetReadEvent();
 		HANDLE GetWriteEvent();
-		HANDLE GetCloseEvent();
 		
 		void HandleEvent(HANDLE);
 
@@ -106,6 +105,8 @@ namespace TestUtil {
 		OVERLAPPED & GetWriteOverlaped() {
 			return m_writeOverlaped;
 		}
+
+		virtual void CloseHandles();
 
 	private:
 
@@ -136,7 +137,6 @@ namespace TestUtil {
 		void UpdateBufferState(size_t addSize);
 
 		void Close(const boost::mutex::scoped_lock &);
-		virtual void CloseHandles();
 
 	private:
 
@@ -201,6 +201,10 @@ namespace TestUtil {
 				const boost::posix_time::time_duration &waitTime);
 		virtual ~PipeServerConnection();
 
+	public:
+
+		HANDLE GetCloseEvent();
+
 	private:
 
 		virtual void HandleClose();
@@ -209,6 +213,8 @@ namespace TestUtil {
 	private:
 
 		HANDLE m_closeEvent;
+		boost::mutex m_closeMutex;
+		boost::condition_variable m_closeCondition;
 
 	};
 

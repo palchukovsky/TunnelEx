@@ -215,7 +215,6 @@ void PipeConnection::HandleEvent(HANDLE evt) {
 	} else if (evt == GetWriteOverlaped().hEvent) {
 		HandleWrite();
 	} else {
-		assert(evt == GetCloseEvent());
 		assert(!IsActive());
 		HandleClose();
 	}
@@ -374,10 +373,6 @@ HANDLE PipeConnection::GetReadEvent() {
 
 HANDLE PipeConnection::GetWriteEvent() {
 	return GetWriteOverlaped().hEvent;
-}
-
-HANDLE PipeConnection::GetCloseEvent() {
-	return m_closeEvent;
 }
 
 DWORD PipeConnection::ReadOverlappedWriteResult(const boost::mutex::scoped_lock &lock) {
@@ -572,10 +567,19 @@ PipeServerConnection::~PipeServerConnection() {
 }
 
 void PipeServerConnection::CloseHandles() {
-	verify(SetEvent(m_closeEvent));
+	{
+		boost::mutex::scoped_lock lock(m_closeMutex);
+		verify(SetEvent(m_closeEvent));
+		m_closeCondition.wait(lock);
+	}
 	PipeConnection::CloseHandles();
 }
 
 void PipeServerConnection::HandleClose() {
+	boost::mutex::scoped_lock(m_closeMutex);
+	m_closeCondition.notify_all();
+}
 
+HANDLE PipeServerConnection::GetCloseEvent() {
+	return m_closeEvent;
 }
