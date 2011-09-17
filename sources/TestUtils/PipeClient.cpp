@@ -113,21 +113,46 @@ namespace {
 		void ThreadMain() {
 			for ( ; ; ) {
 				try {
+					
 					Lock lock(m_mutex);
+					
 					const auto object = WaitForMultipleObjects(
 						m_events.size(),
 						&m_events[0],
 						FALSE,
 						INFINITE);
-					const auto signaledEvent = m_events[object - WAIT_OBJECT_0];
-					if (signaledEvent == m_stopEvent) {
-						break;
-					} else if (signaledEvent == m_clientsEvent) {
-						continue;
+					
+					assert(object != WAIT_TIMEOUT);
+					if (object == WAIT_FAILED) {
+
+						const TunnelEx::Error error(GetLastError());
+						std::cerr
+							<< "Client events wait failed: \""
+							<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+							<< "\" (" << error.GetErrorNo() << ")."
+							<< std::endl;
+						throw std::exception("Client events wait failed");
+
+					} else if (object >= WAIT_ABANDONED_0 && object <= WAIT_ABANDONED_0  + m_events.size() - 1) {
+
+						throw std::exception("Client events wait abandoned");
+
 					} else {
-						assert(m_clients.find(signaledEvent) != m_clients.end());
-						m_clients.find(signaledEvent)->second->HandleEvent(signaledEvent);
+
+						assert(object - WAIT_OBJECT_0 >= 0);
+						assert(object - WAIT_OBJECT_0 < m_events.size());
+
+						const auto signaledEvent = m_events[object - WAIT_OBJECT_0];
+						if (signaledEvent == m_stopEvent) {
+							break;
+						} else if (signaledEvent == m_clientsEvent) {
+							continue;
+						} else {
+							assert(m_clients.find(signaledEvent) != m_clients.end());
+							m_clients.find(signaledEvent)->second->HandleEvent(signaledEvent);
+						}
 					}
+
 				} catch (const std::exception &ex) {
 					std::cerr << "Failed to handle pipe client: " << ex.what() << "." << std::endl;
 				} catch (...) {

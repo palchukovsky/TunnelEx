@@ -268,7 +268,7 @@ void ConnectClient::DoDataOneWayExchangePassiveTest(bool &result) {
 
 void ConnectClient::DoSeveralConnetionsTest(bool &result) {
 
-	const testing::ConnectionsNumber connectionsNumber = 200;
+	const testing::ConnectionsNumber connectionsNumber = 30;
 	const testing::PacketsNumber packetsNumber = 10;
 	const testing::PacketSize packetSize = 128;
 		
