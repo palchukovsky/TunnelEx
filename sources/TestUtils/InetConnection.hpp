@@ -89,7 +89,7 @@ namespace TestUtil {
 			assert(!m_isActive);
 			m_endpoint = endpoint;
 			StartRead();
-			BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1);
+			BOOST_INTERLOCKED_COMPARE_EXCHANGE(&m_isActive, 1, 0);
 		}
 
 		void Close() {
@@ -353,7 +353,7 @@ namespace TestUtil {
 				return;
 			}
 			GetSocket().close();
-			BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0);
+			BOOST_INTERLOCKED_COMPARE_EXCHANGE(&m_isActive, 0, 1);
 		}
 
 		void OnZeroReceived(const boost::mutex::scoped_lock &lock) {

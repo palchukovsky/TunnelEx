@@ -248,8 +248,8 @@ void ConnectClient::DoDataOneWayExchangePassiveTest(bool &result) {
 		const int persents = (((i + 1) * 100) / packets);
 		if (!(persents % 10) && persents > lastPersents) {
 			std::cout
-				<< "received "
-				<< (i + 1) << " from " << packets
+				<< "\treceived "
+				<< (i + 1) << " of the " << packets
 				<< " (" << persents << "%)"
 				<< std::endl;
 			lastPersents = persents;
@@ -268,7 +268,7 @@ void ConnectClient::DoDataOneWayExchangePassiveTest(bool &result) {
 
 void ConnectClient::DoSeveralConnetionsTest(bool &result) {
 
-	const testing::ConnectionsNumber connectionsNumber = 30;
+	const testing::ConnectionsNumber connectionsNumber = 400;
 	const testing::PacketsNumber packetsNumber = 10;
 	const testing::PacketSize packetSize = 128;
 		

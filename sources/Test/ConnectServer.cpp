@@ -105,7 +105,7 @@ void ConnectServer::DoTest(bool &result) {
 		serverMode = ServerMode(serverModePos);
 		Modes::const_iterator serverModeItPos = modes.begin();
 		std::advance(serverModeItPos, serverModePos - 1);
-		std::cout << **serverModeItPos << " (" << serverModePos << ")";
+		std::cout << "\t" << **serverModeItPos << " (" << serverModePos << ")";
 	}
 
 	ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
@@ -237,8 +237,8 @@ void ConnectServer::DoTestOneWayPassiveServer(size_t connection, bool &result) {
 		const int persents = (((i + 1) * 100) / packets);
 		if (!(persents % 10) && persents > lastPersents) {
 			std::cout
-				<< "received "
-				<< (i + 1) << " from " << packets
+				<< "\treceived "
+				<< (i + 1) << " of the " << packets
 				<< " (" << persents << "%)"
 				<< std::endl;
 			lastPersents = persents;

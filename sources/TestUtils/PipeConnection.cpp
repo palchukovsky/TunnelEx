@@ -71,7 +71,6 @@ PipeConnection::PipeConnection(HANDLE handle, const boost::posix_time::time_dura
 }
 
 PipeConnection::~PipeConnection() {
-	assert(m_sentBuffers.empty());
 	try {
 		Close();
 		assert(m_handle == INVALID_HANDLE_VALUE);
@@ -87,16 +86,17 @@ size_t PipeConnection::GetBufferSize() {
 }
 
 void PipeConnection::Close() {
-	Close(boost::mutex::scoped_lock(m_stateMutex));
+	boost::mutex::scoped_lock lock(m_stateMutex);
+	Close(lock, false);
 }
 
-void PipeConnection::Close(const boost::mutex::scoped_lock &) {
-	BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 0);
+void PipeConnection::Close(boost::mutex::scoped_lock &stateLock, bool force) {
+	BOOST_INTERLOCKED_COMPARE_EXCHANGE(&m_isActive, 0, 1);
 	m_dataSentCondition.notify_all();
-	CloseHandles();	
+	CloseHandles(stateLock, force);	
 }
 
-void PipeConnection::CloseHandles() {
+void PipeConnection::CloseHandles(boost::mutex::scoped_lock &/*stateLock*/, bool /*force*/) {
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		return;
 	}
@@ -185,7 +185,21 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 		if (!IsActive()) {
 			return;
 		} else if (!m_sentBuffers.empty()) {
-			std::cerr << "Failed to send data to pipe: send data timeout." << std::endl;
+			size_t allBytes = 0;
+			size_t sentBytes = 0;
+			foreach (const auto &i, m_sentBuffers) {
+				assert(i.buffer->size() >= i.sentBytes);
+				allBytes += i.buffer->size();
+				sentBytes += i.sentBytes;
+			}
+			assert(allBytes >= sentBytes);
+			std::cerr
+				<< "Failed to send data to pipe: send data timeout ("
+				<< (allBytes - sentBytes)
+				<< " bytes in queue, full size: "
+				<< allBytes
+				<< " bytes)."
+				<< std::endl;
 			throw SendError("Failed to send data to pipe: send data timeout");
 		}
 	}
@@ -216,7 +230,7 @@ void PipeConnection::HandleEvent(HANDLE evt) {
 		HandleWrite();
 	} else {
 		assert(!IsActive());
-		HandleClose();
+		HandleClose(boost::mutex::scoped_lock(m_stateMutex));
 	}
 }
 
@@ -289,14 +303,14 @@ void PipeConnection::HandleWrite() {
 	}
 }
 
-void PipeConnection::StartRead(const boost::mutex::scoped_lock &lock) {
+void PipeConnection::StartRead(boost::mutex::scoped_lock &lock) {
 	if (!IsActive()) {
 		return;
 	}
 	while (StartReadAndRead(lock));
 }
 
-bool PipeConnection::StartReadAndRead(const boost::mutex::scoped_lock &lock) {
+bool PipeConnection::StartReadAndRead(boost::mutex::scoped_lock &lock) {
 
 	assert(m_isActive);
 	assert(m_handle != INVALID_HANDLE_VALUE);
@@ -336,7 +350,8 @@ bool PipeConnection::StartReadAndRead(const boost::mutex::scoped_lock &lock) {
 					<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
 					<< " (" << error.GetErrorNo() << ")."
 					<< std::endl;
-				Close(lock);
+			case ERROR_BROKEN_PIPE:
+				Close(lock, true);
 			case ERROR_IO_PENDING:
 				return false;
 		}
@@ -375,7 +390,7 @@ HANDLE PipeConnection::GetWriteEvent() {
 	return GetWriteOverlaped().hEvent;
 }
 
-DWORD PipeConnection::ReadOverlappedWriteResult(const boost::mutex::scoped_lock &lock) {
+DWORD PipeConnection::ReadOverlappedWriteResult(boost::mutex::scoped_lock &lock) {
 	DWORD bytesSent = 0;
 	const auto isSuccess = GetOverlappedResult( 
 		m_handle,
@@ -392,12 +407,12 @@ DWORD PipeConnection::ReadOverlappedWriteResult(const boost::mutex::scoped_lock 
 	} else if (bytesSent > 0) {
 		return bytesSent;
 	} else {
-		Close(lock);
+		Close(lock, true);
 		return 0;
 	}
 }
 
-DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &lock) {
+DWORD PipeConnection::ReadOverlappedReadResult(boost::mutex::scoped_lock &lock) {
 
 	if (m_handle == INVALID_HANDLE_VALUE) {
 		assert(!IsActive());
@@ -419,7 +434,7 @@ DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &
 				break;
 			case ERROR_BROKEN_PIPE:
 			case ERROR_PIPE_NOT_CONNECTED:
-				Close(lock);
+				Close(lock, true);
 				return bytesToRead;
 			default:
 				std::cerr
@@ -436,10 +451,14 @@ DWORD PipeConnection::ReadOverlappedReadResult(const boost::mutex::scoped_lock &
 		SetAsConnected(lock);
 		return 0;
 	} else {
-		Close(lock);
+		Close(lock, true);
 		return 0;
 	}
 
+}
+
+std::unique_ptr<boost::mutex::scoped_lock> PipeConnection::LockState() {
+	return std::unique_ptr<boost::mutex::scoped_lock>(new boost::mutex::scoped_lock(m_stateMutex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -510,7 +529,8 @@ PipeClientConnection::PipeClientConnection(
 PipeServerConnection::PipeServerConnection(
 			const std::string &path,
 			const boost::posix_time::time_duration &timeOut)
-		: Base(INVALID_HANDLE_VALUE, timeOut) {
+		: Base(INVALID_HANDLE_VALUE, timeOut),
+		m_isCloseConditionSet(false) {
 
 	AutoHandle handle = CreateNamedPipeA(
 		path.c_str(),
@@ -566,18 +586,28 @@ PipeServerConnection::~PipeServerConnection() {
 	verify(CloseHandle(m_closeEvent));
 }
 
-void PipeServerConnection::CloseHandles() {
+void PipeServerConnection::CloseHandles(boost::mutex::scoped_lock &stateLock, bool force) {
 	{
-		boost::mutex::scoped_lock lock(m_closeMutex);
 		verify(SetEvent(m_closeEvent));
-		m_closeCondition.wait(lock);
+		if (!force && !m_isCloseConditionSet) {
+			m_closeCondition.wait(stateLock);
+		}
 	}
-	PipeConnection::CloseHandles();
+	PipeConnection::CloseHandles(stateLock, force);
 }
 
-void PipeServerConnection::HandleClose() {
-	boost::mutex::scoped_lock(m_closeMutex);
+void PipeServerConnection::ReleaseCloseEvent() {
+	ReleaseCloseEvent(*LockState());
+}
+
+void PipeServerConnection::ReleaseCloseEvent(const boost::mutex::scoped_lock &/*stateLock*/) {
+	m_isCloseConditionSet = true;
 	m_closeCondition.notify_all();
+}
+
+void PipeServerConnection::HandleClose(const boost::mutex::scoped_lock &stateLock) {
+	assert(!m_isCloseConditionSet);
+	ReleaseCloseEvent(stateLock);
 }
 
 HANDLE PipeServerConnection::GetCloseEvent() {

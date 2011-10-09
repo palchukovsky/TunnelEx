@@ -16,20 +16,35 @@ namespace {
 	//////////////////////////////////////////////////////////////////////////
 
 	class PipeClient : public testing::ConnectClient {
+
 	public:
+
+		typedef testing::ConnectClient Base;
+	
+	public:
+	
 		virtual ~PipeClient() {
 			//...//
 		}
+
+	public:
+
+		virtual void TearDown() {
+			// pipe server so slowly...
+			boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+			Base::TearDown();
+		}
+
 	protected:
+
 		virtual std::auto_ptr<TestUtil::Client> CreateClient(
 					const boost::posix_time::time_duration &waitTime)
 				const {
-			// pipe server so slowly...
-			boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
 			std::auto_ptr<TestUtil::Client> result(
 				new TestUtil::PipeClient(testing::pipeServerPath, waitTime));
 			return result;
 		}
+	
 	};
 
 	//////////////////////////////////////////////////////////////////////////

@@ -335,7 +335,7 @@ namespace {
 			serverMode = ServerMode(serverModePos);
 			Modes::const_iterator serverModeItPos = modes.begin();
 			std::advance(serverModeItPos, serverModePos - 1);
-			std::cout << **serverModeItPos << " (" << serverModePos << ")";
+			std::cout << "\t" << **serverModeItPos << " (" << serverModePos << ")";
 		}
 
 		switch (serverMode) {

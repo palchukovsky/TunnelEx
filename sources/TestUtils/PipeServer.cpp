@@ -21,19 +21,49 @@ class PipeServer::Implementation : private boost::noncopyable {
 private:
 
 	typedef std::vector<boost::shared_ptr<PipeServerConnection>> Connections;
+	
+	typedef boost::mutex EventsMutex;
+	typedef EventsMutex::scoped_lock EventsLock;
+
 	typedef boost::mutex ConnectionsMutex;
 	typedef ConnectionsMutex::scoped_lock ConnectionsReadLock;
 	typedef ConnectionsMutex::scoped_lock ConnectionsWriteLock;
+	
+	typedef std::vector<HANDLE> Events;
+	typedef std::map<HANDLE, size_t> EventToConnection;
 
 public:
 
 	Implementation(const std::string &path, const boost::posix_time::time_duration &waitTime)
 			: m_path("\\\\.\\pipe\\" + path),
-			m_stopEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
+			m_stopEvent(CreateEvent(NULL, TRUE, FALSE, NULL)),
 			m_waitTime(waitTime) {
+		
 		try {
-			m_thread.reset(
-				new boost::thread(boost::bind(&Implementation::ServerThreadMain, this)));
+
+			std::auto_ptr<Events> events(new Events);
+			events->push_back(m_stopEvent);
+
+			try {
+				m_serverConnection.reset(new PipeServerConnection(m_path, m_waitTime));
+			} catch (const std::exception &ex) {
+				std::cerr << "Failed to start pipe server: " << ex.what() << "." << std::endl;
+				throw;
+			} catch (...) {
+				std::cerr << "Failed to start pipe server: unknown error." << std::endl;
+				throw;
+			}
+			
+			events->push_back(m_serverConnection->GetReadEvent());
+			
+			std::unique_ptr<Waiter> waiter(
+				new Waiter(
+					events,
+					boost::bind(&Implementation::EventHandler, this, _1, _2),
+					m_eventsMutex));
+			m_waiters.create_thread(boost::bind(&Waiter::Wait, waiter.get()));
+			waiter.release();
+
 		} catch (...) {
 			CloseHandle(m_stopEvent);
 			throw;
@@ -43,7 +73,7 @@ public:
 	~Implementation() {
 		SetEvent(m_stopEvent);
 		try {
-			m_thread->join();
+			m_waiters.join_all();
 		} catch (...) {
 			assert(false);
 		}
@@ -94,140 +124,189 @@ public:
 
 private:
 
-	void ServerThreadMain() {
+	class Waiter : private boost::noncopyable {
 
-		typedef std::vector<HANDLE> Events;
-		Events events;
-		events.push_back(m_stopEvent);
+	public:
 
-		typedef std::map<HANDLE, size_t> EventToConnection;
-		EventToConnection eventToConnection;
-
-		boost::shared_ptr<PipeServerConnection> serverConnection;
-		try {
-			serverConnection.reset(new PipeServerConnection(m_path, m_waitTime));
-		} catch (const std::exception &ex) {
-			std::cerr << "Failed to start pipe server: " << ex.what() << "." << std::endl;
-			return;
-		} catch (...) {
-			std::cerr << "Failed to start pipe server: unknown error." << std::endl;
-			return;
+		explicit Waiter(
+					std::auto_ptr<Events> events,
+					boost::function<bool(Events &, DWORD)> eventHandler,
+					EventsMutex &mutex)
+				: m_events(events),
+				m_eventHandler(eventHandler),
+				m_mutex(mutex) {
+			assert(!m_events->empty());
 		}
-		events.push_back(serverConnection->GetReadEvent());
 
-		for ( ; ; ) {
+	public:
 
-			const auto object = WaitForMultipleObjects(
-				events.size(),
-				&events[0],
-				FALSE,
-				INFINITE);
-
-			assert(object != WAIT_TIMEOUT);
-
-			if (object == WAIT_FAILED) {
-
-				const TunnelEx::Error error(GetLastError());
-				std::cerr
-					<< "Server events wait failed: \""
-					<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
-					<< "\" (" << error.GetErrorNo() << ")."
-					<< std::endl;
-				throw std::exception("Server events wait failed");
-
-			} else if (object == WAIT_OBJECT_0) {
-				
-				break;
-
-			} else if (object >= WAIT_ABANDONED_0 && object <= WAIT_ABANDONED_0  + events.size() - 1) {
-
-				throw std::exception("Server events wait abandoned");
-		
-			} else if (object >= WAIT_OBJECT_0  + events.size() - 1) {
-
-				assert(object - WAIT_OBJECT_0 == events.size() - 1);
-			
-				try {
-
-					HANDLE evt = *events.rbegin();
-
-					events.push_back(serverConnection->GetWriteEvent());
-					size_t index = 0;
-					{
-						ConnectionsWriteLock lock(m_connectionsMutex);
-						index = m_connections.size();
-						m_connections.push_back(serverConnection);
+		void Wait() {
+			try {
+				for ( ; ; ) {
+					assert(!m_events->empty());
+					assert(m_events->size() <= MAXIMUM_WAIT_OBJECTS);
+					const auto object = WaitForMultipleObjects(
+						m_events->size(),
+						&(*m_events)[0],
+						FALSE,
+						INFINITE);
+					EventsLock lock(m_mutex);
+					if (!m_eventHandler(*m_events, object)) {
+						break;
 					}
-					
-					assert(
-						eventToConnection.find(serverConnection->GetReadEvent())
-						== eventToConnection.end());
-					eventToConnection.insert(
-						std::make_pair(serverConnection->GetReadEvent(), index));
-					assert(
-						eventToConnection.find(serverConnection->GetWriteEvent())
-						== eventToConnection.end());
-					eventToConnection.insert(
-						std::make_pair(serverConnection->GetWriteEvent(), index));
-					assert(
-						eventToConnection.find(serverConnection->GetCloseEvent())
-						== eventToConnection.end());
-					eventToConnection.insert(
-						std::make_pair(serverConnection->GetCloseEvent(), index));
-
-					serverConnection->HandleEvent(evt);
-					
-					serverConnection.reset(new PipeServerConnection(m_path, m_waitTime));
-					events.push_back(serverConnection->GetReadEvent());
-				
-				} catch (const std::exception &ex) {
-					std::cerr << "Failed to accept pipe connection: " << ex.what() << "." << std::endl;
-				} catch (...) {
-					std::cerr << "Failed to accept pipe connection: unknown error." << std::endl;
 				}
-
-			} else {
-
-				assert(object > WAIT_OBJECT_0);
-				assert(object < WAIT_OBJECT_0 + events.size() - 1);
-
-				try {
-					HANDLE evt = events[object - WAIT_OBJECT_0];
-					assert(eventToConnection.find(evt) != eventToConnection.end());
-					auto connection = GetConnection(eventToConnection.find(evt)->second);
-					connection->HandleEvent(evt);
-					if (!connection->IsActive()) {
-						assert(
-							eventToConnection.find(connection->GetReadEvent())
-							!= eventToConnection.end());
-						eventToConnection.erase(connection->GetReadEvent());
-						assert(
-							eventToConnection.find(connection->GetReadEvent())
-							== eventToConnection.end());
-						assert(
-							eventToConnection.find(connection->GetWriteEvent())
-							!= eventToConnection.end());
-						eventToConnection.erase(connection->GetWriteEvent());
-						assert(
-							eventToConnection.find(connection->GetWriteEvent())
-							== eventToConnection.end());
-						assert(
-							eventToConnection.find(connection->GetCloseEvent())
-							!= eventToConnection.end());
-						eventToConnection.erase(connection->GetCloseEvent());
-						assert(
-							eventToConnection.find(connection->GetCloseEvent())
-							== eventToConnection.end());
-					}
-				} catch (const std::exception &ex) {
-					std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
-				} catch (...) {
-					std::cerr << "Filed to read pipe data: unknown error." << std::endl;
-				}
-
+			} catch (const std::exception &ex) {
+				std::cerr << "Filed to wait pipe: " << ex.what() << "." << std::endl;
+			} catch (...) {
+				std::cerr << "Filed to wait pipe: unknown error." << std::endl;
 			}
-			
+			delete this;
 		}
+
+	private:
+
+		std::auto_ptr<Events> m_events;
+		boost::function<bool(Events &, DWORD)> m_eventHandler;
+		EventsMutex &m_mutex;
+
+	};
+
+	bool EventHandler(Events &events, DWORD object) {
+
+		assert(object != WAIT_TIMEOUT);
+
+		if (object == WAIT_FAILED) {
+			const TunnelEx::Error error(GetLastError());
+			std::cerr
+				<< "Server events wait failed: \""
+				<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< "\" (" << error.GetErrorNo() << ")."
+				<< std::endl;
+			throw std::exception("Server events wait failed");
+		} else if (object == WAIT_OBJECT_0) {
+			return false;
+		} else if (object >= WAIT_ABANDONED_0 && object <= WAIT_ABANDONED_0  + events.size() - 1) {
+			throw std::exception("Server events wait abandoned");
+		}
+
+		assert(object > WAIT_OBJECT_0);
+		assert(object < WAIT_OBJECT_0 + events.size());
+		HANDLE evt = events[object - WAIT_OBJECT_0];
+
+		if (m_serverConnection->GetReadEvent() == evt) {
+		
+			try {
+
+				const size_t maximumWaitObjects = MAXIMUM_WAIT_OBJECTS;
+				assert(events.size() + 2 <= maximumWaitObjects);
+
+				events.push_back(m_serverConnection->GetWriteEvent());
+				events.push_back(m_serverConnection->GetCloseEvent());
+				size_t index = 0;
+				{
+					ConnectionsWriteLock lock(m_connectionsMutex);
+					index = m_connections.size();
+					m_connections.push_back(m_serverConnection);
+				}
+					
+				assert(
+					m_eventToConnection.find(m_serverConnection->GetReadEvent())
+					== m_eventToConnection.end());
+				m_eventToConnection.insert(
+					std::make_pair(m_serverConnection->GetReadEvent(), index));
+				assert(
+					m_eventToConnection.find(m_serverConnection->GetWriteEvent())
+					== m_eventToConnection.end());
+				m_eventToConnection.insert(
+					std::make_pair(m_serverConnection->GetWriteEvent(), index));
+				assert(
+					m_eventToConnection.find(m_serverConnection->GetCloseEvent())
+					== m_eventToConnection.end());
+				m_eventToConnection.insert(
+					std::make_pair(m_serverConnection->GetCloseEvent(), index));
+
+				m_serverConnection->HandleEvent(evt);
+					
+				m_serverConnection.reset(new PipeServerConnection(m_path, m_waitTime));
+
+				if (events.size() + 3 > maximumWaitObjects) {
+					std::auto_ptr<Events> newEvents(new Events);
+					newEvents->push_back(m_stopEvent);
+					newEvents->push_back(m_serverConnection->GetReadEvent());
+					std::unique_ptr<Waiter> waiter(
+						new Waiter(
+							newEvents,
+							boost::bind(&Implementation::EventHandler, this, _1, _2),
+							m_eventsMutex));
+					m_waiters.create_thread(boost::bind(&Waiter::Wait, waiter.get()));
+					waiter.release();
+
+				} else {
+					events.push_back(m_serverConnection->GetReadEvent());
+				}
+				
+			} catch (const std::exception &ex) {
+				std::cerr << "Failed to accept pipe connection: " << ex.what() << "." << std::endl;
+			} catch (...) {
+				std::cerr << "Failed to accept pipe connection: unknown error." << std::endl;
+			}
+
+		} else {
+
+			assert(m_eventToConnection.find(evt) != m_eventToConnection.end());
+
+			auto connection = GetConnection(m_eventToConnection.find(evt)->second);
+
+			bool isActive = true;
+			try {
+				connection->HandleEvent(evt);
+				isActive = connection->IsActive();
+			} catch (const std::exception &ex) {
+				std::cerr << "Filed to read pipe data: " << ex.what() << "." << std::endl;
+			} catch (...) {
+				std::cerr << "Filed to read pipe data: unknown error." << std::endl;
+			}
+
+			if (!isActive) {
+				connection->ReleaseCloseEvent();
+				assert(
+					m_eventToConnection.find(connection->GetReadEvent())
+					!= m_eventToConnection.end());
+				m_eventToConnection.erase(connection->GetReadEvent());
+				assert(
+					m_eventToConnection.find(connection->GetReadEvent())
+					== m_eventToConnection.end());
+				assert(
+					m_eventToConnection.find(connection->GetWriteEvent())
+					!= m_eventToConnection.end());
+				m_eventToConnection.erase(connection->GetWriteEvent());
+				assert(
+					m_eventToConnection.find(connection->GetWriteEvent())
+					== m_eventToConnection.end());
+				assert(
+					m_eventToConnection.find(connection->GetCloseEvent())
+					!= m_eventToConnection.end());
+				m_eventToConnection.erase(connection->GetCloseEvent());
+				assert(
+					m_eventToConnection.find(connection->GetCloseEvent())
+					== m_eventToConnection.end());
+				assert(
+					std::find(events.begin(), events.end(), connection->GetReadEvent())
+					!= events.end());
+				events.erase(std::find(events.begin(), events.end(), connection->GetReadEvent()));
+				assert(
+					std::find(events.begin(), events.end(), connection->GetWriteEvent())
+					!= events.end());
+				events.erase(std::find(events.begin(), events.end(), connection->GetWriteEvent()));
+				assert(
+					std::find(events.begin(), events.end(), connection->GetCloseEvent())
+					!= events.end());
+				events.erase(std::find(events.begin(), events.end(), connection->GetCloseEvent()));
+			}
+
+		}
+
+		return events.size() > 1;
 
 	}
 
@@ -239,8 +318,15 @@ private:
 	mutable ConnectionsMutex m_connectionsMutex;
 
 	HANDLE m_stopEvent;
-	boost::shared_ptr<boost::thread> m_thread;
 	const boost::posix_time::time_duration m_waitTime;
+
+	EventToConnection m_eventToConnection;
+
+	boost::shared_ptr<PipeServerConnection> m_serverConnection;
+
+	EventsMutex m_eventsMutex;
+
+	boost::thread_group m_waiters;
 
 };
 

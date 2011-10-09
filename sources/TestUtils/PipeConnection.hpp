@@ -88,7 +88,8 @@ namespace TestUtil {
 	protected:
 
 		void SetAsConnected() {
-			SetAsConnected(boost::mutex::scoped_lock(m_stateMutex));
+			boost::mutex::scoped_lock lock(m_stateMutex);
+			SetAsConnected(lock);
 		}
 
 		void SetHandle(HANDLE handle) throw() {
@@ -106,37 +107,39 @@ namespace TestUtil {
 			return m_writeOverlaped;
 		}
 
-		virtual void CloseHandles();
+		virtual void CloseHandles(boost::mutex::scoped_lock &stateLock, bool force);
+
+		std::unique_ptr<boost::mutex::scoped_lock> LockState();
 
 	private:
 
-		void SetAsConnected(const boost::mutex::scoped_lock &lock) {
+		void SetAsConnected(boost::mutex::scoped_lock &lock) {
 			assert(m_isActive == 0);
 			assert(m_handle != INVALID_HANDLE_VALUE);
-			if (BOOST_INTERLOCKED_EXCHANGE(&m_isActive, 1) == 0) {
+			if (BOOST_INTERLOCKED_COMPARE_EXCHANGE(&m_isActive, 1, 0) == 0) {
 				StartRead(lock);
 			} else {
 				assert(false);
 			}
 		}
 
-		void StartRead(const boost::mutex::scoped_lock &);
-		bool StartReadAndRead(const boost::mutex::scoped_lock &);
+		void StartRead(boost::mutex::scoped_lock &);
+		bool StartReadAndRead(boost::mutex::scoped_lock &);
 
 		void HandleRead();
 		void ReadReceived(DWORD bytesNumber, const boost::mutex::scoped_lock &);
 		void HandleWrite();
-		virtual void HandleClose() {
+		virtual void HandleClose(const boost::mutex::scoped_lock &/*stateLock*/) {
 			//...//
 		}
 
-		DWORD ReadOverlappedWriteResult(const boost::mutex::scoped_lock &);
-		DWORD ReadOverlappedReadResult(const boost::mutex::scoped_lock &);
+		DWORD ReadOverlappedWriteResult(boost::mutex::scoped_lock &);
+		DWORD ReadOverlappedReadResult(boost::mutex::scoped_lock &);
 
 		void UpdateBufferState();
 		void UpdateBufferState(size_t addSize);
 
-		void Close(const boost::mutex::scoped_lock &);
+		void Close(boost::mutex::scoped_lock &, bool force);
 
 	private:
 
@@ -204,17 +207,19 @@ namespace TestUtil {
 	public:
 
 		HANDLE GetCloseEvent();
+		void ReleaseCloseEvent();
 
 	private:
 
-		virtual void HandleClose();
-		virtual void CloseHandles();
+		virtual void HandleClose(const boost::mutex::scoped_lock &stateLock);
+		virtual void CloseHandles(boost::mutex::scoped_lock &stateLock, bool force);
+		void ReleaseCloseEvent(const boost::mutex::scoped_lock &stateLock);
 
 	private:
 
 		HANDLE m_closeEvent;
-		boost::mutex m_closeMutex;
 		boost::condition_variable m_closeCondition;
+		bool m_isCloseConditionSet;
 
 	};
 
