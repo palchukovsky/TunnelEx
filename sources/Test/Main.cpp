@@ -9,6 +9,7 @@
 
 #include "Prec.h"
 #include "Environment.hpp"
+#include "Common.hpp"
 
 namespace {
 
@@ -33,19 +34,36 @@ int main(int argc, char **argv) {
 		MODE_PIPE_CLIENT
 	} mode = MODE_COMMON;
 
-	if (argc >= 2) {
-		if (boost::iequals(argv[1], "tcpserver") || boost::iequals(argv[1], "tcp-server")) {
+	for (auto i = 1; i < argc; ++i) {
+		if (boost::iequals(argv[i], "tcpserver") || boost::iequals(argv[i], "tcp-server")) {
 			mode = MODE_TCP_SERVER;
-		} else if (boost::iequals(argv[1], "tcpclient") || boost::iequals(argv[1], "tcp-client")) {
+		} else if (boost::iequals(argv[i], "tcpclient") || boost::iequals(argv[i], "tcp-client")) {
 			mode = MODE_TCP_CLIENT;
-		} else if (boost::iequals(argv[1], "udpserver") || boost::iequals(argv[1], "udp-server")) {
+		} else if (boost::iequals(argv[i], "udpserver") || boost::iequals(argv[i], "udp-server")) {
 			mode = MODE_UDP_SERVER;
-		} else if (boost::iequals(argv[1], "udpclient") || boost::iequals(argv[1], "udp-client")) {
+		} else if (boost::iequals(argv[i], "udpclient") || boost::iequals(argv[i], "udp-client")) {
 			mode = MODE_UDP_CLIENT;
-		} else if (boost::iequals(argv[1], "pipeserver") || boost::iequals(argv[1], "pipe-server")) {
+		} else if (boost::iequals(argv[i], "pipeserver") || boost::iequals(argv[i], "pipe-server")) {
 			mode = MODE_PIPE_SERVER;
-		} else if (boost::iequals(argv[1], "pipeclient") || boost::iequals(argv[1], "pipe-client")) {
+		} else if (boost::iequals(argv[i], "pipeclient") || boost::iequals(argv[i], "pipe-client")) {
 			mode = MODE_PIPE_CLIENT;
+		} else if (boost::istarts_with(argv[i], "point=") || boost::istarts_with(argv[i], "endpoint=")) {
+			std::string point = argv[i];
+			point = point.substr(point.find('=') + 1);
+			testing::pipeServerPath = point;
+			if (point.find(':') != std::string::npos) {
+				testing::tcpServerHost
+					= testing::udpServerHost
+					= point.substr(0, point.find(':'));
+				testing::tcpServerPort
+					= testing::udpServerPort
+					= boost::lexical_cast<unsigned short>(point.substr(point.find(':') + 1));
+			} else {
+				testing::tcpServerHost
+					= testing::udpServerHost
+					= point;
+			}
+			
 		}
 	}
 
@@ -70,6 +88,9 @@ int main(int argc, char **argv) {
 			testing::AddGlobalTestEnvironment(new ServerEnvironment);
 			testing::GTEST_FLAG(filter) = "TcpServer.*";
 			testing::GTEST_FLAG(repeat) = -1;
+			std::cout
+				<< "Using endpoint: \"*:" << testing::tcpServerPort << "..."
+				<< std::endl;
 			break;
 		case MODE_TCP_CLIENT:
 			testing::AddGlobalTestEnvironment(new ClientEnvironment);
@@ -82,11 +103,18 @@ int main(int argc, char **argv) {
 				testing::GTEST_FLAG(filter)
 					= std::string("TcpClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
+			std::cout
+				<< "Using endpoint: \""
+				<< testing::tcpServerHost << ":" << testing::tcpServerPort << "..."
+				<< std::endl;
 			break;
 		case MODE_UDP_SERVER:
 			testing::AddGlobalTestEnvironment(new ServerEnvironment);
 			testing::GTEST_FLAG(filter) = "UdpServer.*";
 			testing::GTEST_FLAG(repeat) = -1;
+			std::cout
+				<< "Using endpoint: \"*:" << testing::udpServerPort << "..."
+				<< std::endl;
 			break;
 		case MODE_UDP_CLIENT:
 			testing::AddGlobalTestEnvironment(new ClientEnvironment);
@@ -99,11 +127,16 @@ int main(int argc, char **argv) {
 				testing::GTEST_FLAG(filter)
 					= std::string("UdpClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
+			std::cout
+				<< "Using endpoint: \""
+				<< testing::udpServerHost << ":" << testing::udpServerPort << "..."
+				<< std::endl;
 			break;
 		case MODE_PIPE_SERVER:
 			testing::AddGlobalTestEnvironment(new ServerEnvironment);
 			testing::GTEST_FLAG(filter) = "PipeServer.*";
 			testing::GTEST_FLAG(repeat) = -1;
+			std::cout << "Using endpoint: \"" << testing::pipeServerPath << "\"..." << std::endl;
 			break;
 		case MODE_PIPE_CLIENT:
 			testing::AddGlobalTestEnvironment(new ClientEnvironment);
@@ -116,6 +149,7 @@ int main(int argc, char **argv) {
 				testing::GTEST_FLAG(filter)
 					= std::string("PipeClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
+			std::cout << "Using endpoint: \"" << testing::pipeServerPath << "\"..." << std::endl;
 			break;
 		default:
 			assert(false);

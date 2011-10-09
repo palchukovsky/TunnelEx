@@ -25,7 +25,10 @@ namespace {
 					const boost::posix_time::time_duration &waitTime)
 				const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::TcpClient("localhost", testing::tcpServerPort, waitTime));
+				new TestUtil::TcpClient(
+					testing::tcpServerHost,
+					testing::tcpServerPort,
+					waitTime));
 			return result;
 		}
 	};

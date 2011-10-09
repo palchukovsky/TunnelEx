@@ -16,9 +16,11 @@ namespace testing {
 	typedef boost::uint16_t PacketSize;
 	typedef boost::uint16_t ConnectionsNumber;
 
-	extern const unsigned short tcpServerPort;
-	extern const unsigned short udpServerPort;
-	extern const std::string pipeServerPath;
+	extern std::string tcpServerHost;
+	extern unsigned short tcpServerPort;
+	extern std::string udpServerHost;
+	extern unsigned short udpServerPort;
+	extern std::string pipeServerPath;
 	
 	extern const std::string clientMagicHello;
 	extern const std::string clientMagicBay;

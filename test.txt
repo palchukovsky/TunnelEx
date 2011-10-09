@@ -26,20 +26,20 @@
 
 1.2. TCP
 --------
-    тест-сервер: TexTest.exe tcp-server [ port ]
-    тест-клиент: TexTest.exe tcp-client host:port
+    тест-сервер: TexTest.exe tcp-server [ point=*:port ]
+    тест-клиент: TexTest.exe tcp-client [ point=host:port ]
     порт тест-сервера по умолчанию: 12332
 
 1.3. UDP
 --------
-    тест-сервер: TexTest.exe udp-server [ port ]
-    тест-клиент: TexTest.exe udp-client host:port
+    тест-сервер: TexTest.exe udp-server [ point=*:port ]
+    тест-клиент: TexTest.exe udp-client [ point=host:port ]
     порт тест-сервера по умолчанию: 12333
 
 1.4. Пайп
 ---------
-    тест-сервер: TexTest.exe pipe-server [ pipe ]
-    тест-клиент: TexTest.exe pipe-client pipe
+    тест-сервер: TexTest.exe pipe-server [ point=pipe ]
+    тест-клиент: TexTest.exe pipe-client [ point=pipe ]
     имя пайпа тест-сервера по умолчанию: TunnelEx\Test\89326B80-AE04-11E0-9F1C-0800200C9A66
 
 

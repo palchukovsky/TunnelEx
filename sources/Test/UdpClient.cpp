@@ -40,7 +40,10 @@ namespace {
 					const boost::posix_time::time_duration &waitTime)
 				const {
 			std::auto_ptr<TestUtil::Client> result(
-				new TestUtil::UdpClient("localhost", testing::udpServerPort, waitTime));
+				new TestUtil::UdpClient(
+					testing::udpServerHost,
+					testing::udpServerPort,
+					waitTime));
 			return result;
 		}
 
