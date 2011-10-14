@@ -3,10 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AAF2FC6-8797-4245-A3EC-8A10E9396762}"
 	ProjectSection(SolutionItems) = preProject
-		CompileConfig.h = CompileConfig.h
-		Common\Constants.h = Common\Constants.h
-		icon.ico = icon.ico
-		Performance1.psess = Performance1.psess
+		..\buld.txt = ..\buld.txt
+		..\license.rtf = ..\license.rtf
+		..\License.txt = ..\License.txt
+		..\test.txt = ..\test.txt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Docs", "Docs\Docs.vcxproj", "{9F4B8D91-2911-4F1F-98FD-3345D8AE993D}"
@@ -79,6 +79,30 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj",
 		{ECF10D21-3713-4E5D-B3BF-465F4D34F340} = {ECF10D21-3713-4E5D-B3BF-465F4D34F340}
 		{BE5696F9-FFA0-47D3-BF5A-66DC28236CE5} = {BE5696F9-FFA0-47D3-BF5A-66DC28236CE5}
 		{DB90FDFC-2F4C-4F37-9203-A87EEC39B4D4} = {DB90FDFC-2F4C-4F37-9203-A87EEC39B4D4}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sources", "Sources", "{F3217265-6DD0-470D-B3EE-1881D39C329B}"
+	ProjectSection(SolutionItems) = preProject
+		CompileConfig.h = CompileConfig.h
+		Common\Constants.h = Common\Constants.h
+		icon.ico = icon.ico
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Properties", "Properties", "{DF07DB41-631C-49C1-B145-83DC2DFB995A}"
+	ProjectSection(SolutionItems) = preProject
+		Configuration Debug.props = Configuration Debug.props
+		Configuration Release.props = Configuration Release.props
+		Configuration Test.props = Configuration Test.props
+		Default.props = Default.props
+		Lib ACE debug.props = Lib ACE debug.props
+		Lib ACE release.props = Lib ACE release.props
+		Lib ACE test.props = Lib ACE test.props
+		Lib MiniUPnP.props = Lib MiniUPnP.props
+		Lib OpenSSL.props = Lib OpenSSL.props
+		Lib wxWidgets debug.props = Lib wxWidgets debug.props
+		Lib wxWidgets release.props = Lib wxWidgets release.props
+		Lib wxWidgets test.props = Lib wxWidgets test.props
+		Static lib.props = Static lib.props
 	EndProjectSection
 EndProject
 Global
@@ -192,14 +216,16 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5509928A-2D76-4FDF-9926-867156BA92E4} = {7AAF2FC6-8797-4245-A3EC-8A10E9396762}
-		{B7596B53-11F9-4C2D-9CE1-CC9965C86574} = {7AAF2FC6-8797-4245-A3EC-8A10E9396762}
+		{F3217265-6DD0-470D-B3EE-1881D39C329B} = {7AAF2FC6-8797-4245-A3EC-8A10E9396762}
+		{DF07DB41-631C-49C1-B145-83DC2DFB995A} = {7AAF2FC6-8797-4245-A3EC-8A10E9396762}
 		{7D76C72F-A36D-46F6-AEE7-87ACF19BA606} = {E596A351-89A3-4A59-B00F-2A50507F70B7}
 		{487C6572-1CE5-40FC-8A0A-ACE48F162F57} = {E596A351-89A3-4A59-B00F-2A50507F70B7}
 		{C458A337-2BBB-45BD-82FF-FC9CF13931A9} = {E596A351-89A3-4A59-B00F-2A50507F70B7}
 		{C30530F5-B52D-4E6B-AA2C-713C05C263F8} = {E596A351-89A3-4A59-B00F-2A50507F70B7}
 		{BF7A25BF-7F5D-4FD3-BF5C-889361EAC5A2} = {E596A351-89A3-4A59-B00F-2A50507F70B7}
-		{3DA746DB-979B-4190-BB37-FED7166E015F} = {CA46DDF7-9D34-4B15-B9A2-017BFFA675D2}
 		{ECF10D21-3713-4E5D-B3BF-465F4D34F340} = {CA46DDF7-9D34-4B15-B9A2-017BFFA675D2}
+		{3DA746DB-979B-4190-BB37-FED7166E015F} = {CA46DDF7-9D34-4B15-B9A2-017BFFA675D2}
+		{5509928A-2D76-4FDF-9926-867156BA92E4} = {F3217265-6DD0-470D-B3EE-1881D39C329B}
+		{B7596B53-11F9-4C2D-9CE1-CC9965C86574} = {F3217265-6DD0-470D-B3EE-1881D39C329B}
 	EndGlobalSection
 EndGlobal

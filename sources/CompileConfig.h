@@ -50,8 +50,4 @@
 
 #define NULL 0
 
-#if defined(_DEBUG) || defined(_TEST)
-#	define DEV_VER
-#endif
-
 #endif
