@@ -209,7 +209,6 @@ namespace TunnelEx {
 	private:
 
 		void InitHolder() {
-			assert(m_holder == 0);
 			try {
 				m_holder = new ::TunnelEx::Helpers::UniquePtrHolder<T>(m_ptr);
 			} catch (...) {
