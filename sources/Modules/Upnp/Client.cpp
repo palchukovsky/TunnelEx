@@ -38,8 +38,8 @@ const Client::Exception & Client::Exception::operator =(const Exception &rhs) th
 	return *this;
 }
 
-UniquePtr<LocalException> Client::Exception::Clone() const {
-	return UniquePtr<LocalException>(new Exception(*this));
+AutoPtr<LocalException> Client::Exception::Clone() const {
+	return AutoPtr<LocalException>(new Exception(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -65,8 +65,8 @@ const Client::DeviceNotExistException & Client::DeviceNotExistException::operato
 	return *this;
 }
 
-UniquePtr<LocalException> Client::DeviceNotExistException::Clone() const {
-	return UniquePtr<LocalException>(new DeviceNotExistException(*this));
+AutoPtr<LocalException> Client::DeviceNotExistException::Clone() const {
+	return AutoPtr<LocalException>(new DeviceNotExistException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////

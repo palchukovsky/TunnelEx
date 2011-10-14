@@ -12,8 +12,7 @@
 
 #include "Singleton.hpp"
 #include "String.hpp"
-#include "UniquePtr.hpp"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 #include "Server.hpp"
 
 namespace TunnelEx {
@@ -74,14 +73,14 @@ namespace TunnelEx {
 			/**
 			  * @throw TunnelEx::InvalidLinkException
 			  */
-			UniquePtr<EndpointAddress> CreateEndpointAddress(
+			AutoPtr<EndpointAddress> CreateEndpointAddress(
 					const WString &resourceIdentifier);
 
 			/** 
 			  * @throw TunnelEx::InvalidLinkException
 			  * @throw TunnelEx::LocalException
 			  */
-			UniquePtr<Service> CreateService(
+			AutoPtr<Service> CreateService(
 					TunnelEx::SharedPtr<const ServiceRule>,
 					const ServiceRule::Service &);
 

@@ -11,7 +11,7 @@
 #define INCLUDED_FILE__Tunnel_h__0703010205
 
 #include "Instance.hpp"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 
 class ACE_Proactor;
 

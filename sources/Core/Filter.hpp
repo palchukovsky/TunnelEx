@@ -11,8 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__Filter_h__0801120236
 
 #include "Instance.hpp"
-#include "UniquePtr.hpp"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 #include "Api.h"
 
 namespace TunnelEx {
@@ -45,7 +44,7 @@ namespace TunnelEx {
 	protected:
 
 		//! Locks rule for changes and returns lock.
-		::TunnelEx::UniquePtr<::TunnelEx::Lock> LockRule();
+		::TunnelEx::AutoPtr<::TunnelEx::Lock> LockRule();
 
 		//! Rules changing.
 		/** Must be implemented by any derived class. Rule must be changed 

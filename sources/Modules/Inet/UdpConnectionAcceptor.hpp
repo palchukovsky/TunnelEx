@@ -91,7 +91,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return IoHandleInfo(m_socket->get_handle(), IoHandleInfo::TYPE_SOCKET);
 		}
 
-		virtual UniquePtr<TunnelEx::Connection> Accept() {
+		virtual AutoPtr<TunnelEx::Connection> Accept() {
 
 			DataConnectionWriteLock lock(m_dataConnectionMutex);
 			assert(m_dataConnection == 0);
@@ -103,7 +103,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					L"An existing connection was forcibly closed by the remote host");
 			}
 
-			UniquePtr<Connection> result(
+			AutoPtr<Connection> result(
 				new Connection(
 					senderAddr,
 					GetRuleEndpoint(),
@@ -139,7 +139,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		}
 
-		virtual UniquePtr<EndpointAddress> GetLocalAddress() const {
+		virtual AutoPtr<EndpointAddress> GetLocalAddress() const {
 			ACE_INET_Addr addr;
 			if (m_socket->get_local_addr(addr) != 0) {
 				const Error error(errno);
@@ -147,7 +147,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				exception % error.GetString().GetCStr() % error.GetErrorNo();
 				throw SystemException(exception.str().c_str());
 			}
-			return UniquePtr<EndpointAddress>(new UdpEndpointAddress(addr));
+			return AutoPtr<EndpointAddress>(new UdpEndpointAddress(addr));
 		}
 
 	private:

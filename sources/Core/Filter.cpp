@@ -48,8 +48,8 @@ public:
 		m_myInterface.ChangeRule(*m_rule);
 	}
 
-	UniquePtr<Lock> LockRule() {
-		return UniquePtr<Lock>(new Lock(*m_ruleChangingMutex));
+	AutoPtr<Lock> LockRule() {
+		return AutoPtr<Lock>(new Lock(*m_ruleChangingMutex));
 	}
 
 	const TunnelRule& GetRule() const {
@@ -77,7 +77,7 @@ void Filter::ScheduleRuleChange() {
 	m_pimpl->ScheduleRuleChange();
 }
 
-UniquePtr<Lock> Filter::LockRule() {
+AutoPtr<Lock> Filter::LockRule() {
 	return m_pimpl->LockRule();
 }
 

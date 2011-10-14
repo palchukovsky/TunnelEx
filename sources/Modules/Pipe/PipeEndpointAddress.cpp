@@ -51,11 +51,11 @@ const WString & PipeEndpointAddress::GetResourceIdentifier() const {
 	return m_identifier;
 }
 
-UniquePtr<Acceptor> PipeEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> PipeEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &ruleEndpoint,
 			const SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
-	return UniquePtr<Acceptor>(
+	return AutoPtr<Acceptor>(
 		new PipeConnectionAcceptor(
 			*this,
 			ruleEndpoint,
@@ -66,34 +66,34 @@ bool PipeEndpointAddress::IsHasMultiClientsType(void) const {
 	return true;
 }
 
-UniquePtr<Connection> PipeEndpointAddress::CreateRemoteConnection(
+AutoPtr<Connection> PipeEndpointAddress::CreateRemoteConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
-	return UniquePtr<Connection>(
+	return AutoPtr<Connection>(
 		new OutcomingPipeConnection(*this, ruleEndpoint, ruleEndpointAddress));
 }
 
-UniquePtr<Connection> PipeEndpointAddress::CreateLocalConnection(
+AutoPtr<Connection> PipeEndpointAddress::CreateLocalConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
-	return UniquePtr<Connection>(
+	return AutoPtr<Connection>(
 		new OutcomingPipeConnection(*this, ruleEndpoint, ruleEndpointAddress));
 }
 
-UniquePtr<EndpointAddress> PipeEndpointAddress::Clone() const {
-	return UniquePtr<EndpointAddress>(new PipeEndpointAddress(*this));
+AutoPtr<EndpointAddress> PipeEndpointAddress::Clone() const {
+	return AutoPtr<EndpointAddress>(new PipeEndpointAddress(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
 
 namespace TunnelEx { namespace Mods { namespace Pipe {
 
-	UniquePtr<EndpointAddress> CreateEndpointAddress(
+	AutoPtr<EndpointAddress> CreateEndpointAddress(
 				Server::ConstRef,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(new PipeEndpointAddress(resourceIdentifier));
+		return AutoPtr<EndpointAddress>(new PipeEndpointAddress(resourceIdentifier));
 	}
 
 } } }

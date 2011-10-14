@@ -89,7 +89,7 @@ void PathfinderEndpointAddress::Swap(PathfinderEndpointAddress &rhs) throw() {
 	m_pimpl->m_resourceIdentifier.Swap(rhs.m_pimpl->m_resourceIdentifier);
 }
 
-UniquePtr<Acceptor> PathfinderEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> PathfinderEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &,
 			SharedPtr<const EndpointAddress>)
 		const {
@@ -111,8 +111,8 @@ bool PathfinderEndpointAddress::IsHasMultiClientsType(void) const {
 	return false;
 }
 
-UniquePtr<EndpointAddress> PathfinderEndpointAddress::Clone() const {
-	UniquePtr<PathfinderEndpointAddress> result(new PathfinderEndpointAddress(*this));
+AutoPtr<EndpointAddress> PathfinderEndpointAddress::Clone() const {
+	AutoPtr<PathfinderEndpointAddress> result(new PathfinderEndpointAddress(*this));
 	if (result->m_pimpl->m_isPathfinderNode) {
 		assert(GetProxyList().size() > 0);
 		if (result->m_pimpl->m_isSetupCompleted) {
@@ -122,7 +122,7 @@ UniquePtr<EndpointAddress> PathfinderEndpointAddress::Clone() const {
 	return result;
 }
 
-UniquePtr<Connection> PathfinderEndpointAddress::CreateConnection(
+AutoPtr<Connection> PathfinderEndpointAddress::CreateConnection(
 			const RuleEndpoint &endpoint,
 			SharedPtr<const EndpointAddress> originalAddress) 
 		const {
@@ -170,7 +170,7 @@ UniquePtr<Connection> PathfinderEndpointAddress::CreateConnection(
 
 	SharedPtr<PathfinderEndpointAddress> address;
 	{
-		UniquePtr<EndpointAddress> originalAddressClone
+		AutoPtr<EndpointAddress> originalAddressClone
 			= originalAddress->Clone();
 		address.Reset(
 			boost::polymorphic_downcast<PathfinderEndpointAddress *>(
@@ -326,10 +326,10 @@ void PathfinderEndpointAddress::StatConnectionSetupCanceling(
 
 namespace TunnelEx { namespace Mods { namespace Pathfinder {
 
-	UniquePtr<EndpointAddress> CreateEndpointAddress(
+	AutoPtr<EndpointAddress> CreateEndpointAddress(
 				Server::ConstRef server,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(
+		return AutoPtr<EndpointAddress>(
 			new PathfinderEndpointAddress(
 				resourceIdentifier,
 				&server));

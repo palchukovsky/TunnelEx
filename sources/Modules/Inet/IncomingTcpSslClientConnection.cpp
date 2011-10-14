@@ -47,8 +47,8 @@ const ACE_SOCK & IncomingTcpSslClientConnection::GetIoStream() const {
 	return const_cast<IncomingTcpSslClientConnection *>(this)->GetIoStream();
 }
 
-UniquePtr<EndpointAddress> IncomingTcpSslClientConnection::GetRemoteAddress() const {
-	return UniquePtr<EndpointAddress>(new TcpEndpointAddress(*m_remoteAddress));
+AutoPtr<EndpointAddress> IncomingTcpSslClientConnection::GetRemoteAddress() const {
+	return AutoPtr<EndpointAddress>(new TcpEndpointAddress(*m_remoteAddress));
 }
 
 void IncomingTcpSslClientConnection::AcceptConnection(
@@ -66,7 +66,7 @@ void IncomingTcpSslClientConnection::AcceptConnection(
 		throw ConnectionOpeningException(message.str().c_str());
 	}
 	
-	UniquePtr<const TcpEndpointAddress> remoteAddress(
+	AutoPtr<const TcpEndpointAddress> remoteAddress(
 		new TcpEndpointAddress(aceRemoteAddr));
 
 	std::auto_ptr<DecodeStream> decodeStream(

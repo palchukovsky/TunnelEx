@@ -82,10 +82,10 @@ TunnelRule FtpListener::CreateRule(
 		const TcpEndpointAddress &currentInputRuleEndpoint
 			= *boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				currentInputRuleEndpointHolder.Get());
-		const UniquePtr<const TcpEndpointAddress> currentInputEndpoint(
+		const AutoPtr<const TcpEndpointAddress> currentInputEndpoint(
 			boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				m_currentConnection.GetLocalAddress().Release()));
-		UniquePtr<TcpEndpointAddress> input(
+		AutoPtr<TcpEndpointAddress> input(
 			new TcpEndpointAddress(
 				ConvertString(
 						currentInputEndpoint->GetHostAddress(),
@@ -93,7 +93,7 @@ TunnelRule FtpListener::CreateRule(
 					.GetCStr(),
 				0,
 				currentInputRuleEndpoint.GetServer()));
-		const UniquePtr<const EndpointAddress> remoteAddress(
+		const AutoPtr<const EndpointAddress> remoteAddress(
 			m_currentConnection.GetRemoteAddress());
 		input->CopyCertificate(
 			currentInputRuleEndpoint,
@@ -103,10 +103,10 @@ TunnelRule FtpListener::CreateRule(
 	}
 
 	{
-		UniquePtr<TcpEndpointAddress> destination(
+		AutoPtr<TcpEndpointAddress> destination(
 			boost::polymorphic_downcast<TcpEndpointAddress *>(
 				m_oppositeConnection.GetRuleEndpointAddress()->Clone().Release()));
-		const UniquePtr<const EndpointAddress> oppositeAddress(
+		const AutoPtr<const EndpointAddress> oppositeAddress(
 			m_oppositeConnection.GetRemoteAddress());
 		destination->CopyRemoteCertificate(
 			*boost::polymorphic_downcast<const TcpEndpointAddress *>(
@@ -148,7 +148,7 @@ void FtpListener::ReplaceCmd(
 		std::string outcomingIpForCmd = ConvertString<String>(inputAddress).GetCStr();
 		boost::replace_all(outcomingIpForCmd, ".", ",");
 
-		const UniquePtr<const InetEndpointAddress> input(
+		const AutoPtr<const InetEndpointAddress> input(
 			boost::polymorphic_downcast<InetEndpointAddress *>(
 				m_server.GetRealOpenedEndpointAddress(
 						dataConnectionRule.GetUuid(),

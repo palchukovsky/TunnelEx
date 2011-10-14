@@ -10,7 +10,7 @@
 #include "Prec.h"
 
 #include "Tunnel.hpp"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "TunnelConnectionSignal.hpp"
 #include "TunnelBuffer.hpp"
 #include "ServerWorker.hpp"
@@ -162,8 +162,8 @@ public:
 			return L"Unknown error";
 		}
 	}
-	UniquePtr<LocalException> Clone() const {
-		return UniquePtr<LocalException>(
+	AutoPtr<LocalException> Clone() const {
+		return AutoPtr<LocalException>(
 			new ConnectionOpeningExceptionImpl<Base>(*this));
 	}
 private:
@@ -183,7 +183,7 @@ private:
 private:
 	Instance::Id m_tunnelInstanceId;
 	SharedPtr<const EndpointAddress> m_address;
-	UniquePtr<LocalException> m_error;
+	AutoPtr<LocalException> m_error;
 	mutable std::wstring m_what;
 	const wchar_t *m_connectionType;
 };
@@ -487,7 +487,7 @@ void Tunnel::ReportOpened() const {
 		}
 
 		void AppendRemote(const Connection &connection, bool isRead, bool *isRemote = 0) {
-			const UniquePtr<const EndpointAddress> remoteAddress
+			const AutoPtr<const EndpointAddress> remoteAddress
 				= connection.GetRemoteAddress();
 			if (isRemote) {
 				*isRemote = remoteAddress;

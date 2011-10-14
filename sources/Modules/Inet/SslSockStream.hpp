@@ -25,7 +25,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			Exception(const Exception &) throw();
 			virtual ~Exception() throw();
 			Exception & operator =(const Exception &) throw();
-			virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+			virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 		private:
 			static std::wstring GetLastError();
 		};

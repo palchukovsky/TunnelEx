@@ -13,8 +13,7 @@
 #include "DataTransferCommand.hpp"
 #include "Instance.hpp"
 #include "IoHandle.h"
-#include "UniquePtr.hpp"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 #include "String.hpp"
 #include "Time.h"
 #include "Api.h"
@@ -142,7 +141,7 @@ namespace TunnelEx {
 		  * @return	address for local side of connection or nil
 		  */
 		virtual
-		::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress>
+		::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress>
 		GetLocalAddress()
 			const
 			= 0;
@@ -155,7 +154,7 @@ namespace TunnelEx {
 		  * @return	address for remote side of connection or nil
 		  */
 		virtual
-		::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress>
+		::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress>
 		GetRemoteAddress()
 			const
 			= 0;

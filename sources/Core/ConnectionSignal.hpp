@@ -11,7 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__DataTransferSignal_hpp__0808050948
 
 #include "Api.h"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 #include "Instance.hpp"
 
 namespace TunnelEx {

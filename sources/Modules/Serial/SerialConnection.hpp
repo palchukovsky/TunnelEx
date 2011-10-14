@@ -135,12 +135,12 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 
 	public:
 
-		virtual UniquePtr<EndpointAddress> GetLocalAddress() const {
-			return UniquePtr<EndpointAddress>();
+		virtual AutoPtr<EndpointAddress> GetLocalAddress() const {
+			return AutoPtr<EndpointAddress>();
 		}
 
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress() const {
-			return UniquePtr<EndpointAddress>();
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const {
+			return AutoPtr<EndpointAddress>();
 		}
 
 	protected:

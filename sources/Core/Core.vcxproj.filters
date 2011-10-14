@@ -181,9 +181,6 @@
     <ClInclude Include="Service.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SharedPtr.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Singleton.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -205,9 +202,6 @@
     <ClInclude Include="TunnelConnectionSignal.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UniquePtr.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RuleSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -215,6 +209,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TunnelBuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SmartPtr.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

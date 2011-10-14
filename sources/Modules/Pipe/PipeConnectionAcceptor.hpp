@@ -49,14 +49,14 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 	
 	public:
 	
-		virtual UniquePtr<Connection> Accept();
+		virtual AutoPtr<Connection> Accept();
 
 		virtual bool TryToAttach() {
 			return false;
 		}
 
-		virtual UniquePtr<EndpointAddress> GetLocalAddress() const {
-			UniquePtr<PipeEndpointAddress> result(new PipeEndpointAddress);
+		virtual AutoPtr<EndpointAddress> GetLocalAddress() const {
+			AutoPtr<PipeEndpointAddress> result(new PipeEndpointAddress);
 			if (m_acceptor.get_local_addr(result->GetAcePipeAddr()) != 0) {
 				const Error error(errno);
 				WFormat exception(L"Could not get listening pipe path: %1% (%2%)");

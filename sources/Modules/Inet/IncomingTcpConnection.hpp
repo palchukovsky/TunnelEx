@@ -52,8 +52,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return false;
 		}
 
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress() const {
-			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(*m_remoteAddress));
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const {
+			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(*m_remoteAddress));
 		}
 
 	private:
@@ -93,7 +93,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				HandleAcceptSuccess(*stream);
 			}
 
-			UniquePtr<const TcpEndpointAddress> remoteAddress(
+			AutoPtr<const TcpEndpointAddress> remoteAddress(
 			new TcpEndpointAddress(aceRemoteAddr));
 
 			SetDataStream(stream);
@@ -103,7 +103,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		TunnelEx::UniquePtr<const TunnelEx::Mods::Inet::TcpEndpointAddress>
+		TunnelEx::AutoPtr<const TunnelEx::Mods::Inet::TcpEndpointAddress>
 			m_remoteAddress;
 
 	};

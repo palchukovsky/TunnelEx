@@ -30,7 +30,7 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 			Exception(const Exception &) throw();
 			virtual ~Exception() throw();
 			const Exception & operator =(const Exception &) throw();
-			virtual UniquePtr<LocalException> Clone() const;
+			virtual AutoPtr<LocalException> Clone() const;
 		};
 
 		class DeviceNotExistException : public Exception {
@@ -41,7 +41,7 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 			const DeviceNotExistException & operator =(
 					const DeviceNotExistException &)
 				throw();
-			virtual UniquePtr<LocalException> Clone() const;
+			virtual AutoPtr<LocalException> Clone() const;
 		};
 
 	public:

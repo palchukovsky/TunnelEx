@@ -292,10 +292,10 @@ protected:
 
 public:
 
-	UniquePtr<SslCertificateIdCollection> GetInstalledIds() const {
+	AutoPtr<SslCertificateIdCollection> GetInstalledIds() const {
 		const_cast<Implementation *>(this)->CheckDb();
 		StorageReadLock lock(m_storageMutex);
-		UniquePtr<SslCertificateIdCollection> result(
+		AutoPtr<SslCertificateIdCollection> result(
 			new SslCertificateIdCollection(m_storage.size()));
 		foreach (const Storage::value_type &info, m_storage) {
 			result->Append(info.second.id);
@@ -303,7 +303,7 @@ public:
 		return result;
 	};
 
-	UniquePtr<X509Shared> GetCertificate(const WString &id) const {
+	AutoPtr<X509Shared> GetCertificate(const WString &id) const {
 		const_cast<Implementation *>(this)->CheckDb();
 		StorageReadLock lock(m_storageMutex);
 		const Storage::const_iterator pos = m_storage.find(id);
@@ -315,7 +315,7 @@ public:
 			throw NotFoundException(
 				L"Failed to find SSL certificate in local storage");
 		}
-		return UniquePtr<X509Shared>(new X509Shared(*pos->second.certificate));
+		return AutoPtr<X509Shared>(new X509Shared(*pos->second.certificate));
 	}
 
 	bool IsPrivateCertificate(const WString &id) const {
@@ -333,7 +333,7 @@ public:
 		return dynamic_cast<X509Private *>(pos->second.certificate.get()) != 0;
 	}
 
-	UniquePtr<X509Private> GetPrivateCertificate(const WString &id) const {
+	AutoPtr<X509Private> GetPrivateCertificate(const WString &id) const {
 		const_cast<Implementation *>(this)->CheckDb();
 		StorageReadLock lock(m_storageMutex);
 		const Storage::const_iterator pos = m_storage.find(id);
@@ -354,7 +354,7 @@ public:
 				ConvertString<String>(id).GetCStr());
 			throw NotFoundException(L"SSL certificate has no private key");
 		}
-		return UniquePtr<X509Private>(new X509Private(*privateCertificate));
+		return AutoPtr<X509Private>(new X509Private(*privateCertificate));
 	}
 
 	void Insert(const X509Shared &certificate) {
@@ -501,11 +501,11 @@ SslCertificatesStorage::~SslCertificatesStorage() throw() {
 	delete m_pimpl;
 }
 
-UniquePtr<SslCertificateIdCollection> SslCertificatesStorage::GetInstalledIds() const {
+AutoPtr<SslCertificateIdCollection> SslCertificatesStorage::GetInstalledIds() const {
 	return m_pimpl->GetInstalledIds();
 };
 
-UniquePtr<X509Shared> SslCertificatesStorage::GetCertificate(
+AutoPtr<X509Shared> SslCertificatesStorage::GetCertificate(
 			const WString &id)
 		const {
 	return m_pimpl->GetCertificate(id);
@@ -517,7 +517,7 @@ bool SslCertificatesStorage::IsPrivateCertificate(
 	return m_pimpl->IsPrivateCertificate(certificateId);
 }
 
-UniquePtr<X509Private> SslCertificatesStorage::GetPrivateCertificate(
+AutoPtr<X509Private> SslCertificatesStorage::GetPrivateCertificate(
 			const WString &id)
 		const {
 	return m_pimpl->GetPrivateCertificate(id);

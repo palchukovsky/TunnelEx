@@ -11,11 +11,10 @@
 #define INCLUDED_FILE__NetworkEndPoint_h__0706121520
 
 #include "String.hpp"
-#include "SharedPtr.hpp"
 #include "Time.h"
 #include "Collection.hpp"
 #include "Exceptions.hpp"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Api.h"
 
 namespace TunnelEx {
@@ -59,12 +58,12 @@ namespace TunnelEx {
 				::TunnelEx::Endpoint::Acceptor acceptor);
 
 		explicit Endpoint(
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> combinedAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> combinedAddress,
 				bool isAcceptor);
 
 		explicit Endpoint(
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> readAddress,
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> writeAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> readAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> writeAddress,
 				::TunnelEx::Endpoint::Acceptor acceptor);
 
 		~Endpoint() throw();
@@ -108,13 +107,13 @@ namespace TunnelEx {
 
 		//! Sets combined address implementation and changes endpoint type to "combined".
 		void SetCombinedAddress(
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress>,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress>,
 				bool isAcceptor);
 
 		//! Sets read and write address implementations identifiers and changes endpoint type to "split".
 		void SetReadWriteAddresses(
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> readAddress,
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> writeAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> readAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> writeAddress,
 				::TunnelEx::Endpoint::Acceptor acceptor);
 
 
@@ -251,7 +250,7 @@ namespace TunnelEx {
 				bool isAcceptor,
 				const ::TunnelEx::WString *uuid = NULL);
 		explicit RuleEndpoint(
-				const ::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> address,
+				const ::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> address,
 				bool isAcceptor,
 				const ::TunnelEx::WString *uuid = NULL);
 		explicit RuleEndpoint(
@@ -260,8 +259,8 @@ namespace TunnelEx {
 				::TunnelEx::Endpoint::Acceptor acceptor,
 				const ::TunnelEx::WString *uuid = NULL);
 		explicit RuleEndpoint(
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> readAddress,
-				::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> writeAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> readAddress,
+				::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> writeAddress,
 				::TunnelEx::Endpoint::Acceptor acceptor,
 				const ::TunnelEx::WString *uuid = NULL);
 		virtual ~RuleEndpoint() throw();

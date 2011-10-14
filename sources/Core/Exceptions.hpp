@@ -10,7 +10,7 @@
 #ifndef INCLUDED_FILE_Exception_h__0702110530
 #define INCLUDED_FILE_Exception_h__0702110530
 
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Api.h"
 
 namespace TunnelEx {
@@ -29,7 +29,7 @@ namespace TunnelEx {
 		bool m_doFree;
 	public:
 		virtual const wchar_t * GetWhat() const throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ namespace TunnelEx {
 		LogicalException(const LogicalException &) throw();
 		virtual ~LogicalException() throw();
 		LogicalException & operator =(const LogicalException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ namespace TunnelEx {
 		NotFoundException(const NotFoundException &) throw();
 		virtual ~NotFoundException() throw();
 		NotFoundException & operator =(const NotFoundException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ namespace TunnelEx {
 		ConnectionException & operator =(
 				const ConnectionException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//! Throws when connection opening has failed.
@@ -81,7 +81,7 @@ namespace TunnelEx {
 		ConnectionOpeningException & operator =(
 				const ConnectionOpeningException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	class SourceConnectionOpeningException
@@ -97,7 +97,7 @@ namespace TunnelEx {
 		SourceConnectionOpeningException & operator =(
 				const SourceConnectionOpeningException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	class DestinationConnectionOpeningException
@@ -113,7 +113,7 @@ namespace TunnelEx {
 		DestinationConnectionOpeningException & operator =(
 				const DestinationConnectionOpeningException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone()const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone()const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ namespace TunnelEx {
 		SystemException(const SystemException &) throw();
 		virtual ~SystemException() throw();
 		SystemException & operator =(const SystemException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 	
 	//! Exception after insufficient memory error.
@@ -136,7 +136,7 @@ namespace TunnelEx {
 		InsufficientMemoryException(const InsufficientMemoryException &) throw();
 		virtual ~InsufficientMemoryException() throw();
 		InsufficientMemoryException & operator =(const InsufficientMemoryException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -150,7 +150,7 @@ namespace TunnelEx {
 		InvalidXmlException & operator =(
 				const InvalidXmlException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -164,7 +164,7 @@ namespace TunnelEx {
 		XmlDoesNotMatchException & operator =(
 				const XmlDoesNotMatchException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ namespace TunnelEx {
 		EndpointException(const EndpointException &) throw();
 		virtual ~EndpointException() throw();
 		EndpointException & operator =(const EndpointException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -194,7 +194,7 @@ namespace TunnelEx {
 		InvalidLinkException(const InvalidLinkException &) throw();
 		virtual ~InvalidLinkException() throw();
 		InvalidLinkException & operator =(const InvalidLinkException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -214,7 +214,7 @@ namespace TunnelEx {
 		EndpointAddressTypeMismatchException & operator =(
 				const EndpointAddressTypeMismatchException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -233,7 +233,7 @@ namespace TunnelEx {
 		EndpointHasNotMultiClientsTypeException & operator =(
 				const EndpointHasNotMultiClientsTypeException &)
 			throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,7 @@ namespace TunnelEx {
 		DllException(const DllException &) throw();
 		virtual ~DllException() throw();
 		DllException & operator =(const DllException &) throw();
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::LocalException> Clone() const;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
 
 	//////////////////////////////////////////////////////////////////////////

@@ -11,7 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__ServerWorker_hpp__0807310006
 
 #include "String.hpp"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Server.hpp"
 #include "Instance.hpp"
 #include "IoHandle.h"
@@ -61,7 +61,7 @@ namespace TunnelEx {
 		  * @throw TunnelEx::LogicalException
 		  * @throw TunnelEx::ConnectionOpeningException
 		  */
-		UniquePtr<EndpointAddress> GetRealOpenedEndpointAddress(
+		AutoPtr<EndpointAddress> GetRealOpenedEndpointAddress(
 				const WString &ruleUuid,
 				const WString &endpointUuid)
 			const;

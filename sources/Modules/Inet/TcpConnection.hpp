@@ -55,10 +55,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	public:
 
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress() const {
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const {
 			ACE_INET_Addr aceAddr;
 			GetRemoteAceAddress(aceAddr);
-			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(aceAddr));
+			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(aceAddr));
 		}
 
 	protected:
@@ -165,7 +165,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	}
 
 	template<>
-	UniquePtr<EndpointAddress> TcpConnection<SslSockStream>::GetRemoteAddress() const {
+	AutoPtr<EndpointAddress> TcpConnection<SslSockStream>::GetRemoteAddress() const {
 		assert(m_dataStream.get());
 		using namespace TunnelEx::Helpers::Crypto;
 		ACE_INET_Addr aceAddr;
@@ -173,9 +173,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		X509 *const x509Ptr = SSL_get_peer_certificate(m_dataStream->ssl());
 		if (x509Ptr != 0) {
 			std::auto_ptr<X509Shared> x509(new X509Shared(X509_dup(x509Ptr)));
-			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(aceAddr, x509));
+			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(aceAddr, x509));
 		} else {
-			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(aceAddr));
+			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(aceAddr));
 		}
 	}
 

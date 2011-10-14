@@ -22,7 +22,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		ProxyWorkingException(const ProxyWorkingException &) throw();
 		virtual ~ProxyWorkingException() throw();
 		const ProxyWorkingException & operator =(const ProxyWorkingException &) throw();
-		virtual TunnelEx::UniquePtr<TunnelEx::LocalException> Clone() const;
+		virtual TunnelEx::AutoPtr<TunnelEx::LocalException> Clone() const;
 	};
 
 } } }

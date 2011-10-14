@@ -41,7 +41,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	public:
 
 		virtual bool IsOneWay() const;
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress() const;
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const;
 
 	protected:
 
@@ -62,7 +62,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		TunnelEx::UniquePtr<const TunnelEx::Mods::Inet::TcpEndpointAddress>
+		TunnelEx::AutoPtr<const TunnelEx::Mods::Inet::TcpEndpointAddress>
 			m_remoteAddress;
 		RawStream m_rawStream;
 

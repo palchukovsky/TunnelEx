@@ -179,8 +179,8 @@ SslSockStream::Exception & SslSockStream::Exception::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> SslSockStream::Exception::Clone() const {
-	return UniquePtr<LocalException>(new Exception(*this));
+AutoPtr<LocalException> SslSockStream::Exception::Clone() const {
+	return AutoPtr<LocalException>(new Exception(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////

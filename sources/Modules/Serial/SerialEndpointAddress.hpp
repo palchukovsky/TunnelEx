@@ -61,17 +61,17 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 		
 		virtual bool IsHasMultiClientsType(void) const;
 		
-		virtual UniquePtr<Acceptor> OpenForIncomingConnections(
+		virtual AutoPtr<Acceptor> OpenForIncomingConnections(
 					const RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
 				const;
 
-		virtual UniquePtr<Connection> CreateRemoteConnection(
+		virtual AutoPtr<Connection> CreateRemoteConnection(
 					const TunnelEx::RuleEndpoint &,
 					SharedPtr<const EndpointAddress>) 
 				const;
 
-		virtual UniquePtr<Connection> CreateLocalConnection(
+		virtual AutoPtr<Connection> CreateLocalConnection(
 					const RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 				const;
@@ -83,7 +83,7 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			return false;
 		}
 
-		virtual UniquePtr<EndpointAddress> Clone() const;
+		virtual AutoPtr<EndpointAddress> Clone() const;
 
 	public:
 

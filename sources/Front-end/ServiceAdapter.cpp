@@ -146,7 +146,7 @@ private:
 		const boost::function<Result(void)> m_requestFunc;
 		Result m_requestResult;
 		const Result &m_defaultResult;
-		UniquePtr<LocalException> m_exeption;
+		AutoPtr<LocalException> m_exeption;
 	};
 
 	template<>
@@ -174,7 +174,7 @@ private:
 		}
 	private:
 		const boost::function<void(void)> m_requestFunc;
-		UniquePtr<LocalException> m_exeption;
+		AutoPtr<LocalException> m_exeption;
 	};
 
 public:

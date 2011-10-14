@@ -122,7 +122,7 @@ public:
 		return !m_worker.get() ? false : m_worker->IsRuleEnabled(uuid);
 	}
 
-	UniquePtr<EndpointAddress> GetRealOpenedEndpointAddress(
+	AutoPtr<EndpointAddress> GetRealOpenedEndpointAddress(
 				const WString &ruleUuid,
 				const WString &endpointUuid)
 			const {
@@ -218,7 +218,7 @@ bool Singletons::ServerPolicy::IsRuleEnabled(const WString &uuid) const {
 	return m_pimpl->IsRuleEnabled(uuid);
 }
 
-UniquePtr<EndpointAddress>
+AutoPtr<EndpointAddress>
 Singletons::ServerPolicy::GetRealOpenedEndpointAddress(
 			const WString &ruleUuid,
 			const WString &endpointUuid)

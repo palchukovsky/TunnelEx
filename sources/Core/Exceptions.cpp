@@ -72,8 +72,8 @@ const wchar_t * LocalException::GetWhat() const throw() {
 	return m_what;
 }
 
-UniquePtr<LocalException> LocalException::Clone() const {
-	return UniquePtr<LocalException>(new LocalException(*this));
+AutoPtr<LocalException> LocalException::Clone() const {
+	return AutoPtr<LocalException>(new LocalException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -99,8 +99,8 @@ LogicalException & LogicalException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> LogicalException::Clone() const {
-	return UniquePtr<LocalException>(new LogicalException(*this));
+AutoPtr<LocalException> LogicalException::Clone() const {
+	return AutoPtr<LocalException>(new LogicalException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,8 +126,8 @@ NotFoundException & NotFoundException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> NotFoundException::Clone() const {
-	return UniquePtr<LocalException>(new NotFoundException(*this));
+AutoPtr<LocalException> NotFoundException::Clone() const {
+	return AutoPtr<LocalException>(new NotFoundException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -155,8 +155,8 @@ ConnectionException & ConnectionException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> ConnectionException::Clone() const {
-	return UniquePtr<LocalException>(new ConnectionException(*this));
+AutoPtr<LocalException> ConnectionException::Clone() const {
+	return AutoPtr<LocalException>(new ConnectionException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -185,8 +185,8 @@ ConnectionOpeningException & ConnectionOpeningException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> ConnectionOpeningException::Clone() const {
-	return UniquePtr<LocalException>(new ConnectionOpeningException(*this));
+AutoPtr<LocalException> ConnectionOpeningException::Clone() const {
+	return AutoPtr<LocalException>(new ConnectionOpeningException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -215,8 +215,8 @@ SourceConnectionOpeningException & SourceConnectionOpeningException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> SourceConnectionOpeningException::Clone() const {
-	return UniquePtr<LocalException>(new SourceConnectionOpeningException(*this));
+AutoPtr<LocalException> SourceConnectionOpeningException::Clone() const {
+	return AutoPtr<LocalException>(new SourceConnectionOpeningException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -245,8 +245,8 @@ DestinationConnectionOpeningException & DestinationConnectionOpeningException::o
 	return *this;
 }
 
-UniquePtr<LocalException> DestinationConnectionOpeningException::Clone() const {
-	return UniquePtr<LocalException>(
+AutoPtr<LocalException> DestinationConnectionOpeningException::Clone() const {
+	return AutoPtr<LocalException>(
 		new DestinationConnectionOpeningException(*this));
 }
 
@@ -273,8 +273,8 @@ SystemException & SystemException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> SystemException::Clone() const {
-	return UniquePtr<LocalException>(new SystemException(*this));
+AutoPtr<LocalException> SystemException::Clone() const {
+	return AutoPtr<LocalException>(new SystemException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -304,8 +304,8 @@ InsufficientMemoryException & InsufficientMemoryException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> InsufficientMemoryException::Clone() const {
-	return UniquePtr<LocalException>(new InsufficientMemoryException(*this));
+AutoPtr<LocalException> InsufficientMemoryException::Clone() const {
+	return AutoPtr<LocalException>(new InsufficientMemoryException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -331,8 +331,8 @@ InvalidXmlException & InvalidXmlException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> InvalidXmlException::Clone() const {
-	return UniquePtr<LocalException>(new InvalidXmlException(*this));
+AutoPtr<LocalException> InvalidXmlException::Clone() const {
+	return AutoPtr<LocalException>(new InvalidXmlException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -360,8 +360,8 @@ XmlDoesNotMatchException & XmlDoesNotMatchException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> XmlDoesNotMatchException::Clone() const {
-	return UniquePtr<LocalException>(new XmlDoesNotMatchException(*this));
+AutoPtr<LocalException> XmlDoesNotMatchException::Clone() const {
+	return AutoPtr<LocalException>(new XmlDoesNotMatchException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -387,8 +387,8 @@ EndpointException & EndpointException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> EndpointException::Clone() const {
-	return UniquePtr<LocalException>(new EndpointException(*this));
+AutoPtr<LocalException> EndpointException::Clone() const {
+	return AutoPtr<LocalException>(new EndpointException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -418,8 +418,8 @@ InvalidLinkException & InvalidLinkException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> InvalidLinkException::Clone() const {
-	return UniquePtr<LocalException>(new InvalidLinkException(*this));
+AutoPtr<LocalException> InvalidLinkException::Clone() const {
+	return AutoPtr<LocalException>(new InvalidLinkException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -449,8 +449,8 @@ EndpointAddressTypeMismatchException & EndpointAddressTypeMismatchException::ope
 	return *this;
 }
 
-UniquePtr<LocalException> EndpointAddressTypeMismatchException::Clone() const {
-	return UniquePtr<LocalException>(new EndpointAddressTypeMismatchException(*this));
+AutoPtr<LocalException> EndpointAddressTypeMismatchException::Clone() const {
+	return AutoPtr<LocalException>(new EndpointAddressTypeMismatchException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -482,9 +482,9 @@ EndpointHasNotMultiClientsTypeException & EndpointHasNotMultiClientsTypeExceptio
 	return *this;
 }
 
-UniquePtr<LocalException> EndpointHasNotMultiClientsTypeException::Clone()
+AutoPtr<LocalException> EndpointHasNotMultiClientsTypeException::Clone()
 		const {
-	return UniquePtr<LocalException>(
+	return AutoPtr<LocalException>(
 		new EndpointHasNotMultiClientsTypeException(*this));
 }
 
@@ -509,8 +509,8 @@ DllException & DllException::operator =(const DllException &rhs) throw() {
 	return *this;
 }
 
-UniquePtr<LocalException> DllException::Clone() const {
-	return UniquePtr<LocalException>(new DllException(*this));
+AutoPtr<LocalException> DllException::Clone() const {
+	return AutoPtr<LocalException>(new DllException(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////

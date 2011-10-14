@@ -355,10 +355,10 @@ void UpnpcService::DoWork() {
 
 namespace TunnelEx { namespace Mods { namespace Upnp {
 	
-	UniquePtr<TunnelEx::Service> CreateUpnpcService(
+	AutoPtr<TunnelEx::Service> CreateUpnpcService(
 				SharedPtr<const ServiceRule> rule,
 				const ServiceRule::Service &service) {
-		return UniquePtr<TunnelEx::Service>(new UpnpcService(rule, service));
+		return AutoPtr<TunnelEx::Service>(new UpnpcService(rule, service));
 	}
 
 } } }

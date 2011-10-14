@@ -85,7 +85,7 @@ private:
 	typedef boost::function<DestinationPingFilterFabricPrototype>
 		DestinationPingFilterFabric;
 
-	typedef UniquePtr<EndpointAddress>(
+	typedef AutoPtr<EndpointAddress>(
 			EndpointAddressFabricPrototype)(
 				Server::ConstRef,
 				const WString &);
@@ -104,7 +104,7 @@ private:
 		EndpointAddressFabricFunc func;
 	};
 
-	typedef UniquePtr<Service>(ServiceFabricPrototype)(
+	typedef AutoPtr<Service>(ServiceFabricPrototype)(
 		SharedPtr<const ServiceRule>,
 		const ServiceRule::Service &);
 	typedef boost::function<ServiceFabricPrototype> ServiceFabricFunc;
@@ -338,7 +338,7 @@ public:
 		}
 	}
 
-	UniquePtr<EndpointAddress> CreateEndpointAddress(
+	AutoPtr<EndpointAddress> CreateEndpointAddress(
 				const WString &resourceIdentifier) {
 		boost::wcmatch what;
 		assert(boost::regex_match(resourceIdentifier.GetCStr(), what, m_enpointAddrTypeExp));
@@ -358,7 +358,7 @@ public:
 	}
 
 
-	UniquePtr<Service> CreateService(
+	AutoPtr<Service> CreateService(
 				TunnelEx::SharedPtr<const ServiceRule> rule,
 				const ServiceRule::Service &service) {
 
@@ -441,12 +441,12 @@ void ModulesFactoryPolicy::CreatePostListeners(
 		postListenersReceiveCallback);
 }
 
-UniquePtr<EndpointAddress> ModulesFactoryPolicy::CreateEndpointAddress(
+AutoPtr<EndpointAddress> ModulesFactoryPolicy::CreateEndpointAddress(
 			const WString &resourceIdentifier) {
 	return m_pimpl->CreateEndpointAddress(resourceIdentifier);
 }
 
-UniquePtr<Service> ModulesFactoryPolicy::CreateService(
+AutoPtr<Service> ModulesFactoryPolicy::CreateService(
 			TunnelEx::SharedPtr<const ServiceRule> rule,
 			const ServiceRule::Service &service) {
 	return m_pimpl->CreateService(rule, service);

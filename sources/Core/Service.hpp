@@ -13,7 +13,7 @@
 #include "Rule.hpp"
 #include "Exceptions.hpp"
 #include "Instance.hpp"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 #include "Api.h"
 
 namespace TunnelEx {

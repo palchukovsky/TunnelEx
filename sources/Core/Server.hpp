@@ -53,7 +53,7 @@ namespace TunnelEx {
 			/* Throws an exception if server doesn't started. */
 			void Stop();
 
-			::TunnelEx::UniquePtr<EndpointAddress> GetRealOpenedEndpointAddress(
+			::TunnelEx::AutoPtr<EndpointAddress> GetRealOpenedEndpointAddress(
 					const ::TunnelEx::WString &ruleUuid,
 					const ::TunnelEx::WString &endpointUuid)
 				const ;

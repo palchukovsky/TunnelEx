@@ -152,7 +152,7 @@ const WString & UpnpEndpointAddress::GetResourceIdentifier() const {
 	return m_pimpl->m_resourceIdentifier;
 }
 
-UniquePtr<Connection> UpnpEndpointAddress::CreateRemoteConnection(
+AutoPtr<Connection> UpnpEndpointAddress::CreateRemoteConnection(
 			const RuleEndpoint &,
 			SharedPtr<const EndpointAddress>)
 		const {
@@ -207,8 +207,8 @@ void UpnpTcpEndpointAddress::Swap(UpnpTcpEndpointAddress &rhs) throw() {
 	UpnpEndpointAddress::Swap(rhs);
 }
 
-UniquePtr<EndpointAddress> UpnpTcpEndpointAddress::Clone() const {
-	return UniquePtr<EndpointAddress>(new UpnpTcpEndpointAddress(*this));
+AutoPtr<EndpointAddress> UpnpTcpEndpointAddress::Clone() const {
+	return AutoPtr<EndpointAddress>(new UpnpTcpEndpointAddress(*this));
 }
 
 WString UpnpTcpEndpointAddress::CreateResourceIdentifier(
@@ -230,7 +230,7 @@ const wchar_t * UpnpTcpEndpointAddress::GetSubProtoImpl() {
 	return Inet::TcpEndpointAddress::GetProto();
 }
 
-UniquePtr<Acceptor> UpnpTcpEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> UpnpTcpEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
@@ -239,7 +239,7 @@ UniquePtr<Acceptor> UpnpTcpEndpointAddress::OpenForIncomingConnections(
 		ConvertString<WString>(Client().GetLocalIpAddress().c_str()).GetCStr(),
 		0);
 	
-	UniquePtr<TcpConnectionAcceptor> result(
+	AutoPtr<TcpConnectionAcceptor> result(
 		new TcpConnectionAcceptor(
 			GetExternalPort(),
 			tcpAddress,
@@ -254,7 +254,7 @@ bool UpnpTcpEndpointAddress::IsHasMultiClientsType() const {
 	return true;
 }
 
-UniquePtr<Connection> UpnpTcpEndpointAddress::CreateLocalConnection(
+AutoPtr<Connection> UpnpTcpEndpointAddress::CreateLocalConnection(
 			const RuleEndpoint &,
 			SharedPtr<const EndpointAddress>) 
 		const {
@@ -290,8 +290,8 @@ void UpnpUdpEndpointAddress::Swap(UpnpUdpEndpointAddress &rhs) throw() {
 	UpnpEndpointAddress::Swap(rhs);
 }
 
-UniquePtr<EndpointAddress> UpnpUdpEndpointAddress::Clone() const {
-	return UniquePtr<EndpointAddress>(new UpnpUdpEndpointAddress(*this));
+AutoPtr<EndpointAddress> UpnpUdpEndpointAddress::Clone() const {
+	return AutoPtr<EndpointAddress>(new UpnpUdpEndpointAddress(*this));
 }
 
 WString UpnpUdpEndpointAddress::CreateResourceIdentifier(
@@ -313,7 +313,7 @@ const wchar_t * UpnpUdpEndpointAddress::GetSubProtoImpl() {
 	return Inet::UdpEndpointAddress::GetProto();
 }
 
-UniquePtr<Acceptor> UpnpUdpEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> UpnpUdpEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
@@ -322,7 +322,7 @@ UniquePtr<Acceptor> UpnpUdpEndpointAddress::OpenForIncomingConnections(
 		ConvertString<WString>(Client().GetLocalIpAddress().c_str()).GetCStr(),
 		0);
 	
-	UniquePtr<UdpConnectionAcceptor> result(
+	AutoPtr<UdpConnectionAcceptor> result(
 		new UdpConnectionAcceptor(
 			GetExternalPort(),
 			udpAddress,
@@ -336,7 +336,7 @@ bool UpnpUdpEndpointAddress::IsHasMultiClientsType() const {
 	return true;
 }
 
-UniquePtr<Connection> UpnpUdpEndpointAddress::CreateLocalConnection(
+AutoPtr<Connection> UpnpUdpEndpointAddress::CreateLocalConnection(
 			const RuleEndpoint &,
 			SharedPtr<const EndpointAddress>) 
 		const {
@@ -350,17 +350,17 @@ UniquePtr<Connection> UpnpUdpEndpointAddress::CreateLocalConnection(
 
 namespace TunnelEx { namespace Mods { namespace Upnp {
 
-	UniquePtr<EndpointAddress> CreateUpnpTcpEndpointAddress(
+	AutoPtr<EndpointAddress> CreateUpnpTcpEndpointAddress(
 				Server::ConstRef,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(
+		return AutoPtr<EndpointAddress>(
 			new UpnpTcpEndpointAddress(resourceIdentifier));
 	}
 
-	UniquePtr<EndpointAddress> CreateUpnpUdpEndpointAddress(
+	AutoPtr<EndpointAddress> CreateUpnpUdpEndpointAddress(
 				Server::ConstRef,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(
+		return AutoPtr<EndpointAddress>(
 			new UpnpUdpEndpointAddress(resourceIdentifier));
 	}
 

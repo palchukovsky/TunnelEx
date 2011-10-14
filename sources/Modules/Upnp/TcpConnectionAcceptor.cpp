@@ -24,7 +24,7 @@ TcpConnectionAcceptor::TcpConnectionAcceptor(
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		: Base(inetAddress, ruleEndpoint, ruleEndpointAddress) {
 
-	const UniquePtr<EndpointAddress> openedAddress = Base::GetLocalAddress();
+	const AutoPtr<EndpointAddress> openedAddress = Base::GetLocalAddress();
 
 	ServiceRule::Service service;
 	service.uuid = Helpers::Uuid().GetAsString().c_str();

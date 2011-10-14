@@ -617,7 +617,7 @@ public:
 		// Certificate set
 		if (isServer || !isAnonymous) {
 			if (!m_privateKey) {
-				UniquePtr<X509Private> certificate = !isAnonymous
+				AutoPtr<X509Private> certificate = !isAnonymous
 					?	server
 							.GetCertificatesStorage()
 							.GetPrivateCertificate(m_certificate)
@@ -670,7 +670,7 @@ public:
 		} else if (m_remoteCertificates.GetSize() > 0) {
 			bool isAnyLoaded = false;
 			for (size_t i = 0; i < m_remoteCertificates.GetSize(); ++i) {
-				UniquePtr<X509Shared> certificate;
+				AutoPtr<X509Shared> certificate;
 				try {
 					certificate = server
 						.GetCertificatesStorage()
@@ -712,9 +712,9 @@ public:
 
 private:
 
-	UniquePtr<X509Private> GenerateAnonymousPrivateCertificate() const {
+	AutoPtr<X509Private> GenerateAnonymousPrivateCertificate() const {
 		const std::auto_ptr<const Rsa> rsa(Rsa::Generate(Key::SIZE_2048));
-		UniquePtr<X509Private> cert(
+		AutoPtr<X509Private> cert(
 			X509Private::GenerateVersion3(
 				rsa->GetPrivateKey(),
 				rsa->GetPublicKey(),
@@ -815,19 +815,19 @@ const TcpEndpointAddress & TcpEndpointAddress::operator =(
 	return *this;
 }
 
-UniquePtr<EndpointAddress> TcpEndpointAddress::Clone() const {
-	return UniquePtr<EndpointAddress>(new TcpEndpointAddress(*this));
+AutoPtr<EndpointAddress> TcpEndpointAddress::Clone() const {
+	return AutoPtr<EndpointAddress>(new TcpEndpointAddress(*this));
 }
 
 bool TcpEndpointAddress::IsHasMultiClientsType() const {
 	return true;
 }
 
-UniquePtr<Acceptor> TcpEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> TcpEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
-	UniquePtr<Acceptor> result;
+	AutoPtr<Acceptor> result;
 	if (GetCertificate().IsEmpty()) {
 		assert(!m_pimpl->IsSslServer());
 		assert(!m_pimpl->IsSslClient());
@@ -855,26 +855,26 @@ UniquePtr<Acceptor> TcpEndpointAddress::OpenForIncomingConnections(
 	return result;
 }
 
-UniquePtr<Connection> TcpEndpointAddress::CreateRemoteConnection(
+AutoPtr<Connection> TcpEndpointAddress::CreateRemoteConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
 	return CreateConnection(ruleEndpoint, ruleEndpointAddress);
 }
 
-UniquePtr<Connection> TcpEndpointAddress::CreateLocalConnection(
+AutoPtr<Connection> TcpEndpointAddress::CreateLocalConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
 	return CreateConnection(ruleEndpoint, ruleEndpointAddress);
 }
 
-UniquePtr<Connection> TcpEndpointAddress::CreateConnection(
+AutoPtr<Connection> TcpEndpointAddress::CreateConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
 	using namespace SubProtoDirectionTraits;
-	UniquePtr<Connection> result;
+	AutoPtr<Connection> result;
 	const ACE_INET_Addr *const proxyAddress = GetProxyAceInetAddr();
 	if (proxyAddress == 0) {
 		if (GetCertificate().IsEmpty()) {
@@ -1299,42 +1299,42 @@ const UdpEndpointAddress & UdpEndpointAddress::operator =(
 	return *this;
 }
 
-UniquePtr<EndpointAddress> UdpEndpointAddress::Clone() const {
-	return UniquePtr<EndpointAddress>(new UdpEndpointAddress(*this));
+AutoPtr<EndpointAddress> UdpEndpointAddress::Clone() const {
+	return AutoPtr<EndpointAddress>(new UdpEndpointAddress(*this));
 }
 
 bool UdpEndpointAddress::IsHasMultiClientsType() const {
 	return true;
 }
 
-UniquePtr<Acceptor> UdpEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> UdpEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
-	return UniquePtr<Acceptor>(
+	return AutoPtr<Acceptor>(
 		new UdpConnectionAcceptor<false>(
 			*this,
 			ruleEndpoint,
 			ruleEndpointAddress));
 }
 
-UniquePtr<Connection> UdpEndpointAddress::CreateConnection(
+AutoPtr<Connection> UdpEndpointAddress::CreateConnection(
 				const RuleEndpoint &ruleEndpoint,
 				SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 			const {
-	UniquePtr<Connection> result(
+	AutoPtr<Connection> result(
 		new OutcomingUdpConnection<false>(*this, ruleEndpoint, ruleEndpointAddress));
 	return result;
 }
 
-UniquePtr<Connection> UdpEndpointAddress::CreateRemoteConnection(
+AutoPtr<Connection> UdpEndpointAddress::CreateRemoteConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress)
 		const {
 	return CreateConnection(ruleEndpoint, ruleEndpointAddress);
 }
 
-UniquePtr<Connection> UdpEndpointAddress::CreateLocalConnection(
+AutoPtr<Connection> UdpEndpointAddress::CreateLocalConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
@@ -1404,17 +1404,17 @@ const wchar_t * UdpEndpointAddress::GetProto() {
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 	
-	UniquePtr<EndpointAddress> CreateTcpEndpointAddress(
+	AutoPtr<EndpointAddress> CreateTcpEndpointAddress(
 				Server::ConstRef server,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(
+		return AutoPtr<EndpointAddress>(
 			new TcpEndpointAddress(resourceIdentifier, &server));
 	}
 
-	UniquePtr<EndpointAddress> CreateUdpEndpointAddress(
+	AutoPtr<EndpointAddress> CreateUdpEndpointAddress(
 				Server::ConstRef server,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(
+		return AutoPtr<EndpointAddress>(
 			new UdpEndpointAddress(resourceIdentifier, &server));
 	}
 

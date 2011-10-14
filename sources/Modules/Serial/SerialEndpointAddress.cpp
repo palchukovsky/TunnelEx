@@ -201,7 +201,7 @@ const WString & SerialEndpointAddress::GetResourceIdentifier() const {
 	return m_pimpl->m_identifier;
 }
 
-UniquePtr<Acceptor> SerialEndpointAddress::OpenForIncomingConnections(
+AutoPtr<Acceptor> SerialEndpointAddress::OpenForIncomingConnections(
 			const RuleEndpoint &,
 			SharedPtr<const EndpointAddress>)
 		const {
@@ -213,24 +213,24 @@ bool SerialEndpointAddress::IsHasMultiClientsType(void) const {
 	return false;
 }
 
-UniquePtr<Connection> SerialEndpointAddress::CreateRemoteConnection(
+AutoPtr<Connection> SerialEndpointAddress::CreateRemoteConnection(
 			const TunnelEx::RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
-	return UniquePtr<Connection>(
+	return AutoPtr<Connection>(
 		new SerialConnection(*this, ruleEndpoint, ruleEndpointAddress));
 }
 
-UniquePtr<Connection> SerialEndpointAddress::CreateLocalConnection(
+AutoPtr<Connection> SerialEndpointAddress::CreateLocalConnection(
 			const RuleEndpoint &ruleEndpoint,
 			SharedPtr<const EndpointAddress> ruleEndpointAddress) 
 		const {
-	return UniquePtr<Connection>(
+	return AutoPtr<Connection>(
 		new SerialConnection(*this, ruleEndpoint, ruleEndpointAddress));
 }
 
-UniquePtr<EndpointAddress> SerialEndpointAddress::Clone() const {
-	return UniquePtr<EndpointAddress>(new SerialEndpointAddress(*this));
+AutoPtr<EndpointAddress> SerialEndpointAddress::Clone() const {
+	return AutoPtr<EndpointAddress>(new SerialEndpointAddress(*this));
 }
 
 const ACE_DEV_Addr & SerialEndpointAddress::GetAceDevAddr() const {
@@ -330,10 +330,10 @@ WString SerialEndpointAddress::CreateResourceIdentifier(
 
 namespace TunnelEx { namespace Mods { namespace Serial {
 
-	UniquePtr<EndpointAddress> CreateEndpointAddress(
+	AutoPtr<EndpointAddress> CreateEndpointAddress(
 				Server::ConstRef,
 				const WString &resourceIdentifier) {
-		return UniquePtr<EndpointAddress>(new SerialEndpointAddress(resourceIdentifier));
+		return AutoPtr<EndpointAddress>(new SerialEndpointAddress(resourceIdentifier));
 	}
 
 } } }

@@ -152,7 +152,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		TcpEndpointAddress(const TcpEndpointAddress &);
 		const TcpEndpointAddress & operator =(const TcpEndpointAddress &);
 
-		virtual TunnelEx::UniquePtr<TunnelEx::EndpointAddress> Clone() const;
+		virtual TunnelEx::AutoPtr<TunnelEx::EndpointAddress> Clone() const;
 
 	public:
 
@@ -163,17 +163,17 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual bool IsHasMultiClientsType() const;
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Acceptor> OpenForIncomingConnections(
+		virtual TunnelEx::AutoPtr<TunnelEx::Acceptor> OpenForIncomingConnections(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress> ruleEndpointAddress)
 			const;
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Connection> CreateRemoteConnection(
+		virtual TunnelEx::AutoPtr<TunnelEx::Connection> CreateRemoteConnection(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Connection> CreateLocalConnection(
+		virtual TunnelEx::AutoPtr<TunnelEx::Connection> CreateLocalConnection(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;
@@ -238,7 +238,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Connection> CreateConnection(
+		virtual TunnelEx::AutoPtr<TunnelEx::Connection> CreateConnection(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;
@@ -280,18 +280,18 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		UdpEndpointAddress(const UdpEndpointAddress &);
 		const UdpEndpointAddress & operator =(const UdpEndpointAddress &);
 
-		virtual TunnelEx::UniquePtr<TunnelEx::EndpointAddress> Clone() const;
+		virtual TunnelEx::AutoPtr<TunnelEx::EndpointAddress> Clone() const;
 
 	public:
 
 		virtual bool IsHasMultiClientsType() const;
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Acceptor> OpenForIncomingConnections(
+		virtual TunnelEx::AutoPtr<TunnelEx::Acceptor> OpenForIncomingConnections(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>)
 			const;
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Connection> CreateRemoteConnection(
+		virtual TunnelEx::AutoPtr<TunnelEx::Connection> CreateRemoteConnection(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;
@@ -302,7 +302,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual bool IsReadyToRecreateLocalConnection() const {
 			return false;
 		}
-		virtual TunnelEx::UniquePtr<TunnelEx::Connection> CreateLocalConnection(
+		virtual TunnelEx::AutoPtr<TunnelEx::Connection> CreateLocalConnection(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;
@@ -331,7 +331,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		virtual TunnelEx::UniquePtr<TunnelEx::Connection> CreateConnection(
+		virtual TunnelEx::AutoPtr<TunnelEx::Connection> CreateConnection(
 				const TunnelEx::RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;

@@ -35,6 +35,6 @@ const ProxyWorkingException & ProxyWorkingException::operator =(
 	return *this;
 }
 
-UniquePtr<LocalException> ProxyWorkingException::Clone() const {
-	return UniquePtr<LocalException>(new ProxyWorkingException(*this));
+AutoPtr<LocalException> ProxyWorkingException::Clone() const {
+	return AutoPtr<LocalException>(new ProxyWorkingException(*this));
 }

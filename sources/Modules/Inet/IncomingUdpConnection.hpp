@@ -71,10 +71,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	public:
 
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress() const {
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const {
 			using namespace TunnelEx;
 			// Because remote address can be changed dynamically
-			return UniquePtr<EndpointAddress>(
+			return AutoPtr<EndpointAddress>(
 				new UdpEndpointAddress(WString(L"*:*")));
 		}
 

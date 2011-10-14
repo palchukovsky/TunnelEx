@@ -11,8 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__Acceptor_hpp__0807121047
 
 #include "IoHandle.h"
-#include "SharedPtr.hpp"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Instance.hpp"
 #include "Api.h"
 
@@ -45,7 +44,7 @@ namespace TunnelEx {
 		  * @throw TunnelEx::ConnectionOpeningException
 		  * @return accepted connection object;
 		  */
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::Connection> Accept() = 0;
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::Connection> Accept() = 0;
 
 		//! Attaches connection to existing tunnel.
 		/** Tries to attach incoming connection to existing tunnel and
@@ -55,7 +54,7 @@ namespace TunnelEx {
 		  */
 		virtual bool TryToAttach() = 0;
 
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> GetLocalAddress()
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> GetLocalAddress()
 			const
 			= 0;
 

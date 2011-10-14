@@ -749,7 +749,7 @@ void TexServiceImplementation::GetSslCertificate(
 			texs__SslCertificateInfo &result)
 		const {
 	try {
-		const UniquePtr<const X509Shared> certificate 
+		const AutoPtr<const X509Shared> certificate 
 			= m_pimpl->GetSslCertificatesStorage().GetCertificate(id.c_str());
 		texs__SslCertificateInfo certificateInfo;
 		certificateInfo.id = id;
@@ -794,7 +794,7 @@ void TexServiceImplementation::GetSslCertificates(
 		for ( ; ; ) {
 
 			std::list<texs__SslCertificateShortInfo> certificates;
-			const UniquePtr<const SslCertificateIdCollection> ids
+			const AutoPtr<const SslCertificateIdCollection> ids
 				= m_pimpl->GetSslCertificatesStorage().GetInstalledIds();
 		
 			try {
@@ -802,7 +802,7 @@ void TexServiceImplementation::GetSslCertificates(
 				for (size_t i = 0; i < ids->GetSize(); ++i) {
 					const WString &id = (*ids)[i];
 					try {
-						const UniquePtr<const X509Shared> certificate 
+						const AutoPtr<const X509Shared> certificate 
 							= m_pimpl->GetSslCertificatesStorage().GetCertificate(id);
 						texs__SslCertificateShortInfo certificateInfo;
 						certificateInfo.id = id.GetCStr();

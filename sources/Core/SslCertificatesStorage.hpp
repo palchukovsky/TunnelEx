@@ -11,7 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__SslCertificatesStorage_hpp__1011061620
 
 #include "Collection.hpp"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Api.h"
 
 namespace TunnelEx { namespace Helpers { namespace Crypto {
@@ -51,14 +51,14 @@ namespace TunnelEx {
 		void Delete(const ::TunnelEx::SslCertificateIdCollection &ids);
 		void Delete(const ::TunnelEx::WString &id);
 
-		::TunnelEx::UniquePtr<::TunnelEx::SslCertificateIdCollection> GetInstalledIds()
+		::TunnelEx::AutoPtr<::TunnelEx::SslCertificateIdCollection> GetInstalledIds()
 				const;
 
 		//! Returns a certificate.
 		/** @param certificateId	local certificate ID
 		  * @throw	TunnelEx::NotFoundException
 		  */
-		::TunnelEx::UniquePtr<::TunnelEx::Helpers::Crypto::X509Shared> GetCertificate(
+		::TunnelEx::AutoPtr<::TunnelEx::Helpers::Crypto::X509Shared> GetCertificate(
 					const ::TunnelEx::WString &certificateId)
 				const;
 
@@ -74,7 +74,7 @@ namespace TunnelEx {
 		/** @param certificateId	local certificate ID
 		  * @throw	TunnelEx::NotFoundException
 		  */
-		::TunnelEx::UniquePtr<::TunnelEx::Helpers::Crypto::X509Private>
+		::TunnelEx::AutoPtr<::TunnelEx::Helpers::Crypto::X509Private>
 		GetPrivateCertificate(
 					const ::TunnelEx::WString &certificateId)
 				const;

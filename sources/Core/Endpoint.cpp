@@ -48,15 +48,15 @@ public:
 			&& !m_cachedWriteResourceIdentifier.IsEmpty());
 	}
 
-	explicit Implementation(UniquePtr<EndpointAddress> combinedAddress, bool isAcceptor) throw()
+	explicit Implementation(AutoPtr<EndpointAddress> combinedAddress, bool isAcceptor) throw()
 			: m_combinedOrReadAddress(combinedAddress),
 			m_acceptor(isAcceptor ? Endpoint::ACCEPTOR_READER : Endpoint::ACCEPTOR_NONE) {
 		//...//
 	}
 
 	explicit Implementation(
-				UniquePtr<EndpointAddress> readAddress,
-				UniquePtr<EndpointAddress> writeAddress,
+				AutoPtr<EndpointAddress> readAddress,
+				AutoPtr<EndpointAddress> writeAddress,
 				Endpoint::Acceptor acceptor)
 			throw()
 			: m_combinedOrReadAddress(readAddress),
@@ -72,11 +72,11 @@ public:
 				rhs.m_cachedWriteResourceIdentifier),
 			m_acceptor(rhs.m_acceptor) {
 		if (rhs.m_combinedOrReadAddress) {
-			UniquePtr<EndpointAddress> clone(rhs.m_combinedOrReadAddress->Clone());
+			AutoPtr<EndpointAddress> clone(rhs.m_combinedOrReadAddress->Clone());
 			m_combinedOrReadAddress = clone;
 		}
 		if (rhs.m_writeAddress) {
-			UniquePtr<EndpointAddress> clone(rhs.m_writeAddress->Clone());
+			AutoPtr<EndpointAddress> clone(rhs.m_writeAddress->Clone());
 			m_writeAddress = clone;
 		}
 	}
@@ -148,14 +148,14 @@ Endpoint::Endpoint(
 	//...//
 }
 
-Endpoint::Endpoint(UniquePtr<EndpointAddress> combinedAddress, bool isAcceptor)
+Endpoint::Endpoint(AutoPtr<EndpointAddress> combinedAddress, bool isAcceptor)
 		: m_pimpl(new Implementation(combinedAddress, isAcceptor)) {
 	//...//
 }
 
 Endpoint::Endpoint(
-			UniquePtr<EndpointAddress> readAddress,
-			UniquePtr<EndpointAddress> writeAddress,
+			AutoPtr<EndpointAddress> readAddress,
+			AutoPtr<EndpointAddress> writeAddress,
 			Acceptor acceptor)
 		: m_pimpl(new Implementation(readAddress, writeAddress, acceptor)) {
 	//...//
@@ -240,7 +240,7 @@ SharedPtr<EndpointAddress> Endpoint::GetWriteAddress() {
 	return m_pimpl->m_writeAddress;
 }
 
-void Endpoint::SetCombinedAddress(UniquePtr<EndpointAddress> address, bool isAcceptor) {
+void Endpoint::SetCombinedAddress(AutoPtr<EndpointAddress> address, bool isAcceptor) {
 	Endpoint(address, isAcceptor).Swap(*this);
 }
 
@@ -270,8 +270,8 @@ const WString & Endpoint::GetWriteResourceIdentifier() const {
 }
 
 void Endpoint::SetReadWriteAddresses(
-			::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> ra,
-			::TunnelEx::UniquePtr<::TunnelEx::EndpointAddress> wa,
+			::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> ra,
+			::TunnelEx::AutoPtr<::TunnelEx::EndpointAddress> wa,
 			Acceptor acceptor) {
 	Endpoint(ra, wa, acceptor).Swap(*this);
 }
@@ -343,8 +343,8 @@ RuleEndpoint::RuleEndpoint(
 }
 
 RuleEndpoint::RuleEndpoint(
-			UniquePtr<EndpointAddress> r,
-			UniquePtr<EndpointAddress> w,
+			AutoPtr<EndpointAddress> r,
+			AutoPtr<EndpointAddress> w,
 			Endpoint::Acceptor acceptor,
 			const WString *uuid)
 		: Endpoint(r, w, acceptor),
@@ -353,7 +353,7 @@ RuleEndpoint::RuleEndpoint(
 }
 
 RuleEndpoint::RuleEndpoint(
-			UniquePtr<EndpointAddress> address,
+			AutoPtr<EndpointAddress> address,
 			bool isAcceptor,
 			const WString *uuid)
 		: Endpoint(address, isAcceptor),

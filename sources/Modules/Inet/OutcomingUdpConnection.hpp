@@ -52,11 +52,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	public:
 
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress() const {
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const {
 			using namespace TunnelEx;
 			ACE_INET_Addr addr;
 			if (m_stream.get_remote_addr(addr) == 0) {
-				return UniquePtr<EndpointAddress>(
+				return AutoPtr<EndpointAddress>(
 					new UdpEndpointAddress(
 					*boost::polymorphic_downcast<const UdpEndpointAddress *>(
 					GetRuleEndpointAddress().Get())));

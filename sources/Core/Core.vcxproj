@@ -178,12 +178,12 @@
     <ClInclude Include="MessageBlockHolder.hpp" />
     <ClInclude Include="ModulesFactory.hpp" />
     <ClInclude Include="Prec.h" />
+    <ClInclude Include="SmartPtr.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Rule.hpp" />
     <ClInclude Include="Server.hpp" />
     <ClInclude Include="ServerWorker.hpp" />
     <ClInclude Include="Service.hpp" />
-    <ClInclude Include="SharedPtr.hpp" />
     <ClInclude Include="Singleton.hpp" />
     <ClInclude Include="SslCertificatesStorage.hpp" />
     <ClInclude Include="String.hpp" />
@@ -192,7 +192,6 @@
     <ClInclude Include="Tunnel.hpp" />
     <ClInclude Include="TunnelBuffer.hpp" />
     <ClInclude Include="TunnelConnectionSignal.hpp" />
-    <ClInclude Include="UniquePtr.hpp" />
     <ClInclude Include="RuleSet.h">
       <DependentUpon>RuleSet.xsd</DependentUpon>
     </ClInclude>

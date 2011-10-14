@@ -44,7 +44,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	
 	public:
 	
-		virtual TunnelEx::UniquePtr<TunnelEx::EndpointAddress> GetLocalAddress() const {
+		virtual TunnelEx::AutoPtr<TunnelEx::EndpointAddress> GetLocalAddress() const {
 			using namespace TunnelEx;
 			ACE_INET_Addr addr;			
 			if (GetIoStream().get_local_addr(addr) != 0) {
@@ -53,7 +53,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				message % error.GetString().GetCStr() % error.GetErrorNo();
 				throw SystemException(message.str().c_str());
 			}
-			return UniquePtr<EndpointAddress>(new EndpointAddressImpl(addr));
+			return AutoPtr<EndpointAddress>(new EndpointAddressImpl(addr));
 		}
 
 	protected:

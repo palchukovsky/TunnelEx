@@ -79,8 +79,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return IoHandleInfo(m_acceptor.get_handle(), IoHandleInfo::TYPE_SOCKET);
 		}
 
-		virtual UniquePtr<TunnelEx::Connection> Accept() {
-			UniquePtr<TunnelEx::Connection> result(
+		virtual AutoPtr<TunnelEx::Connection> Accept() {
+			AutoPtr<TunnelEx::Connection> result(
 				new Connection(
 					GetRuleEndpoint(),
 					GetRuleEndpointAddress(),
@@ -92,7 +92,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return false;
 		}
 		
-		virtual UniquePtr<EndpointAddress> GetLocalAddress() const {
+		virtual AutoPtr<EndpointAddress> GetLocalAddress() const {
 			ACE_INET_Addr addr;
 			if (m_acceptor.get_local_addr(addr) != 0) {
 				const Error error(errno);
@@ -100,7 +100,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				exception % error.GetString().GetCStr() % error.GetErrorNo();
 				throw SystemException(exception.str().c_str());
 			}
-			return UniquePtr<EndpointAddress>(new TcpEndpointAddress(addr));
+			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(addr));
 		}
 		
 	private:

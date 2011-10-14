@@ -55,8 +55,8 @@ public:
 		return *this;
 	}
 	
-	virtual UniquePtr<LocalException> Clone() const {
-		return UniquePtr<LocalException>(new LicenseException(*this));
+	virtual AutoPtr<LocalException> Clone() const {
+		return AutoPtr<LocalException>(new LicenseException(*this));
 	}
 
 };
@@ -99,8 +99,8 @@ public:
 			return L"Unknown error";
 		}
 	}
-	UniquePtr<LocalException> Clone() const {
-		return UniquePtr<LocalException>(
+	AutoPtr<LocalException> Clone() const {
+		return AutoPtr<LocalException>(
 			new ConnectionOpeningExceptionImpl<Base>(*this));
 	}
 private:
@@ -118,7 +118,7 @@ private:
 	}
 private:
 	SharedPtr<const EndpointAddress> m_address;
-	UniquePtr<LocalException> m_error;
+	AutoPtr<LocalException> m_error;
 	mutable std::wstring m_what;
 	const wchar_t *m_connectionType;
 };
@@ -350,7 +350,7 @@ private:
 		Barrier operationCompleteBarrier;
 		const Rule *rule;
 		bool lastResult;
-		UniquePtr<LocalException> lastException;
+		AutoPtr<LocalException> lastException;
 		bool isRuleException;
 
 	};
@@ -374,7 +374,7 @@ private:
 		ACE_Barrier startBarrier;
 
 		boost::shared_ptr<RuleInfo> ruleInfo;
-		UniquePtr<Connection> inConnection;
+		AutoPtr<Connection> inConnection;
 	
 		boost::shared_ptr<Tunnel> tunnel;
 
@@ -470,7 +470,7 @@ public:
 		return m_activeTunnels.size();
 	}
 
-	UniquePtr<EndpointAddress> GetRealOpenedEndpointAddress(
+	AutoPtr<EndpointAddress> GetRealOpenedEndpointAddress(
 				const WString &ruleUuid,
 				const WString &endpointUuid)
 			const {
@@ -500,7 +500,7 @@ public:
 		m_ruleUpdatingState.operationBarrier.wait();
 		m_ruleUpdatingState.operationCompleteBarrier.wait();
 		if (m_ruleUpdatingState.lastException) {
-			UniquePtr<LocalException> lastException = m_ruleUpdatingState.lastException;
+			AutoPtr<LocalException> lastException = m_ruleUpdatingState.lastException;
 			m_ruleUpdatingState.lastException.Reset();
 			if (dynamic_cast<LicenseException *>(lastException.Get())) {
 				throw *(dynamic_cast<LicenseException *>(lastException.Get()));
@@ -609,7 +609,7 @@ public:
 		if (!acceptor.TryToAttach()) {
 			Log::GetInstance().AppendDebug(
 				"Incoming connection detected, initializing tunnel...");
-			UniquePtr<Connection> inConnection = acceptor.Accept();
+			AutoPtr<Connection> inConnection = acceptor.Accept();
 			if (!inConnection->IsOneWay()) {
 				const unsigned long limit
 					= ruleInfo->rule->GetAcceptedConnectionsLimit();
@@ -623,7 +623,7 @@ public:
 				}
 				OpenTunnel(ruleInfo, inConnection);
 			} else if (Log::GetInstance().IsDebugRegistrationOn()) {
-				const UniquePtr<const EndpointAddress> remoteAddress(
+				const AutoPtr<const EndpointAddress> remoteAddress(
 					inConnection->GetRemoteAddress());
 				Log::GetInstance().AppendDebug(
 					"One-way connection %1% -> %2% is completed.",
@@ -639,7 +639,7 @@ public:
 
 	void OpenTunnel(
 				boost::shared_ptr<RuleInfo> ruleInfo,
-				UniquePtr<Connection> inConnection) {
+				AutoPtr<Connection> inConnection) {
 		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
 		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
 		m_tunnelOpeningState.ruleInfo = ruleInfo;
@@ -669,7 +669,7 @@ public:
 				const wchar_t *const type)
 			const {
 		try {
-			UniquePtr<Connection> result
+			AutoPtr<Connection> result
 				= address->CreateLocalConnection(endpoint, address);
 			return SharedPtr<Connection>(result);
 		} catch (const TunnelEx::ConnectionOpeningException &ex) {
@@ -778,7 +778,7 @@ private:
 		assert(servicesNumb > 0);
 		for (size_t i = 0; i < servicesNumb; ++i) {
 			const ServiceRule::Service &s = rule->GetServices()[i];
-			UniquePtr<Service> servicePtr
+			AutoPtr<Service> servicePtr
 				= ModulesFactory::GetInstance().CreateService(rule, s);
 			if (rule->IsEnabled()) {
 				if (!servicePtr->IsStarted()) {
@@ -1294,7 +1294,7 @@ private:
 
 	void OpenTunnelImplementation(
 				boost::shared_ptr<RuleInfo> ruleInfo,
-				UniquePtr<Connection> inConnection) {
+				AutoPtr<Connection> inConnection) {
 		boost::shared_ptr<Tunnel> tunnel;
 		{
 			SharedPtr<Connection> reader;
@@ -1502,7 +1502,7 @@ private:
 		Implementation &instance = *static_cast<Implementation *>(param);
 		for ( ; ; ) {
 			boost::shared_ptr<RuleInfo> ruleInfo;
-			UniquePtr<Connection> inConnection;
+			AutoPtr<Connection> inConnection;
 			boost::shared_ptr<Tunnel> tunnel;
 			for ( ; ; ) {
 				TunnelOpeningState::Lock conditionLock(
@@ -1715,7 +1715,7 @@ size_t ServerWorker::GetTunnelsNumber() const {
 	return m_pimpl->GetTunnelsNumber();
 }
 
-UniquePtr<EndpointAddress> ServerWorker::GetRealOpenedEndpointAddress(
+AutoPtr<EndpointAddress> ServerWorker::GetRealOpenedEndpointAddress(
 			const WString &ruleUuid,
 			const WString &endpointUuid)
 		const {

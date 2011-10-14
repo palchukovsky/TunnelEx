@@ -11,8 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__EndpointAddress_h__0805222113
 
 #include "String.hpp"
-#include "SharedPtr.hpp"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Api.h"
 
 namespace TunnelEx {
@@ -56,7 +55,7 @@ namespace TunnelEx {
 		 *	@throw TunnelEx::ConnectionOpeningException
 		 *	@throw TunnelEx::EndpointHasNotMultiClientsTypeException
 		 */
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::Acceptor> OpenForIncomingConnections(
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::Acceptor> OpenForIncomingConnections(
 				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
 				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> ruleEndpointAddress)
 			const
@@ -68,7 +67,7 @@ namespace TunnelEx {
 		  * @sa RuleEndpoint::GetOpenTimeout
 		  * @throw TunnelEx::ConnectionOpeningException
 		  */
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::Connection> CreateRemoteConnection(
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::Connection> CreateRemoteConnection(
 				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
 				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> ruleEndpointAddress) 
 			const
@@ -84,13 +83,13 @@ namespace TunnelEx {
 		 *  @sa CreateRemoteConnection
 		 *  @throw TunnelEx::ConnectionOpeningException
 		 */
-		virtual ::TunnelEx::UniquePtr<::TunnelEx::Connection> CreateLocalConnection(
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::Connection> CreateLocalConnection(
 				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
 				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> ruleEndpointAddress) 
 			const
 			= 0;
 
-		virtual ::TunnelEx::UniquePtr<EndpointAddress> Clone() const = 0;
+		virtual ::TunnelEx::AutoPtr<EndpointAddress> Clone() const = 0;
 
 	public:
 

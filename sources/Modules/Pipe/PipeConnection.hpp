@@ -41,12 +41,12 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 	
 	public:
 
-		virtual UniquePtr<EndpointAddress> GetLocalAddress(void) const {
-			return UniquePtr<EndpointAddress>();
+		virtual AutoPtr<EndpointAddress> GetLocalAddress(void) const {
+			return AutoPtr<EndpointAddress>();
 		}
 		
-		virtual UniquePtr<EndpointAddress> GetRemoteAddress(void) const {
-			return UniquePtr<EndpointAddress>();
+		virtual AutoPtr<EndpointAddress> GetRemoteAddress(void) const {
+			return AutoPtr<EndpointAddress>();
 		}
 
 	protected:

@@ -15,7 +15,7 @@
 #include "Log.hpp"
 #include "Format.hpp"
 #include "IoHandle.h"
-#include "UniquePtr.hpp"
+#include "SmartPtr.hpp"
 #include "Error.hpp"
 #include "ObjectsDeletionCheck.h"
 
@@ -103,7 +103,7 @@ namespace TunnelEx {
 				String buffer;
 				std::ostringstream message;
 				message << "Endpoint ";
-				const UniquePtr<const EndpointAddress> acceptorLocalAddress
+				const AutoPtr<const EndpointAddress> acceptorLocalAddress
 					= m_acceptor->GetLocalAddress();
 				const WString &acceptorLocalAddressId
 					= acceptorLocalAddress->GetResourceIdentifier();
@@ -138,7 +138,7 @@ namespace TunnelEx {
 					String buffer;
 					std::ostringstream message;
 					message << "Closing incoming connections endpoint ";
-					const UniquePtr<const EndpointAddress> acceptorLocalAddress
+					const AutoPtr<const EndpointAddress> acceptorLocalAddress
 						= m_acceptor->GetLocalAddress();
 					const WString &acceptorLocalAddressId
 						= acceptorLocalAddress->GetResourceIdentifier();
@@ -250,7 +250,7 @@ namespace TunnelEx {
 		ServerWorker &m_server;
 		const EndpointHandle m_endpointHandle;
 		const SharedPtr<const EndpointAddress> m_address;
-		UniquePtr<Acceptor> m_acceptor;
+		AutoPtr<Acceptor> m_acceptor;
 		boost::shared_ptr<ACE_Barrier> m_dtorBarrier;
 		
 		TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);

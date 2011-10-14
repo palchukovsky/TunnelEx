@@ -40,12 +40,12 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 		
 		virtual bool IsHasMultiClientsType(void) const;
 		
-		virtual UniquePtr<Acceptor> OpenForIncomingConnections(
+		virtual AutoPtr<Acceptor> OpenForIncomingConnections(
 					const RuleEndpoint &,
 					SharedPtr<const EndpointAddress>)
 				const;
 
-		virtual UniquePtr<EndpointAddress> Clone() const;
+		virtual AutoPtr<EndpointAddress> Clone() const;
 
 		virtual bool IsReadyToRecreateRemoteConnection() const {
 			return IsReadyToRecreateConnection();
@@ -66,7 +66,7 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 
 	protected:
 
-		virtual UniquePtr<Connection> CreateConnection(
+		virtual AutoPtr<Connection> CreateConnection(
 				const RuleEndpoint &,
 				SharedPtr<const EndpointAddress>) 
 			const;

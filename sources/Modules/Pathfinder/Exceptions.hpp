@@ -40,8 +40,8 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 			return *this;
 		}
 
-		virtual TunnelEx::UniquePtr<TunnelEx::LocalException> Clone() const {
-			return UniquePtr<LocalException>(new ServiceException(*this));
+		virtual TunnelEx::AutoPtr<TunnelEx::LocalException> Clone() const {
+			return AutoPtr<LocalException>(new ServiceException(*this));
 		}
 
 	};
@@ -71,8 +71,8 @@ namespace TunnelEx { namespace Mods { namespace Pathfinder {
 			return *this;
 		}
 
-		virtual TunnelEx::UniquePtr<TunnelEx::LocalException> Clone() const {
-			return UniquePtr<LocalException>(new LicensingException(*this));
+		virtual TunnelEx::AutoPtr<TunnelEx::LocalException> Clone() const {
+			return AutoPtr<LocalException>(new LicensingException(*this));
 		}
 
 	};

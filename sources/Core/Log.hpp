@@ -13,7 +13,7 @@
 #include "Singleton.hpp"
 #include "Api.h"
 #include "String.hpp"
-#include "SharedPtr.hpp"
+#include "SmartPtr.hpp"
 #include "Time.h"
 
 //! \todo: remove this headers before API will be released.

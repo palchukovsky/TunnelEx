@@ -37,8 +37,8 @@ namespace TunnelEx { namespace Mods { namespace Upnp {
 				LocalException::operator =(rhs);
 				return *this;
 			}
-			virtual UniquePtr<LocalException> Clone() const {
-				return UniquePtr<LocalException>(new Exception(*this));
+			virtual AutoPtr<LocalException> Clone() const {
+				return AutoPtr<LocalException>(new Exception(*this));
 			}
 		};
 

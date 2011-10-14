@@ -11,8 +11,7 @@
 
 #include "TestUtils/DtorTester.hpp"
 
-#include "Core/SharedPtr.hpp"
-#include "Core/UniquePtr.hpp"
+#include "Core/SmartPtr.hpp"
 
 using namespace TestUtil;
 namespace tex = TunnelEx;
@@ -142,14 +141,14 @@ namespace {
 		std::string lastDelObj;
 		unsigned int delObjNumb = 0;
 		{
-			tex::UniquePtr<DtorTester> foo(new DtorTester(delObjNumb, lastDelObj));
+			tex::AutoPtr<DtorTester> foo(new DtorTester(delObjNumb, lastDelObj));
 			EXPECT_TRUE(delObjNumb == 0);
 		}
 		EXPECT_TRUE(delObjNumb == 1);
 
 		delObjNumb = 0;
 		{
-			tex::UniquePtr<DtorTester> foo(new DtorTester(delObjNumb, lastDelObj));
+			tex::AutoPtr<DtorTester> foo(new DtorTester(delObjNumb, lastDelObj));
 			EXPECT_TRUE(delObjNumb == 0);
 			foo.Reset();
 			EXPECT_TRUE(delObjNumb == 1);
@@ -159,7 +158,7 @@ namespace {
 		{
 			DtorTester* tester = new DtorTester(delObjNumb, lastDelObj);
 			{
-				tex::UniquePtr<DtorTester> foo(tester);
+				tex::AutoPtr<DtorTester> foo(tester);
 				EXPECT_TRUE(delObjNumb == 0);
 				foo.Release();
 			}
@@ -169,18 +168,18 @@ namespace {
 
 		delObjNumb = 0;
 		{
-			tex::UniquePtr<DtorTester> foo1(new DtorTester(delObjNumb, lastDelObj));
+			tex::AutoPtr<DtorTester> foo1(new DtorTester(delObjNumb, lastDelObj));
 			EXPECT_TRUE(delObjNumb == 0);
-			tex::UniquePtr<DtorTester> foo2(foo1);
+			tex::AutoPtr<DtorTester> foo2(foo1);
 			EXPECT_TRUE(delObjNumb == 0);
 		}
 		EXPECT_TRUE(delObjNumb == 1);
 
 		delObjNumb = 0;
 		{
-			tex::UniquePtr<DtorTester> foo1(new DtorTester(delObjNumb, lastDelObj, "obj 1"));
+			tex::AutoPtr<DtorTester> foo1(new DtorTester(delObjNumb, lastDelObj, "obj 1"));
 			EXPECT_TRUE(delObjNumb == 0);
-			tex::UniquePtr<DtorTester> foo2(new DtorTester(delObjNumb, lastDelObj, "obj 2"));
+			tex::AutoPtr<DtorTester> foo2(new DtorTester(delObjNumb, lastDelObj, "obj 2"));
 			EXPECT_TRUE(delObjNumb == 0);
 			foo1 = foo2;
 			EXPECT_TRUE(delObjNumb == 1);
@@ -197,7 +196,7 @@ namespace {
 		unsigned int delObjNumb = 0;
 
 		{
-			tex::UniquePtr<DtorTester> autoPtr(new DtorTester(delObjNumb, lastDelObj));
+			tex::AutoPtr<DtorTester> autoPtr(new DtorTester(delObjNumb, lastDelObj));
 			tex::SharedPtr<DtorTester> sharedPtr(autoPtr);
 			EXPECT_TRUE(delObjNumb == 0);
 		}
@@ -207,7 +206,7 @@ namespace {
 		{
 			tex::SharedPtr<DtorTester> sharedPtr;
 			{
-				tex::UniquePtr<DtorTester> autoPtr(new DtorTester(delObjNumb, lastDelObj));
+				tex::AutoPtr<DtorTester> autoPtr(new DtorTester(delObjNumb, lastDelObj));
 				sharedPtr = autoPtr;
 			}
 			EXPECT_TRUE(delObjNumb == 0);
