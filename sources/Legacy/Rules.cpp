@@ -447,7 +447,7 @@ protected:
 			if (wbuffer == L"CombinedAddress") {
 				endpoint.SetCombinedResourceIdentifier(
 					node->GetAttribute("ResourceIdentifier", wbuffer),
-					node->GetAttribute("IsAcceptor", wbuffer) == L"true");
+					node->GetAttribute("IsAcceptor", wbuffer2) == L"true");
 			} else if (wbuffer == L"SplitAddress") {
 				node->GetAttribute("Acceptor", wbuffer);
 				Endpoint::Acceptor acceptor = Endpoint::ACCEPTOR_NONE; // wbuffer == L"none"
