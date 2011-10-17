@@ -24,9 +24,19 @@ set BuildWhat=none
 set IsHelpMode=false
 set IsNoClean=false
 set IsNoBuild=false
+set IsFinalBuild=false
+
+set IsFirstKey=true
 
 :GetKey
 if "%1"=="" goto GetKeyEnd
+if "%IsFinalBuild%"=="true" (
+	echo Error: failed to set additional parameters for final build.
+	goto Help
+)
+if "%1"=="release" goto SetFinalBuildType
+if "%1"=="final" goto SetFinalBuildType
+set IsFirstKey=false
 if "%1"=="conf" goto GetBuildType
 if "%1"=="build" goto GetWhatToBuild
 if "%1"=="full" goto GetFullBuild
@@ -39,10 +49,6 @@ goto Help
 
 :GetBuildType
 shift
-if "%1"=="debug" (
-	set IsDebug=true
-	goto GetNextKey
-)
 if "%1"=="release" (
 	set IsRelease=true
 	goto GetNextKey
@@ -54,6 +60,17 @@ if "%1"=="full" (
 )
 echo Error: "%1" - unknown build type.
 goto Help
+
+:SetFinalBuildType
+shift
+if "%IsFirstKey%" NEQ "true" (
+	echo Error: failed to set additional parameters for final build.
+	goto Help
+)
+set IsFinalBuild=true
+set IsRelease=true
+set BuildWhat=all
+goto GetNextKey
 
 :GetWhatToBuild
 shift
@@ -171,18 +188,19 @@ echo on
 :Help
 set IsHelpMode=true
 echo Parameters:
-echo     conf           - configuration type
-echo                      values: "release", "debug" or "full"
-echo                      ex.: conf=release
-echo     build          - specify what component should be build
-echo                      values: "all", "ws" (workspace), "openssl", "ace",
-echo                      "wxwidgets", "libxml", "gsoap", "miniupnp" or
-echo                      "tunnelex"
-echo                      ex.: build=all
-echo     full           - build all components for all configuraions
-echo     create_project - projects generation mode
-echo                      values: "yes" (default), "no" or "only"
-echo     no_clean       - do not clean temp-files after build
-echo     no_build       - do not build binaries, only urarc, patch files, create projects and so on
+echo     final or release - build final release
+echo     conf             - configuration type
+echo                        values: "release", "debug" or "full"
+echo                        ex.: conf=release
+echo     build            - specify what component should be build
+echo                        values: "all", "ws" (workspace), "openssl", "ace",
+echo                        "wxwidgets", "libxml", "gsoap", "miniupnp" or
+echo                        "tunnelex"
+echo                        ex.: build=all
+echo     full             - build all components for all configuraions
+echo     create_project   - projects generation mode
+echo                        values: "yes" (default), "no" or "only"
+echo     no_clean         - do not clean temp-files after build
+echo     no_build         - do not build binaries, only urarc, patch files, create projects and so on
 echo on
 @exit /B 1

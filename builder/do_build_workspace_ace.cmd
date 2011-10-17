@@ -53,6 +53,11 @@ devenv.com "%ACE_ROOT%\ace\ace.sln" /Build "Test"
 @goto BuildNext
 
 :BuildRelease
+if "%IsFinalBuild%"=="true" (
+	if "%IsDebug%" NEQ "true" (
+		devenv.com "%ACE_ROOT%\ace\ace.sln" /Build "Test"
+	)
+)
 devenv.com "%ACE_ROOT%\ace\ace.sln" /Build "Release"
 @if %errorlevel% neq 0 goto Error
 @goto Finish
