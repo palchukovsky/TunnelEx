@@ -76,12 +76,17 @@ int main(int argc, char **argv) {
 		case  MODE_COMMON:
 			{
 				testing::AddGlobalTestEnvironment(new LocalEnvironment);
-				std::string filter = testing::GTEST_FLAG(filter).c_str();
-				filter
-					+= "-TcpClient.*:TcpServer.*"
+				const char *const noServerTestsFilter
+					=	"-TcpClient.*:TcpServer.*"
 						":UdpClient.*:UdpServer.*"
 						":PipeClient.*:PipeServer.*";
-				testing::GTEST_FLAG(filter) = filter;
+				std::string newFilter = testing::GTEST_FLAG(filter);
+				if (newFilter != "*") {
+					newFilter += std::string(":") + noServerTestsFilter;
+				} else {
+					newFilter = noServerTestsFilter;
+				}
+				testing::GTEST_FLAG(filter) = newFilter;
 			}
 			break;
 		case MODE_TCP_SERVER:
