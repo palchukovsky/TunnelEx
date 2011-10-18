@@ -77,7 +77,7 @@ namespace {
 					Interlocked::Increment(&DebugLockStat::proactor);
 				}
 			}
-			if (!(Interlocked::Increment(&DebugLockStat::locks) % 100) || !isWasLocked) {
+			if (!(Interlocked::Increment(&DebugLockStat::locks) % 10000) || !isWasLocked) {
 				const double failesPercent
 					= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
 				Format stat(
@@ -156,6 +156,10 @@ public:
 			m_sendQueueSize(0),
 			m_idleTimeoutTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
+		Log::GetInstance().AppendDebug(
+			"New connection object %1% created. Active objects: %2%.",
+			m_instanceId,
+			m_instancesNumber);
 	}
 	
 private:
@@ -169,6 +173,10 @@ private:
 		//! @todo: fix (currently don't know when buffer deletion is secure)
 		// m_buffer->DeleteBuffer(m_allocators);
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
+		Log::GetInstance().AppendDebug(
+			"Connection object %1% deleted. Active objects: %2%.",
+			m_instanceId,
+			m_instancesNumber);
 	}
 
 public:
