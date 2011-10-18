@@ -7,6 +7,9 @@
     <ClCompile>
       <PreprocessorDefinitions>TUNNELEX_MOD_UPNP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <ModuleDefinitionFile>TexModUpnp.def</ModuleDefinitionFile>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>
