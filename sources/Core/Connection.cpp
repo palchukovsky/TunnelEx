@@ -132,6 +132,11 @@ private:
 		Mutex;
 	typedef LockWithDebugReports<Mutex> Lock;
 
+	enum Timer {
+		TIMER_IDLE_TIMEOUT,
+		TIMER_CLOSE
+	};
+
 public:
 
 	explicit Implementation(
@@ -154,7 +159,8 @@ public:
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(0),
 			m_sendQueueSize(0),
-			m_idleTimeoutTimer(-1) {
+			m_idleTimeoutTimer(-1),
+			m_closeTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 		Log::GetInstance().AppendDebug(
 			"New connection object %1% created. Active objects: %2%.",
@@ -183,42 +189,63 @@ public:
 
 	void CheckedDelete() {
 		Lock lock(m_mutex, false);
-		CheckedDelete(lock);
+		CheckedDelete(lock, false);
 	}
 
 private:
 
-	bool CheckedDelete(Lock &lock) {
+	//! Deletes or prepares object to delete.
+	/** @return true if object was deleted
+	  */
+	bool CheckedDelete(Lock &lock, bool isProactorAction) {
+		
 		assert(m_proactor || m_refsCount == 1);
+		assert(m_refsCount <= 2);
+		assert(m_refsCount >= 1);
+		
 		if (m_idleTimeoutTimer != -1) {
 			assert(m_proactor);
 			m_proactor->cancel_timer(m_idleTimeoutTimer);
 			m_idleTimeoutTimer = -1;
 		}
+		
 		m_readStream.reset();
 		m_writeStream.reset();
-		assert(m_refsCount <= 2);
-		assert(m_refsCount >= 1);
-		if (Interlocked::Decrement(&m_refsCount)) {
+	
+		if (Interlocked::Decrement(&m_refsCount) > 0) {
+			// only force closing can start close timer
+			assert(isProactorAction || m_closeTimer == -1);
+			// force closing && proactor not yet close connection
+			if (!isProactorAction && m_proactor) {
+				m_closeTimer = m_proactor->schedule_timer(
+					*this,
+					reinterpret_cast<void *>(TIMER_CLOSE),
+					ACE_Time_Value(m_idleTimeoutInterval));
+			}
 			return false;
 		}
-		const Id instanceId = m_instanceId;
-		const SharedPtr<ConnectionSignal> signal = m_signal;
+
+		const auto instanceId = m_instanceId;
+		const auto signal = m_signal;
 		lock.release();
 		delete this;
 		signal->OnConnectionClosed(instanceId);
+
 		return true;
+
 	}
 
-	/* Can be called only from 1) reading handling at 0 2) from data send
-	 * notification if m_closeAtLastMessageBlock is true and buffer now is
-	 * empty.
-	 */
-	bool Close(Lock &lock) {
+	//! Closed connection and deletes or prepares object to delete.
+	/** Can be called only from 1) reading handling at 0 2) from data send
+	  * notification if m_closeAtLastMessageBlock is true and buffer now is
+	  * empty
+      * @return true if object was deleted
+	  */
+	bool Close(Lock &lock, bool isProactorAction) {
 		assert(!m_closeAtLastMessageBlock || m_sendQueueSize);
 		if (m_sendQueueSize == 0) {
 			m_signal->OnConnectionClose(m_instanceId);
-			return CheckedDelete(lock);
+			return CheckedDelete(lock, isProactorAction);
 		} else {
 			Interlocked::Increment(&m_closeAtLastMessageBlock);
 			return false;
@@ -566,20 +593,39 @@ public:
 	virtual void handle_time_out(const ACE_Time_Value &, const void *act = 0) {
 
 		AssertNotLockedByMyThread(m_mutex);
-		assert(act != 0); // deprecated
-		assert(act == reinterpret_cast<void *>(1));
-		UseUnused(act);
+		assert(
+			act == reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT)
+			|| act == reinterpret_cast<void *>(TIMER_CLOSE));
 
-		if (!m_myInterface.OnIdleTimeout()) {
-			Log::GetInstance().AppendDebug(
-				"Closing connection %1% by idle timeout...",
-				m_instanceId);
-			m_signal->OnConnectionClose(m_instanceId);
-		} else {
-			Lock lock(m_mutex, true);
-			UpdateIdleTimer();
+		switch (reinterpret_cast<int>(act)) {
+			case TIMER_IDLE_TIMEOUT:
+				if (!m_myInterface.OnIdleTimeout()) {
+					Log::GetInstance().AppendDebug(
+						"Closing connection %1% by idle timeout...",
+						m_instanceId);
+					m_signal->OnConnectionClose(m_instanceId);
+				} else {
+					Lock lock(m_mutex, true);
+					UpdateIdleTimer();
+				}
+				break;
+			case TIMER_CLOSE:
+				assert(m_closeTimer != -1);
+				{
+					Lock lock(m_mutex, true);
+					assert(m_closeTimer != -1);
+					assert(m_proactor);
+					assert(m_sendQueueSize == 0);
+					assert(m_proactor->cancel_timer(m_closeTimer) == 0);
+					if (!CheckedDelete(lock, true)) {
+						m_proactor = 0;
+					}
+				}
+				break;
+			default:
+				assert(false);
+				break;
 		}
-
 	}
 
 private:
@@ -635,7 +681,7 @@ private:
 		}
 
 		Lock lock(m_mutex, true);
-		if (m_proactor && !Close(lock)) {
+		if (m_closeTimer == -1 && m_proactor && !Close(lock, true)) {
 			m_proactor = 0;
 		}
 
@@ -683,7 +729,9 @@ private:
 			{
 				Lock lock(m_mutex, true);
 				if (--m_sendQueueSize == 0 && m_closeAtLastMessageBlock) {
-					Close(lock);
+					if (m_closeTimer == -1) {
+						Close(lock, true);
+					}
 					return;
 				}
 			}
@@ -775,7 +823,7 @@ private:
 			assert(m_proactor);
 			m_idleTimeoutTimer = m_proactor->schedule_timer(
 				*this,
-				reinterpret_cast<void *>(1),
+				reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
 				m_idleTimeoutInterval);
 		}
 	}
@@ -790,6 +838,7 @@ private:
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
 		assert(m_idleTimeoutTimer == -1);
+		assert(m_closeTimer == -1);
 		if (m_isSetupCompletedWithSuccess) {
 			UpdateIdleTimer();
 		}
@@ -836,6 +885,8 @@ private:
 
 	ACE_Time_Value m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
+
+	long m_closeTimer;
 
 	TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 
