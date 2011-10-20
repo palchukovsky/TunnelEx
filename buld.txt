@@ -53,8 +53,10 @@
       и иметь имя ACE-src-6.0.0.tar.bz2;
     * Boost 1.46.1 (http://boost.org, http://www.boostpro.com/download), все
       компоненты (static-библиотеки, для многопоточной runtime-библиотеки)
-       - путь к файлам заголовков и библиотек должен быть прописан в глобальных
-      свойствах IDE;
+      - путь к каталогу, в котором установлена библиотека должен быть указан
+      в переменной окружения BOOST_PATH (например если она установлена в
+      C:\Program Files\boost\boost_1_47, то BOOST_PATH должна содержать
+      C:\Program Files\boost);
     * Libxml2 2.7.2 (ftp://xmlsoft.org/libxml2/) - архив дистрибутива должен
       быть запакован с помощью TAR+ZIP и иметь имя libxml2-sources-2.7.2.tar.gz;
     * wxWidgets 2.8.10 (http://wxwidgets.org/downloads/) - архив дистрибутива
@@ -66,10 +68,12 @@
       состоять из двух частей: TAR+ZIP архива miniupnpc-1.4.20100418.tar.gz с
       исходными кодами и ZIP архива upnpc-exe-win32-20100418.zip с бинарными
       файлам;
-    * Google Test 1.6.0 (http://code.google.com/p/googletest/), "MD"-runtime
-      (lib-файлы должны быть собраны с суфиксом "_md" для release-сборки и
-      "_mdd" для debug) - путь к файлам заголовков и библиотек должен быть
-      прописан в глобальных свойствах IDE;
+    * Google Test 1.6.0 (http://code.google.com/p/googletest/),
+      static-библиотеки, для многопоточной runtime-библиотеки - путь к
+      каталогу, в котором установлена фреймворк должен быть указан в
+      переменной окружения GTEST_PATH (например если она установлена в
+      C:\Program Files\GTest\gtest-1.6.0, то GTEST_PATH должна содержать
+      C:\Program Files\GTest);
 
 
 

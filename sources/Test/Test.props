@@ -6,7 +6,11 @@
   <ItemDefinitionGroup>
     <Link>
       <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(GTEST_PATH)\gtest-1.6.0\msvc\gtest-md\Debug;$(GTEST_PATH)\gtest-1.6.0\msvc\gtest-md\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(GTEST_PATH)\gtest-1.6.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>
