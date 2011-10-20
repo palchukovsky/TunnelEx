@@ -280,7 +280,8 @@ namespace TestUtil {
 				
 				} else {
 					if (	error.value() != WSAECONNRESET
-							&& error.value() != WSA_OPERATION_ABORTED) {
+							&& error.value() != WSA_OPERATION_ABORTED
+							&& error.value() != 2 /* eof */) {
 						std::cerr
 							<< "TestUtil::InetConnection::HandleRead: "
 							<< error.message() << " (" << error.value() << ")."

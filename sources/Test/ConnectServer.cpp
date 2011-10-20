@@ -276,23 +276,38 @@ void ConnectServer::DoTestSeveralConnections(size_t mainConnection, bool &result
 			testing::clientMagicEnd,
 			false));
 
-	for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
-		const size_t connection = i + mainConnection;
-		ASSERT_TRUE(m_server->WaitConnect(connection + 1, false))
-			<< "Failed to accept sub connection #" << i << ".";
-		ASSERT_TRUE(
-			m_server->WaitAndTakeData(connection, testing::clientMagicHello, false));
-		testing::ConnectionsNumber remoteI = 0;
-		ASSERT_NO_THROW(
-			remoteI = m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
-		ASSERT_EQ(i, remoteI);
-		ASSERT_TRUE(
-			m_server->WaitAndTakeData(
+	{
+		int lastPersents = 0;
+		for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
+
+			const size_t connection = i + mainConnection;
+			ASSERT_TRUE(m_server->WaitConnect(connection + 1, false))
+				<< "Failed to accept sub connection #" << i << ".";
+			ASSERT_TRUE(
+				m_server->WaitAndTakeData(connection, testing::clientMagicHello, false));
+			testing::ConnectionsNumber remoteI = 0;
+			ASSERT_NO_THROW(
+				remoteI = m_server->WaitAndTakeData<testing::ConnectionsNumber>(connection, false));
+			ASSERT_EQ(i, remoteI);
+			ASSERT_TRUE(
+				m_server->WaitAndTakeData(
 				connection,
 				testing::serverMagicSubConnectionMode,
 				true));
-		ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
-		ASSERT_NO_THROW(m_server->SendVal(connection, i));
+			ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicHello));
+			ASSERT_NO_THROW(m_server->SendVal(connection, i));
+
+			const auto persents = (((i + 1) * 100) / connectionsNumber);
+			if (!(persents % 10) && persents > lastPersents) {
+				std::cout
+					<< "\accepted "
+					<< (i + 1) << " of the " << connectionsNumber
+					<< " (" << persents << "%)"
+					<< std::endl;
+				lastPersents = persents;
+			}
+
+		}
 	}
 
 	testing::PacketsNumber packetsNumber = 0;
