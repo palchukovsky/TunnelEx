@@ -281,7 +281,7 @@ namespace TestUtil {
 				} else {
 					if (	error.value() != WSAECONNRESET
 							&& error.value() != WSA_OPERATION_ABORTED
-							&& error.value() != 2 /* eof */) {
+							&& error.value() != boost::asio::error::eof) {
 						std::cerr
 							<< "TestUtil::InetConnection::HandleRead: "
 							<< error.message() << " (" << error.value() << ")."
@@ -395,7 +395,8 @@ namespace TestUtil {
 					StartRead();
 				} else {
 					if (	error.value() != WSAECONNRESET
-							&& error.value() != WSA_OPERATION_ABORTED) {
+							&& error.value() != WSA_OPERATION_ABORTED
+							&& error.value() != boost::asio::error::eof) {
 						std::cerr
 							<< "TestUtil::InetConnection::HandleRead: "
 							<< error.message() << " (" << error.value() << ")."

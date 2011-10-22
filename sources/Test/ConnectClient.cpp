@@ -281,7 +281,10 @@ void ConnectClient::DoSeveralConnetionsTest(bool &result) {
 
 	typedef std::list<boost::shared_ptr<TestUtil::Client>> Connections;
 	Connections connections;
+
+	auto lastPersents = 0;
 	for (testing::ConnectionsNumber i = 1; i <= connectionsNumber; ++i) {
+
 		boost::shared_ptr<TestUtil::Client> connection(CreateConnection());
 		ASSERT_TRUE(Connect(*connection, false));
 		ASSERT_NO_THROW(connection->SendVal(i));
@@ -294,6 +297,17 @@ void ConnectClient::DoSeveralConnetionsTest(bool &result) {
 			<< "Failed to receive sub connection number for sub connection #" << i << ".";
 		ASSERT_EQ(i, remoteI);
 		connections.push_back(connection);
+
+		const auto persents = (((i + 1) * 100) / connectionsNumber);
+		if (!(persents % 10) && persents > lastPersents) {
+			std::cout
+				<< "\taccepted "
+				<< (i + 1) << " of the " << connectionsNumber
+				<< " (" << persents << "%)"
+				<< std::endl;
+			lastPersents = persents;
+		}
+
 	}
 
 	const std::auto_ptr<const TestUtil::Client> closeControlConnection(

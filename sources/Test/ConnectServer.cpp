@@ -300,7 +300,7 @@ void ConnectServer::DoTestSeveralConnections(size_t mainConnection, bool &result
 			const auto persents = (((i + 1) * 100) / connectionsNumber);
 			if (!(persents % 10) && persents > lastPersents) {
 				std::cout
-					<< "\accepted "
+					<< "\taccepted "
 					<< (i + 1) << " of the " << connectionsNumber
 					<< " (" << persents << "%)"
 					<< std::endl;
