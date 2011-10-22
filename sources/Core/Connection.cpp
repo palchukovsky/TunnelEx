@@ -229,7 +229,10 @@ private:
 		const auto signal = m_signal;
 		lock.release();
 		delete this;
-		signal->OnConnectionClosed(instanceId);
+
+		if (signal) {
+			signal->OnConnectionClosed(instanceId);
+		}
 
 		return true;
 
@@ -242,7 +245,7 @@ private:
       * @return true if object was deleted
 	  */
 	bool Close(Lock &lock, bool isProactorAction) {
-		assert(!m_closeAtLastMessageBlock || m_sendQueueSize);
+		assert(!m_closeAtLastMessageBlock || m_sendQueueSize == 0);
 		if (m_sendQueueSize == 0) {
 			m_signal->OnConnectionClose(m_instanceId);
 			return CheckedDelete(lock, isProactorAction);
