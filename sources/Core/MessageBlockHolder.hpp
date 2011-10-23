@@ -32,26 +32,32 @@ namespace TunnelEx {
 		}
 
 		virtual ~UniqueMessageBlockHolder() throw() {
-			if (Test()) {
-				Delete(*m_messageBlock);
-			}
+			Reset();
 		}
 
 	public:
 
-		void Release() throw() {
-			assert(Test());
+		void Reset() throw() {
+			if (!IsSet()) {
+				return;
+			}
+			Delete(*m_messageBlock);
 			m_messageBlock = 0;
 		}
 
-		bool Test() const throw() {
+		void Release() throw() {
+			assert(IsSet());
+			m_messageBlock = 0;
+		}
+
+		bool IsSet() const throw() {
 			return m_messageBlock != 0;
 		}
 
 	public:
 
 		ACE_Message_Block & Get() throw() {
-			assert(Test());
+			assert(IsSet());
 			return *m_messageBlock;
 		}
 
@@ -62,17 +68,17 @@ namespace TunnelEx {
 	public:
 
 		virtual const char * GetData() const throw() {
-			assert(Test());
+			assert(IsSet());
 			return m_messageBlock->rd_ptr();
 		}
 
 		virtual size_t GetUnreadedDataSize() const throw() {
-			assert(Test());
+			assert(IsSet());
 			return m_messageBlock->length();
 		}
 
 		virtual void SetData(const char *data, size_t length){
-			assert(Test());
+			assert(IsSet());
 			std::auto_ptr<ACE_Message_Block> newBlock(
 				new ACE_Message_Block(
 					length,
@@ -103,17 +109,17 @@ namespace TunnelEx {
 		}
 
 		virtual void MarkAsAddedToQueue() throw() {
-			assert(Test());
+			assert(IsSet());
 			assert(!m_isAddedToQueue);
 			m_isAddedToQueue = true;
 		}
 		virtual bool IsAddedToQueue() const throw() {
-			assert(Test());
+			assert(IsSet());
 			return m_isAddedToQueue;
 		}
 
 		virtual bool IsTunnelMessage() const throw() {
-			assert(Test());
+			assert(IsSet());
 			return m_messageBlock->flags() & FLAG_TUNNEL_MESSAGE ? true : false;
 		}
 
