@@ -25,26 +25,12 @@ namespace boost {
 			<< " (file " << file << ":" << line << ")";
 		TunnelEx::Log::GetInstance().AppendFatalError(oss.str());
 
-#		if defined(_DEBUG)
-		{
-			oss << std::endl << std::endl << "Stop program execution?";
-			const int userAns = MessageBoxA(
-				0,
-				oss.str().c_str(),
-				"Assertion failed",
-				MB_YESNO | MB_ICONSTOP);
-			if (userAns == IDYES) {
-				_wassert(L"Execution stopped", _CRT_WIDE(__FILE__), __LINE__);
-			}
-		}
+#		ifdef _DEBUG
+			_wassert(L"Execution stopped", _CRT_WIDE(__FILE__), __LINE__);
+#		elif defined(_TEST)
+			DebugBreak();
 #		else
-		{
-			MessageBoxA(
-				0,
-				oss.str().c_str(),
-				"Assertion failed",
-				MB_OK | MB_ICONSTOP);
-		}
+#			error "Failed to find assert-break method."
 #		endif
 		
 	}
