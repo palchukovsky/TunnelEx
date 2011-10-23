@@ -97,7 +97,7 @@ void ConnectServer::DoTest(bool &result) {
 		modes.push_back(&testing::serverMagicOneWayActiveMode);
 		modes.push_back(&testing::serverMagicOneWayPassiveMode);
 		modes.push_back(&testing::serverMagicSeveralConnectionsMode);
-		int serverModePos = 0;
+		int serverModePos = std::numeric_limits<int>::min();
 		ASSERT_NO_THROW( 
 			serverModePos = m_server->WaitAndTakeData(connection, modes, true));
 		ASSERT_GT(serverModePos, 0);
