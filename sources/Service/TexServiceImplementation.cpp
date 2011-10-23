@@ -329,7 +329,7 @@ TexServiceImplementation::TexServiceImplementation()
 	uintmax_t previousLogSize;
 	const bool logWasTruncated = m_pimpl->TruncateLog(conf, previousLogSize);
 	Log::GetInstance().AttachFile(conf.GetLogPath());
-#	if !defined(_DEBUG) && !defined(TEST)
+#	if !defined(DEV_VER)
 		if (conf.GetLogLevel() == TunnelEx::LOG_LEVEL_DEBUG) {
 			conf.SetLogLevel(TunnelEx::LOG_LEVEL_INFO);
 			conf.Save();
