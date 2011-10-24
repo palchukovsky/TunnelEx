@@ -30,6 +30,17 @@
 namespace mi = boost::multi_index;
 using namespace TunnelEx;
 
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+
+	//! @todo: hadcored min thread number, move to options or config
+	const auto openingTunnelMinThreadCount = 3;
+	//! @todo: hadcored sleep time, move to options or config
+	const auto openingTunnelSleepMinutesBeforeExit = 20;
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 class ServerWorker::LicenseException : public LocalException {
@@ -107,8 +118,8 @@ private:
 	const std::wstring & GetWhatImpl() const {
 		if (m_what.empty()) {
 			WFormat what(
-				L"Opening new %3% connection to the %1%"
-				L" is failed with the error \"%2%\"");
+				L"Opening new %3% connection to %1%"
+				L" is failed with error \"%2%\"");
 			what % m_address->GetResourceIdentifier().GetCStr();
 			what % m_error->GetWhat();
 			what % m_connectionType;
@@ -140,7 +151,8 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
-namespace TunnelEx { namespace Helpers {
+namespace {
+
 	class ProactorLoopStopper : public ACE_Handler {
 	public:
 		explicit ProactorLoopStopper(ACE_Proactor &proactor)
@@ -163,7 +175,29 @@ namespace TunnelEx { namespace Helpers {
 		TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 	};
 	TUNNELEX_OBJECTS_DELETION_CHECK_DEFINITION(ProactorLoopStopper, m_instancesNumber);
-} }
+
+	template<typename Exception>
+	void ReportException(TunnelRule::ErrorsTreatment treatment, const Exception &ex) {
+		switch (treatment) {
+			case TunnelRule::ERRORS_TREATMENT_INFO:
+				Log::GetInstance().AppendInfo(
+					ConvertString<String>(ex.GetWhat()).GetCStr());
+				break;
+			case TunnelRule::ERRORS_TREATMENT_WARN:
+				Log::GetInstance().AppendWarn(
+					ConvertString<String>(ex.GetWhat()).GetCStr());				
+				break;
+			default:
+				assert(false);
+			case TunnelRule::ERRORS_TREATMENT_ERROR:
+				Log::GetInstance().AppendError(
+					ConvertString<String>(ex.GetWhat()).GetCStr());				
+				break;
+		}
+	}
+
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -328,7 +362,7 @@ private:
 
 	typedef ACE_Thread_Mutex ServerStopMutex;
 	typedef ACE_Guard<ServerStopMutex> ServerStopLock;
-	typedef ACE_Condition<ServerStopMutex> ServerStopCondition;
+	typedef ACE_Thread_Condition<ServerStopMutex> ServerStopCondition;
 
 	struct RuleUpdatingState : private boost::noncopyable {
 
@@ -359,24 +393,45 @@ private:
 
 		typedef ACE_Thread_Mutex Mutex;
 		typedef ACE_Guard<Mutex> Lock;
-		typedef ACE_Condition<Mutex> Condition;
+		typedef ACE_Thread_Condition<Mutex> Condition;
+
+		struct NewConnection {
+
+			NewConnection() {
+				//...//
+			}
+
+			explicit NewConnection (
+						boost::shared_ptr<RuleInfo> ruleInfoIn, 
+						AutoPtr<Connection> &connectionIn)
+					: ruleInfo(ruleInfoIn),
+					connection(connectionIn) {
+				assert(bool(ruleInfo) == bool(connection));
+			}
+
+			operator bool() const throw() {
+				assert(bool(ruleInfo) == bool(connection));
+				return bool(connection);
+			}
+
+			boost::shared_ptr<RuleInfo> ruleInfo;
+			SharedPtr<Connection> connection;
+
+		};
+
+		typedef std::list<NewConnection> NewConnections;
+		typedef std::list<boost::shared_ptr<Tunnel>> Tunnels;
 		
 		TunnelOpeningState()
-				: operationCondition(operationMutex),
-				startBarrier(2) {
+				: condition(mutex) {
 			//...//
 		}
 		
-		Mutex methodMutex;
-		Mutex operationMutex;
-		Condition operationCondition;
+		Mutex mutex;
+		Condition condition;
 
-		ACE_Barrier startBarrier;
-
-		boost::shared_ptr<RuleInfo> ruleInfo;
-		AutoPtr<Connection> inConnection;
-	
-		boost::shared_ptr<Tunnel> tunnel;
+		NewConnections newConnections;
+		Tunnels tunnels;
 
 	};
 
@@ -411,15 +466,22 @@ public:
 					L"Failed to start service at server operation system, License Upgrade required");
 			}
 		}
-		m_tunnelOpeningThreadManager.spawn_n(2, &TunnelOpeningThread, this);
+		m_tunnelOpeningThreadManager.spawn_n(
+			openingTunnelMinThreadCount,
+			&TunnelOpeningThread,
+			this);
 		m_mainThreadManager.spawn(&ProactorEventLoopThread, this);
 		m_mainThreadManager.spawn(&ReactorEventLoopThread, this);
 		m_mainThreadManager.spawn(&UpdatingThread, this);
 	}
 
 	~Implementation() {
+
+		verify(Interlocked::CompareExchange(m_isDestructionMode, 1, 0) == 0);
+
+		m_tunnelOpeningState.condition.broadcast();
+
 		RuleUpdatingState::Lock stateLock(m_ruleUpdatingState.stateMutex);
-		m_isDestructionMode = true;
 		{
 			ServerStopLock stopLock(m_serverStopMutex);
 			{
@@ -432,9 +494,6 @@ public:
 			}
 			m_serverStopCondition.broadcast();
 		}
-		{
-			TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
-		}
 		m_ruleUpdatingState.operationBarrier.wait();
 		stateLock.release();
 		m_activeRules.clear();
@@ -445,11 +504,6 @@ public:
 		}
 		ScheduleProactorStopping();
 		m_mainThreadManager.wait();
-		{
-			TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
-			m_tunnelOpeningState.startBarrier.shutdown();
-		}
-		m_tunnelOpeningState.operationCondition.broadcast();
 		m_tunnelOpeningThreadManager.wait();
 	}
 
@@ -495,7 +549,7 @@ public:
 
 	bool Update(const Rule &rule) {
 		RuleUpdatingState::Lock stateLock(m_ruleUpdatingState.stateMutex);
-		assert(m_isDestructionMode == false);
+		assert(!m_isDestructionMode);
 		m_ruleUpdatingState.rule = &rule;
 		m_ruleUpdatingState.operationBarrier.wait();
 		m_ruleUpdatingState.operationCompleteBarrier.wait();
@@ -640,27 +694,10 @@ public:
 	void OpenTunnel(
 				boost::shared_ptr<RuleInfo> ruleInfo,
 				AutoPtr<Connection> inConnection) {
-		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
-		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
-		m_tunnelOpeningState.ruleInfo = ruleInfo;
-		m_tunnelOpeningState.inConnection = inConnection;
-		assert(!m_tunnelOpeningState.tunnel);
-		conditionLock.release();
-		m_tunnelOpeningState.operationCondition.signal();
-		const ACE_Time_Value startWaitingThreadTime = ACE_OS::gettimeofday();
-		if (m_tunnelOpeningState.startBarrier.wait() == -1) {
-			return;
-		}
-		const ACE_Time_Value waitThreadTime(
-			ACE_OS::gettimeofday() - startWaitingThreadTime);
-		if (Log::GetInstance().IsDebugRegistrationOn()) {
-			Format message("Waited for opening thread %1% second and %2% microseconds.");
-			message % waitThreadTime.sec() % waitThreadTime.usec();
-			Log::GetInstance().AppendDebug(message.str().c_str());
-		}
-		if (waitThreadTime.sec() > 1) {
-			StartTunnelOpeningThread();
-		}
+		TunnelOpeningState::Lock lock(m_tunnelOpeningState.mutex);
+		m_tunnelOpeningState.newConnections.push_back(
+			TunnelOpeningState::NewConnection(ruleInfo, inConnection));
+		m_tunnelOpeningState.condition.signal();
 	}
 
 	SharedPtr<Connection> CreateConnection(
@@ -730,27 +767,9 @@ public:
 			return;
 		}
 
-		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
-		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
-		assert(!m_tunnelOpeningState.ruleInfo);
-		assert(!m_tunnelOpeningState.inConnection);
-		m_tunnelOpeningState.tunnel = tunnel;
-		tunnel.reset();
-		conditionLock.release();
-		m_tunnelOpeningState.operationCondition.signal();
-		const ACE_Time_Value startWaitingThreadTime = ACE_OS::gettimeofday();
-		if (m_tunnelOpeningState.startBarrier.wait() == -1) {
-			return;
-		}
-		const ACE_Time_Value waitThreadTime(ACE_OS::gettimeofday() - startWaitingThreadTime);
-		if (Log::GetInstance().IsDebugRegistrationOn()) {
-			Format message("Waited for closing thread %1% second and %2% microseconds.");
-			message % waitThreadTime.sec() % waitThreadTime.usec();
-			Log::GetInstance().AppendDebug(message.str().c_str());
-		}
-		if (waitThreadTime.sec() > 1) {
-			StartTunnelOpeningThread();
-		}
+		TunnelOpeningState::Lock lock(m_tunnelOpeningState.mutex);
+		m_tunnelOpeningState.tunnels.push_back(tunnel);
+		m_tunnelOpeningState.condition.signal();
 
 	}
 
@@ -907,7 +926,7 @@ private:
 #					ifdef DEV_VER
 						if (ruleToCheck.find(ruleInfo->rule->GetUuid().GetCStr()) != ruleToCheck.end()) {
 							Format message(
-								"Issue TEX-634: rule %1% already added to the checking list.");
+								"Issue TEX-634: rule %1% already added to checking list.");
 							message % ConvertString<String>(ruleInfo->rule->GetUuid()).GetCStr();
 							Log::GetInstance().AppendWarn(message.str());
 						}
@@ -951,7 +970,7 @@ private:
 			m_activeRules.erase(oldRuleAcceptorsPos);
 		} else if (Log::GetInstance().IsDebugRegistrationOn()) {
 			Format message(
-				"Failed to find tunnel rule %1% in active list, new rule will be inserted.");
+				"Tunnel rule %1% is not found in active list, new rule will be inserted.");
 			message % ConvertString<String>(rule.GetUuid()).GetCStr();
 			Log::GetInstance().AppendDebug(message.str());
 		}
@@ -1053,7 +1072,7 @@ private:
 					Log::GetInstance().AppendDebug(message.str());
 				} else {
 					Format message(
-						"Failed to find service rule %1% in active list, new rule will be inserted.");
+						"Service rule %1% is not found in active list, new rule will be inserted.");
 					message % ConvertString<String>(rule.GetUuid()).GetCStr();
 					Log::GetInstance().AppendDebug(message.str());
 				}
@@ -1270,31 +1289,14 @@ private:
 	}
 
 	void SwitchTunnel(boost::shared_ptr<Tunnel> tunnel) {
-		TunnelOpeningState::Lock methodLock(m_tunnelOpeningState.methodMutex);
-		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.operationMutex);
-		assert(!m_tunnelOpeningState.ruleInfo);
-		assert(!m_tunnelOpeningState.inConnection);
-		m_tunnelOpeningState.tunnel = tunnel;
-		conditionLock.release();
-		m_tunnelOpeningState.operationCondition.signal();
-		const ACE_Time_Value startWaitingThreadTime = ACE_OS::gettimeofday();
-		if (m_tunnelOpeningState.startBarrier.wait() == -1) {
-			return;
-		}
-		const ACE_Time_Value waitThreadTime(ACE_OS::gettimeofday() - startWaitingThreadTime);
-		if (Log::GetInstance().IsDebugRegistrationOn()) {
-			Format message("Waited for switching thread %1% second and %2% microseconds.");
-			message % waitThreadTime.sec() % waitThreadTime.usec();
-			Log::GetInstance().AppendDebug(message.str().c_str());
-		}
-		if (waitThreadTime.sec() > 1) {
-			StartTunnelOpeningThread();
-		}
+		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.mutex);
+		m_tunnelOpeningState.tunnels.push_back(tunnel);
+		m_tunnelOpeningState.condition.signal();
 	}
 
 	void OpenTunnelImplementation(
 				boost::shared_ptr<RuleInfo> ruleInfo,
-				AutoPtr<Connection> inConnection) {
+				SharedPtr<Connection> inConnection) {
 		boost::shared_ptr<Tunnel> tunnel;
 		{
 			SharedPtr<Connection> reader;
@@ -1441,7 +1443,7 @@ private:
 	bool OpenTunnelImplementation(boost::shared_ptr<Tunnel> tunnel) {
 		Log::GetInstance().AppendDebug(
 			"Number of currently open tunnels: %1%.",
-			m_activeTunnels.size());
+			m_activeTunnels.size() + 1);
 		{
 			ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
 			if (tunnel->IsSetupFailed()) {
@@ -1476,98 +1478,128 @@ private:
 	}
 
 	void StartTunnelOpeningThread() {
-		//! @todo: hardcoded and not checked value
-		if (m_tunnelOpeningThreadManager.count_threads() < 25) {
-			m_tunnelOpeningThreadManager.spawn(&TunnelOpeningThread, this);
-#			ifdef DEV_VER
-			{
-				Log::GetInstance().AppendDebug(
-					"Started one more thread for tunnel opening (already started: %1%).",
-					m_tunnelOpeningThreadManager.count_threads());
-			}
-#			endif
-		} else {
-#			ifdef DEV_VER
-			{
-				Format message("Already %1% threads for tunnel opening started, could not start more.");
-				message % m_tunnelOpeningThreadManager.count_threads();
-				Log::GetInstance().AppendWarn(message.str().c_str());
-			}
-#			endif
+		const auto threadsCount = m_tunnelOpeningThreadManager.count_threads();
+		Log::GetInstance().AppendDebug(
+			"Starting one more thread for tunnel opening (already started: %1%).",
+			threadsCount);
+		//! @todo: hardcored maximum thread count		
+		if (threadsCount >= 600) {
+			Format message(
+				"Failed to start new tunnel opening thread."
+					" Maximum number of threads exceeded."
+					" Already active %1% threads."
+					" Please contact product support to resolve this issue.");
+			message % threadsCount;
+			Log::GetInstance().AppendFatalError(message.str());
+			return;
 		}
+		m_tunnelOpeningThreadManager.spawn(&TunnelOpeningThread, this);
 	}
 
 	static ACE_THR_FUNC_RETURN TunnelOpeningThread(void *param) {
+
 		Log::GetInstance().AppendDebug("Started tunnel opening thread.");
 		Implementation &instance = *static_cast<Implementation *>(param);
+		TunnelOpeningState &state = instance.m_tunnelOpeningState;
+
 		for ( ; ; ) {
-			boost::shared_ptr<RuleInfo> ruleInfo;
-			AutoPtr<Connection> inConnection;
+
+			TunnelOpeningState::NewConnection newConnection;
 			boost::shared_ptr<Tunnel> tunnel;
-			for ( ; ; ) {
-				TunnelOpeningState::Lock conditionLock(
-					instance.m_tunnelOpeningState.operationMutex);
+			bool isRequiresMoreThreads = false;
+
+			for (bool isTimeout = false; ; isTimeout = true) {
+
+				TunnelOpeningState::Lock conditionLock(state.mutex);
 				if (instance.m_isDestructionMode) {
+					Log::GetInstance().AppendDebug(
+						"Closing tunnel opening thread, because a destruction mode has activated...");
 					return 0;
+				}
+
+				const char *logMessageSubject = 0;
+				
+				if (!state.newConnections.empty()) {
+				
+					newConnection = *state.newConnections.begin();
+					state.newConnections.pop_front();
+					if (Log::GetInstance().IsDebugRegistrationOn()) {
+						logMessageSubject = "connection is taken to open tunnel";
+					}
+				
+				} else if (!state.tunnels.empty()) {
+				
+					tunnel = *state.tunnels.begin();
+					state.tunnels.pop_front();
+					if (Log::GetInstance().IsDebugRegistrationOn()) {
+						logMessageSubject = "tunnel is taken to switch";
+					}
+				
 				} else if (
-						instance.m_tunnelOpeningState.inConnection
-						|| instance.m_tunnelOpeningState.tunnel) {
-					ruleInfo = instance.m_tunnelOpeningState.ruleInfo;
-					instance.m_tunnelOpeningState.ruleInfo.reset();
-					inConnection = instance.m_tunnelOpeningState.inConnection;
-					tunnel = instance.m_tunnelOpeningState.tunnel;
-					instance.m_tunnelOpeningState.tunnel.reset();
-					assert(
-						(ruleInfo && inConnection && !tunnel)
-						|| (!ruleInfo && !inConnection && tunnel));
-					if (instance.m_tunnelOpeningState.startBarrier.wait() == -1) {
-						return 0;
+						isTimeout
+						&& instance.m_tunnelOpeningThreadManager.count_threads() + 2 > openingTunnelMinThreadCount) {
+				
+					Log::GetInstance().AppendDebug(
+						"Too many threads (%1%) for tunnel opening, closing one...",
+						instance.m_tunnelOpeningThreadManager.count_threads());
+					return 0;
+				
+				} else {
+				
+					Log::GetInstance().AppendDebug(
+						"No connections or tunnels in queue, will wait %1% minutes...",
+						openingTunnelSleepMinutesBeforeExit);
+					const ACE_Time_Value waitUntilTime
+						= ACE_OS::gettimeofday()
+						+ ACE_Time_Value(60 * openingTunnelSleepMinutesBeforeExit);
+					
+					if (state.condition.wait(&waitUntilTime) == -1) {
+						assert(errno == ETIME);
+						if (errno != ETIME) {
+							const Error error(errno);
+							Format message(
+								"Failed to set tunnel opening condition, system error: %1% (%2%).");
+							message % ConvertString<String>(error.GetString()).GetCStr();
+							message % error.GetErrorNo();
+							Log::GetInstance().AppendSystemError(message.str());
+							return 1;
+						}
 					}
-					break;
+
+					continue;
+				
 				}
-				//! @todo: hadcored sleep time, move to options or config
-				const ACE_Time_Value waitUntilTime
-					= ACE_OS::gettimeofday() + ACE_Time_Value(20 * 60); // wait 20 min.
-				const int waitResult
-					= instance.m_tunnelOpeningState.operationCondition.wait(&waitUntilTime);
-				if (waitResult == -1) {
-					assert(errno == ETIME);
-					if (instance.m_tunnelOpeningThreadManager.count_threads() > 5) {
-						Log::GetInstance().AppendDebug(
-							"Too many threads for tunnel opening (%1%), closing one...",
-							instance.m_tunnelOpeningThreadManager.count_threads());
-						return 0;
-					}
+			
+				if (logMessageSubject) {
+					Log::GetInstance().AppendDebug(
+						"One %1%, another connections/tunnels %2%/%3% in queue.",
+						logMessageSubject,
+						state.newConnections.size(),
+						state.tunnels.size());
 				}
+
+				isRequiresMoreThreads
+					= !state.newConnections.empty() || !state.tunnels.empty();
+
+				break;
+			
 			}
+
 			try {
-				assert(
-					(ruleInfo && inConnection && !tunnel)
-					|| (!ruleInfo && !inConnection && tunnel));
-				if (!tunnel) {
-					instance.OpenTunnelImplementation(ruleInfo, inConnection);
-				} else if (!tunnel->IsDead()) {
-					instance.SwitchTunnelImplementation(tunnel);
-				}
-			} catch (const TunnelEx::DestinationConnectionOpeningException &ex) {
-				const TunnelRule::ErrorsTreatment errorsTreatment = tunnel
-					?	tunnel->GetRule().GetErrorsTreatment()
-					:	ruleInfo->rule->GetErrorsTreatment();
-				switch (errorsTreatment) {
-					case TunnelRule::ERRORS_TREATMENT_INFO:
-						Log::GetInstance().AppendInfo(
-							ConvertString<String>(ex.GetWhat()).GetCStr());				
-						break;
-					case TunnelRule::ERRORS_TREATMENT_WARN:
-						Log::GetInstance().AppendWarn(
-							ConvertString<String>(ex.GetWhat()).GetCStr());				
-						break;
-					default:
-						assert(false);
-					case TunnelRule::ERRORS_TREATMENT_ERROR:
-						Log::GetInstance().AppendError(
-							ConvertString<String>(ex.GetWhat()).GetCStr());				
-						break;
+				if (newConnection) {
+					try {
+						instance.OpenTunnelImplementation(
+							newConnection.ruleInfo,
+							newConnection.connection);
+					} catch	(const TunnelEx::DestinationConnectionOpeningException &ex) {
+						ReportException(newConnection.ruleInfo->rule->GetErrorsTreatment(), ex);
+					}
+				} else if (tunnel && !tunnel->IsDead()) {
+					try {
+						instance.SwitchTunnelImplementation(tunnel);
+					} catch (const TunnelEx::DestinationConnectionOpeningException &ex) {
+						ReportException(tunnel->GetRule().GetErrorsTreatment(), ex);
+					}
 				}
 			} catch (const TunnelEx::LocalException &ex) {
 				Format message("Failed to open tunnel: %1%.");
@@ -1581,9 +1613,13 @@ private:
 				Log::GetInstance().AppendSystemError(
 					"Unknown system error occurred in tunnel opening thread.");
 			}
+
+			if (isRequiresMoreThreads) {
+				instance.StartTunnelOpeningThread();
+			}
+
 		}
-		Log::GetInstance().AppendDebug("Tunnel opening thread completed.");
-		return 0;
+
 	}
 
 	static ACE_THR_FUNC_RETURN ProactorEventLoopThread(void *param) {
@@ -1628,8 +1664,7 @@ private:
 
 	void ScheduleProactorStopping() throw() {
 		try {
-			std::auto_ptr<Helpers::ProactorLoopStopper> handler(
-				new Helpers::ProactorLoopStopper(m_proactor));
+			std::unique_ptr<ProactorLoopStopper> handler(new ProactorLoopStopper(m_proactor));
 			// timer will hit after timers for connections handlers d-ion
 			m_proactor.schedule_timer(*handler, 0, ACE_Time_Value(0, 1));
 			handler.release();
@@ -1680,7 +1715,7 @@ private:
 	
 	ACE_Thread_Manager m_mainThreadManager;
 	ACE_Thread_Manager m_tunnelOpeningThreadManager;
-	bool m_isDestructionMode;
+	volatile long m_isDestructionMode;
 
 	RuleUpdatingState m_ruleUpdatingState;
 	TunnelOpeningState m_tunnelOpeningState;

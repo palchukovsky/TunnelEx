@@ -68,4 +68,12 @@ long Interlocked::Decrement(long volatile *ptr) throw() {
 	return BOOST_INTERLOCKED_DECREMENT(ptr);
 }
 
+long Interlocked::CompareExchange(
+			long volatile &destination,
+			long exchangeValue,
+			long compareValue)
+		throw() {
+	return BOOST_INTERLOCKED_COMPARE_EXCHANGE(&destination, exchangeValue, compareValue);
+}
+
 //////////////////////////////////////////////////////////////////////////
