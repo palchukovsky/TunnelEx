@@ -134,6 +134,7 @@ private:
 
 	enum Timer {
 		TIMER_IDLE_TIMEOUT,
+		TIMER_DELETE,
 		TIMER_CLOSE
 	};
 
@@ -160,7 +161,7 @@ public:
 			m_closeAtLastMessageBlock(0),
 			m_sendQueueSize(0),
 			m_idleTimeoutTimer(-1),
-			m_closeTimer(-1) {
+			m_delTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 		Log::GetInstance().AppendDebug(
 			"New connection object %1% created. Active objects: %2%.",
@@ -199,7 +200,7 @@ private:
 	  */
 	bool CheckedDelete(Lock &lock, bool isProactorAction) {
 		
-		assert(m_proactor || m_refsCount == 1);
+		assert(m_proactor || m_refsCount == 1 || m_closeAtLastMessageBlock);
 		assert(m_refsCount <= 2);
 		assert(m_refsCount >= 1);
 		
@@ -214,13 +215,10 @@ private:
 	
 		if (Interlocked::Decrement(&m_refsCount) > 0) {
 			// only force closing can start close timer
-			assert(isProactorAction || m_closeTimer == -1);
+			assert(isProactorAction || m_delTimer == -1);
 			// force closing && proactor not yet close connection
 			if (!isProactorAction && m_proactor) {
-				m_closeTimer = m_proactor->schedule_timer(
-					*this,
-					reinterpret_cast<void *>(TIMER_CLOSE),
-					ACE_Time_Value(m_idleTimeoutInterval));
+				ScheduleDeletion();
 			}
 			return false;
 		}
@@ -236,6 +234,30 @@ private:
 
 		return true;
 
+	}
+
+	void ScheduleClosure() {
+		assert(m_delTimer == -1);
+		Log::GetInstance().AppendDebug(
+			"Scheduling connection %1% for closure...",
+			m_instanceId);
+		m_delTimer = m_proactor->schedule_timer(
+			*this,
+			reinterpret_cast<void *>(TIMER_CLOSE),
+			ACE_Time_Value(m_idleTimeoutInterval));
+		assert(m_delTimer != -1);
+	}
+
+	void ScheduleDeletion() {
+		assert(m_delTimer == -1);
+		Log::GetInstance().AppendDebug(
+			"Scheduling connection %1% for deletion...",
+			m_instanceId);
+		m_delTimer = m_proactor->schedule_timer(
+			*this,
+			reinterpret_cast<void *>(TIMER_DELETE),
+			ACE_Time_Value(m_idleTimeoutInterval));
+		assert(m_delTimer != -1);
 	}
 
 	//! Closed connection and deletes or prepares object to delete.
@@ -507,8 +529,8 @@ public:
 
 		if (!m_isReadingActive) {
 			Lock lock(m_mutex, false);
-			if (!m_isReadingActive) {
-				InitReadIfPossible();
+			if (!m_isReadingActive && !InitReadIfPossible()) {
+				Close(lock, false);
 			}
 		}
 
@@ -538,7 +560,13 @@ public:
 		AssertNotLocked(m_mutex);
 		Lock lock(m_mutex, false);
 		m_isReadingInitiated = true;
-		InitReadIfPossible();
+		if (!InitReadIfPossible()) {
+			assert(m_delTimer == -1);
+			Log::GetInstance().AppendDebug(
+				"Failed to start reading for connection %1%.",
+				m_instanceId);
+			ScheduleClosure();
+		}
 	}
 
 	void StopRead() {
@@ -596,9 +624,6 @@ public:
 	virtual void handle_time_out(const ACE_Time_Value &, const void *act = 0) {
 
 		AssertNotLockedByMyThread(m_mutex);
-		assert(
-			act == reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT)
-			|| act == reinterpret_cast<void *>(TIMER_CLOSE));
 
 		switch (reinterpret_cast<int>(act)) {
 			case TIMER_IDLE_TIMEOUT:
@@ -612,15 +637,28 @@ public:
 					UpdateIdleTimer();
 				}
 				break;
-			case TIMER_CLOSE:
-				assert(m_closeTimer != -1);
+			case TIMER_DELETE:
+				Log::GetInstance().AppendDebug(
+					"Connection %1% scheduled for deletion.",
+					m_instanceId);
 				{
 					Lock lock(m_mutex, true);
-					assert(m_closeTimer != -1);
+					assert(m_delTimer != -1);
 					assert(m_proactor);
 					assert(m_sendQueueSize == 0);
-					assert(m_proactor->cancel_timer(m_closeTimer) == 0);
+					assert(m_proactor->cancel_timer(m_delTimer) == 0);
 					if (!CheckedDelete(lock, true)) {
+						m_proactor = 0;
+					}
+				}
+				break;
+			case TIMER_CLOSE:
+				Log::GetInstance().AppendDebug(
+					"Connection %1% scheduled for closure.",
+					m_instanceId);
+				{
+					Lock lock(m_mutex, true);
+					if (m_proactor && !Close(lock, true)) {
 						m_proactor = 0;
 					}
 				}
@@ -683,8 +721,11 @@ private:
 			}
 		}
 
+		// the tunnel can be deleted (and buffer space too) after next Close call...
+		messageBlock.Reset();
+
 		Lock lock(m_mutex, true);
-		if (m_closeTimer == -1 && m_proactor && !Close(lock, true)) {
+		if (m_delTimer == -1 && m_proactor && !Close(lock, true)) {
 			m_proactor = 0;
 		}
 
@@ -728,11 +769,13 @@ private:
 	template<typename Result>
 	void DoHandleWriteStream(const Result &result) {
 		try {
-			const UniqueMessageBlockHolder messageBlock(result.message_block());
+			UniqueMessageBlockHolder messageBlock(result.message_block());
 			{
 				Lock lock(m_mutex, true);
 				if (--m_sendQueueSize == 0 && m_closeAtLastMessageBlock) {
-					if (m_closeTimer == -1) {
+					if (m_delTimer == -1) {
+						// the tunnel can be deleted (and buffer space too) after next Close call...
+						messageBlock.Reset();
 						Close(lock, true);
 					}
 					return;
@@ -749,7 +792,7 @@ private:
 	//! Inits read buffer if it possible and allowed
 	/**  Can be called only from proactor thread.
 	  */
-	void InitReadIfPossible() {
+	bool InitReadIfPossible() {
 
 		AssertLockedByMyThread(m_mutex);
 
@@ -759,7 +802,7 @@ private:
 		assert(m_isReadingInitiated);
 		
 		if (!m_isReadingInitiated) {
-			return;
+			return true;
 		} else if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize) {
 			if (m_isReadingActive) {
 				const size_t bytes = m_sentMessageBlockQueueSize * m_dataBlockSize;
@@ -771,10 +814,10 @@ private:
 				Interlocked::Decrement(&m_isReadingActive);
 				assert(m_isReadingActive == 0);
 			}
-			return;
+			return true;
 		} else if (!m_isReadingActive) {
 			if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize / 2) {
-				return;
+				return true;
 			}
 			const size_t bytes = m_sentMessageBlockQueueSize * m_dataBlockSize;
 			Log::GetInstance().AppendDebug(
@@ -802,16 +845,20 @@ private:
 				message
 					% error.GetString().GetCStr()
 					% error.GetErrorNo()
-					% m_instanceId;	
+					% m_instanceId;
 				if (error.GetErrorNo() == ERROR_NETNAME_DELETED) {
 					// see TEX-553
 					Log::GetInstance().AppendDebug(message.str().c_str());
+					messageBlock.Reset();
+					return false;
 				} else {
 					throw ConnectionException(message.str().c_str());
 				}
 			}
 			messageBlock.Release();
 		}
+
+		return true;
 	
 	}
 
@@ -841,7 +888,7 @@ private:
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
 		assert(m_idleTimeoutTimer == -1);
-		assert(m_closeTimer == -1);
+		assert(m_delTimer == -1);
 		if (m_isSetupCompletedWithSuccess) {
 			UpdateIdleTimer();
 		}
@@ -889,7 +936,7 @@ private:
 	ACE_Time_Value m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
 
-	long m_closeTimer;
+	long m_delTimer;
 
 	TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 
@@ -929,9 +976,7 @@ void Connection::WriteDirectly(const char *data, size_t size) {
 		throw TunnelEx::InsufficientMemoryException(
 			L"Insufficient message block memory");
 	}
-	const DataTransferCommand cmd = WriteDirectly(messageBlock);
-	assert(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
-	UseUnused(cmd);
+	verify(WriteDirectly(messageBlock) == DATA_TRANSFER_CMD_SEND_PACKET);
 }
 
 DataTransferCommand Connection::Write(MessageBlock &messageBlock) {
@@ -954,9 +999,7 @@ void Connection::SendToRemote(const char *data, size_t size) {
 		throw TunnelEx::InsufficientMemoryException(
 			L"Insufficient message block memory");
 	}
-	const DataTransferCommand cmd = SendToRemote(messageBlock);
-	assert(cmd == DATA_TRANSFER_CMD_SEND_PACKET);
-	UseUnused(cmd);
+	verify(SendToRemote(messageBlock) == DATA_TRANSFER_CMD_SEND_PACKET);
 }
 
 void Connection::SendToTunnel(MessageBlock &messageBlock) {
