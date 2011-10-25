@@ -205,6 +205,7 @@ Tunnel::Tunnel(
 		m_source(sourceRead, sourceWrite),
 		m_destinationIndex(0),
 		m_closedConnections(0),
+		m_allConnectionsClosedCondition(m_allConnectionsClosedMutex),
 		m_isDead(false) {
 	m_destination = CreateDestinationConnections(m_destinationIndex);
 	Log::GetInstance().AppendDebug("Outcoming connection created for %1%.", GetInstanceId());
@@ -368,22 +369,49 @@ void Tunnel::Init() {
 }
 
 Tunnel::~Tunnel() throw() {
-	//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
 	try {
+		//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
 		m_sourceDataTransferSignal->DisconnectDataTransfer();
 		m_destinationDataTransferSignal->DisconnectDataTransfer();
 	} catch (...) {
+#		ifdef DEV_VER
+		{
+			Format message("Unexpected exception in tunnel destructor.");
+			message % GetInstanceId();
+			Log::GetInstance().AppendWarn(message.str());
+		}
+#		else
+			Log::GetInstance().AppendDebug(
+				"Unexpected exception in tunnel destructor.",
+				GetInstanceId());
+#		endif
 		assert(false);
 	}
 	ReadWriteConnections().Swap(m_source);
 	ReadWriteConnections().Swap(m_destination);
-	assert(m_closedConnections <= m_connectionsToClose);
-	while (m_closedConnections < m_connectionsToClose) {
-		// FIXME - reimplement with condition
-		Log::GetInstance().AppendDebug(
-			"Not all connections closed in tunnel %1%, wait for scheduled...",
-			GetInstanceId());
-		ACE_OS::sleep(ACE_Time_Value(0, 500 * 1000));
+	{
+		AllConnectionsClosedLock lock(m_allConnectionsClosedMutex);
+		assert(m_closedConnections <= m_connectionsToClose);
+		for (auto i = 1; m_closedConnections < m_connectionsToClose; ++i) {
+			if (i > 1) {
+	#			ifdef DEV_VER
+				{
+					Format message(
+						"Not all connections closed in tunnel %1%, waiting for the %2% time for scheduled...");
+					message % GetInstanceId() % i;
+					Log::GetInstance().AppendWarn(message.str());
+				}
+	#			else
+					Log::GetInstance().AppendDebug(
+						"Not all connections closed in tunnel %1%, waiting for the %2% time for scheduled...",
+						GetInstanceId(),
+						i);
+	#			endif
+			}
+			const ACE_Time_Value waitUntil(ACE_OS::gettimeofday() + ACE_Time_Value(60));
+			verify(m_allConnectionsClosedCondition.wait(&waitUntil) != -1 || errno == ETIME);
+		}
+		assert(m_closedConnections == m_connectionsToClose);
 	}
 	ReportClosed();
 }
@@ -635,27 +663,25 @@ void Tunnel::OnConnectionSetup(Instance::Id instanceId) {
 }
 
 void Tunnel::OnConnectionClose(Instance::Id instanceId) {
-	assert(m_closedConnections < m_connectionsToClose);
 	Log::GetInstance().AppendDebug(
-		"Closing connection %1% in tunnel %2% (connections: %3%, already closed: %4%).",
+		"Closing connection %1% in tunnel %2%.",
 		instanceId,
-		GetInstanceId(),
-		m_connectionsToClose,
-		m_closedConnections);
+		GetInstanceId());
 	m_server.CloseTunnel(GetInstanceId());
 }
 
 void Tunnel::OnConnectionClosed(Instance::Id instanceId) {
+	AllConnectionsClosedLock lock(m_allConnectionsClosedMutex);
 	assert(m_closedConnections < m_connectionsToClose);
 	Log::GetInstance().AppendDebug(
 		"Connection %1% closed in tunnel %2% (connections: %3%, already closed: %4%).",
 		instanceId,
 		GetInstanceId(),
 		m_connectionsToClose,
-		m_closedConnections);
-	Interlocked::Increment(&m_closedConnections);
-	// FIXME: shot here d-or condition or not?
-	// object can be deleted here!
+		m_closedConnections + 1);
+	if (++m_closedConnections >= m_connectionsToClose) {
+		m_allConnectionsClosedCondition.broadcast();
+	}
 }
 
 Tunnel::Licenses & Tunnel::GetLicenses() {

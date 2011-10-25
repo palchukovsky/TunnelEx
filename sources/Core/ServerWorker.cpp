@@ -1490,7 +1490,7 @@ private:
 					" Already active %1% threads."
 					" Please contact product support to resolve this issue.");
 			message % threadsCount;
-			Log::GetInstance().AppendFatalError(message.str());
+			Log::GetInstance().AppendWarn(message.str());
 			return;
 		}
 		m_tunnelOpeningThreadManager.spawn(&TunnelOpeningThread, this);
