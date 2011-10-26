@@ -366,26 +366,26 @@ private:
 
 	struct RuleUpdatingState : private boost::noncopyable {
 
-		typedef ACE_Recursive_Thread_Mutex Mutex;
+		typedef ACE_Thread_Mutex Mutex;
 		typedef ACE_Guard<Mutex> Lock;
-		typedef ACE_Barrier Barrier;
+		typedef ACE_Thread_Condition<Mutex> Condition;
 		
 		RuleUpdatingState()
-				: threadCount(2), // two thread - updater thread and updating thread
-				operationBarrier(threadCount),
-				operationCompleteBarrier(threadCount) {
+				: newRuleCondition(ruleMutex),
+				resultCondition(resultMutex),
+				rule(nullptr) {
 			//...//
 		}
 		
-		const unsigned char threadCount;
-
-		Mutex stateMutex;
-		Barrier operationBarrier;
-		Barrier operationCompleteBarrier;
+		Mutex ruleMutex;
+		Condition newRuleCondition;
+		Mutex resultMutex;
+		Condition resultCondition;
+		
 		const Rule *rule;
-		bool lastResult;
-		AutoPtr<LocalException> lastException;
-		bool isRuleException;
+		
+		boost::optional<bool> result;
+		AutoPtr<LocalException> exception;
 
 	};
 
@@ -480,8 +480,8 @@ public:
 		verify(Interlocked::CompareExchange(m_isDestructionMode, 1, 0) == 0);
 
 		m_tunnelOpeningState.condition.broadcast();
+		m_ruleUpdatingState.newRuleCondition.broadcast();
 
-		RuleUpdatingState::Lock stateLock(m_ruleUpdatingState.stateMutex);
 		{
 			ServerStopLock stopLock(m_serverStopMutex);
 			{
@@ -494,8 +494,6 @@ public:
 			}
 			m_serverStopCondition.broadcast();
 		}
-		m_ruleUpdatingState.operationBarrier.wait();
-		stateLock.release();
 		m_activeRules.clear();
 		ScheduleReactorStopping();
 		{
@@ -548,23 +546,32 @@ public:
 	}
 
 	bool Update(const Rule &rule) {
-		RuleUpdatingState::Lock stateLock(m_ruleUpdatingState.stateMutex);
-		assert(!m_isDestructionMode);
-		m_ruleUpdatingState.rule = &rule;
-		m_ruleUpdatingState.operationBarrier.wait();
-		m_ruleUpdatingState.operationCompleteBarrier.wait();
-		if (m_ruleUpdatingState.lastException) {
-			AutoPtr<LocalException> lastException = m_ruleUpdatingState.lastException;
-			m_ruleUpdatingState.lastException.Reset();
-			if (dynamic_cast<LicenseException *>(lastException.Get())) {
-				throw *(dynamic_cast<LicenseException *>(lastException.Get()));
-			} else {
-				throw *lastException;
-			}
-		}
-		return m_ruleUpdatingState.lastResult;
-	}
 		
+		RuleUpdatingState::Lock resultLock(m_ruleUpdatingState.resultMutex);
+		{
+			RuleUpdatingState::Lock ruleLock(m_ruleUpdatingState.ruleMutex);
+			assert(!m_isDestructionMode);
+			m_ruleUpdatingState.rule = &rule;
+			m_ruleUpdatingState.newRuleCondition.signal();
+		}
+		m_ruleUpdatingState.result.reset();
+		assert(!m_ruleUpdatingState.exception);
+		
+		m_ruleUpdatingState.resultCondition.wait();
+
+		if (m_ruleUpdatingState.exception) {
+			const AutoPtr<const LocalException> exception(m_ruleUpdatingState.exception);
+			const LicenseException *licenseException
+				= dynamic_cast<const LicenseException *>(exception.Get());
+			throw *(licenseException ? licenseException : exception.Get());
+		} else if (!m_ruleUpdatingState.result) {
+			throw LocalException(L"Unknown system error occurred at rule updating");
+		} else {
+			return *m_ruleUpdatingState.result;
+		}
+	
+	}
+
 	bool DeleteRule(const WString &uuid) {
 		
 		RulesWriteLock lock(m_rulesMutex);
@@ -1112,39 +1119,51 @@ private:
 	}
 
 	static ACE_THR_FUNC_RETURN UpdatingThread(void *param) {
+
 		Log::GetInstance().AppendDebug("Started updating thread.");
+	
 		Implementation &instance = *static_cast<Implementation *>(param);
-		for ( ; ; ) {
-			instance.m_ruleUpdatingState.operationBarrier.wait();
-			if (instance.m_isDestructionMode) {
-				break;
-			}
-			try {
-				if (dynamic_cast<const TunnelRule *>(instance.m_ruleUpdatingState.rule)) {
-					instance.m_ruleUpdatingState.lastResult
-						= instance.UpdateImplementation(
+		typedef RuleUpdatingState::Lock Lock;
+		RuleUpdatingState &state = instance.m_ruleUpdatingState;
+
+		while (!instance.m_isDestructionMode) {
+
+			Lock ruleLock(state.ruleMutex);
+	
+			if (state.rule) {
+				Lock resultLock(state.resultMutex);
+				assert(!state.exception);
+				assert(!state.result);
+				try {
+					if (dynamic_cast<const TunnelRule *>(state.rule)) {
+						state.result = instance.UpdateImplementation(
 							*boost::polymorphic_downcast<const TunnelRule *>(
 								instance.m_ruleUpdatingState.rule));
-				} else {
-					assert(dynamic_cast<const ServiceRule *>(instance.m_ruleUpdatingState.rule));
-					instance.m_ruleUpdatingState.lastResult
-						= instance.UpdateImplementation(
+					} else {
+						assert(dynamic_cast<const ServiceRule *>(state.rule));
+						state.result = instance.UpdateImplementation(
 							*boost::polymorphic_downcast<const ServiceRule *>(
 								instance.m_ruleUpdatingState.rule));
-				}
-			} catch (const TunnelEx::LocalException &ex) {
-				instance.m_ruleUpdatingState.lastException = ex.Clone();
-			} catch (const std::exception &ex) {
-				instance.m_ruleUpdatingState.lastException.Reset(
+					}
+				} catch (const TunnelEx::LocalException &ex) {
+					instance.m_ruleUpdatingState.exception = ex.Clone();
+				} catch (const std::exception &ex) {
+					instance.m_ruleUpdatingState.exception.Reset(
 					new SystemException(ConvertString<WString>(ex.what()).GetCStr()));
-			} catch (...) {
-				Log::GetInstance().AppendSystemError(
-					"Unknown system error occurred in tunnels updating thread.");
+				} catch (...) {
+					Log::GetInstance().AppendSystemError(
+						"Unknown system error occurred in updating thread.");
+				}
+				state.resultCondition.broadcast();
 			}
-			instance.m_ruleUpdatingState.operationCompleteBarrier.wait();
+			
+			state.newRuleCondition.wait();
+
 		}
+
 		Log::GetInstance().AppendDebug("Updating thread completed.");
 		return 0;
+
 	}
 
 	static ACE_THR_FUNC_RETURN ServiceThread(void *param) {
