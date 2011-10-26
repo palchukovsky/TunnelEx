@@ -11,6 +11,8 @@
 #ifndef INCLUDED_FILE__TUNNELEX__Service_h__0712270036
 #define INCLUDED_FILE__TUNNELEX__Service_h__0712270036
 
+#include "Core/Log.hpp"
+
 class TexServiceImplementation;
 
 void RunAsTexService();
@@ -19,7 +21,8 @@ bool UninstallTexService();
 
 class TexWinService : private boost::noncopyable {
 public:
-	TexWinService();
+	explicit TexWinService(
+			boost::optional<TunnelEx::LogLevel> forcedLogLevel = boost::optional<TunnelEx::LogLevel>());
 	~TexWinService();
 private:
 	mutable soap m_soap;

@@ -321,7 +321,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
-TexServiceImplementation::TexServiceImplementation()
+TexServiceImplementation::TexServiceImplementation(boost::optional<LogLevel> forcedLogLevel)
 		: m_pimpl(new Implementation) {
 
 	ServiceConfiguration &conf = m_pimpl->GetConfiguration();
@@ -330,12 +330,14 @@ TexServiceImplementation::TexServiceImplementation()
 	const bool logWasTruncated = m_pimpl->TruncateLog(conf, previousLogSize);
 	Log::GetInstance().AttachFile(conf.GetLogPath());
 #	if !defined(DEV_VER)
-		if (conf.GetLogLevel() == TunnelEx::LOG_LEVEL_DEBUG) {
+		if (!forcedLogLevel && conf.GetLogLevel() == TunnelEx::LOG_LEVEL_DEBUG) {
 			conf.SetLogLevel(TunnelEx::LOG_LEVEL_INFO);
 			conf.Save();
 		}
 #	endif
-	Log::GetInstance().SetMinimumRegistrationLevel(conf.GetLogLevel());
+	Log::GetInstance().SetMinimumRegistrationLevel(forcedLogLevel
+		?	*forcedLogLevel
+		:	conf.GetLogLevel());
 	Log::GetInstance().AppendInfo(
 		ConvertString<String>(L"Logging stated: " TUNNELEX_NAME_W L" " TUNNELEX_VERSION_FULL_W TUNNELEX_BUILD_IDENTITY_ADD_W).GetCStr());
 	if (logWasTruncated) {

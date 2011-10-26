@@ -16,7 +16,6 @@
 #include "TexServiceImplementation.hpp"
 #include "ServiceEndpointBroadcaster.hpp"
 
-#include "Core/Log.hpp"
 #include "Core/Server.hpp"
 #include "Core/Exceptions.hpp"
 #include "Core/String.hpp"
@@ -26,9 +25,10 @@ using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
-TexWinService::TexWinService() {
+TexWinService::TexWinService(
+			boost::optional<LogLevel> forcedLogLevel /*= boost::optional<TunnelEx::LogLevel>()*/) {
 	assert(!m_texService.get());
-	m_texService.reset(new TexServiceImplementation);
+	m_texService.reset(new TexServiceImplementation(forcedLogLevel));
 	soap_init2(&m_soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 	m_soap.max_keep_alive = 1000;
 }
@@ -258,8 +258,8 @@ void WINAPI ServiceMain(DWORD, LPWSTR*) {
 
 	try {
 		TexWinService().Run(g_serviceShutdownEvent);
-	} catch (const TunnelEx::LocalException&) {
-		/*...*/
+	} catch (const TunnelEx::LocalException &) {
+		//...//
 	}
 
 	///////////////////////////////////////////////////////////////////////

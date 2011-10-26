@@ -30,6 +30,7 @@ using namespace TunnelEx;
 void LaunchControlCenter();
 bool RunAsTexService2();
 bool RunStandalone();
+bool RunDebug();
 bool StartTexService();
 bool StopTexService();
 bool ShowTexServiceStatus();
@@ -67,7 +68,7 @@ int main(int, const char*[]) {
 			commands[TEX_SERVICE_CL_CMD_STOP]		= &StopTexService;
 			commands[TEX_SERVICE_CL_CMD_STATUS]		= &ShowTexServiceStatus;
 			commands[TEX_SERVICE_CL_CMD_STANDALONE]	= &RunStandalone;
-			commands[TEX_SERVICE_CL_CMD_DEBUG]		= &RunStandalone;
+			commands[TEX_SERVICE_CL_CMD_DEBUG]		= &RunDebug;
 			const Commands::const_iterator commandPos = commands.find(argv[1]);
 			if (commandPos == commands.end()) {
 				result = 2;
@@ -99,10 +100,17 @@ void LaunchControlCenter() {
 	STARTUPINFOA startupInfo;
 	memset(&startupInfo, 0, sizeof startupInfo);
 	startupInfo.cb = sizeof startupInfo;
-	const BOOL createResult
-		= CreateProcessA(
-			0, TUNNELEX_CONTROL_CENTER_EXE_FILE_NAME, 0, 0, FALSE, 0,
-			0, 0, &startupInfo, &processInfo);
+	const auto createResult = CreateProcessA(
+			0,
+			TUNNELEX_CONTROL_CENTER_EXE_FILE_NAME,
+			0,
+			0,
+			FALSE,
+			0,
+			0,
+			0,
+			&startupInfo,
+			&processInfo);
 	if (createResult) {
 		CloseHandle(processInfo.hThread);
 		CloseHandle(processInfo.hProcess);
@@ -163,16 +171,17 @@ bool ShowTexServiceStatus() {
 	return false;
 }
 
-bool RunStandalone() {
-	
-	Log::GetInstance().SetMinimumRegistrationLevel(TunnelEx::LOG_LEVEL_INFO);
-	Log::GetInstance().AttachStderrStream();
-	
+bool RunStandalone(boost::optional<TunnelEx::LogLevel> forcedLogLevel) {
+
+	Log::GetInstance().SetMinimumRegistrationLevel(forcedLogLevel
+		?	*forcedLogLevel
+		:	TunnelEx::LOG_LEVEL_INFO);
+
 	class ThreadHolder : private boost::noncopyable {
 	public:
-		ThreadHolder()
-				: boost::noncopyable(),
-				m_stopEvent(CreateEvent(NULL, FALSE, TRUE, NULL)) {
+		explicit ThreadHolder(boost::optional<TunnelEx::LogLevel> forcedLogLevel)
+				: m_stopEvent(CreateEvent(NULL, FALSE, TRUE, NULL)),
+				m_forcedLogLevel(forcedLogLevel) {
 			ResetEvent(m_stopEvent);
 		}
 		~ThreadHolder() {
@@ -180,7 +189,7 @@ bool RunStandalone() {
 		}
 		void Run() {
 			try {
-				TexWinService().Run(m_stopEvent);
+				TexWinService(m_forcedLogLevel).Run(m_stopEvent);
 			} catch (const TunnelEx::LocalException& ex) {
 				MessageBoxW(NULL, ex.GetWhat(), L"Error!", MB_ICONSTOP | MB_OK);
 			}
@@ -190,7 +199,8 @@ bool RunStandalone() {
 		}
 	private:
 		HANDLE m_stopEvent;
-	} threadHolder;
+		boost::optional<TunnelEx::LogLevel> m_forcedLogLevel;
+	} threadHolder(forcedLogLevel);
 	boost::thread thread(boost::bind(&ThreadHolder::Run, &threadHolder));
 	
 	getchar();
@@ -199,4 +209,14 @@ bool RunStandalone() {
 
 	return true;
 
+}
+
+bool RunDebug() {
+	Log::GetInstance().SetMinimumRegistrationLevel(TunnelEx::LOG_LEVEL_DEBUG);
+	Log::GetInstance().AttachStderrStream();
+	return RunStandalone(TunnelEx::LOG_LEVEL_DEBUG);
+}
+
+bool RunStandalone() {
+	return RunStandalone(boost::optional<TunnelEx::LogLevel>());
 }

@@ -18,7 +18,7 @@ class TexServiceImplementation : private boost::noncopyable {
 
 private:
 
-	TexServiceImplementation();
+	explicit TexServiceImplementation(boost::optional<TunnelEx::LogLevel> forcedLogLevel);
 
 public:
 
