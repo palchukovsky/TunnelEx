@@ -46,12 +46,13 @@ namespace TunnelEx {
 
 		struct Licenses;
 
-		typedef ACE_Thread_Mutex ConnectionClosedMutex;
-		typedef ACE_Guard<ConnectionClosedMutex> ConnectionClosedLock;
-
 		class ListenerBinder;
 		template<class Base>
 		class ConnectionOpeningExceptionImpl;
+
+		typedef ACE_Thread_Mutex AllConnectionsClosedMutex;
+		typedef ACE_Guard<AllConnectionsClosedMutex> AllConnectionsClosedLock;
+		typedef ACE_Thread_Condition<AllConnectionsClosedMutex> AllConnectionsClosedCondition;
 
 	public:
 		
@@ -182,7 +183,9 @@ namespace TunnelEx {
 
 		unsigned int m_destinationIndex;
 
-		volatile long m_closedConnections;
+		long m_closedConnections;
+		AllConnectionsClosedMutex m_allConnectionsClosedMutex;
+		AllConnectionsClosedCondition m_allConnectionsClosedCondition;
 
 		bool m_isDead;
 
