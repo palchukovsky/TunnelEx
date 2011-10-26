@@ -323,6 +323,7 @@ private:
 	wxButton *m_helpButton;
 
 	bool m_isUpnpDevChecked;
+	mutable bool m_isPortChanged;
 
 };
 

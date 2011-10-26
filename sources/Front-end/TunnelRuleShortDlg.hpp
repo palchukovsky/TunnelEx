@@ -77,6 +77,10 @@ public:
 		return m_isAdvancedMode;
 	}
 
+	bool IsFtp() const {
+		return m_typeFtp->GetValue();
+	}
+
 public:
 
 	void OnTypeChange(wxCommandEvent &);
@@ -141,7 +145,9 @@ private:
 			wxCheckBox &checkBox,
 			wxButton &button,
 			TunnelEx::SslCertificateId &certificate,
-			TunnelEx::SslCertificateIdCollection &remoteCertificates)
+			TunnelEx::SslCertificateIdCollection &remoteCertificates,
+			wxTextCtrl &port,
+			bool isPortChanged)
 		const;
 
 private:
@@ -222,6 +228,9 @@ private:
 
 	TunnelEx::SslCertificateId m_destinationCertificate;
 	TunnelEx::SslCertificateIdCollection m_destinationRemoteCertificates;
+
+	bool m_isInputPortChanged;
+	bool m_isDestinationPortChanged;
 
 };
 

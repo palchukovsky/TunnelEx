@@ -72,7 +72,9 @@ TunnelRuleShortDlg::TunnelRuleShortDlg(
 		m_isAdvancedMode(false),
 		m_step(1),
 		m_isLicenseValid(true),
-		m_isUpnpDevChecked(false) {
+		m_isUpnpDevChecked(false),
+		m_isInputPortChanged(false),
+		m_isDestinationPortChanged(false) {
 	GetService().GetNetworkAdapters(true, m_serviceNetworkAdapters);
 	SetRule(std::auto_ptr<Rule>(new TunnelRule));
 }
@@ -90,7 +92,9 @@ TunnelRuleShortDlg::TunnelRuleShortDlg(
 			rule),
 		m_isAdvancedMode(false),
 		m_isLicenseValid(true),
-		m_isUpnpDevChecked(false) {
+		m_isUpnpDevChecked(false),
+		m_isInputPortChanged(false),
+		m_isDestinationPortChanged(false) {
 	GetService().GetNetworkAdapters(true, m_serviceNetworkAdapters);
 }
 
@@ -191,10 +195,12 @@ void TunnelRuleShortDlg::OnPortChanged(wxTextCtrl &port, wxString &valid) const 
 
 void TunnelRuleShortDlg::OnInputPortChanged(wxCommandEvent &) {
 	OnPortChanged(*m_inputPort, m_inputPortValid);
+	m_isInputPortChanged = true;
 }
 
 void TunnelRuleShortDlg::OnDestinationPortChanged(wxCommandEvent &) {
 	OnPortChanged(*m_destinationPort, m_destinationPortValid);
+	m_isDestinationPortChanged = true;
 }
 
 void TunnelRuleShortDlg::OnProxyUseToggle(wxCommandEvent &) {
@@ -1427,31 +1433,46 @@ void TunnelRuleShortDlg::UpdateVisibleNewRule() {
 			{
 				ShowGeneralSettings();
 				m_typeBox->Show();
+				if (m_typeFtp->GetValue()) {
+					m_typeDescription->SetLabel(
+						wxT("Redirection of FTP and FTPS requests of clients")
+							wxT(" to the real FTP server."));
+					if (!m_isInputPortChanged) {
+						m_inputPort->ChangeValue(m_inputSslUse->GetValue()
+							?	defaultFtpsPort
+							:	defaultFtpPort);
+					}
+					if (!m_isDestinationPortChanged) {
+						m_destinationPort->ChangeValue(m_destinationSslUse->GetValue()
+							?	defaultFtpsPort
+							:	defaultFtpPort);
+					}
+					m_typeFtpLink->Show();
+				} else {
+					if (!m_isInputPortChanged) {
+						m_inputPort->ChangeValue(wxEmptyString);
+					}
+					if (!m_isDestinationPortChanged) {
+						m_destinationPort->ChangeValue(wxEmptyString);
+					}
+					m_typeFtpLink->Hide();
+				}
 				if (m_typeTcp->GetValue()) {
 					m_typeDescription->SetLabel(
 						wxT("TCP connections reception and redirecting data")
 							wxT(" from them to another computer and/or port. "));
-					m_typeFtpLink->Hide();
 				} else if (m_typeUdp->GetValue()) {
 					m_typeDescription->SetLabel(
 						wxT("UDP datagrams reception and redirecting them to another")
 							wxT(" computer and/or port."));
-					m_typeFtpLink->Hide();
-				} else if (m_typeFtp->GetValue()) {
-					m_typeDescription->SetLabel(
-						wxT("Redirection of FTP and FTPS requests of clients")
-							wxT(" to the real FTP server."));
-					m_typeFtpLink->Show();
 				} else if (m_typePipe->GetValue()) {
 					m_typeDescription->SetLabel(
 						wxT("Reception and redirection of data via named pipes."));
-					m_typeFtpLink->Hide();
 				} else if (m_typeSerial->GetValue()) {
 					m_typeDescription->SetLabel(
 						wxT("Reception and redirection of data from serial port (COM-port)."));
-					m_typeFtpLink->Hide();
 				} else {
-					assert(false);
+					assert(m_typeFtp->GetValue());
 				}
 				const wxSize typeBoxMinSize = m_typeBox->GetMinSize();
 				m_typeBox->GetSizer()->SetSizeHints(m_typeBox);
@@ -1633,7 +1654,9 @@ void TunnelRuleShortDlg::OnUseInputSslToggle(wxCommandEvent &) {
 		*m_inputSslUse,
 		*m_inputSslSettings,
 		m_inputCertificate,
-		m_inputRemoteCertificates);
+		m_inputRemoteCertificates,
+		*m_inputPort,
+		m_isInputPortChanged);
 }
 
 void TunnelRuleShortDlg::OnUseDestintationSslToggle(wxCommandEvent &) {
@@ -1641,16 +1664,22 @@ void TunnelRuleShortDlg::OnUseDestintationSslToggle(wxCommandEvent &) {
 		*m_destinationSslUse,
 		*m_destinationSslSettings,
 		m_destinationCertificate,
-		m_destinationRemoteCertificates);
+		m_destinationRemoteCertificates,
+		*m_destinationPort,
+		m_isDestinationPortChanged);
 }
 
 void TunnelRuleShortDlg::OnUseSslToggle(
 			wxCheckBox &checkBox,
 			wxButton &button,
 			SslCertificateId &certificate,
-			SslCertificateIdCollection &remoteCertificates)
+			SslCertificateIdCollection &remoteCertificates,
+			wxTextCtrl &port,
+			bool isPortChanged)
 		const {
+	
 	if (checkBox.GetValue()) {
+	
 		if (!m_licenses->ssl.IsFeatureAvailable(true)) {
 			checkBox.SetValue(wxGetApp().IsUnlimitedModeActive());
 			LicenseRestrictionDlg(
@@ -1660,14 +1689,22 @@ void TunnelRuleShortDlg::OnUseSslToggle(
 					true)
 				.ShowModal();
 		}
+		
 		if (checkBox.GetValue()) {
 			certificate = TcpEndpointAddress::GetAnonymousSslCertificateMagicName();
 		}
+	
 	} else {
 		certificate.Clear();
 		remoteCertificates.SetSize(0);
 	}
+	
 	button.Enable(checkBox.GetValue());
+	
+	if (IsNewRule() && m_typeFtp->GetValue() && !isPortChanged) {
+		port.ChangeValue(checkBox.GetValue() ? defaultFtpsPort : defaultFtpPort);
+	}
+
 }
 
 void TunnelRuleShortDlg::OnInputSslSettings(wxCommandEvent &) {

@@ -86,6 +86,9 @@ inline int CorrectBorderForButtonSizer(const int borderWidth) {
 	return borderWidth - 4;
 }
 
+extern const wxString defaultFtpPort;
+extern const wxString defaultFtpsPort;
+
 #endif
 
 #include "LocalAssert.h"

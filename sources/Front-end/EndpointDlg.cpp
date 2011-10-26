@@ -175,7 +175,8 @@ EndpointDlg::EndpointDlg(
 		m_isNewEndpoint(true),
 		m_service(service),
 		m_licenses(new Licenses(m_service.GetService())),
-		m_isUpnpDevChecked(false) {
+		m_isUpnpDevChecked(false),
+		m_isPortChanged(false) {
 	Init();
 }
 
@@ -193,7 +194,8 @@ EndpointDlg::EndpointDlg(
 		m_isNewEndpoint(false),
 		m_service(service),
 		m_licenses(new Licenses(m_service.GetService())),
-		m_isUpnpDevChecked(false) {
+		m_isUpnpDevChecked(false),
+		m_isPortChanged(false) {
 	Init();
 }
 
@@ -607,6 +609,7 @@ void EndpointDlg::OnCombinedOrReadPortChanged(wxCommandEvent &) {
 }
 
 void EndpointDlg::OnPortChanged(EndpointInfoItem &info) const {
+	m_isPortChanged = true;
 	std::wstring checkValue = info.portInput->GetValue().c_str();
 	boost::trim(checkValue);
 	if (checkValue.empty()) {
@@ -1794,7 +1797,7 @@ void EndpointDlg::ReadEndpointInfo(
 			}
 			info.SetAdapter(typedAddress.GetAdapter(), m_serviceNetworkAdapters);
 			if (typedAddress.GetPort()) {
-				info.portInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetPort()));
+				info.portInput->ChangeValue(boost::lexical_cast<std::wstring>(typedAddress.GetPort()));
 			}
 			info.EnableProxy(typedAddress.GetProxyList().size() > 0);
 			if (typedAddress.GetProxyList().size() > 0) {
@@ -1829,7 +1832,7 @@ void EndpointDlg::ReadEndpointInfo(
 		}
 		info.SetAdapter(inetAddress.GetAdapter(), m_serviceNetworkAdapters);
 		if (inetAddress.GetPort()) {
-			info.portInput->SetValue(boost::lexical_cast<std::wstring>(inetAddress.GetPort()));
+			info.portInput->ChangeValue(boost::lexical_cast<std::wstring>(inetAddress.GetPort()));
 		}
 
 		if (dynamic_cast<const TcpEndpointAddress *>(&inetAddress)) {
@@ -1890,7 +1893,7 @@ void EndpointDlg::ReadEndpointInfo(
 		info.SetUpnpAdapter();
 
 		if (typedAddress.GetExternalPort()) {
-			info.portInput->SetValue(boost::lexical_cast<std::wstring>(typedAddress.GetExternalPort()));
+			info.portInput->ChangeValue(boost::lexical_cast<std::wstring>(typedAddress.GetExternalPort()));
 		}
 
 		if (dynamic_cast<const UpnpTcpEndpointAddress *>(&address)) {
@@ -1926,7 +1929,7 @@ void EndpointDlg::CreateDefaultEndpointInfo(EndpointInfoItem &info) const {
 	info.SetAccepting(info.isReadOrCombined);
 	info.networkProtoInput->SetStringSelection(wxT("TCP"));
 	if (m_isFtpEndpoint) {
-		info.portInput->SetValue(wxT("21"));
+		info.portInput->ChangeValue(defaultFtpPort);
 	}
 	info.adapterInput->SetSelection(0); // zero is index of "all"
 	info.EnableSsl(false);
@@ -2057,24 +2060,35 @@ void EndpointDlg::OnProxyUseWriteToggle(wxCommandEvent &event) {
 void EndpointDlg::CheckSslUseControls(
 			bool readEndpointAction,
 			bool isSet) {
+	
 	EndpointInfoItem &info = m_endpointsInfo[!readEndpointAction ? 1 : 0];
+	
 	if (isSet && !m_licenses->ssl.IsFeatureAvailable(true)) {
 		LicenseRestrictionDlg(m_service, this, m_licenses->ssl, true).ShowModal();
 	}
+	
 	if (	isSet
 			&& !m_licenses->ssl.IsFeatureValueAvailable(true)
 			&& !wxGetApp().IsUnlimitedModeActive()) {
 		isSet = false;
 	}
+	
 	if (	isSet
 			&& !m_licenses->ssl.IsFeatureValueAvailable(true)
 			&& !wxGetApp().IsUnlimitedModeActive()) {
 		return;
 	}
+	
 	if (isSet && info.certificate.IsEmpty() == 0) {
 		isSet = ShowSslSettingsDialog(info);
 	}
+
+	if (m_isNewEndpoint && m_isFtpEndpoint && !m_isPortChanged) {
+		info.portInput->ChangeValue(isSet ? defaultFtpsPort : defaultFtpPort);
+	}
+
 	info.EnableSsl(isSet);
+
 }
 
 void EndpointDlg::CheckProxyUseControls(

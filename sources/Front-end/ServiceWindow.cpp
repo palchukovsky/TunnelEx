@@ -308,7 +308,7 @@ void ServiceWindow::AddCustomRule() {
 	}
 	if (simpleDlg.IsAdvancdeMode()) {
 		std::auto_ptr<TunnelRuleDlg> fullDlg(!newRule.get()
-			?	new TunnelRuleDlg(*this, this, false)
+			?	new TunnelRuleDlg(*this, this, simpleDlg.IsFtp())
 			:	new TunnelRuleDlg(*this, this, *newRule));
 		if (fullDlg->ShowModal() == wxID_OK) {
 			newRule.reset(
