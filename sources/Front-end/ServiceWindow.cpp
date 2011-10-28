@@ -1222,17 +1222,22 @@ namespace {
 			if (!handles.connect) {
 				return 0;
 			}
+			LPCSTR accept[2] = {
+				"*/*",
+				NULL
+			};
 			handles.request = HttpOpenRequestA(
 				handles.connect,
 				"POST",
 				"license/create/trial",
-				0,
-				0,
-				0, 
-				INTERNET_FLAG_NO_AUTH | INTERNET_FLAG_NO_CACHE_WRITE
-					| INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI
-					| INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD,
-				0);
+				NULL,
+				NULL,
+				accept, 
+				INTERNET_FLAG_NO_CACHE_WRITE
+					| INTERNET_FLAG_NO_UI
+					| INTERNET_FLAG_PRAGMA_NOCACHE
+					| INTERNET_FLAG_RELOAD,
+				1);
 			assert(handles.request);
 			if (!handles.request) {
 				return 0;
