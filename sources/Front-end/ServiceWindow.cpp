@@ -298,70 +298,14 @@ void ServiceWindow::OnSelectionChanged(wxListEvent &) {
 	wxPostEvent(GetParent(), event);
 }
 
-void ServiceWindow::ShowNewRuleEntryPoint(const std::wstring &ruleUuid) {
-	
-	const wxString configVarFullName = wxT("/Show/NewRuleEntryPoint");
-	bool showThisDialog;
-	wxGetApp().GetConfig().Read(configVarFullName, &showThisDialog, true);
-	if (!showThisDialog) {
-		return;
-	}
-
-	const RulesMap::const_iterator rule = m_rules.find(ruleUuid);
-	assert(rule != m_rules.end());
-	
-	wxDialog dlg(
-		this,
-		wxID_ANY,
-		wxT("New rule added"),
-		wxDefaultPosition, 
-		wxDefaultSize,
-		wxCAPTION);
-
-	auto &text = *(new wxStaticText(&dlg, wxID_ANY, wxT("WEDWEdwed ewdew d wed wed wed ewwedwed wed ")));
-	auto &checkBox = *(new wxCheckBox(&dlg, wxID_ANY, wxT("Do not show this message in the future")));
-	auto checkBoxFont(checkBox.GetFont());
-	checkBoxFont.SetPointSize(7);
-	checkBox.SetFont(checkBoxFont);
-
-	std::auto_ptr<wxStdDialogButtonSizer> buttonBox(new wxStdDialogButtonSizer);
-	auto &okButton = *(new wxButton(&dlg, wxID_OK));
-	buttonBox->AddButton(&okButton);
-	okButton.SetDefault();
-	okButton.SetFocus();
-	dlg.SetAffirmativeId(wxID_OK);
-	buttonBox->Realize();
-
-	std::auto_ptr<wxBoxSizer> bottomSizer(new wxBoxSizer(wxHORIZONTAL));
-	bottomSizer->Add(&checkBox, wxSizerFlags(1).Expand());
-	bottomSizer->AddStretchSpacer();
-	bottomSizer->Add(buttonBox.get(), wxSizerFlags(1).Expand());
-	buttonBox.release();
-
-	std::auto_ptr<wxBoxSizer> topSizer(new wxBoxSizer(wxVERTICAL));
-	topSizer->Add(&text, wxSizerFlags(1).Expand());
-	topSizer->Add(bottomSizer.get());
-	bottomSizer.release();
-
-	dlg.SetSizer(topSizer.get());
-	topSizer.release();
-
-	dlg.ShowModal();
-	wxGetApp().GetConfig().Write(configVarFullName, !checkBox.IsChecked());
-
-}
-
 void ServiceWindow::AddCustomRule() {
-
 	std::auto_ptr<TunnelRule> newRule;
 	TunnelRuleShortDlg simpleDlg(*this, this);
-
 	if (simpleDlg.ShowModal() == wxID_OK) {
 		newRule.reset(
 			new TunnelRule(
 				const_cast<const TunnelRuleShortDlg &>(simpleDlg).GetRule()));
 	}
-
 	if (simpleDlg.IsAdvancdeMode()) {
 		std::auto_ptr<TunnelRuleDlg> fullDlg(!newRule.get()
 			?	new TunnelRuleDlg(*this, this, simpleDlg.IsFtp())
@@ -372,14 +316,9 @@ void ServiceWindow::AddCustomRule() {
 					const_cast<const TunnelRuleDlg &>(*fullDlg).GetRule()));
 		}
 	}
-
 	if (newRule.get()) {
 		AddRule(*newRule);
-		if (!simpleDlg.IsAdvancdeMode() && IsRuleEnabled(newRule->GetUuid().GetCStr())) {
-			ShowNewRuleEntryPoint(newRule->GetUuid().GetCStr());
-		}
 	}
-
 }
 
 void ServiceWindow::AddCustomRuleAdvanced() {
@@ -1298,7 +1237,7 @@ namespace {
 					| INTERNET_FLAG_NO_UI
 					| INTERNET_FLAG_PRAGMA_NOCACHE
 					| INTERNET_FLAG_RELOAD,
-				INTERNET_NO_CALLBACK);
+				1);
 			assert(handles.request);
 			if (!handles.request) {
 				return 0;

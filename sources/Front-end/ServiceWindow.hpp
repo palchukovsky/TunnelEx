@@ -175,8 +175,6 @@ private:
 
 	const Licenses & GetLicenses() const;
 
-	void ShowNewRuleEntryPoint(const std::wstring &);
-
 private:
 
 	enum ControlsIds;
