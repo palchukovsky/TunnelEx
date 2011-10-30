@@ -166,16 +166,27 @@ PipeValidator::PipeValidator(bool validateIfVisibleOnly)
 }
 
 bool PipeValidator::Validate(wxWindow *) {
+
 	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
 	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
 		return true;
 	}
-	wxString val = ctrl.GetValue().Trim();
-	//! @todo: make one expression
+
+	std::wstring val = ctrl.GetValue().c_str();
+	
+	boost::trim(val);
+	boost::replace_all(val, L"\\", L"/");
+	{
+		const std::wstring winPipeStart = L"//./pipe/";
+		if (boost::istarts_with(val, winPipeStart)) {
+			val = val.substr(winPipeStart.size());
+		}
+	}
+	
 	const bool result
-		= boost::regex_match(val.c_str(), boost::wregex(L"([ \\d\\W_A-Za-z]*/+)*[ \\d\\W_A-Za-z]+"))
-			&& val.Find(L"\\") == -1
-			&& !boost::regex_match(val.c_str(), boost::wregex(L"[/\\\\]+"));
+		= boost::regex_match(val, boost::wregex(L"([ \\d\\W_A-Za-z]*/+)*[ \\d\\W_A-Za-z]+"))
+			&& !boost::regex_match(val, boost::wregex(L"[/\\\\]+"));
+
 	if (!result) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
@@ -183,7 +194,9 @@ bool PipeValidator::Validate(wxWindow *) {
 	} else {
 		ctrl.SetValue(val);
 	}
+
 	return result;
+
 }
 
 wxObject * PipeValidator::Clone() const {
