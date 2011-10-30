@@ -474,7 +474,7 @@ std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 					wxDefaultPosition,
 					wxDefaultSize,
 					wxTE_NOHIDESEL | wxTE_PROCESS_ENTER,
-					HostValidator(true));
+					DestinationHostValidator(true, CONTROL_ID_PATHFINDER_USE, CONTROL_ID_PROXY_USE));
 				m_destinationHost->SetToolTip(
 					wxT("Hostname or IP address. It can be any local or remote hostname or IP address."));	
 				lineBox->Add(m_destinationHost, wxSizerFlags(center).Proportion(1));

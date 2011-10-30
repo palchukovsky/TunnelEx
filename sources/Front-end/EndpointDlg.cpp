@@ -1331,7 +1331,10 @@ void EndpointDlg::CreateControlEndpointNetworkAddress(
 				- info.portLabel->GetSize().GetWidth(),
 			-1),
 		wxTE_NOHIDESEL | wxTE_PROCESS_ENTER,
-		HostValidator(true));
+		DestinationHostValidator(
+			true,
+			info.isReadOrCombined ? CONTROL_ID_PATHFINDER_USE : CONTROL_ID_PATHFINDER_USE_WRITE,
+			info.isReadOrCombined ? CONTROL_ID_PROXY_USE : CONTROL_ID_PROXY_USE_WRITE));
 	info.hostInput->SetToolTip(
 		wxT("Host name or IP address. It can be any local or remote hostname or IP address."));	
 	// Port: ///////////////////////////////////////////////////////////

@@ -19,26 +19,35 @@ HostValidator::HostValidator(bool validateIfVisibleOnly)
 	//...//
 }
 
+bool HostValidator::IsValidationRequired() const {
+	const auto &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	return !(m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown()));
+}
+
 bool HostValidator::Validate(wxWindow *) {
-	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
-	if (m_validateIfVisibleOnly && (!ctrl.IsShown() || !ctrl.GetParent()->IsShown())) {
+
+	if (!IsValidationRequired()) {
 		return true;
 	}
-	wxString val = ctrl.GetValue().Trim();
+
+	wxTextCtrl &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	const wxString val = ctrl.GetValue().Trim();
+
 	const boost::wregex expression(
 		L"([a-z0-9]([\\-a-z0-9]*[a-z0-9])?\\.?)*[a-z0-9]+",
 		boost::regex_constants::perl | boost::regex_constants::icase);
-	const bool result = boost::regex_match(val.c_str(), expression);
-	if (!result) {
+	if (!boost::regex_match(val.c_str(), expression)) {
 		ctrl.SetFocus();
 		ctrl.SelectAll();
 		wxLogWarning(
 			wxT("Please, provide a valid host name or IP address.")
-				wxT("\nEx.: ") TUNNELEX_DOMAIN_W wxT(", localhost, 127.0.0.1, 192.168.2.24."));
-	} else {
-		ctrl.SetValue(val);
+				wxT("\nEx.: ") TUNNELEX_DOMAIN_W wxT(", example.com, 192.168.2.24."));
+		return false;
 	}
-	return result;
+		
+	ctrl.SetValue(val);
+	return true;
+
 }
 
 wxObject * HostValidator::Clone() const {
@@ -47,6 +56,73 @@ wxObject * HostValidator::Clone() const {
 
 bool HostValidator::TransferToWindow() {
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+DestinationHostValidator::DestinationHostValidator(
+			bool validateIfVisibleOnly,
+			wxWindowID pathfinderToggleCtrlId,
+			wxWindowID proxyToggleCtrlId)
+		: Base(validateIfVisibleOnly),
+		m_pathfinderToggleCtrlId(pathfinderToggleCtrlId),
+		m_proxyToggleCtrlId(proxyToggleCtrlId) {
+	//...//
+}
+
+bool DestinationHostValidator::Validate(wxWindow *window) {
+	
+	if (!IsValidationRequired()) {
+		return true;
+	}
+	
+	auto &ctrl = *boost::polymorphic_downcast<wxTextCtrl *>(GetWindow());
+	if (IsPathfinderInUse() && !IsProxyInUse() && IsLocalHost(ctrl.GetValue().Trim())) {
+		ctrl.SetFocus();
+		ctrl.SelectAll();
+		wxLogWarning(
+			wxT("It is impossible to assign a loopback address")
+				wxT(" (such as localhost, 127.0.0.1, 0:0:0:0:0:0:0:1 or ::1)")
+				wxT(" as the tunnel destination if uses Pathfinder online service,")
+				wxT(" because this address is not reachable for a external proxy server.")
+				wxT(" Please provide an address of a network interface,")
+				wxT(" which are external proxy server will be able to connect."));
+		return false;
+	}
+	
+	return Base::Validate(window);
+
+}
+
+bool DestinationHostValidator::IsPathfinderInUse() const {
+	return boost::polymorphic_downcast<wxCheckBox *>(
+		GetWindow()
+		->GetParent()
+		->FindWindow(m_pathfinderToggleCtrlId))
+		->GetValue();
+}
+
+bool DestinationHostValidator::IsProxyInUse() const {
+	return boost::polymorphic_downcast<wxCheckBox *>(
+		GetWindow()
+		->GetParent()
+		->FindWindow(m_proxyToggleCtrlId))
+		->GetValue();
+}
+
+bool DestinationHostValidator::IsLocalHost(const wxString &host) const {
+	return
+		host.CmpNoCase(wxT("localhost")) == 0
+		|| host.CmpNoCase(wxT("127.0.0.1")) == 0
+		|| host.CmpNoCase(wxT("0:0:0:0:0:0:0:1")) == 0
+		|| host.CmpNoCase(wxT("::1")) == 0;
+}
+
+wxObject * DestinationHostValidator::Clone() const {
+	return new DestinationHostValidator(
+		ValidateIfVisibleOnly(),
+		m_pathfinderToggleCtrlId,
+		m_proxyToggleCtrlId);
 }
 
 //////////////////////////////////////////////////////////////////////////
