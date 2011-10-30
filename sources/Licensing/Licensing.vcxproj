@@ -73,7 +73,6 @@
     <ClInclude Include="FsLocalStorage.hpp" />
     <ClInclude Include="IpHelperWorkstationPropertiesQueryPolicy.hpp" />
     <ClInclude Include="LocalComunicationPolicy.hpp" />
-    <ClInclude Include="OfflineCommPolicy.hpp" />
     <ClInclude Include="WinInetCommPolicy.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -70,17 +70,22 @@ namespace TunnelEx { namespace Licensing {
 
 			boost::format action("%2%/%1%");
 			action % "request" %  "key";
+			LPCSTR accept[2] = {
+				"*/*",
+				NULL
+			};
 			handles.request = HttpOpenRequestA(
 				handles.connect,
 				"POST",
 				action.str().c_str(),
 				0,
 				0,
-				0, 
-				INTERNET_FLAG_NO_AUTH | INTERNET_FLAG_NO_CACHE_WRITE
-					| INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_NO_UI
-					| INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD,
-				0);
+				accept, 
+				INTERNET_FLAG_NO_CACHE_WRITE
+					| INTERNET_FLAG_NO_UI
+					| INTERNET_FLAG_PRAGMA_NOCACHE
+					| INTERNET_FLAG_RELOAD,
+				INTERNET_NO_CALLBACK);
 			assert(handles.request);
 			if (!handles.request) {
 				return std::string();

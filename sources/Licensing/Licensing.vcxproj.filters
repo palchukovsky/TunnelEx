@@ -52,9 +52,6 @@
     <ClInclude Include="LocalComunicationPolicy.hpp">
       <Filter>Header Files\Implementations</Filter>
     </ClInclude>
-    <ClInclude Include="OfflineCommPolicy.hpp">
-      <Filter>Header Files\Implementations</Filter>
-    </ClInclude>
     <ClInclude Include="WinInetCommPolicy.hpp">
       <Filter>Header Files\Implementations</Filter>
     </ClInclude>

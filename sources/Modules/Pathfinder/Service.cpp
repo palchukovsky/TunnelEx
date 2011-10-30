@@ -287,19 +287,23 @@ bool ServiceImpl::RequestProxy(
 	}
 
 	AutoInetHandle request;
+	LPCWSTR accept[2] = {
+		L"*/*",
+		NULL
+	};
 	request.handle = HttpOpenRequestW(
 		m_handles->connect.handle,
 		L"GET",
 		requestStr.str().c_str(),
 		0,
 		0,
-		0, 
+		accept, 
 		INTERNET_FLAG_NO_CACHE_WRITE
 			| INTERNET_FLAG_KEEP_CONNECTION
 			| INTERNET_FLAG_NO_UI
 			| INTERNET_FLAG_PRAGMA_NOCACHE
 			| INTERNET_FLAG_RELOAD,
-		0);
+		INTERNET_NO_CALLBACK);
 	if (!request.handle) {
 		const Error error(GetLastError());
 		m_handles->Reset();
@@ -511,19 +515,23 @@ void ServiceImpl::Report(
 	}
 
 	AutoInetHandle request;
+	LPCWSTR accept[2] = {
+		L"*/*",
+		NULL
+	};
 	request.handle = HttpOpenRequestW(
 		m_handles->connect.handle,
 		L"POST",
 		requestStr.str().c_str(),
 		0,
 		0,
-		0, 
+		accept, 
 		INTERNET_FLAG_NO_CACHE_WRITE
 			| INTERNET_FLAG_KEEP_CONNECTION
 			| INTERNET_FLAG_NO_UI
 			| INTERNET_FLAG_PRAGMA_NOCACHE
 			| INTERNET_FLAG_RELOAD,
-		0);
+		INTERNET_NO_CALLBACK);
 	if (!request.handle) {
 		const Error error(GetLastError());
 		m_handles->Reset();
