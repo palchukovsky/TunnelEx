@@ -32,6 +32,7 @@ protected:
 		CONTROL_ID_TYPE = CONTROL_ID_LAST,
 		CONTROL_ID_NETWORK_ADAPTER,
 		CONTROL_ID_PORT_INPUT,
+		CONTROL_ID_HOST_DESTINATION,
 		CONTROL_ID_PORT_DESTINATION,
 		CONTROL_ID_PROXY_USE,
 		CONTROL_ID_PROXY_SETTINGS,
@@ -86,6 +87,7 @@ public:
 	void OnTypeChange(wxCommandEvent &);
 	void OnNetworkAdapterChange(wxCommandEvent &);
 	void OnInputPortChanged(wxCommandEvent &);
+	void OnDestinationHostPasted(wxClipboardTextEvent &);
 	void OnDestinationPortChanged(wxCommandEvent &);
 	void OnProxyUseToggle(wxCommandEvent &);
 	void OnProxySettings(wxCommandEvent &);

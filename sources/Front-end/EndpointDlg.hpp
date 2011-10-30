@@ -35,7 +35,9 @@ protected:
 		CONTROL_ID_NETWORK_PROTOCOL_WRITE,
 		CONTROL_ID_NETWORK_ADAPTER,
 		CONTROL_ID_NETWORK_ADAPTER_WRITE,
+		CONTROL_ID_HOST,
 		CONTROL_ID_PORT,
+		CONTROL_ID_HOST_WRITE,
 		CONTROL_ID_PORT_WRITE,
 		CONTROL_ID_ACCEPTING,
 		CONTROL_ID_ACCEPTING_WRITE,
@@ -89,6 +91,7 @@ protected:
 		wxStaticText *portLabel;
 		wxTextCtrl *portInput;
 		std::wstring portValid;
+		bool isPortChanged;
 
 		wxStaticText *pipeLabel;
 		wxTextCtrl *pipeInput;
@@ -145,7 +148,7 @@ protected:
 				const TunnelEx::SslCertificateId &certificate,
 				const TunnelEx::SslCertificateIdCollection &remoteCertificates);
 		void ResetSsl();
-		
+
 	};
 
 	typedef boost::array<EndpointInfoItem, 2> EndpointsInfo;
@@ -184,7 +187,9 @@ public:
 	void OnCancel(wxCommandEvent &);
 	void OnHelp(wxCommandEvent &);
 	void OnLogToggle(wxCommandEvent &);
+	void OnCombinedOrReadHostPasted(wxClipboardTextEvent &);
 	void OnCombinedOrReadPortChanged(wxCommandEvent &);
+	void OnWriteHostPasted(wxClipboardTextEvent &);
 	void OnWritePortChanged(wxCommandEvent &);
 	void OnEndpointTypeChange(wxCommandEvent &);
 	void OnEndpointReadWriteTypeChange(wxCommandEvent &);
@@ -260,7 +265,8 @@ private:
 			TunnelEx::WString &resourceIdentifier)
 		const;
 
-	void OnPortChanged(EndpointInfoItem &info) const;
+	void OnPortChanged(EndpointInfoItem &) const;
+	void OnHostPasted(wxClipboardTextEvent &, EndpointInfoItem &) const;
 
 	void SaveEnpointTemplate() const;
 
@@ -323,7 +329,6 @@ private:
 	wxButton *m_helpButton;
 
 	bool m_isUpnpDevChecked;
-	mutable bool m_isPortChanged;
 
 };
 

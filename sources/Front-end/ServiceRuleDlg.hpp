@@ -75,6 +75,7 @@ protected:
 
 	enum ControlId {
 		CONTROL_ID_EXTERNAL_PORT = ServiceRuleDlg::CONTROL_ID_LAST,
+		CONTROL_ID_DESTINATION_HOST,
 		CONTROL_ID_DESTINATION_PORT,
 		CONTROL_ID_LAST
 	};
@@ -120,6 +121,7 @@ public:
 
 	void OnExternalPortChanged(wxCommandEvent &);
 	void OnDestinationPortChanged(wxCommandEvent &);
+	void OnDestinationHostPasted(wxClipboardTextEvent &);
 
 private:
 

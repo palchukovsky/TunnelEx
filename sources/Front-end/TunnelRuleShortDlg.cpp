@@ -48,19 +48,20 @@ struct TunnelRuleShortDlg::Licenses {
 };
 
 BEGIN_EVENT_TABLE(TunnelRuleShortDlg, TunnelRuleShortDlg::Base)
-	EVT_BUTTON(		wxID_OK,		TunnelRuleShortDlg::OnOk)
-	EVT_COMMAND(	wxID_ANY, wxEVT_COMMAND_TEXT_ENTER, TunnelRuleShortDlg::OnOk)
-	EVT_CHOICE(		TunnelRuleShortDlg::CONTROL_ID_NETWORK_ADAPTER,	TunnelRuleShortDlg::OnNetworkAdapterChange)
+	EVT_BUTTON(		wxID_OK,											TunnelRuleShortDlg::OnOk)
+	EVT_COMMAND(	wxID_ANY, wxEVT_COMMAND_TEXT_ENTER,					TunnelRuleShortDlg::OnOk)
+	EVT_CHOICE(		TunnelRuleShortDlg::CONTROL_ID_NETWORK_ADAPTER,		TunnelRuleShortDlg::OnNetworkAdapterChange)
 	EVT_TEXT(		TunnelRuleShortDlg::CONTROL_ID_PORT_INPUT,			TunnelRuleShortDlg::OnInputPortChanged)
+	EVT_TEXT_PASTE(	TunnelRuleShortDlg::CONTROL_ID_HOST_DESTINATION,	TunnelRuleShortDlg::OnDestinationHostPasted)
 	EVT_TEXT(		TunnelRuleShortDlg::CONTROL_ID_PORT_DESTINATION,	TunnelRuleShortDlg::OnDestinationPortChanged)
-	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_PROXY_USE,	TunnelRuleShortDlg::OnProxyUseToggle)
+	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_PROXY_USE,			TunnelRuleShortDlg::OnProxyUseToggle)
 	EVT_BUTTON(		TunnelRuleShortDlg::CONTROL_ID_PROXY_SETTINGS,		TunnelRuleShortDlg::OnProxySettings)
-	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_PATHFINDER_USE, TunnelRuleShortDlg::OnPathfinderUseToggle)
+	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_PATHFINDER_USE,		TunnelRuleShortDlg::OnPathfinderUseToggle)
 	EVT_BUTTON(		TunnelRuleShortDlg::CONTROL_ID_ADVANCED_MODE,		TunnelRuleShortDlg::OnAdvancedMode)
 	EVT_BUTTON(		TunnelRuleShortDlg::CONTROL_ID_PREV_STEP,			TunnelRuleShortDlg::OnPrevStep)
 	EVT_RADIOBUTTON(TunnelRuleShortDlg::CONTROL_ID_TYPE,				TunnelRuleShortDlg::OnTypeChange)
-	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_INPUT_SSL_USE,			TunnelRuleShortDlg::OnUseInputSslToggle)
-	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_DESTINATION_SSL_USE,		TunnelRuleShortDlg::OnUseDestintationSslToggle)
+	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_INPUT_SSL_USE,		TunnelRuleShortDlg::OnUseInputSslToggle)
+	EVT_CHECKBOX(	TunnelRuleShortDlg::CONTROL_ID_DESTINATION_SSL_USE,	TunnelRuleShortDlg::OnUseDestintationSslToggle)
 	EVT_BUTTON(		TunnelRuleShortDlg::CONTROL_ID_INPUT_SSL_SETTINGS,	TunnelRuleShortDlg::OnInputSslSettings)
 	EVT_BUTTON(		TunnelRuleShortDlg::CONTROL_ID_DESTINATION_SSL_SETTINGS, TunnelRuleShortDlg::OnDestintationSslSettings)
 END_EVENT_TABLE()
@@ -94,7 +95,7 @@ TunnelRuleShortDlg::TunnelRuleShortDlg(
 		m_isLicenseValid(true),
 		m_isUpnpDevChecked(false),
 		m_isInputPortChanged(false),
-		m_isDestinationPortChanged(false) {
+		m_isDestinationPortChanged(true) {
 	GetService().GetNetworkAdapters(true, m_serviceNetworkAdapters);
 }
 
@@ -196,6 +197,15 @@ void TunnelRuleShortDlg::OnPortChanged(wxTextCtrl &port, wxString &valid) const 
 void TunnelRuleShortDlg::OnInputPortChanged(wxCommandEvent &) {
 	OnPortChanged(*m_inputPort, m_inputPortValid);
 	m_isInputPortChanged = true;
+}
+
+void TunnelRuleShortDlg::OnDestinationHostPasted(wxClipboardTextEvent &clipboardEvent) {
+	if (	!RuleUtils::SlitAddressFromClipboard(
+				*m_destinationHost,
+				*m_destinationPort,
+				m_isDestinationPortChanged)) {
+		clipboardEvent.Skip();
+	}
 }
 
 void TunnelRuleShortDlg::OnDestinationPortChanged(wxCommandEvent &) {
@@ -459,7 +469,7 @@ std::auto_ptr<wxSizer> TunnelRuleShortDlg::CreateControlContent() {
 				lineBox->Add(&hostLabel, center);
 				m_destinationHost = new wxTextCtrl(
 					m_tcpUdpFtpBox,
-					wxID_ANY,
+					CONTROL_ID_HOST_DESTINATION,
 					wxEmptyString,
 					wxDefaultPosition,
 					wxDefaultSize,

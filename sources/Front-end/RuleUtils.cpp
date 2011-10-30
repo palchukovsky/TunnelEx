@@ -540,3 +540,38 @@ unsigned short RuleUtils::ConvertPort(const wxString &port) {
 		return portNum;
 	}
 }
+
+bool RuleUtils::SlitAddressFromClipboard(wxTextCtrl &host, wxTextCtrl &port, bool isPortChanged) {
+	
+	if (!port.GetValue().IsEmpty() && isPortChanged) {
+		return false;
+	}
+	
+	if (!wxTheClipboard->Open()) {
+		assert(false);
+		return false;
+	}
+
+	bool isSet = false;
+	try {
+		if (wxTheClipboard->IsSupported(wxDF_TEXT)) {
+			wxTextDataObject clipboardData;
+			wxTheClipboard->GetData(clipboardData);
+			std::wstring value = clipboardData.GetText();
+			boost::trim(value);
+			boost::wsmatch what;
+			if (boost::regex_match(value, what, boost::wregex(L"^([^:]+):(\\d+)$"))) {
+				host.SetValue(what[1].str());
+				port.SetValue(what[2].str());
+				isSet = true;
+			}
+		}
+	} catch (...) {
+		wxTheClipboard->Close();
+		throw;
+	}
+	wxTheClipboard->Close();
+
+	return isSet;
+
+}

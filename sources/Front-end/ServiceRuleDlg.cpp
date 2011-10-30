@@ -72,6 +72,7 @@ std::auto_ptr<ServiceRule> ServiceRuleDlg::EditRule(
 BEGIN_EVENT_TABLE(UpnpServiceRuleDlg, ServiceRuleDlg)
 	EVT_TEXT(UpnpServiceRuleDlg::CONTROL_ID_EXTERNAL_PORT, UpnpServiceRuleDlg::OnExternalPortChanged)
 	EVT_TEXT(UpnpServiceRuleDlg::CONTROL_ID_DESTINATION_PORT, UpnpServiceRuleDlg::OnDestinationPortChanged)
+	EVT_TEXT_PASTE(UpnpServiceRuleDlg::CONTROL_ID_DESTINATION_HOST,	UpnpServiceRuleDlg::OnDestinationHostPasted)
 END_EVENT_TABLE()
 
 UpnpServiceRuleDlg::UpnpServiceRuleDlg(
@@ -269,7 +270,7 @@ std::auto_ptr<wxSizer> UpnpServiceRuleDlg::CreateControlContent() {
 
 		m_destinationHost = new wxTextCtrl(
 			this,
-			wxID_ANY,
+			CONTROL_ID_DESTINATION_HOST,
 			m_sourceDestinationHost,
 			wxDefaultPosition,
 			wxDefaultSize,
@@ -378,5 +379,11 @@ void UpnpServiceRuleDlg::CheckPortValue(wxTextCtrl &ctrl, wxString &validPort) c
 		ctrl.SetInsertionPoint(std::min(ctrl.GetLastPosition(), pos));
 	} else {
 		validPort = val;
+	}
+}
+
+void UpnpServiceRuleDlg::OnDestinationHostPasted(wxClipboardTextEvent &clipboardEvent) {
+	if (!RuleUtils::SlitAddressFromClipboard(*m_destinationHost, *m_destinationPort, true)) {
+		clipboardEvent.Skip();
 	}
 }

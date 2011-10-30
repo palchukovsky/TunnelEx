@@ -143,6 +143,11 @@ struct RuleUtils {
 
 	static unsigned short ConvertPort(const wxString &);
 
+	static bool SlitAddressFromClipboard(
+			wxTextCtrl &host,
+			wxTextCtrl &port,
+			bool isPortChanged);
+
 };
 
 #endif // INCLUDED_FILE__TUNNELEX__EndpointDlgUtils_hpp__1009181802

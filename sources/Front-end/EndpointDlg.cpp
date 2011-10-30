@@ -144,7 +144,9 @@ BEGIN_EVENT_TABLE(EndpointDlg, wxDialog)
 	EVT_CHOICE(		EndpointDlg::CONTROL_ID_NETWORK_ADAPTER_WRITE, EndpointDlg::OnNetworkAdapterChange)
 	EVT_CHECKBOX(	EndpointDlg::CONTROL_ID_LOGTRAFFIC_TOGGLE,	EndpointDlg::OnLogToggle)
 	EVT_BUTTON(		EndpointDlg::CONTROL_ID_LOGTRAFFIC_FOLDER_SELECT, EndpointDlg::OnLogFolderBrowse)
+	EVT_TEXT_PASTE(	EndpointDlg::CONTROL_ID_HOST,				EndpointDlg::OnCombinedOrReadHostPasted)
 	EVT_TEXT(		EndpointDlg::CONTROL_ID_PORT,				EndpointDlg::OnCombinedOrReadPortChanged)
+	EVT_TEXT_PASTE(	EndpointDlg::CONTROL_ID_HOST_WRITE,			EndpointDlg::OnWriteHostPasted)
 	EVT_TEXT(		EndpointDlg::CONTROL_ID_PORT_WRITE,			EndpointDlg::OnWritePortChanged)
 	EVT_CHOICE(		EndpointDlg::CONTROL_ID_READ_WRITE_TYPE,	EndpointDlg::OnEndpointReadWriteTypeChange)
 	EVT_CHOICE(		EndpointDlg::CONTROL_ID_ACCEPTING,			EndpointDlg::OnAcceptingToggle)
@@ -175,8 +177,7 @@ EndpointDlg::EndpointDlg(
 		m_isNewEndpoint(true),
 		m_service(service),
 		m_licenses(new Licenses(m_service.GetService())),
-		m_isUpnpDevChecked(false),
-		m_isPortChanged(false) {
+		m_isUpnpDevChecked(false) {
 	Init();
 }
 
@@ -194,8 +195,7 @@ EndpointDlg::EndpointDlg(
 		m_isNewEndpoint(false),
 		m_service(service),
 		m_licenses(new Licenses(m_service.GetService())),
-		m_isUpnpDevChecked(false),
-		m_isPortChanged(false) {
+		m_isUpnpDevChecked(false) {
 	Init();
 }
 
@@ -600,16 +600,34 @@ void EndpointDlg::OnLogToggle(wxCommandEvent &) {
 	m_logBrowseButton->Enable(isEnabled);
 }
 
+void EndpointDlg::OnWriteHostPasted(wxClipboardTextEvent &clipboardEvent) {
+	OnHostPasted(clipboardEvent, m_endpointsInfo[1]);
+}
+
 void EndpointDlg::OnWritePortChanged(wxCommandEvent &) {
 	OnPortChanged(m_endpointsInfo[1]);
+}
+
+void EndpointDlg::OnCombinedOrReadHostPasted(wxClipboardTextEvent &clipboardEvent) {
+	OnHostPasted(clipboardEvent, m_endpointsInfo[0]);
 }
 
 void EndpointDlg::OnCombinedOrReadPortChanged(wxCommandEvent &) {
 	OnPortChanged(m_endpointsInfo[0]);
 }
 
+void EndpointDlg::OnHostPasted(
+			wxClipboardTextEvent &clipboardEvent,
+			EndpointInfoItem &info)
+		const {
+	if (!RuleUtils::SlitAddressFromClipboard(*info.hostInput, *info.portInput, info.isPortChanged)) {
+		clipboardEvent.Skip();
+		return;
+	}
+}
+
 void EndpointDlg::OnPortChanged(EndpointInfoItem &info) const {
-	m_isPortChanged = true;
+	info.isPortChanged = true;
 	std::wstring checkValue = info.portInput->GetValue().c_str();
 	boost::trim(checkValue);
 	if (checkValue.empty()) {
@@ -1301,19 +1319,21 @@ void EndpointDlg::CreateControlEndpointNetworkAddress(
 		wxALIGN_RIGHT);
 	info.hostInput = new wxTextCtrl(
 		this,
-		wxID_ANY,
+		info.isReadOrCombined ? CONTROL_ID_HOST : CONTROL_ID_HOST_WRITE,
 		wxEmptyString,
 		wxPoint((m_borderWidth * 2) + m_internalBorderWidth + labelWidth, -1),
 		wxSize(
-			groupWidth - (m_borderWidth * 3)
-				- (m_internalBorderWidth * 2) - labelWidth
+			groupWidth
+				- (m_borderWidth * 3)
+				- (m_internalBorderWidth * 2)
+				- labelWidth
 				- RuleUtils::GetPortFieldSize().GetWidth()
 				- info.portLabel->GetSize().GetWidth(),
 			-1),
 		wxTE_NOHIDESEL | wxTE_PROCESS_ENTER,
 		HostValidator(true));
 	info.hostInput->SetToolTip(
-		wxT("Hostname or IP address. It can be any local or remote hostname or IP address."));	
+		wxT("Host name or IP address. It can be any local or remote hostname or IP address."));	
 	// Port: ///////////////////////////////////////////////////////////
 	info.portInput = new wxTextCtrl(
 		this,
@@ -1324,6 +1344,7 @@ void EndpointDlg::CreateControlEndpointNetworkAddress(
 		wxTE_NOHIDESEL | wxTE_PROCESS_ENTER,
 		NetworPortValidator(true));
 	info.portInput->SetToolTip(wxT("Endpoint network port."));
+	info.isPortChanged = !m_isNewEndpoint;
 	// External IP: ///////////////////////////////////////////////////////
 	info.externalIpLabel = new wxStaticText(
 		this,
@@ -2083,7 +2104,7 @@ void EndpointDlg::CheckSslUseControls(
 		isSet = ShowSslSettingsDialog(info);
 	}
 
-	if (m_isNewEndpoint && m_isFtpEndpoint && !m_isPortChanged) {
+	if (m_isFtpEndpoint && !info.isPortChanged) {
 		info.portInput->ChangeValue(isSet ? defaultFtpsPort : defaultFtpPort);
 	}
 
