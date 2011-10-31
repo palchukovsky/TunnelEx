@@ -33,9 +33,15 @@ namespace TunnelEx { namespace Licensing {
 	
 		inline explicit KeyRequest(
 					const std::string &license,
+					const RequestErrors &errors,
 					const boost::any &clientParam = boost::any())
 				: m_clientParam(clientParam) {
-			RequestGeneration::Generate(license, m_request, m_privateKey, m_clientParam);
+			RequestGeneration::Generate(
+				license,
+				errors,
+				m_request,
+				m_privateKey,
+				m_clientParam);
 		}
 
 		inline explicit KeyRequest(

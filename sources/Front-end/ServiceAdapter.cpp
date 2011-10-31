@@ -614,6 +614,7 @@ public:
 
 	void GenerateLicenseKeyRequest(
 				const std::string &license,
+				const TunnelEx::Licensing::RequestErrors &errors,
 				std::string &request,
 				std::string &privateKey) {
 		for (int attempts = 0; ; ) {
@@ -1152,6 +1153,7 @@ void ServiceAdapter::DisableRules(const RulesUuids &uuids) {
 
 void ServiceAdapter::GenerateLicenseKeyRequest(
 			const std::string &license,
+			const TunnelEx::Licensing::RequestErrors &errors,
 			std::string &request,
 			std::string &privateKey) {
 	m_pimpl->RequestWithProgressBar<void>(

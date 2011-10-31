@@ -1207,6 +1207,7 @@ namespace {
 				= InternetOpenA(TUNNELEX_NAME, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, 0);
 			assert(handles.inet);
 			if (!handles.inet) {
+				ReportError("Failed to open Inet object for trial license request.");
 				return 0;
 			}
 			handles.connect = InternetConnectA(
@@ -1220,6 +1221,7 @@ namespace {
 				0);
 			assert(handles.connect);
 			if (!handles.connect) {
+				ReportError("Failed to init connection for trial license request.");
 				return 0;
 			}
 			LPCSTR accept[2] = {
@@ -1240,6 +1242,7 @@ namespace {
 				1);
 			assert(handles.request);
 			if (!handles.request) {
+				ReportError("Failed to open Inet request object for trial license request.");
 				return 0;
 			}
 			
@@ -1264,6 +1267,7 @@ namespace {
 				const_cast<char *>(postData.str().c_str()),
 				DWORD(postData.str().size()));
 			if (!sendResult) {
+				ReportError("Failed to send Inet request for trial license request.");
 				return 0;
 			}
 
@@ -1282,6 +1286,7 @@ namespace {
 						&bytesRead);
 					assert(readResult);
 					if (!readResult) {
+						ReportError("Failed to read trial license.");
 						return 0;
 					} if (bytesRead == 0) {
 						break;
@@ -1330,6 +1335,12 @@ namespace {
 			m_period = periodTmp;
 
 			return 0;
+
+		}
+
+	private:
+
+		void ReportError(const wchar_t *const message) {
 
 		}
 
