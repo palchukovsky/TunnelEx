@@ -12,8 +12,6 @@
 
 namespace TunnelEx { namespace Licensing {
 
-	typedef std::list<std::string> RequestErrors;
-
 	enum UnactivityReason {
 		UR_NO,
 		// feature just unavailable (not found)

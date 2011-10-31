@@ -59,7 +59,6 @@ public:
 
 	void GenerateLicenseKeyRequest(
 			const std::string &license,
-			const std::list<texs__LicenseKeyRequestError> &errors,
 			std::string &request,
 			std::string &privateKey)
 		const;

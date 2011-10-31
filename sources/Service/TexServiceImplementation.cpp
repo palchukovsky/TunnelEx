@@ -651,13 +651,11 @@ void TexServiceImplementation::CheckState(texs__ServiceState &result) const {
 
 void TexServiceImplementation::GenerateLicenseKeyRequest(
 			const std::string &license,
-			const std::list<texs__LicenseKeyRequestError> &errors,
 			std::string &request,
 			std::string &privateKey)
 		const {
 	Licensing::ServiceKeyRequest::RequestGeneration::Generate(
 		license,
-		errors,
 		request,
 		privateKey,
 		boost::any());

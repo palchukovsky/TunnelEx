@@ -114,7 +114,6 @@ public:
 
 	void GenerateLicenseKeyRequest(
 			const std::string &license,
-			const TunnelEx::Licensing::RequestErrors &errors,
 			std::string &request,
 			std::string &privateKey);
 	std::string GetTrialLicense() const;

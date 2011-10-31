@@ -350,7 +350,6 @@ namespace TunnelEx { namespace Licensing {
 
 		inline static void Generate(
 					const std::string &license,
-					const RequestErrors &errors,
 					std::string &requestResult,
 					std::string &privateKeyResult,
 					const boost::any &clientParam) {
@@ -358,7 +357,6 @@ namespace TunnelEx { namespace Licensing {
 				.service
 				->GenerateLicenseKeyRequest(
 					license,
-					requestResult,
 					requestResult,
 					privateKeyResult);
 		}

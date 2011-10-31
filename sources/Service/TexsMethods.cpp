@@ -128,11 +128,9 @@ int texs__CheckState(soap *, texs__ServiceState &result) {
 int texs__GenerateLicenseKeyRequest(
 			soap *,
 			std::string license,
-			std::list<texs__LicenseKeyRequestError> errors,
 			texs__LicenseKeyRequest &request) {
 	TexWinService::GetTexServiceInstance()->GenerateLicenseKeyRequest(
 		license,
-		errors,
 		request.request,
 		request.key);
 	return SOAP_OK;
