@@ -31,7 +31,7 @@ namespace TunnelEx { namespace Licensing {
 			typedef ClientTrait::LocalStorage LocalStorage;
 			
 			boost::shared_ptr<Document> doc = Document::CreateNew("LicenseKeyRequest");
-			doc->GetRoot()->SetAttribute("Version", "1.1");
+			doc->GetRoot()->SetAttribute("Version", "1.2");
 			
 			doc->GetRoot()->CreateNewChild("License")->SetContent(boost::to_upper_copy(license));
 			
@@ -66,6 +66,22 @@ namespace TunnelEx { namespace Licensing {
 						"Name",
 						WorkstationPropertiesQuery::CastPropertyToString(prop.first));
 					node->SetContent(prop.second);
+				}
+			}
+
+			{
+				
+				typedef ClientTrait::Notifycation Notifycation;
+				typedef Notifycation::Errors Errors;
+				typedef Errors::value_type Error;
+				typedef Errors::size_type ErrorIndex;
+				auto errorsList = doc->GetRoot()->CreateNewChild("Errors");
+				ErrorIndex lastError = std::numeric_limits<ErrorIndex>::min();
+				Error error;
+				while (Notifycation::GetError(lastError, error)) {
+					auto error = errorsList->CreateNewChild("Error");
+					error->SetAttribute("Time", error.time);
+					error->SetAttribute("Point", boost::lexical_cast<std::string>(error.point));
 				}
 			}
 

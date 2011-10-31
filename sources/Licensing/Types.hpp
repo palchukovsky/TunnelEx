@@ -136,6 +136,15 @@ namespace TunnelEx { namespace Licensing {
 		WorkstationPropertyValues workstationProperties;
 	};
 
+	enum ErrorPoint {
+		ERROR_POINT_FRONTEND_ = 
+	};
+
+	struct Error {
+		std::string time;
+		ErrorPoint point;
+	};
+
 } }
 
 #endif // #ifndef INCLUDED_FILE__TUNNELEX__CheckPolicies_hpp__0909081944

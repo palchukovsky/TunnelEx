@@ -283,6 +283,22 @@ private:
 
 namespace TunnelEx { namespace Licensing {
 
+	////////////////////////////////////////////////////////////////////////////////
+
+	template<typename ClientTrait>
+	struct NotificationPolicy {
+
+		static void RegisterError(ErrorPoint point, const boost::any &clientParam) {
+			namespace pt = boost::posix_time;
+			boost::any_cast<LicenseState>(clientParam)
+				.service
+					->RegisterLicenseActivationError(
+						pt::to_iso_extended_string(pt::second_clock::universal_time());,
+						point);
+		}
+
+	};
+
 	//////////////////////////////////////////////////////////////////////////
 
 	template<class ClientTrait, bool isTestMode>

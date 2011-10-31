@@ -67,6 +67,9 @@ namespace TunnelEx { namespace Licensing {
 	template<typename ClientTrait>
 	struct EditionQueryPolicy;
 
+	template<typename ClientTrait>
+	struct NotificationPolicy;
+
 	//////////////////////////////////////////////////////////////////////////
 
 	template<Product product>
@@ -466,6 +469,7 @@ namespace TunnelEx { namespace Licensing {
 		typedef typename Client2Comm<client, isTestMode>::Policy Comminication;
 		typedef RequestGenerationPolicy<MyType, isTestMode> RequestGeneration;
 		typedef EditionQueryPolicy<MyType> EditionQuery;
+		typedef NotificationPolicy<MyType> Notification;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
