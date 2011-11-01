@@ -89,7 +89,8 @@ namespace TunnelEx { namespace Licensing {
 		CLIENT_FTP_TUNNEL					= 13,
 		//! Pathfinder service
 		CLIENT_PATHFINDER					= 14,
-		CLIENT_SSL							= 15
+		CLIENT_SSL							= 15,
+		CLIENT_LAST_INDEX					= 16
 	};
 
 	typedef std::map<WorkstationProperty, std::string> WorkstationPropertyValues;
@@ -141,7 +142,7 @@ namespace TunnelEx { namespace Licensing {
 		std::string license;
 		std::string time;
 		std::string point;
-		std::string code;
+		std::string error;
 	
 	};
 

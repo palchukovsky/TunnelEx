@@ -15,5 +15,6 @@
 #include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
 #include "Licensing/LocalComunicationPolicy.hpp"
 #include "Licensing/RequestGenPolicies.hpp"
+#include "Licensing/ServerNotificationPolicy.hpp"
 
 #endif // INCLUDED_FILE__TUNNELEX__Licensing_hpp__1104112351

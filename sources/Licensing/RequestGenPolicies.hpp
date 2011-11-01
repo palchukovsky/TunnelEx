@@ -11,6 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__RequestGenPolicies_hpp__0911190107
 
 #include "Core/String.hpp"
+#include "Types.hpp"
 
 namespace TunnelEx { namespace Licensing {
 
@@ -70,25 +71,21 @@ namespace TunnelEx { namespace Licensing {
 			}
 
 			{
-				typedef ClientTrait::Notification Notification;
-				typedef Notification::Errors Errors;
-				typedef Errors::value_type Error;
-				typedef Errors::size_type ErrorIndex;
-				boost::shared_ptr<Node> errorsList;
-				ErrorIndex lastError = std::numeric_limits<ErrorIndex>::min();
+				boost::shared_ptr<Node> errorsListNode;
+				size_t errorIndex = std::numeric_limits<size_t>::min();
 				Error error;
-				while (Notifycation::GetError(lastError, error)) {
-					if (!errorsList) {
-						errorsList = doc->GetRoot()->CreateNewChild("Errors");
+				while (ClientTrait::Notification::GetError(errorIndex++, error)) {
+					if (!errorsListNode) {
+						errorsListNode = doc->GetRoot()->CreateNewChild("Errors");
 					}
-					auto error = errorsList->CreateNewChild("Error");
+					auto errorNode = errorsListNode->CreateNewChild("Error");
 					if (!error.license.empty()) {
-						error->SetAttribute("License", error.license);
+						errorNode->SetAttribute("License", error.license);
 					}
-					error->SetAttribute("Trait", boost::lexical_cast<std::string>(error.client));
-					error->SetAttribute("Time", error.time);
-					error->SetAttribute("Point", error.point);
-					error->SetContent(error.error);
+					errorNode->SetAttribute("Trait", boost::lexical_cast<std::string>(error.client));
+					errorNode->SetAttribute("Time", error.time);
+					errorNode->SetAttribute("Point", error.point);
+					errorNode->SetContent(error.error);
 				}
 			}
 

@@ -246,8 +246,10 @@ const String & Singletons::ServerPolicy::GetName() const {
 
 #if TEMPLATES_REQUIRE_SOURCE != 0
 #	include "Singleton.cpp"
-	//! Only for template instantiation.
-	void MakeServerTemplateInstantiation() {
-		Server::GetInstance();
+	namespace {
+		//! Only for template instantiation.
+		void MakeServerTemplateInstantiation() {
+			Server::GetInstance();
+		}
 	}
 #endif // TEMPLATES_REQUIRE_SOURCE

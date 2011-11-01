@@ -141,6 +141,25 @@ int texs__GetLicenseKey(soap *, std::string &licenseKey) {
 	return SOAP_OK;
 }
 
+int texs__RegisterLicenseError(
+			soap *,
+			int client,
+			std::string license,
+			std::string time,
+			std::string point,
+			std::string error,
+			texs__RegisterLicenseErrorResult *) {
+	using namespace TunnelEx::Licensing;
+	assert(client >= CLIENT_START && client < CLIENT_LAST_INDEX);
+	TexWinService::GetTexServiceInstance()->RegisterLicenseError(
+		Client(client),
+		license,
+		time,
+		point,
+		error);
+	return SOAP_OK;
+}
+
 int texs__GetLicenseKeyInfo(soap *, texs__LicenseKeyInfo &result) {
 	result.key = TexWinService::GetTexServiceInstance()
 		->GetLicenseKeyLocalAsymmetricPrivateKey();

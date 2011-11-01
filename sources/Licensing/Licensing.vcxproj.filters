@@ -55,5 +55,8 @@
     <ClInclude Include="WinInetCommPolicy.hpp">
       <Filter>Header Files\Implementations</Filter>
     </ClInclude>
+    <ClInclude Include="ServerNotificationPolicy.hpp">
+      <Filter>Header Files\Implementations</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

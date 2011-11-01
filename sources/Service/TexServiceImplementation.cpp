@@ -16,6 +16,7 @@
 #include "ServiceFilesSecurity.hpp"
 #include "Core/Server.hpp"
 #include "Core/SslCertificatesStorage.hpp"
+#include "Core/LicenseState.hpp"
 #include "Core/Rule.hpp"
 #include "Core/Log.hpp"
 #include "Core/Exceptions.hpp"
@@ -662,21 +663,33 @@ void TexServiceImplementation::GenerateLicenseKeyRequest(
 }
 
 std::string TexServiceImplementation::GetTrialLicense() const {
-	return Licensing::ServiceKeyRequest::LocalStorage::GetTrialLicense();
+	return Licensing::ServiceKeyRequest::LocalStorage::GetTrialLicense(boost::any());
 }
 
 std::string TexServiceImplementation::GetLicenseKey() const {
-	return Licensing::ServiceKeyRequest::LocalStorage::GetLicenseKey();
+	return Licensing::ServiceKeyRequest::LocalStorage::GetLicenseKey(boost::any());
+}
+
+void TexServiceImplementation::RegisterLicenseError(
+			TunnelEx::Licensing::Client client,
+			const std::string &license,
+			const std::string &time,
+			const std::string &point,
+			const std::string &error) {
+	TunnelEx::LicenseState::GetInstance().RegisterError(client, license, time, point, error);
 }
 
 std::string TexServiceImplementation::GetLicenseKeyLocalAsymmetricPrivateKey() const {
-	return Licensing::ServiceKeyRequest::LocalStorage::GetLocalAsymmetricPrivateKey();
+	return Licensing::ServiceKeyRequest::LocalStorage::GetLocalAsymmetricPrivateKey(boost::any());
 }
 
 void TexServiceImplementation::SetLicenseKey(
 			const std::string &licenseKey,
 			const std::string &privateKey) {
-	Licensing::ServiceKeyRequest::LocalStorage::StoreLicenseKey(licenseKey, privateKey);
+	Licensing::ServiceKeyRequest::LocalStorage::StoreLicenseKey(
+		licenseKey,
+		privateKey,
+		boost::any());
 	m_pimpl->UpdateLastLicenseKeyModificationTime();
 }
 

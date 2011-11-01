@@ -12,6 +12,7 @@
 #include "Licensing/RequestGenPolicies.hpp"
 #include "Licensing/WinInetCommPolicy.hpp"
 #include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
+#include "Licensing/ServerNotificationPolicy.hpp"
 #include "Licensing/License.hpp"
 
 #include "Core/String.hpp"
@@ -22,8 +23,6 @@ namespace pt = boost::posix_time;
 //////////////////////////////////////////////////////////////////////////
 
 namespace {
-
-	//////////////////////////////////////////////////////////////////////////
 
 	class LicenseKeyTestServer : private boost::noncopyable {
 
@@ -36,7 +35,9 @@ namespace {
 
 	public:
 
-		LicenseKeyTestServer() {
+		LicenseKeyTestServer()
+				: m_isNotificationTest(false),
+				m_isClientParamTest(false) {
 			//...//
 		}
 
@@ -46,7 +47,9 @@ namespace {
 					const char *const asymmetricPrivateKeyFileModif = "")
 				: m_xmlLicenseKeyRetrieverFunc(xmlLicenseKeyRetrieverFunc),
 				m_asymmetricPrivateKeyFileModif(asymmetricPrivateKeyFileModif),
-				m_localWorkstationPropertyValuesGetterFunc(localWorkstationPropertyValuesGetterFunc) {
+				m_localWorkstationPropertyValuesGetterFunc(localWorkstationPropertyValuesGetterFunc),
+				m_isNotificationTest(false),
+				m_isClientParamTest(false) {
 			//...//
 		}
 
@@ -58,7 +61,9 @@ namespace {
 				: m_xmlLicenseKeyRetrieverFunc(xmlLicenseKeyRetrieverFunc),
 				m_localWorkstationPropertyValuesGetterFunc(localWorkstationPropertyValuesGetterFunc),
 				m_asymmetricPrivateKeyFileModif(asymmetricPrivateKeyFileModif),
-				m_currentTime(currentTime) {
+				m_currentTime(currentTime),
+				m_isNotificationTest(false),
+				m_isClientParamTest(false) {
 			//...//
 		}
 		
@@ -68,7 +73,9 @@ namespace {
 					const char *const asymmetricPrivateKeyFileModif = "")
 				: m_localWorkstationPropertyValuesGetterFunc(localWorkstationPropertyValuesGetterFunc),
 				m_licenseKeyFileModif(licenseKeyFileModif),
-				m_asymmetricPrivateKeyFileModif(asymmetricPrivateKeyFileModif) {
+				m_asymmetricPrivateKeyFileModif(asymmetricPrivateKeyFileModif),
+				m_isNotificationTest(false),
+				m_isClientParamTest(false) {
 			//...//
 		}
 
@@ -80,6 +87,24 @@ namespace {
 
 		void SetCurrentTime(const pt::ptime &currentTime) {
 			m_currentTime = currentTime;
+		}
+
+	public:
+
+		bool SetNotificationTestMode() {
+			m_isNotificationTest = true;
+		}
+
+		bool IsNotificationTest() const {
+			return m_isNotificationTest;
+		}
+
+		bool SetClientParamTestMode() {
+			m_isClientParamTest = true;
+		}
+
+		bool IsClientParamTestMode() const {
+			return m_isClientParamTest;
 		}
 
 	public:
@@ -111,10 +136,23 @@ namespace {
 		const std::string m_licenseKeyFileModif;
 		const std::string m_asymmetricPrivateKeyFileModif;
 		pt::ptime m_currentTime;
+		bool m_isNotificationTest;
+		bool m_isClientParamTest;
 
 	};
 	
-	std::auto_ptr<LicenseKeyTestServer> licenseKeyTestServer;
+	std::unique_ptr<LicenseKeyTestServer> licenseKeyTestServer;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+
+	struct ClientParam {
+		std::string in;
+		std::string out;
+	};
 
 }
 
@@ -254,7 +292,41 @@ namespace TunnelEx { namespace Licensing {
 
 	};
 
-	//////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+
+	template<class ClientTrait>
+	struct WinInetCommPolicy<ClientTrait, true> {
+
+	public:
+
+		typedef WinInetCommPolicy<ClientTrait, false> Original;
+		typedef typename ClientTrait::License License;
+
+	public:
+
+		static std::string SendRequest(
+				const std::string &request,
+				const boost::any &clientParam) {
+			if (licenseKeyTestServer->IsNotificationTest()) {
+				License::RegisterError(
+					"F18126D7-66A0-4AC8-BC5D-9F662B78FC46",
+					"E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50",
+					clientParam);
+				return std::string();
+			} else if (licenseKeyTestServer->IsClientParamTestMode()) {
+				if (	boost::any_cast<<boost::ref<ClientParam>>(clientParam).in
+						== "EE644AA8-6B80-4077-A807-B60817584288") {
+					boost::any_cast<boost::ref<ClientParam>>(clientParam).out
+						= "683BBFBC-2625-449E-9337-5EF3CE2DD46D";
+				}
+			} else {
+				return Original::SendRequest(request, clientParam);
+			}
+		}
+
+	};
+
+	////////////////////////////////////////////////////////////////////////////////
 
 } }
 
@@ -1169,7 +1241,125 @@ namespace {
 		ASSERT_TRUE(propValues.find(tex::Licensing::WORKSTATION_PROPERTY_OS_VOLUME) != propValues.end());
 		EXPECT_TRUE(propValues[tex::Licensing::WORKSTATION_PROPERTY_OS_VOLUME].size() == hashSize);
 	}
+
+	TEST(Licensing, ErrorNotification) {
+
+		licenseKeyTestServer.reset(new LicenseKeyTestServer);
+		licenseKeyTestServer->SetNotificationTestMode();
+
+		for (auto i = 0; i < 2; ++i) {
+
+			{
+				tex::Licensing::ExeLicenseTesting::KeyRequest request(
+					"71D20E3A-9154-49D0-A47D-2563F99C7F07");
+				request.Send();
+			}
+
+			{
+				tex::Licensing::TunnelLicenseTesting::KeyRequest request(
+					"9F9271A1-7640-4B68-A438-624DC87A97AC");
+				request.Send();
+			}
+
+			{
+				tex::Licensing::RuleSetLicenseTesting::KeyRequest request(
+					"0A8CB730-84F0-4476-B881-E38BAFEF63DC");
+				request.Send();
+			}
+
+			{
+				tex::Licensing::ProxyLicenseTesting::KeyRequest request(
+					"5B161DE1-9295-4D36-98E8-2EB2EF719EBE");
+				request.Send();
+			}
+
+			{
+				tex::Licensing::EndpointIoSeparationLicenseTesting::KeyRequest request(
+					"1F371FD5-4151-4F61-B00B-D4123CBE24D2");
+				request.Send();
+			}
+
+		}
+
+		tex::Licensing::Error error;
+		
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(0, error));
+		ASSERT_EQ(error.client, tex::Licensing::RuleSetLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(1, error));
+		ASSERT_EQ(error.client, tex::Licensing::ProxyLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(2, error));
+		ASSERT_EQ(error.client, tex::Licensing::EndpointIoSeparationLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(3, error));
+		ASSERT_EQ(error.client, tex::Licensing::ExeLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(4, error));
+		ASSERT_EQ(error.client, tex::Licensing::TunnelLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(5, error));
+		ASSERT_EQ(error.client, tex::Licensing::RuleSetLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(6, error));
+		ASSERT_EQ(error.client, tex::Licensing::ProxyLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(7, error));
+		ASSERT_EQ(error.client, tex::Licensing::EndpointIoSeparationLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		ASSERT_FALSE(tex::Licensing::RuleSetLicenseTesting::Notification::GetError(8, error));
+		
+	}
 	
+	TEST(Licensing, ClientParam) {
+
+		licenseKeyTestServer.reset(new LicenseKeyTestServer);
+		licenseKeyTestServer->SetClientParamTestMode();
+
+		ClientParam clientParam;
+		clientParam.in = "EE644AA8-6B80-4077-A807-B60817584288";
+
+		tex::Licensing::RuleSetLicenseTesting::KeyRequest request(
+			"0BB341EC-7403-4CDA-871C-93130FA259CB",
+			boost::ref(clientParam));
+		request.Send();
+
+		ASSERT_EQ(clientParam.out, "683BBFBC-2625-449E-9337-5EF3CE2DD46D");
+
+	}
+
 	/* TEST(Licensing, KeyRequest) {
 		licenseKeyTestServer.reset(new LicenseKeyTestServer);
 		tex::Licensing::OnlineKeyRequestTesting request(

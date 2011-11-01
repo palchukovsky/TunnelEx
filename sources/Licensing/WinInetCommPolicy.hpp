@@ -19,7 +19,7 @@ namespace TunnelEx { namespace Licensing {
 
 	public:
 
-		typedef ClientTrait::License License;
+		typedef typename ClientTrait::License License;
 
 	private:
 

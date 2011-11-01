@@ -12,5 +12,6 @@
 
 #include "Licensing/FsLocalStorage.hpp"
 #include "Licensing/IpHelperWorkstationPropertiesQueryPolicy.hpp"
+#include "Licensing/ServerNotificationPolicy.hpp"
 
 #endif // INCLUDED_FILE__TUNNELEX__Licensing_hpp__1104112349

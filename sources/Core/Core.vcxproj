@@ -170,6 +170,10 @@
     <ClInclude Include="Filter.hpp" />
     <ClInclude Include="Instance.hpp" />
     <ClInclude Include="IoHandle.h" />
+    <ClCompile Include="LicenseState.cpp">
+      <FileType>CppHeader</FileType>
+    </ClCompile>
+    <ClInclude Include="LicenseState.hpp" />
     <ClInclude Include="Licensing.hpp" />
     <ClInclude Include="Listener.hpp" />
     <ClInclude Include="Locking.hpp" />

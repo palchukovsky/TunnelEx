@@ -11,6 +11,7 @@
 #define INCLUDED_FILE__TUNNELEX__TexServiceImplementation_h__0802170531
 
 #include "Core/Log.hpp"
+#include "Licensing/Types.hpp"
 
 class TexServiceImplementation : private boost::noncopyable {
 
@@ -64,6 +65,12 @@ public:
 		const;
 	std::string GetTrialLicense() const;
 	std::string GetLicenseKey() const;
+	void RegisterLicenseError(
+			TunnelEx::Licensing::Client client,
+			const std::string &license,
+			const std::string &time,
+			const std::string &point,
+			const std::string &error);
 	std::string GetLicenseKeyLocalAsymmetricPrivateKey() const;
 	void SetLicenseKey(
 			const std::string &licenseKey,

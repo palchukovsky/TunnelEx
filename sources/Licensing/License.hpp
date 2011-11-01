@@ -48,6 +48,7 @@ namespace TunnelEx { namespace Licensing {
 
 		typedef typename ClientTrait Client;
 		typedef typename Client::KeyRetrieve KeyRetrieve;
+		typedef typename Client::KeyRequest KeyRequest;
 		typedef typename Client::Feature Feature;
 		typedef typename Feature::Value FeatureValue;
 		typedef typename Client::FeatureInfo FeatureInfo;

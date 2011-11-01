@@ -1394,7 +1394,7 @@ bool ServiceWindow::ActivateTrial() {
 
 		using namespace Licensing;
 
-		std::auto_ptr<ExeLicense> currentLicense(new ExeLicense(LicenseState(GetService())));
+		std::unique_ptr<ExeLicense> currentLicense(new ExeLicense(LicenseState(GetService())));
 		assert(!currentLicense->IsTrial());
 		if (currentLicense->IsTrial()) {
 			wxMessageBox(

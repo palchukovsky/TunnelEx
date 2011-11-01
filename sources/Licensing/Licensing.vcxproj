@@ -67,6 +67,7 @@
     <ClInclude Include="QueryPolicies.hpp" />
     <ClInclude Include="Request.hpp" />
     <ClInclude Include="RequestGenPolicies.hpp" />
+    <ClInclude Include="ServerNotificationPolicy.hpp" />
     <ClInclude Include="StoragePolicies.hpp" />
     <ClInclude Include="Traits.hpp" />
     <ClInclude Include="Types.hpp" />

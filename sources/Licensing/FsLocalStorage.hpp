@@ -171,9 +171,10 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline static bool GetFileContent(
-					LicenseDbHead &head) {
+					LicenseDbHead &head,
+					const boost::any &clientParam) {
 			std::vector<unsigned char> tmpVarData;
-			return GetFileContent(head, tmpVarData);
+			return GetFileContent(head, tmpVarData, clientParam);
 		}
 
 		inline static bool GetFileContent(
@@ -212,11 +213,11 @@ namespace TunnelEx { namespace Licensing {
 			return true;
 		}
 
-		inline static std::string GetTrialLicense() {
+		inline static std::string GetTrialLicense(const boost::any &clientParam) {
 			std::string result;
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;
-			if (!GetFileContent(head, varData)) {
+			if (!GetFileContent(head, varData, clientParam)) {
 				result = ConvertString<String>(Helpers::Uuid().GetAsString().c_str()).GetCStr();
 				memcpy(head.licenseUuid, result.c_str(), sizeof(head.licenseUuid));
 				SetFileContent(head, varData);
@@ -285,9 +286,10 @@ namespace TunnelEx { namespace Licensing {
 		
 		inline static void StoreLicenseKey(
 					const std::string &licenseKey,
-					const std::string &privateKey) {
+					const std::string &privateKey,
+					const boost::any &clientParam) {
 			LicenseDbHead head;
-			GetFileContent(head);
+			GetFileContent(head, clientParam);
 			std::vector<unsigned char> varData(licenseKey.begin(), licenseKey.end());
 			copy(privateKey.begin(), privateKey.end(), back_inserter(varData));
 			head.licenseKeyLen = licenseKey.size();
