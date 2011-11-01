@@ -64,7 +64,7 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		void Send() {
-			m_licenseKey = Comminication::SendRequest(m_request);
+			m_licenseKey = Comminication::SendRequest(m_request, m_clientParam);
 		}
 
 		template<class License> 

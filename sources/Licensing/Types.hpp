@@ -62,34 +62,34 @@ namespace TunnelEx { namespace Licensing {
 
 	enum Client {
 		//! start enabling check
-		CLIENT_START,
+		CLIENT_START						= 1,
 		//! service start
-		CLIENT_SERVER_START,
+		CLIENT_SERVER_START					= 2,
 		//! allowed tunnels number check
-		CLIENT_TUNNEL,
+		CLIENT_TUNNEL						= 3,
 		//! allowed rules number check
-		CLIENT_RULESET,
+		CLIENT_RULESET						= 4,
 		//! proxy enabling check
-		CLIENT_PROXY,
+		CLIENT_PROXY						= 5,
 		//! proxy cascade enabling check
-		CLIENT_PROXY_CASCADE,
+		CLIENT_PROXY_CASCADE				= 6,
 		//! online key request
-		CLIENT_ONLINE_KEY_REQUST,
+		CLIENT_ONLINE_KEY_REQUST			= 7,
 		//! offline key request
-		CLIENT_OFFLINE_KEY_REQUST,
+		CLIENT_OFFLINE_KEY_REQUST			= 8,
 		//! License info dialog
-		CLIENT_LICENSE_INFO_DLG,
+		CLIENT_LICENSE_INFO_DLG				= 9,
 		//! Service implementation
-		CLIENT_SERVICE,
+		CLIENT_SERVICE						= 10,
 		//! Information about license
-		CLIENT_INFO,
+		CLIENT_INFO							= 11,
 		//! Slit endpoint feature
-		CLIENT_ENDPOINT_IO_SEPARATION,
+		CLIENT_ENDPOINT_IO_SEPARATION		= 12,
 		//! Ftp-tunneling
-		CLIENT_FTP_TUNNEL,
+		CLIENT_FTP_TUNNEL					= 13,
 		//! Pathfinder service
-		CLIENT_PATHFINDER,
-		CLIENT_SSL
+		CLIENT_PATHFINDER					= 14,
+		CLIENT_SSL							= 15
 	};
 
 	typedef std::map<WorkstationProperty, std::string> WorkstationPropertyValues;
@@ -136,13 +136,13 @@ namespace TunnelEx { namespace Licensing {
 		WorkstationPropertyValues workstationProperties;
 	};
 
-	enum ErrorPoint {
-		ERROR_POINT_FRONTEND_ = 
-	};
-
 	struct Error {
+		Client client;
+		std::string license;
 		std::string time;
-		ErrorPoint point;
+		std::string point;
+		std::string code;
+	
 	};
 
 } }

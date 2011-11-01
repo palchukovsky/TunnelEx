@@ -70,18 +70,25 @@ namespace TunnelEx { namespace Licensing {
 			}
 
 			{
-				
-				typedef ClientTrait::Notifycation Notifycation;
-				typedef Notifycation::Errors Errors;
+				typedef ClientTrait::Notification Notification;
+				typedef Notification::Errors Errors;
 				typedef Errors::value_type Error;
 				typedef Errors::size_type ErrorIndex;
-				auto errorsList = doc->GetRoot()->CreateNewChild("Errors");
+				boost::shared_ptr<Node> errorsList;
 				ErrorIndex lastError = std::numeric_limits<ErrorIndex>::min();
 				Error error;
 				while (Notifycation::GetError(lastError, error)) {
+					if (!errorsList) {
+						errorsList = doc->GetRoot()->CreateNewChild("Errors");
+					}
 					auto error = errorsList->CreateNewChild("Error");
+					if (!error.license.empty()) {
+						error->SetAttribute("License", error.license);
+					}
+					error->SetAttribute("Trait", boost::lexical_cast<std::string>(error.client));
 					error->SetAttribute("Time", error.time);
-					error->SetAttribute("Point", boost::lexical_cast<std::string>(error.point));
+					error->SetAttribute("Point", error.point);
+					error->SetContent(error.error);
 				}
 			}
 

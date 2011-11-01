@@ -445,6 +445,7 @@ namespace TunnelEx { namespace Licensing {
 
 	template<Client client, bool isTestMode>
 	struct ClientTrait {
+	
 		typedef ClientTrait<client, isTestMode> MyType;
 		typedef License<MyType> License;
 		typedef KeyRequest<MyType> KeyRequest;
@@ -470,6 +471,11 @@ namespace TunnelEx { namespace Licensing {
 		typedef RequestGenerationPolicy<MyType, isTestMode> RequestGeneration;
 		typedef EditionQueryPolicy<MyType> EditionQuery;
 		typedef NotificationPolicy<MyType> Notification;
+
+		static Client GetCode() {
+			return client;
+		}
+	
 	};
 
 	//////////////////////////////////////////////////////////////////////////

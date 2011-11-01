@@ -121,6 +121,12 @@ public:
 	std::string GetLicenseKeyLocalAsymmetricPrivateKey() const;
 	void SetLicenseKey(const std::string &key, const std::string &privateKey);
 	bool GetProperties(TunnelEx::Licensing::WorkstationPropertyValues &);
+	void RegisterLicenseError(
+			TunnelEx::Licensing::Client client,
+			const std::string &license,
+			const std::string &time,
+			const std::string &point,
+			const std::string &error);
 
 	bool GetUpnpStatus(wxString &externalIp, wxString &localIp) const;
 	boost::optional<wxString> GetCachedUpnpDeviceExternalIp() const;

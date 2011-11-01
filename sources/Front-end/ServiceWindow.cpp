@@ -1220,6 +1220,9 @@ namespace {
 				0);
 			assert(handles.connect);
 			if (!handles.connect) {
+				m_currentLicense.RegisterError(
+					"BA6F275B-B631-43BD-970A-A1BBEF7649D0",
+					GetLastError());
 				return 0;
 			}
 			LPCSTR accept[2] = {
@@ -1240,6 +1243,9 @@ namespace {
 				1);
 			assert(handles.request);
 			if (!handles.request) {
+				m_currentLicense.RegisterError(
+					"61D0DF02-89A4-4914-935C-C385D200A60C",
+					GetLastError());
 				return 0;
 			}
 			
@@ -1264,6 +1270,9 @@ namespace {
 				const_cast<char *>(postData.str().c_str()),
 				DWORD(postData.str().size()));
 			if (!sendResult) {
+				m_currentLicense.RegisterError(
+					"A2AE4864-F1B4-4E4C-8271-8D6F6B97AE32",
+					GetLastError());
 				return 0;
 			}
 
@@ -1282,6 +1291,9 @@ namespace {
 						&bytesRead);
 					assert(readResult);
 					if (!readResult) {
+						m_currentLicense.RegisterError(
+							"9B11B828-CBAE-407D-B262-3F59CDE659C3",
+							GetLastError());
 						return 0;
 					} if (bytesRead == 0) {
 						break;
@@ -1317,6 +1329,7 @@ namespace {
 						try {
 							periodTmp = boost::lexical_cast<size_t>(line);
 						} catch (const std::bad_cast &) {
+							m_currentLicense.RegisterError("98E3301F-7F17-43E6-B6C7-6C7C2F1D0BFA");
 							assert(false);
 						}
 						break;
@@ -1405,6 +1418,7 @@ bool ServiceWindow::ActivateTrial() {
 		std::string license = requesting.GetLicense();
 		const size_t period = requesting.GetPeriod();
 		if (license.empty() || !period) {
+			currentLicense->RegisterError("641B3D52-E40E-4D3B-93E7-392DDA90163C");
 			wxLogError(
 				wxT("Unknown error at trial license requesting.")
 				wxT(" Please check an Internet connection and Internet Explorer proxy server settings")
@@ -1479,6 +1493,10 @@ bool ServiceWindow::ActivateTrial() {
 				this);
 			if (answer == wxYES) {
 				wxGetApp().OpenOrderPage();
+			} else {
+				license->RegisterError(
+					"87DCF214-48A7-4766-9EEC-16A51DB22A42",
+					answer);
 			}
 		}
 	}

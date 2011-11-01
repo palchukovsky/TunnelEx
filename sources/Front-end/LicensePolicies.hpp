@@ -288,13 +288,17 @@ namespace TunnelEx { namespace Licensing {
 	template<typename ClientTrait>
 	struct NotificationPolicy {
 
-		static void RegisterError(ErrorPoint point, const boost::any &clientParam) {
+		static void RegisterError(
+					Client client,
+					const std::string &license,
+					const std::string &time,
+					const std::string &point,
+					const std::string &error,
+					const boost::any &clientParam) {
 			namespace pt = boost::posix_time;
 			boost::any_cast<LicenseState>(clientParam)
 				.service
-					->RegisterLicenseActivationError(
-						pt::to_iso_extended_string(pt::second_clock::universal_time());,
-						point);
+				->RegisterLicenseError(client, license, time, point, error);
 		}
 
 	};
@@ -323,9 +327,7 @@ namespace TunnelEx { namespace Licensing {
 					const boost::any &clientParam) {
 			boost::any_cast<LicenseState>(clientParam)
 				.service
-				->SetLicenseKey(
-					licenseKey,
-					privateKey);
+				->SetLicenseKey(licenseKey, privateKey);
 		}
 
 		inline static bool IsLicenseKeyChanged(const boost::any &clientParam) {

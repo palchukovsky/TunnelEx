@@ -200,8 +200,8 @@ public:
 			m_serviceMutex(wxMUTEX_RECURSIVE),
 			m_endpoint(ConvertString<String>(endpoint.c_str())),
 			m_originalEndpoint(endpoint),
-			m_stateCheckingStopEvent(CreateEvent(NULL, FALSE, FALSE, NULL), &CloseHandle),
-			m_stateCheckingUpdateEvent(CreateEvent(NULL, FALSE, FALSE, NULL), &CloseHandle),
+			m_stateCheckingStopEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr), &CloseHandle),
+			m_stateCheckingUpdateEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr), &CloseHandle),
 			m_lastErrorTime(lastKnownErrorTime),
 			m_lastWarningTime(lastKnownWarnTime),
 			m_lastRulesModifyTime(0),
@@ -237,7 +237,7 @@ private:
 					?	progressBarMessage
 					:	wxT("Requesting current state information, please wait..."),
 				100,
-				NULL,
+				nullptr,
 				wxPD_APP_MODAL | wxPD_SMOOTH);
 			for ( ; request.IsRunning(); progress.Pulse(), wxMilliSleep(25));
 		}
@@ -356,7 +356,7 @@ public:
 			wxMutexLocker serviceLock(m_serviceMutex);
 			rules.GetXml(xml);
 			const int resultCode
-				= m_service.texs__UpdateRules(xml.GetCStr(), NULL);
+				= m_service.texs__UpdateRules(xml.GetCStr(), nullptr);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
 				if (resultCode != SOAP_OK) {
@@ -373,7 +373,7 @@ public:
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
-				= m_service.texs__DeleteRules(transportContainer, NULL);
+				= m_service.texs__DeleteRules(transportContainer, nullptr);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
 				if (resultCode != SOAP_OK) {
@@ -390,7 +390,7 @@ public:
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
-				= m_service.texs__EnableRules(transportContainer, NULL);
+				= m_service.texs__EnableRules(transportContainer, nullptr);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
 				if (resultCode != SOAP_OK) {
@@ -407,7 +407,7 @@ public:
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
-				= m_service.texs__DisableRules(transportContainer, NULL);
+				= m_service.texs__DisableRules(transportContainer, nullptr);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
 				if (resultCode != SOAP_OK) {
@@ -440,7 +440,7 @@ public:
 	void SetLogLevel(texs__LogLevel logLevel) {
 		for (int attempts = 0; ; ) {
 			wxMutexLocker serviceLock(m_serviceMutex);
-			const int resultCode = m_service.texs__SetLogLevel(logLevel, NULL);
+			const int resultCode = m_service.texs__SetLogLevel(logLevel, nullptr);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
 				if (resultCode != SOAP_OK) {
@@ -586,7 +586,7 @@ public:
 			std::wstring error;
 			wxMutexLocker serviceLock(m_serviceMutex);
 			const int resultCode
-				= m_service.texs__DeleteSslCertificates(ids, NULL);
+				= m_service.texs__DeleteSslCertificates(ids, nullptr);
 			++attempts;
 			if (resultCode != SOAP_EOF || attempts >= 2) {
 				if (resultCode != SOAP_OK) {
@@ -770,6 +770,34 @@ public:
 
 		}
 
+	}
+
+	void RegisterLicenseError(
+				TunnelEx::Licensing::Client client,
+				const std::string &license,
+				const std::string &time,
+				const std::string &point,
+				const std::string &error) {
+		using namespace Licensing;
+		for (int attempts = 0; ; ) {
+			wxMutexLocker serviceLock(m_serviceMutex);
+			const int resultCode = m_service.texs__RegisterLicenseError(
+				int(client),
+				license,
+				time,
+				point,
+				error,
+				nullptr);
+			++attempts;
+			if (resultCode != SOAP_EOF || attempts >= 2) {
+#				ifdef DEV_VER
+					if (resultCode != SOAP_OK) {
+						HandleSoapError(resultCode);
+					}
+#				endif
+				return;
+			}
+		}
 	}
 
 	bool GetUpnpStatus(wxString &externalIp, wxString &localIp) const {
@@ -1194,6 +1222,23 @@ bool ServiceAdapter::GetProperties(Licensing::WorkstationPropertyValues &result)
 	} catch (const LocalException &ex) {
 		wxLogError(ex.GetWhat());
 		return false;
+	}
+}
+
+void ServiceAdapter::RegisterLicenseError(
+			TunnelEx::Licensing::Client client,
+			const std::string &license,
+			const std::string &time,
+			const std::string &point,
+			const std::string &error) {
+	try {
+		m_pimpl->RegisterLicenseError(client, license, time, point, error);
+	} catch (const LocalException &ex) {
+#		ifdef DEV_VER
+			wxLogError(ex.GetWhat());
+#		else
+			UseUnused(ex);
+#		endif
 	}
 }
 

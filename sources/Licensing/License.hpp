@@ -62,7 +62,8 @@ namespace TunnelEx { namespace Licensing {
 		typedef typename Client::WorkstationPropertiesLocal WorkstationPropertiesLocal;
 		typedef typename Client::EditionQuery EditionQuery;
 		typedef typename Client::LocalStorage LocalStorage;
-				
+		typedef typename Client::Notification Notification;
+
 	private:
 
 		struct Cache : private boost::noncopyable {
@@ -335,6 +336,39 @@ namespace TunnelEx { namespace Licensing {
 			}
 		}
 
+		void RegisterError(const std::string &point) const {
+			RegisterError(point, std::string());
+		}
+
+		template<typename Error> 
+		void RegisterError(const std::string &point, const Error &error) const {
+			RegisterError(point, error, m_clientParam, GetLicense());
+		}
+
+		template<typename Error> 
+		static void RegisterError(
+					const std::string &point,
+					const Error &error,
+					const boost::any &clientParam) {
+			RegisterError(point, error, clientParam, std::string());
+		}
+
+		template<typename Error> 
+		static void RegisterError(
+					const std::string &point,
+					const Error &error,
+					const boost::any &clientParam,
+					const std::string &license) {
+			namespace pt = boost::posix_time;
+			Notification::RegisterError(
+				Client::GetCode(),
+				license,
+				pt::to_iso_extended_string(pt::second_clock::universal_time()),
+				point,
+				boost::lexical_cast<std::string>(error),
+				clientParam);
+		}
+
 	private:
 
 		inline static bool ReadKey(
@@ -458,7 +492,6 @@ namespace TunnelEx { namespace Licensing {
 			}
 			return result;
 		}
-
 
 	private:
 

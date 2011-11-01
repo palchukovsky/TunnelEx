@@ -17,6 +17,10 @@ namespace TunnelEx { namespace Licensing {
 	
 		// Wininet.lib
 
+	public:
+
+		typedef ClientTrait::License License;
+
 	private:
 
 		struct Handles {
@@ -44,7 +48,9 @@ namespace TunnelEx { namespace Licensing {
 
 	public:
 	
-		static std::string SendRequest(const std::string &request) {
+		static std::string SendRequest(
+					const std::string &request,
+					const boost::any &clientParam) {
 		
 			Handles handles;
 			
@@ -65,6 +71,10 @@ namespace TunnelEx { namespace Licensing {
 				handles.inet, host.str().c_str(), 80, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
 			assert(handles.connect);
 			if (!handles.connect) {
+				License::RegisterError(
+					"ACC91479-5559-4D5C-91E0-9DB41ACF239C",
+					GetLastError(),
+					clientParam);
 				return std::string();
 			}
 
@@ -88,6 +98,10 @@ namespace TunnelEx { namespace Licensing {
 				INTERNET_NO_CALLBACK);
 			assert(handles.request);
 			if (!handles.request) {
+				License::RegisterError(
+					"CB0F4ED3-4437-4DF7-885E-9B941A830944",
+					GetLastError(),
+					clientParam);
 				return std::string();
 			}
 
@@ -104,6 +118,10 @@ namespace TunnelEx { namespace Licensing {
 					const_cast<char *>(postData.str().c_str()),
 					DWORD(postData.str().size()));
 				if (!sendResult) {
+					License::RegisterError(
+						"27575909-A818-43FC-8E28-BDF97AFE57A3",
+						GetLastError(),
+						clientParam);
 					return std::string();
 				}
 			}
@@ -125,6 +143,10 @@ namespace TunnelEx { namespace Licensing {
 						&bytesRead);
 					assert(readResult);
 					if (!readResult) {
+						License::RegisterError(
+							"48FC91EB-0FB4-42EE-B303-1E0CE11EE364",
+							GetLastError(),
+							clientParam);
 						return std::string();
 					} if (bytesRead == 0) {
 						break;

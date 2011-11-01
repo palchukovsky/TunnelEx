@@ -12,8 +12,8 @@
 
 //gsoap texs service name: TunnelExService
 //gsoap texs service style: rpc
-//gsoap texs service namespace: http://schemas.tunnelex.net/service/2.3.wsdl
-//gsoap texs schema namespace: http://schemas.tunnelex.net/service/2.3.xsd
+//gsoap texs service namespace: http://schemas.tunnelex.net/service/2.4.wsdl
+//gsoap texs schema namespace: http://schemas.tunnelex.net/service/2.4.xsd
 //gsoap texs service location: No
 
 //gsoap texs service method-action: Start "urn:#start"
@@ -107,6 +107,15 @@ int texs__GetTrialLicense(std::string &license);
 
 //gsoap texs service method-action: GetLicenseKey "urn:#getLicenseKey"
 int texs__GetLicenseKey(std::string &licenseKey);
+
+//gsoap texs service method-action: RegisterLicenseError "urn:#registerLicenseError"
+int texs__RegisterLicenseError(
+		int client,
+		std::string license,
+		std::string time,
+		std::string point,
+		std::string error,
+		struct texs__RegisterLicenseErrorResult {} *registerLicenseErrorResult);
 
 class texs__LicenseKeyInfo {
 public:

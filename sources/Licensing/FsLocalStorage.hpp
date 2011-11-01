@@ -178,7 +178,8 @@ namespace TunnelEx { namespace Licensing {
 
 		inline static bool GetFileContent(
 					LicenseDbHead &head,
-					std::vector<unsigned char> &varData) {
+					std::vector<unsigned char> &varData,
+					const boost::any &clientParam) {
 			assert(varData.size() == head.licenseKeyLen + head.privateKeyLen);
 			std::vector<unsigned char> fileKey;
 			GetFileEncryptingKey(fileKey);
@@ -193,7 +194,11 @@ namespace TunnelEx { namespace Licensing {
 				ch ^= fileKey[token++ % fileKey.size()];
 				decrypted.push_back(ch);
 			}
-			if (decrypted.size() < sizeof(LicenseDbHead)) {
+			if (decrypted.size() < sizeof LicenseDbHead) {
+				License::RegisterError(
+					"C6F8BD5B-B50C-4060-A4E5-B155DAEC0EEB",
+					decrypted.size(),
+					clientParam);
 				return false;
 			}
 			LicenseDbHead headTmp;
@@ -223,11 +228,11 @@ namespace TunnelEx { namespace Licensing {
 			return result;
 		}
 
-		inline static std::string GetLicenseKey(const boost::any & = boost::any()) {
+		inline static std::string GetLicenseKey(const boost::any &clientParam) {
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;
 			for (size_t i = 1; i <= 2; ++i) {
-				GetFileContent(head, varData);
+				GetFileContent(head, varData, clientParam);
 				break;
 				/* if (all.size()) {
 					break;
@@ -250,6 +255,10 @@ namespace TunnelEx { namespace Licensing {
 				StoreLicenseKey(keyFormated.str(), rsa.GetPrivateKey().Export()); */
 			}
 			if (varData.size() < head.licenseKeyLen) {
+				License::RegisterError(
+					"1CE91D56-F2D9-4A5D-8C1B-3863C7206E66",
+					varData.size(),
+					clientParam);
 				return std::string();
 			}
 			return std::string(
@@ -258,11 +267,15 @@ namespace TunnelEx { namespace Licensing {
 		}
 
 		inline static std::string GetLocalAsymmetricPrivateKey(
-					const boost::any & = boost::any()) {
+					const boost::any &clientParam) {
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;
-			GetFileContent(head, varData);
+			GetFileContent(head, varData, clientParam);
 			if (varData.size() < head.licenseKeyLen + head.privateKeyLen) {
+				License::RegisterError(
+					"723181DF-962C-42B5-8E0B-0637AC722CDC",
+					varData.size(),
+					clientParam);
 				return std::string();
 			}
 			return std::string(
