@@ -5,7 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2009 Eugene V. Palchukovsky
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__TUNNELEX__LicensePolicies_hpp__0912060624
@@ -211,11 +210,10 @@ public:
 public:
 
 	bool Activate(const std::string &license, ServiceAdapter &service) {
+		const LicenseState licenseState(service);
 		assert(!m_request.get());
 		m_request.reset(
-			new TunnelEx::Licensing::OnlineKeyRequest(
-				license,
-				LicenseState(service)));
+			new TunnelEx::Licensing::OnlineKeyRequest(license, licenseState));
 		m_result = false;
 		Create();
 		Run();
@@ -227,6 +225,10 @@ public:
 		wxPD_APP_MODAL | wxPD_SMOOTH);
 		for ( ; IsRunning(); progress.Pulse(), wxMilliSleep(25));
 		if (!GetActivationResult()) {
+			TunnelEx::Licensing::OnlineKeyRequest::License::RegisterError(
+				"736A7648-4A97-463C-A0A0-8328C19FEF8A",
+				licenseState,
+				license);
 			wxLogError(
 				wxT("Unknown error at license activation.")
 				wxT(" Please check an Internet connection and Internet Explorer proxy server settings")

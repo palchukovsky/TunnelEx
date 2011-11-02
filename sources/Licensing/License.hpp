@@ -361,6 +361,8 @@ namespace TunnelEx { namespace Licensing {
 					const boost::any &clientParam,
 					const std::string &license) {
 			namespace pt = boost::posix_time;
+			assert(!point.empty());
+			assert(point.size() == 36);
 			Notification::RegisterError(
 				Client::GetCode(),
 				license,

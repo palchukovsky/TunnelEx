@@ -1452,6 +1452,10 @@ bool ServiceWindow::ActivateTrial() {
 		wxYES_NO | wxICON_EXCLAMATION,
 		this);
 	if (answer != wxYES) {
+		TunnelEx::Licensing::ExeLicense::RegisterError(
+			"B35B8A8C-800F-4ECC-806B-A36DD24AECDF",
+			answer,
+			LicenseState(service));
 		return false;
 	}
 

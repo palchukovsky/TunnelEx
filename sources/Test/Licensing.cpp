@@ -1266,6 +1266,27 @@ namespace {
 				request.Send();
 			}
 
+			if (i == 0) {
+
+				EXPECT_EQ(tex::Licensing::ExeLicenseTesting::Notification::GetErrorCount(), 2);
+
+				tex::Licensing::Error error;
+				
+				EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(0, error));
+				ASSERT_EQ(error.client, tex::Licensing::ExeLicenseTesting::Client::GetCode());
+				ASSERT_TRUE(error.license.empty());
+				ASSERT_FALSE(error.time.empty());
+				ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+				ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+				EXPECT_TRUE(tex::Licensing::RuleSetLicenseTesting::Notification::GetError(1, error));
+				ASSERT_EQ(error.client, tex::Licensing::TunnelLicenseTesting::Client::GetCode());
+				ASSERT_TRUE(error.license.empty());
+				ASSERT_FALSE(error.time.empty());
+				ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+				ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+			}
+
 			{
 				tex::Licensing::RuleSetLicenseTesting::KeyRequest request(
 					"0A8CB730-84F0-4476-B881-E38BAFEF63DC");
