@@ -79,7 +79,7 @@ namespace TunnelEx { namespace Licensing {
 					boost::lexical_cast<std::string>(errorCount));
 				for (size_t i = 0; i < errorCount; ++i) {
 					Error error;
-					if (!Notification::GetError(i++, error)) {
+					if (!Notification::GetError(i, error)) {
 						continue;
 					}
 					auto errorNode = errorsListNode->CreateNewChild("Error");

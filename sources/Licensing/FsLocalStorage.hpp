@@ -170,17 +170,14 @@ namespace TunnelEx { namespace Licensing {
 			}
 		}
 
-		inline static bool GetFileContent(
-					LicenseDbHead &head,
-					const boost::any &clientParam) {
+		inline static bool GetFileContent(LicenseDbHead &head) {
 			std::vector<unsigned char> tmpVarData;
-			return GetFileContent(head, tmpVarData, clientParam);
+			return GetFileContent(head, tmpVarData);
 		}
 
 		inline static bool GetFileContent(
 					LicenseDbHead &head,
-					std::vector<unsigned char> &varData,
-					const boost::any &clientParam) {
+					std::vector<unsigned char> &varData) {
 			assert(varData.size() == head.licenseKeyLen + head.privateKeyLen);
 			std::vector<unsigned char> fileKey;
 			GetFileEncryptingKey(fileKey);
@@ -196,10 +193,6 @@ namespace TunnelEx { namespace Licensing {
 				decrypted.push_back(ch);
 			}
 			if (decrypted.size() < sizeof LicenseDbHead) {
-				License::RegisterError(
-					"C6F8BD5B-B50C-4060-A4E5-B155DAEC0EEB",
-					decrypted.size(),
-					clientParam);
 				return false;
 			}
 			LicenseDbHead headTmp;
@@ -217,7 +210,7 @@ namespace TunnelEx { namespace Licensing {
 			std::string result;
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;
-			if (!GetFileContent(head, varData, clientParam)) {
+			if (!GetFileContent(head, varData)) {
 				result = ConvertString<String>(Helpers::Uuid().GetAsString().c_str()).GetCStr();
 				memcpy(head.licenseUuid, result.c_str(), sizeof(head.licenseUuid));
 				SetFileContent(head, varData);
@@ -233,7 +226,7 @@ namespace TunnelEx { namespace Licensing {
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;
 			for (size_t i = 1; i <= 2; ++i) {
-				GetFileContent(head, varData, clientParam);
+				GetFileContent(head, varData);
 				break;
 				/* if (all.size()) {
 					break;
@@ -271,7 +264,7 @@ namespace TunnelEx { namespace Licensing {
 					const boost::any &clientParam) {
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;
-			GetFileContent(head, varData, clientParam);
+			GetFileContent(head, varData);
 			if (varData.size() < head.licenseKeyLen + head.privateKeyLen) {
 				License::RegisterError(
 					"723181DF-962C-42B5-8E0B-0637AC722CDC",
@@ -286,10 +279,9 @@ namespace TunnelEx { namespace Licensing {
 		
 		inline static void StoreLicenseKey(
 					const std::string &licenseKey,
-					const std::string &privateKey,
-					const boost::any &clientParam) {
+					const std::string &privateKey) {
 			LicenseDbHead head;
-			GetFileContent(head, clientParam);
+			GetFileContent(head);
 			std::vector<unsigned char> varData(licenseKey.begin(), licenseKey.end());
 			copy(privateKey.begin(), privateKey.end(), back_inserter(varData));
 			head.licenseKeyLen = licenseKey.size();

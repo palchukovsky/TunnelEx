@@ -210,10 +210,9 @@ public:
 public:
 
 	bool Activate(const std::string &license, ServiceAdapter &service) {
-		const LicenseState licenseState(service);
 		assert(!m_request.get());
 		m_request.reset(
-			new TunnelEx::Licensing::OnlineKeyRequest(license, licenseState));
+			new TunnelEx::Licensing::OnlineKeyRequest(license, LicenseState(service)));
 		m_result = false;
 		Create();
 		Run();
@@ -227,7 +226,8 @@ public:
 		if (!GetActivationResult()) {
 			TunnelEx::Licensing::OnlineKeyRequest::License::RegisterError(
 				"736A7648-4A97-463C-A0A0-8328C19FEF8A",
-				licenseState,
+				std::string(),
+				boost::any(LicenseState(service)),
 				license);
 			wxLogError(
 				wxT("Unknown error at license activation.")

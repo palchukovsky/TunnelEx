@@ -28,6 +28,7 @@ namespace TunnelEx { namespace Licensing {
 		typedef typename ClientTrait::Comminication Comminication;
 		typedef typename ClientTrait::RequestGeneration RequestGeneration;
 		typedef typename ClientTrait::KeyRetrieve KeyRetrieve;
+		typedef typename ClientTrait::License License;
 
 	public:
 	
@@ -76,7 +77,7 @@ namespace TunnelEx { namespace Licensing {
 		
 		bool Accept() {
 			assert(!m_licenseKey.empty());
-			LocalStorage::StoreLicenseKey(m_licenseKey, m_privateKey, m_clientParam);
+			LocalStorage::StoreLicenseKey(m_licenseKey, m_privateKey);
 			return true;
 		}
 	

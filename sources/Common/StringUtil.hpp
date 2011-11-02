@@ -68,7 +68,11 @@ namespace TunnelEx { namespace Helpers {
 		}
 
 		static std::string BinToAscii(const std::vector<unsigned char> &binary) {
+			if (binary.empty()) {
+				return std::string();
+			}
 			return BinToAscii(&binary[0], binary.size());
+
 		}
 
 		template<typename Char>

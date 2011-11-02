@@ -898,6 +898,12 @@ void MainFrame::Check(std::auto_ptr<License> &license) {
 		if (request.TestKey<InfoDlgLicense>()) {
 			request.Accept();
 			license.reset(new ExeLicense(LicenseState(m_window->GetService())));
+		} else {
+			OnlineKeyRequest::License::RegisterError(
+				"960764EE-6E0F-45EC-8118-0D3D19F4E160",
+				std::string(),
+				LicenseState(m_window->GetService()),
+				licenseStr);
 		}
 	}
 
@@ -939,6 +945,8 @@ void MainFrame::Check(std::auto_ptr<License> &license) {
 					this);
 				if (answer == wxYES) {
 					LicenseDlg(*m_window, this).ShowModal();
+				} else {
+					license->RegisterError("5CEFA070-3CEB-490C-A0EB-745D57185595", answer);
 				}
 			}
 			break;
@@ -960,6 +968,10 @@ void MainFrame::Check(std::auto_ptr<License> &license) {
 					this);
 				if (answer == wxYES) {
 					wxGetApp().OpenOrderPage();
+				} else {
+					license->RegisterError(
+						"FD565EC9-F2DE-4652-A906-7AE46B0BC647",
+						answer);
 				}
 			}
 			break;

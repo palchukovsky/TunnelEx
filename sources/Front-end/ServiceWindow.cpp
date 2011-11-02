@@ -1455,7 +1455,7 @@ bool ServiceWindow::ActivateTrial() {
 		TunnelEx::Licensing::ExeLicense::RegisterError(
 			"B35B8A8C-800F-4ECC-806B-A36DD24AECDF",
 			answer,
-			LicenseState(service));
+			LicenseState(GetService()));
 		return false;
 	}
 
