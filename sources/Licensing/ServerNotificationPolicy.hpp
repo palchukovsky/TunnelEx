@@ -38,6 +38,10 @@ namespace TunnelEx { namespace Licensing {
 			return TunnelEx::LicenseState::GetInstance().GetError(index, result);
 		}
 
+		static size_t GetErrorCount() {
+			return TunnelEx::LicenseState::GetInstance().GetErrorCount();
+		}
+
 	};
 
 

@@ -37,6 +37,8 @@ namespace TunnelEx { namespace Singletons {
 					const std::string &point,
 					const std::string &error);
 
+		size_t GetErrorCount() const;
+
 		bool GetError(size_t index, TunnelEx::Licensing::Error &result);
 
 	private:
@@ -48,7 +50,7 @@ namespace TunnelEx { namespace Singletons {
 
 } }
 
-namespace TunnelEx { 
+namespace TunnelEx {
 
 	typedef ::TunnelEx::Singletons::Holder<
 			::TunnelEx::Singletons::LicenseStatePolicy,

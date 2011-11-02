@@ -70,6 +70,9 @@ namespace TunnelEx { namespace Licensing {
 	template<typename ClientTrait>
 	struct NotificationPolicy;
 
+	template<typename ClientTrait, bool isTestMode>
+	struct CommPolicy;
+
 	//////////////////////////////////////////////////////////////////////////
 
 	template<Product product>
@@ -429,8 +432,7 @@ namespace TunnelEx { namespace Licensing {
 	
 	template<Client client, bool isTestMode>
 	struct Client2Comm {
-		// no communication for this client
-		typedef void Policy;
+		typedef CommPolicy<ClientTrait<client, isTestMode>, isTestMode> Policy;
 	};
 	
 	template<bool isTestMode>

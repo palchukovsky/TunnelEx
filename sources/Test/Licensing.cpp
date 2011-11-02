@@ -91,7 +91,7 @@ namespace {
 
 	public:
 
-		bool SetNotificationTestMode() {
+		void SetNotificationTestMode() {
 			m_isNotificationTest = true;
 		}
 
@@ -99,7 +99,7 @@ namespace {
 			return m_isNotificationTest;
 		}
 
-		bool SetClientParamTestMode() {
+		void SetClientParamTestMode() {
 			m_isClientParamTest = true;
 		}
 
@@ -150,8 +150,13 @@ namespace {
 namespace {
 
 	struct ClientParam {
-		std::string in;
-		std::string out;
+		boost::shared_ptr<std::string> in;
+		boost::shared_ptr<std::string> out;
+		ClientParam()
+				: in(new std::string),
+				out(new std::string) {
+			//...//
+		}
 	};
 
 }
@@ -294,19 +299,18 @@ namespace TunnelEx { namespace Licensing {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	template<class ClientTrait>
-	struct WinInetCommPolicy<ClientTrait, true> {
+	template<typename ClientTrait>
+	struct CommPolicy<ClientTrait, true> {
 
 	public:
 
-		typedef WinInetCommPolicy<ClientTrait, false> Original;
 		typedef typename ClientTrait::License License;
 
 	public:
 
 		static std::string SendRequest(
-				const std::string &request,
-				const boost::any &clientParam) {
+					const std::string &request,
+					const boost::any &clientParam) {
 			if (licenseKeyTestServer->IsNotificationTest()) {
 				License::RegisterError(
 					"F18126D7-66A0-4AC8-BC5D-9F662B78FC46",
@@ -314,13 +318,14 @@ namespace TunnelEx { namespace Licensing {
 					clientParam);
 				return std::string();
 			} else if (licenseKeyTestServer->IsClientParamTestMode()) {
-				if (	boost::any_cast<<boost::ref<ClientParam>>(clientParam).in
+				if (	*boost::any_cast<ClientParam>(clientParam).in
 						== "EE644AA8-6B80-4077-A807-B60817584288") {
-					boost::any_cast<boost::ref<ClientParam>>(clientParam).out
+					*boost::any_cast<ClientParam>(clientParam).out
 						= "683BBFBC-2625-449E-9337-5EF3CE2DD46D";
 				}
+				return std::string();
 			} else {
-				return Original::SendRequest(request, clientParam);
+				throw std::logic_error("The behavior is undefined");
 			}
 		}
 
@@ -1282,65 +1287,69 @@ namespace {
 		}
 
 		tex::Licensing::Error error;
+
+		EXPECT_EQ(tex::Licensing::ProxyLicenseTesting::Notification::GetErrorCount(), 10);
+		EXPECT_FALSE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(0, error));
+		EXPECT_FALSE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(1, error));
 		
-		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(0, error));
-		ASSERT_EQ(error.client, tex::Licensing::RuleSetLicenseTesting::Client::GetCode());
-		ASSERT_TRUE(error.license.empty());
-		ASSERT_FALSE(error.time.empty());
-		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
-		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
-
-		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(1, error));
-		ASSERT_EQ(error.client, tex::Licensing::ProxyLicenseTesting::Client::GetCode());
-		ASSERT_TRUE(error.license.empty());
-		ASSERT_FALSE(error.time.empty());
-		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
-		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
-
 		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(2, error));
-		ASSERT_EQ(error.client, tex::Licensing::EndpointIoSeparationLicenseTesting::Client::GetCode());
+		ASSERT_EQ(error.client, tex::Licensing::RuleSetLicenseTesting::Client::GetCode());
 		ASSERT_TRUE(error.license.empty());
 		ASSERT_FALSE(error.time.empty());
 		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
 		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
 
 		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(3, error));
-		ASSERT_EQ(error.client, tex::Licensing::ExeLicenseTesting::Client::GetCode());
-		ASSERT_TRUE(error.license.empty());
-		ASSERT_FALSE(error.time.empty());
-		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
-		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
-
-		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(4, error));
-		ASSERT_EQ(error.client, tex::Licensing::TunnelLicenseTesting::Client::GetCode());
-		ASSERT_TRUE(error.license.empty());
-		ASSERT_FALSE(error.time.empty());
-		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
-		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
-
-		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(5, error));
-		ASSERT_EQ(error.client, tex::Licensing::RuleSetLicenseTesting::Client::GetCode());
-		ASSERT_TRUE(error.license.empty());
-		ASSERT_FALSE(error.time.empty());
-		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
-		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
-
-		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(6, error));
 		ASSERT_EQ(error.client, tex::Licensing::ProxyLicenseTesting::Client::GetCode());
 		ASSERT_TRUE(error.license.empty());
 		ASSERT_FALSE(error.time.empty());
 		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
 		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
 
-		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(7, error));
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(4, error));
 		ASSERT_EQ(error.client, tex::Licensing::EndpointIoSeparationLicenseTesting::Client::GetCode());
 		ASSERT_TRUE(error.license.empty());
 		ASSERT_FALSE(error.time.empty());
 		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
 		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
 
-		ASSERT_FALSE(tex::Licensing::RuleSetLicenseTesting::Notification::GetError(8, error));
-		
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(5, error));
+		ASSERT_EQ(error.client, tex::Licensing::ExeLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(6, error));
+		ASSERT_EQ(error.client, tex::Licensing::TunnelLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(7, error));
+		ASSERT_EQ(error.client, tex::Licensing::RuleSetLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(8, error));
+		ASSERT_EQ(error.client, tex::Licensing::ProxyLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		EXPECT_TRUE(tex::Licensing::ProxyLicenseTesting::Notification::GetError(9, error));
+		ASSERT_EQ(error.client, tex::Licensing::EndpointIoSeparationLicenseTesting::Client::GetCode());
+		ASSERT_TRUE(error.license.empty());
+		ASSERT_FALSE(error.time.empty());
+		ASSERT_EQ(error.point, "F18126D7-66A0-4AC8-BC5D-9F662B78FC46"); 
+		ASSERT_EQ(error.error, "E0D3E1F2-46FA-4DF7-8C58-0E60E8D78C50");
+
+		ASSERT_FALSE(tex::Licensing::EndpointIoSeparationLicenseTesting::Notification::GetError(11, error));
+
 	}
 	
 	TEST(Licensing, ClientParam) {
@@ -1349,14 +1358,14 @@ namespace {
 		licenseKeyTestServer->SetClientParamTestMode();
 
 		ClientParam clientParam;
-		clientParam.in = "EE644AA8-6B80-4077-A807-B60817584288";
+		*clientParam.in = "EE644AA8-6B80-4077-A807-B60817584288";
 
 		tex::Licensing::RuleSetLicenseTesting::KeyRequest request(
 			"0BB341EC-7403-4CDA-871C-93130FA259CB",
-			boost::ref(clientParam));
+			clientParam);
 		request.Send();
 
-		ASSERT_EQ(clientParam.out, "683BBFBC-2625-449E-9337-5EF3CE2DD46D");
+		ASSERT_EQ(*clientParam.out, "683BBFBC-2625-449E-9337-5EF3CE2DD46D");
 
 	}
 
