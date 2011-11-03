@@ -206,7 +206,7 @@ namespace TunnelEx { namespace Licensing {
 			return true;
 		}
 
-		inline static std::string GetTrialLicense(const boost::any &clientParam) {
+		inline static std::string GetTrialLicense() {
 			std::string result;
 			LicenseDbHead head;
 			std::vector<unsigned char> varData;

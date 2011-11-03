@@ -663,7 +663,7 @@ void TexServiceImplementation::GenerateLicenseKeyRequest(
 }
 
 std::string TexServiceImplementation::GetTrialLicense() const {
-	return Licensing::ServiceKeyRequest::LocalStorage::GetTrialLicense(boost::any());
+	return Licensing::ServiceKeyRequest::LocalStorage::GetTrialLicense();
 }
 
 std::string TexServiceImplementation::GetLicenseKey() const {
@@ -688,8 +688,7 @@ void TexServiceImplementation::SetLicenseKey(
 			const std::string &privateKey) {
 	Licensing::ServiceKeyRequest::LocalStorage::StoreLicenseKey(
 		licenseKey,
-		privateKey,
-		boost::any());
+		privateKey);
 	m_pimpl->UpdateLastLicenseKeyModificationTime();
 }
 

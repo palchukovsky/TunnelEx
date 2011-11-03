@@ -77,7 +77,7 @@ namespace TunnelEx { namespace Licensing {
 		
 		bool Accept() {
 			assert(!m_licenseKey.empty());
-			LocalStorage::StoreLicenseKey(m_licenseKey, m_privateKey);
+			LocalStorage::StoreLicenseKey(m_licenseKey, m_privateKey, m_clientParam);
 			return true;
 		}
 	

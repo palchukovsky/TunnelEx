@@ -227,7 +227,7 @@ public:
 			TunnelEx::Licensing::OnlineKeyRequest::License::RegisterError(
 				"736A7648-4A97-463C-A0A0-8328C19FEF8A",
 				std::string(),
-				boost::any(LicenseState(service)),
+				LicenseState(service),
 				license);
 			wxLogError(
 				wxT("Unknown error at license activation.")
