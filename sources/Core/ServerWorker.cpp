@@ -1159,7 +1159,7 @@ private:
 					instance.m_ruleUpdatingState.exception = ex.Clone();
 				} catch (const std::exception &ex) {
 					instance.m_ruleUpdatingState.exception.Reset(
-					new SystemException(ConvertString<WString>(ex.what()).GetCStr()));
+						new SystemException(ConvertString<WString>(ex.what()).GetCStr()));
 				} catch (...) {
 					Log::GetInstance().AppendSystemError(
 						"Unknown system error occurred in updating thread.");
