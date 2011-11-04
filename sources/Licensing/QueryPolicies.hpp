@@ -28,7 +28,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Feature"
 				% "Name"
 				% featureUuid;
@@ -41,7 +41,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Request";
 			return result.str();
 		}
@@ -52,7 +52,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Request";
 			return result.str();
 		}
@@ -69,7 +69,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Limitations";
 			return result.str();
 		}
@@ -83,7 +83,7 @@ namespace TunnelEx { namespace Licensing {
 				% "1"
 				% "Release"
 				% "Time"
-				% "1";
+				% "2";
 			return result.str();
 		}
 
@@ -95,7 +95,7 @@ namespace TunnelEx { namespace Licensing {
 				% "Version"
 				% "1"
 				% "Update"
-				% "1";
+				% "2";
 			return result.str();
 		}
 
@@ -107,7 +107,7 @@ namespace TunnelEx { namespace Licensing {
 				% "Version"
 				% "1"
 				% "Type"
-				% "1";
+				% "2";
 			return result.str();
 		}
 
@@ -117,7 +117,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Owner";
 			return result.str();
 		}
@@ -128,7 +128,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Product"
 				% "Release";
 			return result.str();
@@ -140,7 +140,7 @@ namespace TunnelEx { namespace Licensing {
 				% "License"
 				% "Key"
 				% "Version"
-				% "1.1"
+				% "1.2"
 				% "Options"
 				% "Workstation"
 				% "Scores";
