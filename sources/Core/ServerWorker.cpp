@@ -177,21 +177,31 @@ namespace {
 	TUNNELEX_OBJECTS_DELETION_CHECK_DEFINITION(ProactorLoopStopper, m_instancesNumber);
 
 	template<typename Exception>
-	void ReportException(TunnelRule::ErrorsTreatment treatment, const Exception &ex) {
+	void ReportException(
+				TunnelRule::ErrorsTreatment treatment,
+				const Exception &ex,
+				const char *messageBase = nullptr) {
+		String exText;
+		ConvertString(ex.GetWhat(), exText);
+		std::string message;
+		if (!messageBase) {
+			message = exText.GetCStr();
+		} else {
+			Format format(messageBase);
+			format % exText.GetCStr();
+			message = format.str();
+		}
 		switch (treatment) {
 			case TunnelRule::ERRORS_TREATMENT_INFO:
-				Log::GetInstance().AppendInfo(
-					ConvertString<String>(ex.GetWhat()).GetCStr());
+				Log::GetInstance().AppendInfo(message);
 				break;
 			case TunnelRule::ERRORS_TREATMENT_WARN:
-				Log::GetInstance().AppendWarn(
-					ConvertString<String>(ex.GetWhat()).GetCStr());				
+				Log::GetInstance().AppendWarn(message);
 				break;
 			default:
 				assert(false);
 			case TunnelRule::ERRORS_TREATMENT_ERROR:
-				Log::GetInstance().AppendError(
-					ConvertString<String>(ex.GetWhat()).GetCStr());				
+				Log::GetInstance().AppendError(message);
 				break;
 		}
 	}
@@ -926,10 +936,10 @@ private:
 					newTunnels.push_back(tunnel);
 					tunnels.insert(ActiveTunnel(tunnel));
 				} catch (const TunnelEx::ConnectionException &ex) {
-					Format message(
+					ReportException(
+						ruleInfo->rule->GetErrorsTreatment(),
+						ex,
 						"Failed to open endpoint for tunnel entrance: %1%.");
-					message % ConvertString<String>(ex.GetWhat()).GetCStr();
-					Log::GetInstance().AppendError(message.str());
 #					ifdef DEV_VER
 						if (ruleToCheck.find(ruleInfo->rule->GetUuid().GetCStr()) != ruleToCheck.end()) {
 							Format message(
