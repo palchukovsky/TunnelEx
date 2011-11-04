@@ -70,6 +70,8 @@ namespace TunnelEx {
 
 		static long Decrement(long volatile *) throw();
 
+		static long Exchange(long volatile &destination, long value) throw();
+
 		static long CompareExchange(
 				long volatile &destination,
 				long exchangeValue,

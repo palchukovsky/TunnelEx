@@ -120,6 +120,11 @@ int texs__Migrate(soap *, bool &result) {
 	return SOAP_OK;
 }
 
+int texs__HitHeart(soap *, long &result) {
+	result = TexWinService::GetTexServiceInstance()->HitHeart();
+	return SOAP_OK;
+}
+
 int texs__CheckState(soap *, texs__ServiceState &result) {
 	TexWinService::GetTexServiceInstance()->CheckState(result);
 	return SOAP_OK;

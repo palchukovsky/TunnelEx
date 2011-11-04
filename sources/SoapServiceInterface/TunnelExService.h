@@ -28,13 +28,17 @@ int texs__IsStarted(bool &isServerStartedResult);
 //gsoap texs service method-action: GetRuleSet "urn:#getRuleSet"
 int texs__GetRuleSet(std::string &getRuleListResult);
 
+//gsoap texs service method-action: texs__HitHeart "urn:#hitHeart"
+int texs__HitHeart(long &state);
+
 class texs__ServiceState {
 public:
-	long long errorTime;
-	long long warnTime;
-	long long licKeyTime;
-	unsigned long long logSize;
-	long long ruleSetTime;
+	long rev;
+	long errorCount;
+	long warnCount;
+	long licKeyRev;
+	long logSize;
+	long ruleSetRev;
 	bool isStarted;
 };
 

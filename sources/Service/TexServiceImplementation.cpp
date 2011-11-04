@@ -34,8 +34,15 @@ class TexServiceImplementation::Implementation : private boost::noncopyable {
 public:
 
 	Implementation()
-			: m_lastRuleSetModificationTime(0),
-			m_lastLicenseKeyModificationTime(0) {
+			: m_stateRevision(0),
+			m_ruleSetRevision(0),
+			m_licenseKeyRevision(0),
+			m_licenseKeyRevisionTimeDiff(0),
+			m_logSize(0),
+			m_errorCount(0),
+			m_warnCount(0),
+			m_isStarted(0),
+			m_startTime(time(0)) {
 		//...//
 	}
 
@@ -194,16 +201,28 @@ public:
 
 	void SetRuleSet(std::auto_ptr<RuleSet> newRuleSet) throw() {
 		m_ruleSet = newRuleSet;
-		UpdateLastRuleSetModificationTime();
+		UpdateLastRuleSetRevision();
 	}
 
-	void UpdateLastRuleSetModificationTime() {
-		m_lastRuleSetModificationTime = time(0);
+	void UpdateLastRuleSetRevision() {
+		Interlocked::Increment(&m_ruleSetRevision);
+		Interlocked::Increment(&m_stateRevision);
 	}
 
 	void UpdateLastLicenseKeyModificationTime() {
-		m_lastLicenseKeyModificationTime
-			= Licensing::ServiceKeyRequest::LocalStorage::GetDbFileModificationTime();
+		const auto diff = m_licenseKeyRevisionTimeDiff;
+		const long newDiff
+			= long(Licensing::ServiceKeyRequest::LocalStorage::GetDbFileModificationTime()
+				- m_startTime);
+		if (	diff != newDiff
+				&& Interlocked::CompareExchange(
+						m_licenseKeyRevisionTimeDiff,
+						newDiff,
+						diff)
+					== diff) {
+			Interlocked::Increment(&m_licenseKeyRevision);
+			Interlocked::Increment(&m_stateRevision);
+		}
 	}
 
 	template<class RuleSet>
@@ -310,8 +329,15 @@ public:
 public:
 
 	std::auto_ptr<RuleSet> m_ruleSet;
-	time_t m_lastRuleSetModificationTime;
-	time_t m_lastLicenseKeyModificationTime;
+	volatile long m_stateRevision;
+	volatile long m_ruleSetRevision;
+	volatile long m_licenseKeyRevision;
+	volatile long m_licenseKeyRevisionTimeDiff;
+	volatile long m_logSize;
+	volatile long m_errorCount;
+	volatile long m_warnCount;
+	volatile long m_isStarted;
+	const time_t m_startTime;
 	std::wstring m_rulesFilePath;
 	std::wstring m_logFilePath;
 	boost::mutex m_mutex;
@@ -426,7 +452,7 @@ void TexServiceImplementation::UpdateRules(const std::wstring &xml) {
 		m_pimpl->UpdateRules(ruleSet.GetServices(), m_pimpl->m_ruleSet->GetServices());
 		m_pimpl->UpdateRules(ruleSet.GetTunnels(), m_pimpl->m_ruleSet->GetTunnels());
 		m_pimpl->SaveRules();
-		m_pimpl->UpdateLastRuleSetModificationTime();
+		m_pimpl->UpdateLastRuleSetRevision();
 	} catch (const ::TunnelEx::LocalException &ex) {
 		Format message("Could not update rules: %1%.");
 		message % ConvertString<String>(ex.GetWhat()).GetCStr();
@@ -453,7 +479,7 @@ void TexServiceImplementation::EnableRules(
 		}
 		if (wasChanged) {
 			m_pimpl->SaveRules();
-			m_pimpl->UpdateLastRuleSetModificationTime();
+			m_pimpl->UpdateLastRuleSetRevision();
 		}
 	} catch (const ::TunnelEx::LocalException &ex) {
 		Format message("Could not enable rules: %1%.");
@@ -479,7 +505,7 @@ void TexServiceImplementation::DeleteRules(const std::list<std::wstring> &uuids)
 	}
 	if (wasFound) {
 		m_pimpl->SaveRules();
-		m_pimpl->UpdateLastRuleSetModificationTime();
+		m_pimpl->UpdateLastRuleSetRevision();
 	}
 }
 
@@ -640,14 +666,57 @@ bool TexServiceImplementation::Migrate() {
 	return true;
 }
 
+long TexServiceImplementation::HitHeart() const {
+
+	bool isNewRevision = false;
+
+	{
+		const auto newLogSize = Log::GetInstance().GetSize();
+		if (newLogSize != m_pimpl->m_logSize) {
+			const auto logSize = m_pimpl->m_logSize;
+			if (	Interlocked::CompareExchange(m_pimpl->m_logSize, newLogSize, logSize)
+						== logSize) {
+				Interlocked::CompareExchange(
+					m_pimpl->m_warnCount,
+					Log::GetInstance().GetWarnCount(),
+					m_pimpl->m_warnCount);
+				Interlocked::CompareExchange(
+					m_pimpl->m_errorCount,
+					Log::GetInstance().GetErrorCount(),
+					m_pimpl->m_errorCount);
+				Interlocked::Increment(&m_pimpl->m_stateRevision);
+				isNewRevision = true;
+			}
+		}
+	}
+
+	{
+		const long newIsStarted = Server::GetInstance().IsStarted() ? 1 : 0;
+		if (m_pimpl->m_isStarted !=  newIsStarted) {
+			const auto isStarted = m_pimpl->m_isStarted;
+			if (	Interlocked::CompareExchange(
+							m_pimpl->m_isStarted,
+							newIsStarted,
+							isStarted)
+						== isStarted
+					&& !isNewRevision) {
+				Interlocked::Increment(&m_pimpl->m_stateRevision);
+			}
+		}
+	}
+
+	return m_pimpl->m_stateRevision;
+
+}
+
 void TexServiceImplementation::CheckState(texs__ServiceState &result) const {
-	//! @todo: implement cache here, for situation with many clients.
-	result.errorTime = Log::GetInstance().GetLastErrorTime();
-	result.warnTime = Log::GetInstance().GetLastWarnTime();
-	result.logSize = Log::GetInstance().GetSize();
-	result.ruleSetTime = m_pimpl->m_lastRuleSetModificationTime;
-	result.licKeyTime = m_pimpl->m_lastLicenseKeyModificationTime;
-	result.isStarted = Server::GetInstance().IsStarted();
+	result.rev = HitHeart();
+	result.errorCount = m_pimpl->m_errorCount;
+	result.warnCount = m_pimpl->m_warnCount;
+	result.logSize = m_pimpl->m_logSize;
+	result.ruleSetRev = m_pimpl->m_ruleSetRevision;
+	result.licKeyRev = m_pimpl->m_licenseKeyRevision;
+	result.isStarted = m_pimpl->m_isStarted != 0;
 }
 
 void TexServiceImplementation::GenerateLicenseKeyRequest(

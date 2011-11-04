@@ -38,6 +38,7 @@ public:
 	void EnableRules(const std::list<std::wstring> &, bool isEnabled);
 	void DeleteRules(const std::list<std::wstring> &);
 
+	long HitHeart() const;
 	void CheckState(texs__ServiceState &) const;
 
 	void GetLastLogRecords(unsigned int, std::list<texs__LogRecord> &) const;

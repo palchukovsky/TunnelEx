@@ -35,13 +35,13 @@ public:
 		LevelInfo()
 				: isRegistrationOn(false),
 				name("<?>"),
-				lastOccurTime(boost::gregorian::date(1970, 1, 1)) {
+				eventCount(0) {
 			//...//
 		}
 
 		const char *name;
 		bool isRegistrationOn;
-		pt::ptime lastOccurTime;
+		volatile long eventCount;
 		
 	};
 
@@ -118,10 +118,8 @@ public:
 				m_stream << '.';
 			}
 			m_stream << std::endl;
-			++m_size;
-			if (level.lastOccurTime < occurTime) {
-				level.lastOccurTime = occurTime;
-			}
+			Interlocked::Increment(&level.eventCount);
+			Interlocked::Increment(&m_size);
 		} catch (...) {
 			assert(false);
 		}
@@ -209,12 +207,12 @@ public:
 		return LOG_LEVEL_UNKNOWN;
 	}
 	
-	unsigned long long GetSize() const {
+	long GetSize() const {
 		return m_size;
 	}
 
-	TimeT GetLastOccurTime(const LogLevel levelId) const {
-		return Helpers::ConvertPosixTimeToTimeT(GetLevelInfo(levelId).lastOccurTime);
+	long GetEventCount(const LogLevel levelId) const {
+		return GetLevelInfo(levelId).eventCount;
 	}
 
 private:
@@ -225,7 +223,7 @@ private:
 	Mutex m_levelsMutex;
 	Levels m_levels;
 	
-	unsigned long long m_size;
+	volatile long m_size;
 
 };
 
@@ -354,26 +352,28 @@ LogLevel LogPolicy::ResolveLevel(const char *levelName) const throw() {
 	return m_pimpl->ResolveLevel(levelName);
 }
 
-unsigned long long LogPolicy::GetSize() const {
+long LogPolicy::GetSize() const {
 	return m_pimpl->GetSize();
 }
 
-TimeT LogPolicy::GetLastWarnTime() const {
-	return m_pimpl->GetLastOccurTime(LOG_LEVEL_WARN);
+long LogPolicy::GetWarnCount() const {
+	return m_pimpl->GetEventCount(LOG_LEVEL_WARN);
 }
 
-TimeT LogPolicy::GetLastErrorTime() const {
+long LogPolicy::GetErrorCount() const {
 	return std::max(
-		m_pimpl->GetLastOccurTime(LOG_LEVEL_ERROR),
+		m_pimpl->GetEventCount(LOG_LEVEL_ERROR),
 		std::max(
-			m_pimpl->GetLastOccurTime(LOG_LEVEL_FATAL_ERROR),
-			m_pimpl->GetLastOccurTime(LOG_LEVEL_SYSTEM_ERROR)));
+			m_pimpl->GetEventCount(LOG_LEVEL_FATAL_ERROR),
+			m_pimpl->GetEventCount(LOG_LEVEL_SYSTEM_ERROR)));
 }
 
 #if TEMPLATES_REQUIRE_SOURCE != 0
 #	include "Singleton.cpp"
-	//! Only for template instantiation.
-	void MakeLogTemplateInstantiation() {
-		Log::GetInstance();
+	namespace {
+		//! Only for template instantiation.
+		void MakeLogTemplateInstantiation() {
+			Log::GetInstance();
+		}
 	}
 #endif // TEMPLATES_REQUIRE_SOURCE

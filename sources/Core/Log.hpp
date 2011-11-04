@@ -195,10 +195,10 @@ namespace TunnelEx {
 
 			LogLevel ResolveLevel(const char *levelName) const throw();
 
-			unsigned long long GetSize() const;
+			long GetSize() const;
 
-			::TunnelEx::TimeT GetLastWarnTime() const;
-			::TunnelEx::TimeT GetLastErrorTime() const;
+			long GetWarnCount() const;
+			long GetErrorCount() const;
 
 		private:
 			

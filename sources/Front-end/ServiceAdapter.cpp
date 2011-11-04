@@ -34,7 +34,8 @@ private:
 
 		explicit StateCheckingThread(ServiceAdapter::Implementation &serviceAdapter)
 				: wxThread(wxTHREAD_JOINABLE),
-				m_serviceAdapter(serviceAdapter) {
+				m_serviceAdapter(serviceAdapter),
+				m_stateRevision(0) {
 			//...//
 		}
 
@@ -64,40 +65,27 @@ private:
 						}
 					case WAIT_TIMEOUT:
 						{
-							texs__ServiceState state;
+							long stateRevision = 0;
 							int errorCode;
 							{
-								wxMutexLocker serviceLock(
-									m_serviceAdapter.m_serviceMutex);
-								errorCode
-									= m_serviceAdapter.m_service.texs__CheckState(state);
+								wxMutexLocker serviceLock(m_serviceAdapter.m_serviceMutex);
+								errorCode = m_serviceAdapter
+									.m_service
+									.texs__HitHeart(stateRevision);
 							}
-							assert(
-								errorCode == SOAP_EOF
-								|| errorCode == SOAP_OK
-								|| errorCode == SOAP_TCP_ERROR
-								|| errorCode == SOAP_UDP_ERROR);
-							if (errorCode == SOAP_OK) {
-								errorsCount = 0;
-								if (!m_serviceAdapter.m_isConnected) {
-									m_serviceAdapter.m_isConnected = true;
-									m_serviceAdapter.m_lastRulesModifyTime = 0;
-									m_serviceAdapter.GenerateEvent(
-										ServiceAdapter::Event::ID_CONNECTED);
+							if (	HandleSoapMethodCall(errorCode, errorsCount)
+									&& m_stateRevision != stateRevision) {
+								texs__ServiceState state;
+								{
+									wxMutexLocker serviceLock(m_serviceAdapter.m_serviceMutex);
+									errorCode = m_serviceAdapter
+										.m_service
+										.texs__CheckState(state);
 								}
-								m_serviceAdapter.CheckState(state);
-							} else if (m_serviceAdapter.m_isConnected) {
-								if (++errorsCount > 2) {
-									m_serviceAdapter.m_isConnected = false;
-									m_serviceAdapter.GenerateEvent(
-										ServiceAdapter::Event::ID_DISCONNECTED);
-								} else {
-									m_serviceAdapter.InitiateStateUpdate(
-										wxMutexLocker(m_serviceAdapter.m_serviceMutex));
+								if (HandleSoapMethodCall(errorCode, errorsCount)) {
+									m_serviceAdapter.CheckState(state);
+									m_stateRevision = state.rev;
 								}
-							} else {
-								m_serviceAdapter.GenerateEvent(
-									ServiceAdapter::Event::ID_CONNECTION_FAILED);
 							}
 						}
 						break;
@@ -111,7 +99,37 @@ private:
 
 	private:
 
+		bool HandleSoapMethodCall(int errorCode, unsigned int &errorsCount) {
+			assert(
+				errorCode == SOAP_EOF
+				|| errorCode == SOAP_OK
+				|| errorCode == SOAP_TCP_ERROR
+				|| errorCode == SOAP_UDP_ERROR);
+			if (errorCode == SOAP_OK) {
+				errorsCount = 0;
+				if (!m_serviceAdapter.m_isConnected) {
+					m_serviceAdapter.m_isConnected = true;
+					m_serviceAdapter.m_rulesModifyRev = 0;
+					m_serviceAdapter.GenerateEvent(ServiceAdapter::Event::ID_CONNECTED);
+				}
+				return true;
+			} else if (m_serviceAdapter.m_isConnected) {
+				if (++errorsCount > 2) {
+					m_serviceAdapter.m_isConnected = false;
+					m_serviceAdapter.GenerateEvent(ServiceAdapter::Event::ID_DISCONNECTED);
+				} else {
+					m_serviceAdapter.InitiateStateUpdate(wxMutexLocker(m_serviceAdapter.m_serviceMutex));
+				}
+			} else {
+				m_serviceAdapter.GenerateEvent(ServiceAdapter::Event::ID_CONNECTION_FAILED);
+			}
+			return false;
+		}
+
+	private:
+
 		ServiceAdapter::Implementation &m_serviceAdapter;
+		long m_stateRevision;
 
 	};
 
@@ -202,10 +220,10 @@ public:
 			m_originalEndpoint(endpoint),
 			m_stateCheckingStopEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr), &CloseHandle),
 			m_stateCheckingUpdateEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr), &CloseHandle),
-			m_lastErrorTime(lastKnownErrorTime),
-			m_lastWarningTime(lastKnownWarnTime),
-			m_lastRulesModifyTime(0),
-			m_lastLicenseKeyModificatiomTime(0),
+			m_errorCount(lastKnownErrorTime),
+			m_warningCount(lastKnownWarnTime),
+			m_rulesModifyRev(0),
+			m_licenseKeyRev(0),
 			m_isStarted(false),
 			m_stateCheckingThread(*this),
 			m_isConnected(false) {
@@ -837,15 +855,15 @@ public:
 	}
 
 	time_t GetLastKnownErrorTime() const {
-		return m_lastErrorTime;
+		return m_errorCount;
 	}
 
 	time_t GetLastKnownWarnTime() const {
-		return m_lastWarningTime;
+		return m_warningCount;
 	}
 
 	time_t GetLastLicenseKeyModificatiomTime() const {
-		return m_lastLicenseKeyModificatiomTime;
+		return m_licenseKeyRev;
 	}
 
 	unsigned long long GetLogSize() const {
@@ -930,24 +948,24 @@ private:
 			state.isStarted,
 			ServiceAdapter::Event::ID_SERVICE_RUNNING_STATE_CHANGED);
 		CheckCheckpointState(
-			m_lastRulesModifyTime,
-			state.ruleSetTime,
+			m_rulesModifyRev,
+			state.ruleSetRev,
 			ServiceAdapter::Event::ID_RULE_SET_MODIFIED);
 		CheckCheckpointState(
-			m_lastLicenseKeyModificatiomTime,
-			state.licKeyTime,
+			m_licenseKeyRev,
+			state.licKeyRev,
 			ServiceAdapter::Event::ID_LICENSE_KEY_MODIFIED);
 		CheckCheckpointState(
 			m_logSize,
 			state.logSize,
 			ServiceAdapter::Event::ID_NEW_LOG_RECORD);
 		CheckCheckpointState(
-			m_lastErrorTime,
-			state.errorTime,
+			m_errorCount,
+			state.errorCount,
 			ServiceAdapter::Event::ID_NEW_ERROR);
 		CheckCheckpointState(
-			m_lastWarningTime,
-			state.warnTime,
+			m_warningCount,
+			state.warnCount,
 			ServiceAdapter::Event::ID_NEW_WARNING);
 	}
 
@@ -971,10 +989,10 @@ private:
 	boost::shared_ptr<void> m_stateCheckingStopEvent;
 	boost::shared_ptr<void> m_stateCheckingUpdateEvent;
 
-	time_t m_lastErrorTime;
-	time_t m_lastWarningTime;
-	time_t m_lastRulesModifyTime;
-	time_t m_lastLicenseKeyModificatiomTime;
+	time_t m_errorCount;
+	time_t m_warningCount;
+	long m_rulesModifyRev;
+	long m_licenseKeyRev;
 	bool m_isStarted;
 	unsigned long long m_logSize;
 	
