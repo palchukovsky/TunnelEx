@@ -343,6 +343,10 @@ UString & tex::ConvertString(const WString::ValueType *source, UString &destinat
 }
 
 String & tex::ConvertString(const UString &source, String &destination) {
+	if (source.IsEmpty()) {
+		destination.Clear();
+		return destination;
+	}
 	std::vector<wchar_t> buffer;
 	MultiByteToWideCharBuffer(
 		CP_UTF8,
@@ -354,8 +358,13 @@ String & tex::ConvertString(const UString &source, String &destination) {
 }
 
 String & tex::ConvertString(const UString::ValueType *source, String &destination) {
+	const auto sourceLen = _mbslen(source);
+	if (sourceLen == 0) {
+		destination.Clear();
+		return destination;
+	}
 	std::vector<wchar_t> buffer;
-	MultiByteToWideCharBuffer(CP_UTF8, source, _mbslen(source), buffer);
+	MultiByteToWideCharBuffer(CP_UTF8, source, sourceLen, buffer);
 	WideCharToMultiByte(CP_ACP, &buffer[0], buffer.size(), destination.m_pimpl->m_string);
 	return destination;
 }
@@ -403,6 +412,10 @@ String & tex::ConvertString(const WString::ValueType *source, String &destinatio
 }
 
 UString & tex::ConvertString(const String &source, UString &destination) {
+	if (source.IsEmpty()) {
+		destination.Clear();
+		return destination;
+	}
 	std::vector<wchar_t> buffer;
 	MultiByteToWideCharBuffer(
  		CP_ACP,
@@ -414,8 +427,13 @@ UString & tex::ConvertString(const String &source, UString &destination) {
 }
 
 UString & tex::ConvertString(const String::ValueType *source, UString &destination) {
+	const auto sourceLen = strlen(source);
+	if (sourceLen == 0) {
+		destination.Clear();
+		return destination;
+	}
 	std::vector<wchar_t> buffer;
-	MultiByteToWideChar(CP_ACP, source, strlen(source), buffer);
+	MultiByteToWideChar(CP_ACP, source, sourceLen, buffer);
 	WideCharToMultiByte(CP_UTF8, &buffer[0], buffer.size(), destination.m_pimpl->m_string);
 	return destination;
 }
