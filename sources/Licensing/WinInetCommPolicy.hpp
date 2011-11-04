@@ -62,6 +62,10 @@ namespace TunnelEx { namespace Licensing {
 				0);
 			assert(handles.inet);
 			if (!handles.inet) {
+				License::RegisterError(
+					"40D01445-FA96-4872-9975-1BE1002AE636",
+					GetLastError(),
+					clientParam);
 				return std::string();
 			}
 			
