@@ -41,6 +41,14 @@ inline void AssertNotLocked(const Mutex &mutex) {
 }
 
 template<typename Mutex>
+inline void AssertNotLockedOrLockedByMyThread(const Mutex &mutex) {
+	assert(
+		const_cast<Mutex &>(mutex).get_nesting_level() < 1
+		|| ACE_OS::thr_self() == const_cast<Mutex &>(mutex).get_thread_id());
+	UseUnused(mutex);
+}
+
+template<typename Mutex>
 inline void AssertNotLockedByMyThread(const Mutex &mutex) {
 	assert(
 		const_cast<Mutex &>(mutex).get_nesting_level() < 1

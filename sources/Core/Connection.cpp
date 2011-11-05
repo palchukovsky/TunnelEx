@@ -88,9 +88,9 @@ namespace {
 					% DebugLockStat::proactor
 					% DebugLockStat::recursive
 					% failesPercent;
-				if (failesPercent > 5) {
+				if (failesPercent > 5 && DebugLockStat::locks > 1000) {
 					Log::GetInstance().AppendError(stat.str());
-				} else if (failesPercent > 2.5) {
+				} else if (failesPercent > 2.5 && DebugLockStat::locks > 1000) {
 					Log::GetInstance().AppendWarn(stat.str());
 				} else {
 					Log::GetInstance().AppendInfo(stat.str());
@@ -541,14 +541,14 @@ public:
 	}
 
 	void OnSetupSuccess() {
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		CompleteSetup(true);
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
 		m_signal->OnConnectionSetupCompleted(m_instanceId);
 	}
 
 	void OnSetupFail(const WString &failReason) {
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		CompleteSetup(false);
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
@@ -561,7 +561,7 @@ public:
 
 	void StartRead() {
 		assert(!m_isReadingInitiated);
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		Lock lock(m_mutex, false);
 		m_isReadingInitiated = true;
 		if (!InitReadIfPossible()) {
@@ -887,7 +887,7 @@ private:
 	}
 
 	void CompleteSetup(bool setupCompletedWithSuccess) {
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		m_isSetupCompleted = true;
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
