@@ -163,10 +163,12 @@ public:
 			m_idleTimeoutTimer(-1),
 			m_delTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
-		Log::GetInstance().AppendDebug(
-			"New connection object %1% created. Active objects: %2%.",
-			m_instanceId,
-			m_instancesNumber);
+#		ifdef DEV_VER
+			Log::GetInstance().AppendDebug(
+				"New connection object %1% created. Active objects: %2%.",
+				m_instanceId,
+				m_instancesNumber);
+#		endif
 	}
 	
 private:
@@ -180,10 +182,12 @@ private:
 		//! @todo: fix (currently don't know when buffer deletion is secure)
 		// m_buffer->DeleteBuffer(m_allocators);
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
-		Log::GetInstance().AppendDebug(
-			"Connection object %1% deleted. Active objects: %2%.",
-			m_instanceId,
-			m_instancesNumber);
+#		ifdef DEV_VER
+			Log::GetInstance().AppendDebug(
+				"Connection object %1% deleted. Active objects: %2%.",
+				m_instanceId,
+				m_instancesNumber);
+#		endif
 	}
 
 public:
