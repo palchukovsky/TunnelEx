@@ -21,13 +21,13 @@
 
 		<CustomAction Id="SetInstallWebPopupUrl"
 					  Property="WixShellExecTarget"
-					  Value="[ProductWebSite]/welcome/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?buid=$(var.ProductVersionMinorLow)" />
+					  Value="[ProductWebSite]/welcome/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?build=$(var.ProductVersionMinorLow)" />
 		<CustomAction Id="SetUpgradeWebPopupUrl"
 					  Property="WixShellExecTarget"
-					  Value="[ProductWebSite]/whatsnew/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?buid=$(var.ProductVersionMinorLow)" />
+					  Value="[ProductWebSite]/whatsnew/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?build=$(var.ProductVersionMinorLow)" />
 		<CustomAction Id="SetUninstallWebPopupUrl"
 					  Property="WixShellExecTarget"
-					  Value="[ProductWebSite]/survey/uninstall/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?buid=$(var.ProductVersionMinorLow)" />
+					  Value="[ProductWebSite]/survey/uninstall/$(var.ProductVersionMajorHigh).$(var.ProductVersionMajorLow).$(var.ProductVersionMinorHigh)/?build=$(var.ProductVersionMinorLow)" />
 		<CustomAction Id="OpenWebPopup"
 					  BinaryKey="WixCA"
 					  DllEntry="WixShellExec"
