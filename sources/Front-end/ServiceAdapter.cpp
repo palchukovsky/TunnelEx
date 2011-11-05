@@ -212,16 +212,16 @@ public:
 	explicit Implementation(
 				wxEvtHandler &statusEventListener,
 				const wxString &endpoint,
-				time_t lastKnownErrorTime,
-				time_t lastKnownWarnTime)
+				long lastKnownErrorCount,
+				long lastKnownWarnCount)
 			: m_statusEventListener(&statusEventListener),
 			m_serviceMutex(wxMUTEX_RECURSIVE),
 			m_endpoint(ConvertString<String>(endpoint.c_str())),
 			m_originalEndpoint(endpoint),
 			m_stateCheckingStopEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr), &CloseHandle),
 			m_stateCheckingUpdateEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr), &CloseHandle),
-			m_errorCount(lastKnownErrorTime),
-			m_warningCount(lastKnownWarnTime),
+			m_errorCount(lastKnownErrorCount),
+			m_warningCount(lastKnownWarnCount),
 			m_rulesModifyRev(0),
 			m_licenseKeyRev(0),
 			m_isStarted(false),
@@ -854,15 +854,15 @@ public:
 		return m_originalEndpoint;
 	}
 
-	time_t GetLastKnownErrorTime() const {
+	long GetLastKnownErrorCount() const {
 		return m_errorCount;
 	}
 
-	time_t GetLastKnownWarnTime() const {
+	long GetLastKnownWarnCount() const {
 		return m_warningCount;
 	}
 
-	time_t GetLastLicenseKeyModificatiomTime() const {
+	long GetLastLicenseKeyRevision() const {
 		return m_licenseKeyRev;
 	}
 
@@ -929,19 +929,6 @@ private:
 		}
 	}
 
-	template<class CheckpointTypeRemote>
-	void CheckCheckpointState(
-				time_t &localCheckpoint,
-				const CheckpointTypeRemote &remoteCheckpoint,
-				ServiceAdapter::Event::Id eventId) {
-		if (localCheckpoint < remoteCheckpoint) {
-			localCheckpoint = remoteCheckpoint;
-			GenerateEvent(eventId);
-		} else if (localCheckpoint != remoteCheckpoint && remoteCheckpoint == 0) {
-			localCheckpoint = remoteCheckpoint;
-		}
-	}
-
 	void CheckState(const texs__ServiceState &state) {
 		CheckCheckpointState(
 			m_isStarted,
@@ -989,8 +976,8 @@ private:
 	boost::shared_ptr<void> m_stateCheckingStopEvent;
 	boost::shared_ptr<void> m_stateCheckingUpdateEvent;
 
-	time_t m_errorCount;
-	time_t m_warningCount;
+	long m_errorCount;
+	long m_warningCount;
 	long m_rulesModifyRev;
 	long m_licenseKeyRev;
 	bool m_isStarted;
@@ -1034,14 +1021,14 @@ ServiceAdapter::ServiceAdapter(const wxString &endpoint)
 ServiceAdapter::ServiceAdapter(
 			wxEvtHandler &statusEventListener,
 			const wxString &endpoint,
-			time_t lastKnownErrorTime,
-			time_t lastKnownWarnTime)
+			long lastKnownErrorCount,
+			long lastKnownWarnCount)
 		: m_pimpl(
 			new Implementation(
 				statusEventListener,
 				endpoint,
-				lastKnownErrorTime,
-				lastKnownWarnTime)) {
+				lastKnownErrorCount,
+				lastKnownWarnCount)) {
 	//...//
 }
 
@@ -1139,27 +1126,27 @@ bool ServiceAdapter::Migrate() {
 	}
 }
 
-time_t ServiceAdapter::GetLastKnownErrorTime() const {
+long ServiceAdapter::GetLastKnownErrorCount() const {
 	try {
-		return m_pimpl->GetLastKnownErrorTime();
+		return m_pimpl->GetLastKnownErrorCount();
 	} catch (const LocalException &ex) {
 		wxLogError(ex.GetWhat());
 		return 0;
 	}
 }
 
-time_t ServiceAdapter::GetLastKnownWarnTime() const {
+long ServiceAdapter::GetLastKnownWarnCount() const {
 	try {
-		return m_pimpl->GetLastKnownWarnTime();
+		return m_pimpl->GetLastKnownWarnCount();
 	} catch (const LocalException &ex) {
 		wxLogError(ex.GetWhat());
 		return 0;
 	}
 }
 
-time_t ServiceAdapter::GetLastLicenseKeyModificatiomTime() const {
+long ServiceAdapter::GetLastLicenseKeyRevision() const {
 	try {
-		return m_pimpl->GetLastLicenseKeyModificatiomTime();
+		return m_pimpl->GetLastLicenseKeyRevision();
 	} catch (const LocalException &ex) {
 		wxLogError(ex.GetWhat());
 		return 0;

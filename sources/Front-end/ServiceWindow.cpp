@@ -76,12 +76,12 @@ END_EVENT_TABLE()
 struct ServiceWindow::Licenses {
 
 	explicit Licenses(ServiceAdapter &service)
-			: licenseKeyModificationTime(0),
-			ruleSet(LicenseState(service, licenseKeyModificationTime)) {
+			: licenseKeyRev(0),
+			ruleSet(LicenseState(service, licenseKeyRev)) {
 		//...//
 	}
 
-	time_t licenseKeyModificationTime;
+	long licenseKeyRev;
 
 	Licensing::RuleSetLicense ruleSet;
 
@@ -158,14 +158,14 @@ void ServiceWindow::SaveServiceState(const ServiceAdapter &service) throw() {
 	try {
 		wxGetApp().GetConfig().Write(
 			wxT("/LastKnownLogError"),
-			long(service.GetLastKnownErrorTime()));
+			service.GetLastKnownErrorCount());
 	} catch (...) {
 		//...//
 	}
 	try {
 		wxGetApp().GetConfig().Write(
 			wxT("/LastKnownLogWarn"),
-			long(service.GetLastKnownWarnTime()));
+			service.GetLastKnownWarnCount());
 	} catch (...) {
 		//...//
 	}

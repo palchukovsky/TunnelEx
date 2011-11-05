@@ -21,21 +21,21 @@
 struct LicenseState {
 
 	//! Gets license key from local DB only if it changed.
-	explicit LicenseState(ServiceAdapter &service, time_t &licenseKeyModificationTime)
+	explicit LicenseState(ServiceAdapter &service, long &licenseKeyRev)
 			: service(&service),
-			licenseKeyModificationTime(&licenseKeyModificationTime) {
+			licenseKeyRev(&licenseKeyRev) {
 		//...//
 	}
 
 	//! Always gets license key from local DB.
 	explicit LicenseState(ServiceAdapter &service)
 			: service(&service),
-			licenseKeyModificationTime(0) {
+			licenseKeyRev(0) {
 		//...//
 	}
 
 	ServiceAdapter *service;
-	time_t *licenseKeyModificationTime;
+	long *licenseKeyRev;
 
 	template<class License>
 	static wxString GetAsString(
@@ -335,15 +335,14 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool IsLicenseKeyChanged(const boost::any &clientParam) {
 			const LicenseState state = boost::any_cast<LicenseState>(clientParam);
 			return
-				!state.licenseKeyModificationTime
-				|| *state.licenseKeyModificationTime != state.service->GetLastLicenseKeyModificatiomTime();
+				!state.licenseKeyRev
+				|| *state.licenseKeyRev != state.service->GetLastLicenseKeyRevision();
 		}
 
 		inline static void ResetLicenseKeyUpdateState(const boost::any &clientParam) {
 			const LicenseState state = boost::any_cast<LicenseState>(clientParam);
-			if (state.licenseKeyModificationTime) {
-				*state.licenseKeyModificationTime
-					= state.service->GetLastLicenseKeyModificatiomTime();
+			if (state.licenseKeyRev) {
+				*state.licenseKeyRev = state.service->GetLastLicenseKeyRevision();
 			}
 		}
 

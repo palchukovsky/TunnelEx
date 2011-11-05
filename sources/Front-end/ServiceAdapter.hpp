@@ -65,8 +65,8 @@ public:
 	explicit ServiceAdapter(
 			wxEvtHandler &statusEventListener,
 			const wxString &endpoint,
-			time_t lastKnownErrorTime,
-			time_t lastKnownWarnTime);
+			long lastKnownErrorCount,
+			long lastKnownWarnCount);
 	
 	~ServiceAdapter() throw();
 
@@ -105,10 +105,10 @@ public:
 
 	const wxString & GetEndpoint() const;
 
-	time_t GetLastKnownErrorTime() const;
-	time_t GetLastKnownWarnTime() const;
+	long GetLastKnownErrorCount() const;
+	long GetLastKnownWarnCount() const;
 	
-	time_t GetLastLicenseKeyModificatiomTime() const;
+	long GetLastLicenseKeyRevision() const;
 	
 	unsigned long long GetLogSize() const;
 
