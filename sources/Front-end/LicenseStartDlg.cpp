@@ -31,7 +31,7 @@ LicenseStartDlg::LicenseStartDlg(
 			 id,
 			 wxT("Welcome to ") TUNNELEX_NAME_W,
 			 wxDefaultPosition,
-			 wxSize(340, 140),
+			 wxSize(340, 165),
 			 wxCAPTION | wxCLOSE_BOX | wxSYSTEM_MENU),
 		 m_service(service) {
 	CreateControls();
@@ -99,9 +99,17 @@ void LicenseStartDlg::CreateControls() {
 		new wxButton(this, CTRL_ORDER, wxT("Purchase online")),
 		wxSizerFlags(0).Expand());
 	subBox->AddSpacer(theme.GetDlgBorder() / 2);
+	
 	subBox->Add(
 		new wxButton(this, CTRL_REQUEST_TRIAL, wxT("Get a Free Trial")),
 		wxSizerFlags(0).Expand());
+	{
+		auto &trialRequestButton = *FindWindow(CTRL_REQUEST_TRIAL);
+		wxSize size = trialRequestButton.GetSize();
+		size.SetHeight(size.GetHeight() * 2);
+		trialRequestButton.SetMinSize(size);
+	}
+
 	subBox->AddStretchSpacer(1);
 	subBox->Add(
 		new wxButton(this, wxID_CANCEL, wxT("Close")),

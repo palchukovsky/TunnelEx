@@ -76,12 +76,12 @@ END_EVENT_TABLE()
 struct ServiceWindow::Licenses {
 
 	explicit Licenses(ServiceAdapter &service)
-			: licenseKeyModificationTime(0),
-			ruleSet(LicenseState(service, licenseKeyModificationTime)) {
+			: licenseKeyRev(0),
+			ruleSet(LicenseState(service, licenseKeyRev)) {
 		//...//
 	}
 
-	time_t licenseKeyModificationTime;
+	long licenseKeyRev;
 
 	Licensing::RuleSetLicense ruleSet;
 
@@ -158,14 +158,14 @@ void ServiceWindow::SaveServiceState(const ServiceAdapter &service) throw() {
 	try {
 		wxGetApp().GetConfig().Write(
 			wxT("/LastKnownLogError"),
-			long(service.GetLastKnownErrorTime()));
+			service.GetLastKnownErrorCount());
 	} catch (...) {
 		//...//
 	}
 	try {
 		wxGetApp().GetConfig().Write(
 			wxT("/LastKnownLogWarn"),
-			long(service.GetLastKnownWarnTime()));
+			service.GetLastKnownWarnCount());
 	} catch (...) {
 		//...//
 	}
@@ -1469,7 +1469,7 @@ bool ServiceWindow::ActivateTrial() {
 
 	{
 		using namespace Licensing;
-		std::auto_ptr<ExeLicense> license(new ExeLicense(LicenseState(GetService())));
+		std::unique_ptr<ExeLicense> license(new ExeLicense(LicenseState(GetService())));
 		if (	!license->IsFeatureAvailable(true)
 				&& license->IsTrial()
 				&& license->GetUnactivityReason() == UR_TIME) {
@@ -1477,7 +1477,6 @@ bool ServiceWindow::ActivateTrial() {
 			ss << L"Time use of your free trial has come to an end";
 			const boost::optional<pt::ptime> timeToLimit
 				= license->GetLimitationTimeTo();
-			license.reset();
 			if (timeToLimit) {
 				ss << L" on ";
 				std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%B, %d %Y"));

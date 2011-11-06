@@ -88,9 +88,9 @@ namespace {
 					% DebugLockStat::proactor
 					% DebugLockStat::recursive
 					% failesPercent;
-				if (failesPercent > 5) {
+				if (failesPercent > 5 && DebugLockStat::locks > 1000) {
 					Log::GetInstance().AppendError(stat.str());
-				} else if (failesPercent > 2.5) {
+				} else if (failesPercent > 2.5 && DebugLockStat::locks > 1000) {
 					Log::GetInstance().AppendWarn(stat.str());
 				} else {
 					Log::GetInstance().AppendInfo(stat.str());
@@ -163,10 +163,12 @@ public:
 			m_idleTimeoutTimer(-1),
 			m_delTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
-		Log::GetInstance().AppendDebug(
-			"New connection object %1% created. Active objects: %2%.",
-			m_instanceId,
-			m_instancesNumber);
+#		ifdef DEV_VER
+			Log::GetInstance().AppendDebug(
+				"New connection object %1% created. Active objects: %2%.",
+				m_instanceId,
+				m_instancesNumber);
+#		endif
 	}
 	
 private:
@@ -180,10 +182,12 @@ private:
 		//! @todo: fix (currently don't know when buffer deletion is secure)
 		// m_buffer->DeleteBuffer(m_allocators);
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
-		Log::GetInstance().AppendDebug(
-			"Connection object %1% deleted. Active objects: %2%.",
-			m_instanceId,
-			m_instancesNumber);
+#		ifdef DEV_VER
+			Log::GetInstance().AppendDebug(
+				"Connection object %1% deleted. Active objects: %2%.",
+				m_instanceId,
+				m_instancesNumber);
+#		endif
 	}
 
 public:
@@ -481,7 +485,6 @@ public:
 
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
-		AssertNotLockedByMyThread(m_mutex);
 		Lock lock(m_mutex, false);
 		assert(IsOpened());
 		assert(m_writeStream.get());
@@ -537,14 +540,14 @@ public:
 	}
 
 	void OnSetupSuccess() {
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		CompleteSetup(true);
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
 		m_signal->OnConnectionSetupCompleted(m_instanceId);
 	}
 
 	void OnSetupFail(const WString &failReason) {
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		CompleteSetup(false);
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
@@ -557,7 +560,6 @@ public:
 
 	void StartRead() {
 		assert(!m_isReadingInitiated);
-		AssertNotLocked(m_mutex);
 		Lock lock(m_mutex, false);
 		m_isReadingInitiated = true;
 		if (!InitReadIfPossible()) {
@@ -701,8 +703,8 @@ private:
 		assert(!m_closeAtLastMessageBlock);
 
 		// if no will be returned in this "if" - connection will be closed
-		if (!result.success()) {
-			ReportReadError(result);
+		if (!result.success() && ReportReadError(result)) {
+			Log::GetInstance().AppendDebug("Closing connection...");
 		} else if (result.bytes_transferred() == 0) {
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
@@ -732,37 +734,39 @@ private:
 	}
 
 	template<typename Result>
-	void ReportReadError(const Result &result) const {
+	bool ReportReadError(const Result &result) const {
 		
 		const Error error(result.error());
 		
 		switch (error.GetErrorNo()) {
-			
+			case ERROR_MORE_DATA: // see TEX-685
+				return false;
 			case ERROR_NETNAME_DELETED: // see TEX-553
 			case ERROR_BROKEN_PIPE: // see TEX-338
+			case ERROR_PIPE_NOT_CONNECTED:
 				Log::GetInstance().AppendDebug(
-					"Read operation has been canceled for connection %1%, closing connection... ",
+					"Read operation has been canceled for connection %1%.",
 					m_instanceId);
-				break;
-			
+				return true;
 			case ERROR_OPERATION_ABORTED:
 				// don't tall about it anything - proactor just removed
 				// message blocks for canceled operations.
-				break;
-		
+				return true;
 			default:
-				if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
-					Format message(
-						"Connection %3% read operation completes with error:"
-							" %1% (%2%), closing connection...");
-					message
-						% ConvertString<String>(error.GetString()).GetCStr()
-						% error.GetErrorNo()
-						% m_instanceId;
-					Log::GetInstance().AppendSystemError(message.str().c_str());
-				}
 				break;
 		}
+
+		if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
+			Format message(
+				"Connection %3% read operation completes with error: %1% (%2%).");
+			message
+				% ConvertString<String>(error.GetString()).GetCStr()
+				% error.GetErrorNo()
+				% m_instanceId;
+			Log::GetInstance().AppendSystemError(message.str().c_str());
+		}
+		
+		return true;
 	
 	}
 	
@@ -846,13 +850,14 @@ private:
 					% error.GetString().GetCStr()
 					% error.GetErrorNo()
 					% m_instanceId;
-				if (error.GetErrorNo() == ERROR_NETNAME_DELETED) {
-					// see TEX-553
-					Log::GetInstance().AppendDebug(message.str().c_str());
-					messageBlock.Reset();
-					return false;
-				} else {
-					throw ConnectionException(message.str().c_str());
+				switch (error.GetErrorNo()) {
+					case ERROR_NETNAME_DELETED: // see TEX-553
+					case ERROR_BROKEN_PIPE:
+						Log::GetInstance().AppendDebug(message.str().c_str());
+						messageBlock.Reset();
+						return false;
+					default:
+						throw ConnectionException(message.str().c_str());
 				}
 			}
 			messageBlock.Release();
@@ -883,7 +888,7 @@ private:
 	}
 
 	void CompleteSetup(bool setupCompletedWithSuccess) {
-		AssertNotLocked(m_mutex);
+		AssertNotLockedOrLockedByMyThread(m_mutex);
 		m_isSetupCompleted = true;
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!

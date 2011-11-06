@@ -8,31 +8,36 @@
  **************************************************************************/
 
 #include "Prec.h"
-#include "Core/Log.hpp"
 
-namespace boost {
+#ifdef DEV_VER
 
-	void assertion_failed(
-			char const *expr,
-			char const *function,
-			char const *file,
-			long line) {
+#	include "Core/Log.hpp"
 
-		std::ostringstream oss;
-		oss
-			<< "Assertion failed: \"" << expr << "\""
-			<< " in function \"" << function << "\""
-			<< " (file " << file << ":" << line << ")";
-		TunnelEx::Log::GetInstance().AppendFatalError(oss.str());
+	namespace boost {
 
-#		ifdef _DEBUG
-			_wassert(L"Execution stopped", _CRT_WIDE(__FILE__), __LINE__);
-#		elif defined(_TEST)
-			DebugBreak();
-#		else
-#			error "Failed to find assert-break method."
-#		endif
+		void assertion_failed(
+				char const *expr,
+				char const *function,
+				char const *file,
+				long line) {
+
+			std::ostringstream oss;
+			oss
+				<< "Assertion failed: \"" << expr << "\""
+				<< " in function \"" << function << "\""
+				<< " (file " << file << ":" << line << ")";
+			TunnelEx::Log::GetInstance().AppendFatalError(oss.str());
+
+#			ifdef _DEBUG
+				_wassert(L"Execution stopped", _CRT_WIDE(__FILE__), __LINE__);
+#			elif defined(_TEST)
+				DebugBreak();
+#			else
+#				error "Failed to find assert-break method."
+#			endif
 		
+		}
+
 	}
 
-}
+#endif
