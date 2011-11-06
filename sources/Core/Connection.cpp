@@ -703,8 +703,8 @@ private:
 		assert(!m_closeAtLastMessageBlock);
 
 		// if no will be returned in this "if" - connection will be closed
-		if (!result.success()) {
-			ReportReadError(result);
+		if (!result.success() && ReportReadError(result)) {
+			Log::GetInstance().AppendDebug("Closing connection...");
 		} else if (result.bytes_transferred() == 0) {
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
@@ -734,37 +734,39 @@ private:
 	}
 
 	template<typename Result>
-	void ReportReadError(const Result &result) const {
+	bool ReportReadError(const Result &result) const {
 		
 		const Error error(result.error());
 		
 		switch (error.GetErrorNo()) {
-			
+			case ERROR_MORE_DATA: // see TEX-685
+				return false;
 			case ERROR_NETNAME_DELETED: // see TEX-553
 			case ERROR_BROKEN_PIPE: // see TEX-338
+			case ERROR_PIPE_NOT_CONNECTED:
 				Log::GetInstance().AppendDebug(
-					"Read operation has been canceled for connection %1%, closing connection... ",
+					"Read operation has been canceled for connection %1%.",
 					m_instanceId);
-				break;
-			
+				return true;
 			case ERROR_OPERATION_ABORTED:
 				// don't tall about it anything - proactor just removed
 				// message blocks for canceled operations.
-				break;
-		
+				return true;
 			default:
-				if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
-					Format message(
-						"Connection %3% read operation completes with error:"
-							" %1% (%2%), closing connection...");
-					message
-						% ConvertString<String>(error.GetString()).GetCStr()
-						% error.GetErrorNo()
-						% m_instanceId;
-					Log::GetInstance().AppendSystemError(message.str().c_str());
-				}
 				break;
 		}
+
+		if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
+			Format message(
+				"Connection %3% read operation completes with error: %1% (%2%).");
+			message
+				% ConvertString<String>(error.GetString()).GetCStr()
+				% error.GetErrorNo()
+				% m_instanceId;
+			Log::GetInstance().AppendSystemError(message.str().c_str());
+		}
+		
+		return true;
 	
 	}
 	
@@ -848,13 +850,14 @@ private:
 					% error.GetString().GetCStr()
 					% error.GetErrorNo()
 					% m_instanceId;
-				if (error.GetErrorNo() == ERROR_NETNAME_DELETED) {
-					// see TEX-553
-					Log::GetInstance().AppendDebug(message.str().c_str());
-					messageBlock.Reset();
-					return false;
-				} else {
-					throw ConnectionException(message.str().c_str());
+				switch (error.GetErrorNo()) {
+					case ERROR_NETNAME_DELETED: // see TEX-553
+					case ERROR_BROKEN_PIPE:
+						Log::GetInstance().AppendDebug(message.str().c_str());
+						messageBlock.Reset();
+						return false;
+					default:
+						throw ConnectionException(message.str().c_str());
 				}
 			}
 			messageBlock.Release();
