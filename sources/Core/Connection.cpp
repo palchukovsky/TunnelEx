@@ -485,7 +485,6 @@ public:
 
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
-		AssertNotLockedByMyThread(m_mutex);
 		Lock lock(m_mutex, false);
 		assert(IsOpened());
 		assert(m_writeStream.get());
@@ -561,7 +560,6 @@ public:
 
 	void StartRead() {
 		assert(!m_isReadingInitiated);
-		AssertNotLockedOrLockedByMyThread(m_mutex);
 		Lock lock(m_mutex, false);
 		m_isReadingInitiated = true;
 		if (!InitReadIfPossible()) {
