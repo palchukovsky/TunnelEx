@@ -994,13 +994,18 @@ private:
 		{
 			ActiveTunnelByRule &index = m_activeTunnels.get<ByRule>();
 			if (index.find(rule.GetUuid()) != index.end()) {
-				ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
-				const ActiveTunnelByRule::const_iterator pos
-					= index.find(rule.GetUuid());
-				if (pos != index.end()) {
-					//! @todo: FIXME move closing to thread
-					pos->tunnel->MarkAsDead();
-					index.erase(pos);
+				boost::shared_ptr<Tunnel> tunnel;
+				{
+					ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
+					const ActiveTunnelByRule::const_iterator pos
+						= index.find(rule.GetUuid());
+					if (pos != index.end()) {
+						tunnel = pos->tunnel;
+						index.erase(pos);
+					}
+				}
+				if (tunnel) {
+					tunnel->MarkAsDead();
 				}
 			}
 		}
