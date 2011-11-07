@@ -48,6 +48,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
 				: Acceptor(ruleEndpoint, ruleEndpointAddress),
 				m_socket(new ACE_SOCK_Dgram, &AceSockDgramCloser),
+				m_dataConnectionIncomingBuffer(new std::vector<char>),
 				m_dataConnection(0) {
 
 			const ACE_INET_Addr &inetAddr = address.GetAceInetAddr();
@@ -96,12 +97,17 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			DataConnectionWriteLock lock(m_dataConnectionMutex);
 			assert(m_dataConnection == 0);
 
-			std::vector<char> incomingData;
 			ACE_INET_Addr senderAddr;
-			if (!ReadFromIncomingStream(incomingData, senderAddr)) {
+			if (!ReadFromIncomingStream(senderAddr)) {
 				throw ConnectionOpeningException(
 					L"An existing connection was forcibly closed by the remote host");
 			}
+
+			std::auto_ptr<std::vector<char>> newIncomingDataBuffer(new std::vector<char>);
+			newIncomingDataBuffer->reserve(m_dataConnectionIncomingBuffer->capacity());
+			
+			std::auto_ptr<std::vector<char>> incomingData(m_dataConnectionIncomingBuffer);
+			m_dataConnectionIncomingBuffer = newIncomingDataBuffer;
 
 			AutoPtr<Connection> result(
 				new Connection(
@@ -128,11 +134,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				return false;
 			}
 
-			std::vector<char> incomingData;
 			ACE_INET_Addr senderAddr;
-			if (ReadFromIncomingStream(incomingData, senderAddr)) {
+			if (ReadFromIncomingStream(senderAddr)) {
 				m_dataConnection->SetRemoteAddress(senderAddr);
-				m_dataConnection->SendToTunnel(&incomingData[0], incomingData.size());
+				m_dataConnection->SendToTunnel(
+					&(*m_dataConnectionIncomingBuffer)[0],
+					m_dataConnectionIncomingBuffer->size());
 			}
 
 			return true;
@@ -152,7 +159,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		bool ReadFromIncomingStream(std::vector<char> &data, ACE_INET_Addr &senderAddr) {
+		bool ReadFromIncomingStream(ACE_INET_Addr &senderAddr) {
+			assert(m_dataConnectionIncomingBuffer.get());
 			int dataLen;
 			if (	ACE_OS::ioctl(m_socket->get_handle(), FIONREAD, &dataLen) == -1
 					|| dataLen <= 0) {
@@ -161,7 +169,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				exception % error.GetString().GetCStr() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
-			const ssize_t readResult = m_socket->recv(&data[0], data.size(), senderAddr);
+			m_dataConnectionIncomingBuffer->resize(dataLen);
+			const ssize_t readResult = m_socket->recv(
+				&(*m_dataConnectionIncomingBuffer)[0],
+				m_dataConnectionIncomingBuffer->size(),
+				senderAddr);
 			if (readResult == -1) {
 				const Error error(errno);
 				if (error.GetErrorNo() == ECONNRESET) {
@@ -179,6 +191,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		boost::shared_ptr<Stream> m_socket;
 
 		DataConnectionMutex m_dataConnectionMutex;
+		std::auto_ptr<std::vector<char>> m_dataConnectionIncomingBuffer;
 		Connection *m_dataConnection;
 
 	};

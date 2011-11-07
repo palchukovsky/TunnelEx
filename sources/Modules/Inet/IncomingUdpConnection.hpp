@@ -49,8 +49,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const ACE_INET_Addr &address,
 					const TunnelEx::RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress,
-					boost::shared_ptr<Stream> socket,
-					const std::vector<char> &incomingData,
+					boost::shared_ptr<Stream> &socket,
+					std::auto_ptr<std::vector<char>> &incomingData,
 					Acceptor *const acceptor)
 				: UdpConnection(ruleEndpoint, ruleEndpointAddress),
 				m_remoteAddress(address),
@@ -95,12 +95,13 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	protected:
 
 		virtual void Setup() {
-			assert(m_incomingData.size() > 0);
+			assert(m_incomingData.get());
+			assert(!m_incomingData->empty());
 			StartReadRemote();
-			SendToTunnel(&m_incomingData[0], m_incomingData.size());
+			SendToTunnel(&(*m_incomingData)[0], m_incomingData->size());
 			StopReadRemote();
 			Base::Setup();
-			std::vector<char>().swap(m_incomingData);
+			m_incomingData.reset();
 		}
 
 		virtual TunnelEx::IoHandleInfo GetIoHandle() {
@@ -147,7 +148,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		SendMutex m_sendMutex;
 		ACE_INET_Addr m_remoteAddress;
 		boost::shared_ptr<Stream> m_socket;
-		std::vector<char> m_incomingData;
+		std::auto_ptr<std::vector<char>> m_incomingData;
 		AcceptorMutex m_acceptorMutex;
 		Acceptor *m_acceptor;
 

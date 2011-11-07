@@ -155,7 +155,7 @@ public:
 			m_isSetupCompleted(false),
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(0),
-			m_dataBlockSize(1024), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
+			m_dataBlockSize(10240), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
 			m_messageBlockQueueBufferSize((1024 * 1024) / m_dataBlockSize), // 1 Mb
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(0),
@@ -456,10 +456,8 @@ public:
 
 	void ResetIdleTimeout(TimeSeconds seconds) {
 		
-		// Private in Connection. Called only from proactor thread so
-		// no locking needed (already under lock).
-		AssertLockedByMyThread(m_mutex);
-		assert(IsOpened());
+		AssertNotLockedOrLockedByMyThread(m_mutex);
+		Lock lock(m_mutex, false);
 		
 		if (seconds > 0) {
 			Log::GetInstance().AppendDebug(
@@ -868,7 +866,6 @@ private:
 	}
 
 	void UpdateIdleTimer() {
-		assert(IsOpened());
 		if (m_idleTimeoutTimer != -1) {
 			assert(m_proactor);
 			m_proactor->cancel_timer(m_idleTimeoutTimer);
