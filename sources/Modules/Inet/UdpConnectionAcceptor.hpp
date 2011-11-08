@@ -46,7 +46,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const InetEndpointAddress &address,
 					const TunnelEx::RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
-				: Acceptor(ruleEndpoint, ruleEndpointAddress),
+				: Base(ruleEndpoint, ruleEndpointAddress),
 				m_socket(new ACE_SOCK_Dgram, &AceSockDgramCloser),
 				m_dataConnectionIncomingBuffer(new std::vector<char>),
 				m_dataConnection(0) {

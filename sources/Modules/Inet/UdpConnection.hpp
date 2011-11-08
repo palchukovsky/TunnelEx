@@ -21,14 +21,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	public:
 
 		typedef StreamT Stream;
-		typedef InetConnection<TcpEndpointAddress> Base;
+		typedef InetConnection<UdpEndpointAddress> Base;
 
 	protected:
 
 		explicit UdpConnection(
 					const RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
-				: InetConnection(ruleEndpoint, ruleEndpointAddress) {
+				: Base(ruleEndpoint, ruleEndpointAddress) {
 			//...//
 		}
 
