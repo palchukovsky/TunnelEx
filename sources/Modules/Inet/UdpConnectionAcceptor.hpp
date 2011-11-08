@@ -49,7 +49,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				: Acceptor(ruleEndpoint, ruleEndpointAddress),
 				m_socket(new ACE_SOCK_Dgram, &AceSockDgramCloser),
 				m_dataConnectionIncomingBuffer(new std::vector<char>),
-				m_dataConnection(0) {
+				m_isDataConnectionActive(false) {
 
 			const ACE_INET_Addr &inetAddr = address.GetAceInetAddr();
 			if (inetAddr.is_any() && inetAddr.get_port_number() == 0) {
@@ -69,9 +69,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 
 		virtual ~UdpConnectionAcceptor() throw() {
-			if (m_dataConnection != 0) {
+			if (m_isDataConnectionActive) {
 				DataConnectionWriteLock lock(m_dataConnectionMutex);
-				if (m_dataConnection != 0) {
+				if (TunnelEx::Interlocked::CompareExchange(m_isDataConnectionActive, 0, 1)) {
 					m_dataConnection->NotifyAcceptorClose(*this);
 				}
 			}
@@ -80,10 +80,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	public:
 
 		void NotifyConnectionClose(const Connection &connection) {
-			ACE_UNUSED_ARG(connection);
+			UseUnused(connection);
 			DataConnectionWriteLock lock(m_dataConnectionMutex);
 			assert(&connection == m_dataConnection);
-			m_dataConnection = 0;
+			verify(TunnelEx::Interlocked::CompareExchange(m_isDataConnectionActive, 0, 1));
 		}
 
 	public:
@@ -95,7 +95,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual AutoPtr<TunnelEx::Connection> Accept() {
 
 			DataConnectionWriteLock lock(m_dataConnectionMutex);
-			assert(m_dataConnection == 0);
+			assert(!m_isDataConnectionActive);
 
 			ACE_INET_Addr senderAddr;
 			if (!ReadFromIncomingStream(senderAddr)) {
@@ -118,6 +118,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					incomingData,
 					this));
 			m_dataConnection = result.Get();
+			verify(!TunnelEx::Interlocked::CompareExchange(m_isDataConnectionActive, 1, 0));
 			
 			return result;
 
@@ -126,11 +127,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual bool TryToAttach() {
 
-			if (!m_dataConnection) {
+			if (!m_isDataConnectionActive) {
 				return false;
 			}
 			DataConnectionReadLock lock(m_dataConnectionMutex);
-			if (!m_dataConnection) {
+			if (!m_isDataConnectionActive) {
 				return false;
 			}
 
@@ -192,6 +193,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		DataConnectionMutex m_dataConnectionMutex;
 		std::auto_ptr<std::vector<char>> m_dataConnectionIncomingBuffer;
+		volatile long m_isDataConnectionActive;
 		Connection *m_dataConnection;
 
 	};
