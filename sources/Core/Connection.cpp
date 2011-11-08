@@ -338,7 +338,7 @@ public:
 			boost::function<int(ACE_Message_Block &, size_t)> readStreamFunc;
 			boost::function<int(ACE_Message_Block &, size_t)> writeStreamFunc;
 			
-			if (ioHandleInfo.handle != 0) {
+			if (ioHandleInfo.handle != INVALID_HANDLE_VALUE) {
 				switch (ioHandleInfo.type) {
 					default:
 						assert(false);
@@ -569,9 +569,9 @@ public:
 	}
 
 	void StopRead() {
-		AssertLockedByMyThread(m_mutex); // Protected in Connection
+		Lock lock(m_mutex, false);
 		assert(m_isReadingInitiated);
-		m_isReadingInitiated = false;
+		m_isReadingInitiated = false; // interlocked?
 	}
 
 	const RuleEndpoint & GetRuleEndpoint() const {
@@ -583,7 +583,7 @@ public:
 	}
 
 	void SendToTunnel(MessageBlock &messageBlock) {
-		AssertLockedByMyThread(m_mutex);
+		Lock lock(m_mutex, false);
 		if (messageBlock.GetUnreadedDataSize() == 0) {
 			return;
 		}
@@ -831,8 +831,7 @@ private:
 		}
 
 		// read init
-		{
-			assert(m_readStream.get());
+		if (m_readStream.get()) { // ex UDP
 			UniqueMessageBlockHolder messageBlock(
 				UniqueMessageBlockHolder::CreateMessageBlockForTunnel(
 					m_dataBlockSize,
