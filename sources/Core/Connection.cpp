@@ -155,7 +155,7 @@ public:
 			m_isSetupCompleted(false),
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(0),
-			m_dataBlockSize(10240), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
+			m_dataBlockSize(1480), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
 			m_messageBlockQueueBufferSize((1024 * 1024) / m_dataBlockSize), // 1 Mb
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(0),
@@ -456,7 +456,6 @@ public:
 
 	void ResetIdleTimeout(TimeSeconds seconds) {
 		
-		AssertNotLockedOrLockedByMyThread(m_mutex);
 		Lock lock(m_mutex, false);
 		
 		if (seconds > 0) {
