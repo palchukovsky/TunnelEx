@@ -29,17 +29,16 @@ bool Error::IsError() const {
 bool Error::CheckError() const {
 #	ifdef BOOST_WINDOWS
 		LPVOID buffer;
-		DWORD bufferSize = ::FormatMessageW(
+		::FormatMessageW(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL,
 			m_errorNo,
-			MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+			0,
 			(LPWSTR)&buffer,
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
-		assert(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
-		return bufferSize;
+		return GetLastError() != ERROR_RESOURCE_LANG_NOT_FOUND;
 #	else
 		// not implemented yet
 		BOOST_STATIC_ASSERT(false);
@@ -49,15 +48,16 @@ bool Error::CheckError() const {
 WString Error::GetString() const {
 #	ifdef BOOST_WINDOWS
 		LPVOID buffer;
-		DWORD bufferSize = ::FormatMessageW(
+		auto bufferSize = ::FormatMessageW(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL,
 			m_errorNo,
-			MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+			0,
 			(LPWSTR)&buffer,
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
+		assert(GetLastError() != ERROR_RESOURCE_LANG_NOT_FOUND);
 		assert(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
 		for (
 				; bufferSize > 0
