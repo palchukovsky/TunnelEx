@@ -110,7 +110,8 @@ namespace {
 				ASSERT_TRUE(SendTestPacket(connection, 128, false, 0.95));
 				if (!(i % 25)) {
 					ASSERT_TRUE(
-						m_server->WaitAndTakeData(connection, testing::clientMagicOk, true));
+						m_server->WaitAndTakeData(connection, testing::clientMagicOk, true))
+							<< " at packet " << i;
 				}
 			}
 
@@ -133,7 +134,8 @@ namespace {
 			for (testing::PacketsNumber i = 0; i < packets; ++i) {
 				ASSERT_TRUE(ReceiveTestPacket(connection, false));
 				if (!(i % 25)) {
-					ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk));
+					ASSERT_NO_THROW(m_server->Send(connection, testing::serverMagicOk))
+						<< " at packet " << i;
 				}
 			}
 
@@ -291,7 +293,7 @@ namespace {
 			}
 			ASSERT_NO_THROW(
 				remoteCrc = m_server->WaitAndTakeData<boost::crc_32_type::value_type>(connection, answers));
-			EXPECT_EQ(realCrc.checksum(), remoteCrc);
+			EXPECT_EQ(realCrc.checksum(), remoteCrc) << " at connection " << connection;
 			result = true;
 		}
 

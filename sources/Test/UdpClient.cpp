@@ -172,7 +172,8 @@ namespace {
 		for (testing::PacketsNumber i = 0; i < packets; ++i) {
 			ASSERT_TRUE(ReceiveTestPacket(false));
 			if (!(i % 25)) {
-				ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk));
+				ASSERT_NO_THROW(GetClient().Send(testing::clientMagicOk))
+					<< " at packet " << i;
 			}
 		}
 
@@ -193,7 +194,8 @@ namespace {
 		for (testing::PacketsNumber i = 0; i < packets; ++i) {
 			ASSERT_TRUE(SendTestPacket(128, false, .95));
 			if (!(i % 25)) {
-				ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true));
+				ASSERT_TRUE(GetClient().WaitAndTakeData(testing::serverMagicOk, true))
+					<< " at packet  " << i;
 			}
 		}
 
