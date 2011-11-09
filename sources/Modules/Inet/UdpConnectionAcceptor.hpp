@@ -184,6 +184,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				exception % error.GetString().GetCStr() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
+			assert(size_t(readResult) <= m_dataConnectionIncomingBuffer->size());
+			m_dataConnectionIncomingBuffer->resize(readResult);
 			return true;
 		}
 
