@@ -32,6 +32,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			//...//
 		}
 
+		explicit UdpConnection(
+					const RuleEndpoint &ruleEndpoint,
+					SharedPtr<const EndpointAddress> ruleEndpointAddress,
+					TimeSeconds idleTimeoutSeconds)
+				: Base(ruleEndpoint, ruleEndpointAddress, idleTimeoutSeconds) {
+			//...//
+		}
+
 		virtual ~UdpConnection() throw() {
 			//...//
 		}

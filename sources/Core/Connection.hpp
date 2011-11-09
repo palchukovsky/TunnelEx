@@ -47,6 +47,14 @@ namespace TunnelEx {
 		explicit Connection(
 				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
 				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> &ruleEndpointAddress);
+		//! C-tor with idle timeout set.
+		/** If idle more then @idleTimeoutSeconds Connection::OnTimeout will be called.
+		  * @sa OnTimeout
+		  */
+		explicit Connection(
+				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
+				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> &ruleEndpointAddress,
+				TimeSeconds idleTimeoutSeconds);
 		//! D-tor.
 		virtual ~Connection() throw();
 
@@ -204,13 +212,6 @@ namespace TunnelEx {
 		  * @throw TunnelEx::LogicalException 
 		  */
 		void WriteDirectly(const char *data, size_t size);
-
-		//! Sets the connection idle time out.
-		/** If idle more then @seconds Connection::OnTimeout will be called.
-		  * Zero value disables timeout (default).
-		  * @sa OnTimeout
-		  */
-		void ResetIdleTimeout(TimeSeconds seconds);
 
 	private:
 

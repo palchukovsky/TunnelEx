@@ -27,7 +27,8 @@
 #endif
 
 using namespace TunnelEx;
-
+using namespace TunnelEx::Helpers::Asserts;
+	
 //////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -88,9 +89,9 @@ namespace {
 					% DebugLockStat::proactor
 					% DebugLockStat::recursive
 					% failesPercent;
-				if (failesPercent > 5 && DebugLockStat::locks > 1000) {
+				if (failesPercent > 0.1 && DebugLockStat::locks > 1000) {
 					Log::GetInstance().AppendError(stat.str());
-				} else if (failesPercent > 2.5 && DebugLockStat::locks > 1000) {
+				} else if (failesPercent > 0.05 && DebugLockStat::locks > 1000) {
 					Log::GetInstance().AppendWarn(stat.str());
 				} else {
 					Log::GetInstance().AppendInfo(stat.str());
@@ -143,7 +144,8 @@ public:
 	explicit Implementation(
 				Connection &myInteface,
 				const RuleEndpoint &ruleEndpoint,
-				SharedPtr<const EndpointAddress> &ruleEndpointAddress)
+				SharedPtr<const EndpointAddress> &ruleEndpointAddress,
+				TimeSeconds idleTimeoutSeconds = 0)
 			: m_myInterface(myInteface),
 			m_instanceId(m_myInterface.GetInstanceId()),
 			m_refsCount(1),
@@ -160,6 +162,7 @@ public:
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(0),
 			m_sendQueueSize(0),
+			m_idleTimeoutInterval(idleTimeoutSeconds, 0),
 			m_idleTimeoutTimer(-1),
 			m_delTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
@@ -454,32 +457,6 @@ public:
 		
 	}
 
-	void ResetIdleTimeout(TimeSeconds seconds) {
-		
-		Lock lock(m_mutex, false);
-		
-		if (seconds > 0) {
-			Log::GetInstance().AppendDebug(
-				"Setting idle timeout %1% seconds for connection %2%...",
-				seconds,
-				m_instanceId);
-		} else {
-			Log::GetInstance().AppendDebug(
-				"Disabling idle timeout for connection %1%...",
-				m_instanceId);
-		}
-	
-		ACE_Time_Value oldInterval(m_idleTimeoutInterval);
-		m_idleTimeoutInterval.set(seconds);
-		try {
-			UpdateIdleTimer();
-		} catch (...) {
-			std::swap(oldInterval, m_idleTimeoutInterval);
-			throw;
-		}
-	
-	}
-
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
 		Lock lock(m_mutex, false);
@@ -518,7 +495,7 @@ public:
 
 	void OnMessageBlockSent(const MessageBlock &messageBlock) {
 
-		AssertNotLockedByMyThread(m_mutex);
+		assert(IsNotLockedByMyThread(m_mutex));
 
 		if (!messageBlock.IsTunnelMessage()) {
 			return;
@@ -537,14 +514,15 @@ public:
 	}
 
 	void OnSetupSuccess() {
-		AssertNotLockedOrLockedByMyThread(m_mutex);
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		CompleteSetup(true);
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
 		m_signal->OnConnectionSetupCompleted(m_instanceId);
+		StartIdleTimer();
 	}
 
 	void OnSetupFail(const WString &failReason) {
-		AssertNotLockedOrLockedByMyThread(m_mutex);
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		CompleteSetup(false);
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
@@ -569,9 +547,11 @@ public:
 	}
 
 	void StopRead() {
-		Lock lock(m_mutex, false);
+		// Protected in Connection. Also see the comment about locking assert in
+		// the SendToTunnel-method.
+		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		assert(m_isReadingInitiated);
-		m_isReadingInitiated = false; // interlocked?
+		m_isReadingInitiated = false;
 	}
 
 	const RuleEndpoint & GetRuleEndpoint() const {
@@ -583,7 +563,10 @@ public:
 	}
 
 	void SendToTunnel(MessageBlock &messageBlock) {
-		Lock lock(m_mutex, false);
+		// It must be locked by "my" thread or in the setup process (locking not
+		// required at setup). Ex.: UDP incoming connection works so: starts read,
+		// sends initial data, stops read, completes setup.
+		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		if (messageBlock.GetUnreadedDataSize() == 0) {
 			return;
 		}
@@ -622,7 +605,7 @@ public:
 
 	virtual void handle_time_out(const ACE_Time_Value &, const void *act = 0) {
 
-		AssertNotLockedByMyThread(m_mutex);
+		assert(IsNotLockedByMyThread(m_mutex));
 
 		switch (reinterpret_cast<int>(act)) {
 			case TIMER_IDLE_TIMEOUT:
@@ -692,7 +675,7 @@ private:
 	template<typename Result>
 	void DoHandleReadStream(const Result &result) {
 
-		AssertNotLockedByMyThread(m_mutex);
+		assert(IsNotLockedByMyThread(m_mutex));
 
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		
@@ -795,7 +778,7 @@ private:
 	  */
 	bool InitReadIfPossible() {
 
-		AssertLockedByMyThread(m_mutex);
+		assert(IsLockedByMyThread(m_mutex));
 
 		// FIXME
 		// Can't explain this situation, try to do it at assert fail.
@@ -864,18 +847,19 @@ private:
 	}
 
 	void UpdateIdleTimer() {
+		assert(m_idleTimeoutTimer == -1 || m_idleTimeoutInterval != ACE_Time_Value::zero);
+		assert(m_proactor);
+		if (m_idleTimeoutInterval == ACE_Time_Value::zero || m_idleTimeoutTimer == -1) {
+			return;
+		}
 		if (m_idleTimeoutTimer != -1) {
-			assert(m_proactor);
 			m_proactor->cancel_timer(m_idleTimeoutTimer);
-			m_idleTimeoutTimer = -1;
 		}
-		if (m_idleTimeoutInterval != ACE_Time_Value::zero && m_isSetupCompleted) {
-			assert(m_proactor);
-			m_idleTimeoutTimer = m_proactor->schedule_timer(
-				*this,
-				reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
-				m_idleTimeoutInterval);
-		}
+		m_idleTimeoutTimer = m_proactor->schedule_timer(
+			*this,
+			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
+			m_idleTimeoutInterval);
+		assert(m_idleTimeoutTimer!= -1);
 	}
 	
 	bool IsOpened() const {
@@ -883,15 +867,26 @@ private:
 	}
 
 	void CompleteSetup(bool setupCompletedWithSuccess) {
-		AssertNotLockedOrLockedByMyThread(m_mutex);
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		m_isSetupCompleted = true;
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
 		assert(m_idleTimeoutTimer == -1);
 		assert(m_delTimer == -1);
-		if (m_isSetupCompletedWithSuccess) {
-			UpdateIdleTimer();
+	}
+
+	void StartIdleTimer() {
+		assert(m_idleTimeoutTimer == -1);
+		assert(m_isSetupCompleted);
+		assert(m_isSetupCompletedWithSuccess);
+		if (m_idleTimeoutInterval == ACE_Time_Value::zero) {
+			return;
 		}
+		Log::GetInstance().AppendDebug(
+			"Setting idle timeout %1% seconds for connection %2%...",
+			m_idleTimeoutInterval.sec(),
+			m_instanceId);
+		UpdateIdleTimer();
 	}
 
 private:
@@ -933,7 +928,7 @@ private:
 	boost::shared_ptr<TunnelBuffer> m_buffer;
 	TunnelBuffer::Allocators m_allocators;
 
-	ACE_Time_Value m_idleTimeoutInterval;
+	const ACE_Time_Value m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
 
 	long m_delTimer;
@@ -950,6 +945,13 @@ Connection::Connection(
 			const RuleEndpoint &ruleLocalEndpoint,
 			SharedPtr<const EndpointAddress> &ruleEndpointAddress) {
 	m_pimpl = new Implementation(*this, ruleLocalEndpoint, ruleEndpointAddress);
+}
+
+Connection::Connection(
+			const RuleEndpoint &ruleLocalEndpoint,
+			SharedPtr<const EndpointAddress> &ruleEndpointAddress,
+			TimeSeconds idleTimeoutSeconds) {
+	m_pimpl = new Implementation(*this, ruleLocalEndpoint, ruleEndpointAddress, idleTimeoutSeconds);
 }
 
 Connection::~Connection() {
@@ -1063,10 +1065,6 @@ bool Connection::IsSetupCompleted() const {
 
 bool Connection::IsSetupFailed() const {
 	return m_pimpl->IsSetupFailed();
-}
-
-void Connection::ResetIdleTimeout(TimeSeconds seconds) {
-	m_pimpl->ResetIdleTimeout(seconds);
 }
 
 bool Connection::OnIdleTimeout() throw() {

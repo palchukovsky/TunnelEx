@@ -52,12 +52,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					boost::shared_ptr<Stream> &socket,
 					std::auto_ptr<std::vector<char>> &incomingData,
 					Acceptor *const acceptor)
-				: UdpConnection(ruleEndpoint, ruleEndpointAddress),
+				: UdpConnection(ruleEndpoint, ruleEndpointAddress, 60), //! @todo: hardcoded idle time
 				m_remoteAddress(address),
 				m_socket(socket),
 				m_incomingData(incomingData),
 				m_acceptor(acceptor) {
-			ResetIdleTimeout(60);
+			//...//
 		}
 
 		virtual ~IncomingUdpConnection() throw() {

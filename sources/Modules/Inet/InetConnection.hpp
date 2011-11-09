@@ -37,6 +37,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				: Connection(ruleEndpoint, ruleEndpointAddress) {
 			//...//
 		}
+
+		explicit InetConnection(
+					const RuleEndpoint &ruleEndpoint,
+					SharedPtr<const EndpointAddress> ruleEndpointAddress,
+					TimeSeconds idleTimeoutSeconds)
+				: Connection(ruleEndpoint, ruleEndpointAddress, idleTimeoutSeconds) {
+			//...//
+		}
 		
 		virtual ~InetConnection() throw() {
 			//...//
