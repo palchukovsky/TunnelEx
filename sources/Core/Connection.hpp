@@ -41,6 +41,8 @@ namespace TunnelEx {
 			MODE_READ_WRITE
 		};
 
+		class Lock;
+
 	public:
 		
 		//! C-tor.
@@ -73,6 +75,12 @@ namespace TunnelEx {
 				::TunnelEx::SharedPtr<::TunnelEx::ConnectionSignal> signal,
 				Mode mode);
 
+	public:
+
+		::TunnelEx::AutoPtr<::TunnelEx::Connection::Lock> LockUp();
+
+	public:
+
 		//! Starts connection setup.
 		/** @sa Setup
 		  * @sa CompleteSetup
@@ -81,6 +89,8 @@ namespace TunnelEx {
 
 		//! Starts read from connection.
 		void StartReadRemote();
+
+	public:
 
 		//! Sends the message block to remote side.
 		/** @param	messageBlock	the message block to send. Object 
@@ -100,6 +110,23 @@ namespace TunnelEx {
 		  */
 		void SendToRemote(const char *data, size_t size);
 
+	public:
+
+		//! Sends the message block to tunnel.
+		/** @param	messageBlock	the message block to send. Object 
+		  *                         can change message block content.
+		  * @return	command for further actions;
+		  */
+		void SendToTunnel(::TunnelEx::MessageBlock &messageBlock, const Lock &);
+
+		//! Sends data into tunnel.
+		/** The internal buffer is not involved in the sending, it can lead
+		  * to problems with memory or speed.
+		  */
+		void SendToTunnel(const char *data, size_t size, const Lock &);
+
+	protected:
+
 		//! Sends the message block to tunnel.
 		/** @param	messageBlock	the message block to send. Object 
 		  *                         can change message block content.
@@ -112,6 +139,8 @@ namespace TunnelEx {
 		  * to problems with memory or speed.
 		  */
 		void SendToTunnel(const char *data, size_t size);
+
+	public:
 
 		//! Callback for data block sent event.
 		void OnMessageBlockSent(const ::TunnelEx::MessageBlock &messageBlock);

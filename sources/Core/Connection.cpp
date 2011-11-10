@@ -121,17 +121,41 @@ namespace {
 
 //////////////////////////////////////////////////////////////////////////
 
-class Connection::Implementation : public ACE_Handler {
-
-private:
+namespace {
 
 	enum MutexType {
 		MT_DEFAULT
 	};
 
 	typedef TypedMutex<ACE_Recursive_Thread_Mutex, MutexTypeToType<MT_DEFAULT>>
-		Mutex;
-	typedef LockWithDebugReports<Mutex> Lock;
+		AceRecursiveTypedMutex;
+
+}
+
+class Connection::Lock : public LockWithDebugReports<AceRecursiveTypedMutex> {
+
+public:
+
+	typedef AceRecursiveTypedMutex Mutex;
+	typedef LockWithDebugReports<Mutex> Base;
+
+public:
+
+	explicit Lock(Mutex &mutex, const bool isFromProactor)
+			: Base(mutex, isFromProactor) {
+		//...//
+	}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+
+class Connection::Implementation : public ACE_Handler {
+
+private:
+
+	typedef Connection::Lock::Mutex Mutex;
+	typedef Connection::Lock Lock;
 
 	enum Timer {
 		TIMER_IDLE_TIMEOUT,
@@ -285,6 +309,10 @@ private:
 	}
 
 public:
+
+	AutoPtr<Connection::Lock> LockUp() {
+		return AutoPtr<Connection::Lock>(new Connection::Lock(m_mutex, false));
+	}
 
 	void Open(SharedPtr<ConnectionSignal> &signal, Connection::Mode mode) {
 
@@ -960,6 +988,10 @@ Connection::~Connection() {
 
 void Connection::Open(SharedPtr<ConnectionSignal> signal, Mode mode) {
 	m_pimpl->Open(signal, mode);
+}
+
+AutoPtr<Connection::Lock> Connection::LockUp() {
+	return m_pimpl->LockUp();
 }
 
 DataTransferCommand Connection::WriteDirectly(MessageBlock &messageBlock) {

@@ -138,9 +138,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			ACE_INET_Addr senderAddr;
 			if (ReadFromIncomingStream(senderAddr)) {
 				m_dataConnection->SetRemoteAddress(senderAddr);
+				AutoPtr<Connection::Lock> lock(m_dataConnection->LockUp());
 				m_dataConnection->SendToTunnel(
 					&(*m_dataConnectionIncomingBuffer)[0],
-					m_dataConnectionIncomingBuffer->size());
+					m_dataConnectionIncomingBuffer->size(),
+					*lock);
 			}
 
 			return true;
