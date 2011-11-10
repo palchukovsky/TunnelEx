@@ -1322,6 +1322,9 @@ namespace {
 					boost::trim_if(line, boost::is_space() || boost::is_cntrl());
 					assert(!line.empty());
 					if (line.empty()) {
+						m_currentLicense.RegisterError(
+							"655C2A38-E34F-465F-9153-874207F72F71",
+							line);
 						continue;
 					} else if (licenseTmp.empty()) {
 						line.swap(licenseTmp);
@@ -1329,7 +1332,9 @@ namespace {
 						try {
 							periodTmp = boost::lexical_cast<size_t>(line);
 						} catch (const std::bad_cast &) {
-							m_currentLicense.RegisterError("98E3301F-7F17-43E6-B6C7-6C7C2F1D0BFA");
+							m_currentLicense.RegisterError(
+								"98E3301F-7F17-43E6-B6C7-6C7C2F1D0BFA",
+								line);
 							assert(false);
 						}
 						break;
