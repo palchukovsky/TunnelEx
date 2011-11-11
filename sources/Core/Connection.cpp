@@ -48,57 +48,88 @@ namespace {
 #ifdef DEV_VER
 namespace {
 
+	////////////////////////////////////////////////////////////////////////////////
+
 	struct DebugLockStat {
+
 		static volatile long locks;
 		static volatile long fails;
 		static volatile long proactor;
 		static volatile long recursive;
+
+		static const double errorLevel;
+		static const double warnLevel;
+		static const double infoLevel;
+
+		static void Report() {
+			const auto failesLevel
+				= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
+			Format stat(
+				"Connection locks/fails/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% fails).");
+			stat
+				% DebugLockStat::locks
+				% DebugLockStat::fails
+				% DebugLockStat::proactor
+				% DebugLockStat::recursive
+				% failesLevel;
+			assert(errorLevel > warnLevel && warnLevel > infoLevel);
+			if (failesLevel >= errorLevel) {
+				Log::GetInstance().AppendError(stat.str());
+			} else if (failesLevel >= warnLevel) {
+				Log::GetInstance().AppendWarn(stat.str());
+			} else if (failesLevel >= infoLevel) {
+				Log::GetInstance().AppendInfo(stat.str());
+			} else {
+				Log::GetInstance().AppendDebug(stat.str());
+			}
+		}
+
 	};
+
 	volatile long DebugLockStat::locks = 0;
 	volatile long DebugLockStat::fails = 0;
 	volatile long DebugLockStat::proactor = 0;
 	volatile long DebugLockStat::recursive = 0;
+	
+	const double DebugLockStat::errorLevel = 1;
+	const double DebugLockStat::warnLevel = .85;
+	const double DebugLockStat::infoLevel = .5;
+
+	////////////////////////////////////////////////////////////////////////////////
 
 	template<typename MutexT>
 	class LockWithDebugReports : public ACE_Guard<MutexT> {
+
 	public:
+
 		typedef MutexT Mutex;
 		typedef ACE_Guard<Mutex> Base;
+
 	public:
+
 		explicit LockWithDebugReports(Mutex &mutex, const bool isFromProactor)
 				: Base(mutex, 0) {
-			const auto isWasLocked = tryacquire() == -1;
-			if (isWasLocked) {
+
+			if (!locked()) {
 				if (ACE_OS::thr_self() == mutex.get_thread_id()) {
 					Interlocked::Increment(&DebugLockStat::recursive);
 				}
-				acquire();
+				verify(acquire() != -1);
 				Interlocked::Increment(&DebugLockStat::fails);
 				if (isFromProactor) {
 					Interlocked::Increment(&DebugLockStat::proactor);
 				}
 			}
-			if (!(Interlocked::Increment(&DebugLockStat::locks) % 10000) || isWasLocked) {
-				const double failesPercent
-					= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
-				Format stat(
-					"Connection locks/fails/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% fails).");
-				stat
-					% DebugLockStat::locks
-					% DebugLockStat::fails
-					% DebugLockStat::proactor
-					% DebugLockStat::recursive
-					% failesPercent;
-				if (failesPercent > 0.1 && DebugLockStat::locks > 1000) {
-					Log::GetInstance().AppendError(stat.str());
-				} else if (failesPercent > 0.05 && DebugLockStat::locks > 1000) {
-					Log::GetInstance().AppendWarn(stat.str());
-				} else {
-					Log::GetInstance().AppendInfo(stat.str());
-				}
+
+			if (!(Interlocked::Increment(&DebugLockStat::locks) % 20000)) {
+				DebugLockStat::Report();
 			}
+
 		}
+
 	};
+
+	////////////////////////////////////////////////////////////////////////////////
 
 }
 #else
@@ -190,6 +221,7 @@ private:
 				"Connection object %1% deleted. Active objects: %2%.",
 				m_instanceId,
 				m_instancesNumber);
+			DebugLockStat::Report();
 #		endif
 	}
 
