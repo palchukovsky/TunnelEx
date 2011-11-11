@@ -41,8 +41,6 @@ namespace TunnelEx {
 			MODE_READ_WRITE
 		};
 
-		class Lock;
-
 	public:
 		
 		//! C-tor.
@@ -74,10 +72,6 @@ namespace TunnelEx {
 		void Open(
 				::TunnelEx::SharedPtr<::TunnelEx::ConnectionSignal> signal,
 				Mode mode);
-
-	public:
-
-		::TunnelEx::AutoPtr<::TunnelEx::Connection::Lock> LockUp();
 
 	public:
 
@@ -117,21 +111,6 @@ namespace TunnelEx {
 		  *                         can change message block content.
 		  * @return	command for further actions;
 		  */
-		void SendToTunnel(::TunnelEx::MessageBlock &messageBlock, const Lock &);
-
-		//! Sends data into tunnel.
-		/** The internal buffer is not involved in the sending, it can lead
-		  * to problems with memory or speed.
-		  */
-		void SendToTunnel(const char *data, size_t size, const Lock &);
-
-	protected:
-
-		//! Sends the message block to tunnel.
-		/** @param	messageBlock	the message block to send. Object 
-		  *                         can change message block content.
-		  * @return	command for further actions;
-		  */
 		void SendToTunnel(::TunnelEx::MessageBlock &messageBlock);
 
 		//! Sends data into tunnel.
@@ -139,6 +118,21 @@ namespace TunnelEx {
 		  * to problems with memory or speed.
 		  */
 		void SendToTunnel(const char *data, size_t size);
+
+	protected:
+
+		//! Sends the message block to tunnel without connection object locking.
+		/** @param	messageBlock	the message block to send. Object 
+		  *                         can change message block content.
+		  * @return	command for further actions;
+		  */
+		void SendToTunnelUnsafe(::TunnelEx::MessageBlock &messageBlock);
+
+		//! Sends data into tunnel without connection object locking.
+		/** The internal buffer is not involved in the sending, it can lead
+		  * to problems with memory or speed.
+		  */
+		void SendToTunnelUnsafe(const char *data, size_t size);
 
 	public:
 

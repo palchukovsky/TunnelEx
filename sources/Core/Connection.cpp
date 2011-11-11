@@ -67,8 +67,8 @@ namespace {
 	public:
 		explicit LockWithDebugReports(Mutex &mutex, const bool isFromProactor)
 				: Base(mutex, 0) {
-			const bool isWasLocked = locked();
-			if (!isWasLocked) {
+			const auto isWasLocked = tryacquire() == -1;
+			if (isWasLocked) {
 				if (ACE_OS::thr_self() == mutex.get_thread_id()) {
 					Interlocked::Increment(&DebugLockStat::recursive);
 				}
@@ -78,7 +78,7 @@ namespace {
 					Interlocked::Increment(&DebugLockStat::proactor);
 				}
 			}
-			if (!(Interlocked::Increment(&DebugLockStat::locks) % 10000) || !isWasLocked) {
+			if (!(Interlocked::Increment(&DebugLockStat::locks) % 10000) || isWasLocked) {
 				const double failesPercent
 					= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
 				Format stat(
@@ -121,41 +121,17 @@ namespace {
 
 //////////////////////////////////////////////////////////////////////////
 
-namespace {
+class Connection::Implementation : public ACE_Handler {
+
+private:
 
 	enum MutexType {
 		MT_DEFAULT
 	};
 
 	typedef TypedMutex<ACE_Recursive_Thread_Mutex, MutexTypeToType<MT_DEFAULT>>
-		AceRecursiveTypedMutex;
-
-}
-
-class Connection::Lock : public LockWithDebugReports<AceRecursiveTypedMutex> {
-
-public:
-
-	typedef AceRecursiveTypedMutex Mutex;
-	typedef LockWithDebugReports<Mutex> Base;
-
-public:
-
-	explicit Lock(Mutex &mutex, const bool isFromProactor)
-			: Base(mutex, isFromProactor) {
-		//...//
-	}
-
-};
-
-//////////////////////////////////////////////////////////////////////////
-
-class Connection::Implementation : public ACE_Handler {
-
-private:
-
-	typedef Connection::Lock::Mutex Mutex;
-	typedef Connection::Lock Lock;
+		Mutex;
+	typedef LockWithDebugReports<Mutex> Lock;
 
 	enum Timer {
 		TIMER_IDLE_TIMEOUT,
@@ -309,10 +285,6 @@ private:
 	}
 
 public:
-
-	AutoPtr<Connection::Lock> LockUp() {
-		return AutoPtr<Connection::Lock>(new Connection::Lock(m_mutex, false));
-	}
 
 	void Open(SharedPtr<ConnectionSignal> &signal, Connection::Mode mode) {
 
@@ -576,7 +548,7 @@ public:
 
 	void StopRead() {
 		// Protected in Connection. Also see the comment about locking assert in
-		// the SendToTunnel-method.
+		// the SendToTunnelUnsafe-method.
 		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		assert(m_isReadingInitiated);
 		m_isReadingInitiated = false;
@@ -591,6 +563,16 @@ public:
 	}
 
 	void SendToTunnel(MessageBlock &messageBlock) {
+		Lock lock(m_mutex, false);
+		SendToTunnelUnsafe(messageBlock);
+	}
+
+	void SendToTunnel(const char *data, size_t size) {
+		Lock lock(m_mutex, false);
+		SendToTunnelUnsafe(data, size);
+	}
+
+	void SendToTunnelUnsafe(MessageBlock &messageBlock) {
 		// It must be locked by "my" thread or in the setup process (locking not
 		// required at setup). Ex.: UDP incoming connection works so: starts read,
 		// sends initial data, stops read, completes setup.
@@ -603,6 +585,21 @@ public:
 		if (messageBlock.IsAddedToQueue()) {
 			Interlocked::Increment(&m_sentMessageBlockQueueSize);
 		}
+	}
+
+	void SendToTunnelUnsafe(const char *data, size_t size) {
+		assert(size > 0);
+		if (!size) {
+			return;
+		}
+		//! @todo: reimplement, memory usage!!!
+		// not using internal allocator for memory, so buffer can be with any size
+		UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
+		if (messageBlock.Get().copy(data, size) == -1) {
+			throw TunnelEx::InsufficientMemoryException(
+				L"Insufficient message block memory");
+		}
+		SendToTunnelUnsafe(messageBlock);
 	}
 
 	bool IsSetupCompleted() const {
@@ -990,10 +987,6 @@ void Connection::Open(SharedPtr<ConnectionSignal> signal, Mode mode) {
 	m_pimpl->Open(signal, mode);
 }
 
-AutoPtr<Connection::Lock> Connection::LockUp() {
-	return m_pimpl->LockUp();
-}
-
 DataTransferCommand Connection::WriteDirectly(MessageBlock &messageBlock) {
 	return m_pimpl->SendToRemote(messageBlock);
 }
@@ -1041,18 +1034,15 @@ void Connection::SendToTunnel(MessageBlock &messageBlock) {
 }
 
 void Connection::SendToTunnel(const char *data, size_t size) {
-	assert(size > 0);
-	if (!size) {
-		return;
-	}
-	//! @todo: reimplement, memory usage!!!
-	// not using internal allocator for memory, so buffer can be with any size
-	UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
-	if (messageBlock.Get().copy(data, size) == -1) {
-		throw TunnelEx::InsufficientMemoryException(
-			L"Insufficient message block memory");
-	}
-	SendToTunnel(messageBlock);
+	m_pimpl->SendToTunnel(data, size);
+}
+
+void Connection::SendToTunnelUnsafe(MessageBlock &messageBlock) {
+	m_pimpl->SendToTunnelUnsafe(messageBlock);
+}
+
+void Connection::SendToTunnelUnsafe(const char *data, size_t size) {
+	m_pimpl->SendToTunnelUnsafe(data, size);
 }
 
 const RuleEndpoint & Connection::GetRuleEndpoint() const {
@@ -1068,7 +1058,7 @@ void Connection::OnMessageBlockSent(const MessageBlock &messageBlock) {
 }
 
 void Connection::ReadRemote(MessageBlock &messageBlock) {
-	SendToTunnel(messageBlock);
+	SendToTunnelUnsafe(messageBlock);
 }
 
 void Connection::Setup() {

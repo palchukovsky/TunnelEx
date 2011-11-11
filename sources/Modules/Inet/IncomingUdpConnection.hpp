@@ -98,7 +98,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			assert(m_incomingData.get());
 			assert(!m_incomingData->empty());
 			StartReadRemote();
-			SendToTunnel(&(*m_incomingData)[0], m_incomingData->size());
+			SendToTunnelUnsafe(&(*m_incomingData)[0], m_incomingData->size());
 			m_incomingData.reset();
 			StopReadRemote();
 			Base::Setup();
