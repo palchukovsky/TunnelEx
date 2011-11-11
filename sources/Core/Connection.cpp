@@ -110,7 +110,7 @@ namespace {
 		typedef ACE_Guard<Mutex> Base;
 	public:
 		explicit LockWithDebugReports(Mutex &mutex, const bool)
-				: Base(mutex, 0) {
+				: Base(mutex) {
 			//...//
 		}
 	};
