@@ -33,7 +33,7 @@ NewVersionDlg::NewVersionDlg(
 		new wxStaticText(
 			this,
 			wxID_ANY,
-			wxT("Your version is: ") TUNNELEX_VERSION_W,
+			wxT("Your version is: ") TUNNELEX_VERSION_FULL_W,
 			wxDefaultPosition,
 			wxDefaultSize,
 			wxALIGN_CENTRE),
@@ -42,11 +42,12 @@ NewVersionDlg::NewVersionDlg(
 		new wxStaticText(
 			this,
 			wxID_ANY,
-			(TunnelEx::WFormat(L"Current version is: %1%.%2%.%3%")
-					% version.majorHigh
-					% version.majorLow
-					% version.minorHigh)
-				.str(),
+			(TunnelEx::WFormat(L"Current version is: %1%.%2%.%3%.%4%")
+				% version.majorHigh
+				% version.majorLow
+				% version.minorHigh
+				% version.minorLow)
+			.str(),
 			wxDefaultPosition,
 			wxDefaultSize,
 			wxALIGN_CENTRE),
@@ -55,7 +56,7 @@ NewVersionDlg::NewVersionDlg(
 		new wxHyperlinkCtrl(
 			this,
 			wxID_ANY,
-			wxT("Please go to http://") TUNNELEX_DOMAIN_W wxT(" to get it."),
+			wxT("Please visit http://") TUNNELEX_DOMAIN_W wxT(" to get it."),
 			wxT("http://") TUNNELEX_DOMAIN_W wxT("/?about")),
 		wxGetApp().GetTheme().GetTopSizerFlags().Center());
 	
