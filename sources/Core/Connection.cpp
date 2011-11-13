@@ -155,8 +155,8 @@ public:
 			m_isSetupCompleted(false),
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(0),
-			m_dataBlockSize(1024), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_messageBlockQueueBufferSize((1024 * 1024) / m_dataBlockSize), // 1 Mb
+			m_dataBlockSize(1480), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
+			m_messageBlockQueueBufferSize((256 * 1024) / m_dataBlockSize),
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(0),
 			m_sendQueueSize(0),
@@ -815,6 +815,15 @@ private:
 						" data read from connection %2% will be suspended.",
 					bytes,
 					m_instanceId);
+#				ifdef DEV_VER
+				{
+					Format message(
+						"Data queue memory size is %1% bytes,"
+							" data read from connection %2% will be suspended.");
+					message % bytes % m_instanceId;
+					Log::GetInstance().AppendWarn(message.str());
+				}
+#				endif
 				Interlocked::Decrement(&m_isReadingActive);
 				assert(m_isReadingActive == 0);
 			}
@@ -829,6 +838,15 @@ private:
 					" data read from connection %2% will be resumed.",
 				bytes,
 				m_instanceId);
+#			ifdef DEV_VER
+			{
+				Format message(
+					"Data queue memory size is %1% bytes,"
+						" data read from connection %2% will be resumed.");
+				message % bytes % m_instanceId;
+				Log::GetInstance().AppendInfo(message.str());
+			}
+#			endif
 			Interlocked::Increment(&m_isReadingActive);
 			assert(m_isReadingActive == 1);
 		}
