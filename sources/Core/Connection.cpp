@@ -283,7 +283,7 @@ private:
 		m_delTimer = m_proactor->schedule_timer(
 			*this,
 			reinterpret_cast<void *>(TIMER_CLOSE),
-			ACE_Time_Value(m_idleTimeoutInterval));
+			ACE_Time_Value::zero);
 		assert(m_delTimer != -1);
 	}
 
@@ -295,7 +295,7 @@ private:
 		m_delTimer = m_proactor->schedule_timer(
 			*this,
 			reinterpret_cast<void *>(TIMER_DELETE),
-			ACE_Time_Value(m_idleTimeoutInterval));
+			ACE_Time_Value::zero);
 		assert(m_delTimer != -1);
 	}
 
@@ -904,21 +904,23 @@ private:
 	}
 
 	void UpdateIdleTimer() {
-		assert(m_idleTimeoutTimer == -1 || m_idleTimeoutInterval != ACE_Time_Value::zero);
 		assert(m_proactor);
-		if (m_idleTimeoutInterval == ACE_Time_Value::zero || m_idleTimeoutTimer == -1) {
+		if (m_idleTimeoutTimer == -1) {
+			assert(
+				!m_isSetupCompleted // not started
+				|| m_refsCount < 2 // in closing
+				|| m_idleTimeoutInterval == ACE_Time_Value::zero);
 			return;
 		}
-		if (m_idleTimeoutTimer != -1) {
-			m_proactor->cancel_timer(m_idleTimeoutTimer);
-		}
+		assert(m_idleTimeoutInterval != ACE_Time_Value::zero);
+		m_proactor->cancel_timer(m_idleTimeoutTimer);
 		m_idleTimeoutTimer = m_proactor->schedule_timer(
 			*this,
 			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
 			m_idleTimeoutInterval);
 		assert(m_idleTimeoutTimer!= -1);
 	}
-	
+
 	bool IsOpened() const {
 		return m_refsCount == 2 && !m_closeAtLastMessageBlock;
 	}
@@ -943,7 +945,11 @@ private:
 			"Setting idle timeout %1% seconds for connection %2%...",
 			m_idleTimeoutInterval.sec(),
 			m_instanceId);
-		UpdateIdleTimer();
+		m_idleTimeoutTimer = m_proactor->schedule_timer(
+			*this,
+			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
+			m_idleTimeoutInterval);
+		assert(m_idleTimeoutTimer!= -1);
 	}
 
 private:
