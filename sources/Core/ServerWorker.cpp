@@ -910,12 +910,14 @@ private:
 					Log::GetInstance().AppendError(message.str());
 				}
 			} else if (!m_tunnelLicense.IsFeatureAvailable(tunnels.size() + 1)) {
-				Log::GetInstance().AppendWarn(
-					"Failed to open new connection: too many connections."
+				Format message(
+					"Failed to open new connection: too many connections - %1%."
 						" The functionality you have requested requires"
 						" a License Upgrade. Please purchase a License that"
 						" will enable this feature at http://" TUNNELEX_DOMAIN "/order"
 						" or get free trial at http://" TUNNELEX_DOMAIN "/order/trial.");
+				message % tunnels.size();
+				Log::GetInstance().AppendWarn(message.str().c_str());
 				throw LocalException(
 					L"Failed to open new connection, License Upgrade required");
 			} else {
@@ -1013,7 +1015,7 @@ private:
 		size_t openedTunnelsNumb = 0;
 		ActiveRule newRule(rule.GetUuid(), true);
 		const size_t allowedActiveRulesCheckNumber = m_activeRules.size() + 1;
-		std::vector<boost::shared_ptr<Tunnel> > newTunnels;
+		std::vector<boost::shared_ptr<Tunnel>> newTunnels;
 		if (	rule.IsEnabled()
 				&&	m_ruleSetLicense.IsFeatureAvailable(allowedActiveRulesCheckNumber)) {
 			// locking, so Close method now will be wait until new tunnels
@@ -1042,12 +1044,14 @@ private:
 				message % ConvertString<String>(rule.GetUuid()).GetCStr();
 			}
 		} else if (rule.IsEnabled()) {
-			Log::GetInstance().AppendWarn(
-				"Failed to activate one or more rules: too many rules activated."
+			Format message(
+				"Failed to activate one or more rules: too many rules activated - %1%."
 					" The functionality you have requested requires"
 					" a License Upgrade. Please purchase a License that"
 					" will enable this feature at http://" TUNNELEX_DOMAIN "/order"
 					" or get free trial at http://" TUNNELEX_DOMAIN "/order/trial.");
+			message % m_activeRules.size();
+			Log::GetInstance().AppendWarn(message.str());
 			throw LicenseException(
 				L"Failed to activate one or more rules, License Upgrade required");
 		}
@@ -1119,12 +1123,14 @@ private:
 				swap(activeRules, m_activeRules);
 			}
 		} else if (rule.IsEnabled()) {
-			Log::GetInstance().AppendWarn(
-				"Failed to activate one or more rules: too many rules activated."
+			Format message(
+				"Failed to activate one or more rules: too many rules activated - %1%."
 					" The functionality you have requested requires"
 					" a License Upgrade. Please purchase a License that"
 					" will enable this feature at http://" TUNNELEX_DOMAIN "/order"
 					" or get free trial at http://" TUNNELEX_DOMAIN "/order/trial.");
+			message % m_activeRules.size();
+			Log::GetInstance().AppendWarn(message.str());
 			throw LicenseException(
 				L"Failed to activate one or more rules, License Upgrade required");
 		}
@@ -1487,12 +1493,14 @@ private:
 				return false;
 			}
 			if (!m_tunnelLicense.IsFeatureAvailable(m_activeTunnels.size() + 1)) {
-				Log::GetInstance().AppendWarn(
-					"Failed to open new connection: too many connections."
+				Format message(
+					"Failed to open new connection: too many connections - %1%."
 						" The functionality you have requested requires"
 						" a License Upgrade. Please purchase a License that"
 						" will enable this feature at http://" TUNNELEX_DOMAIN "/order"
 						" or get free trial at http://" TUNNELEX_DOMAIN "/order/trial.");
+				message % m_activeTunnels.size();
+				Log::GetInstance().AppendWarn(message.str());
 				throw LocalException(
 					L"Failed to open new connection, License Upgrade required");
 			}
