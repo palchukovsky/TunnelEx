@@ -595,11 +595,13 @@ public:
 	}
 
 	void SendToTunnel(MessageBlock &messageBlock) {
+		assert(IsNotLockedByMyThread(m_mutex));
 		Lock lock(m_mutex, false);
 		SendToTunnelUnsafe(messageBlock);
 	}
 
 	void SendToTunnel(const char *data, size_t size) {
+		assert(IsNotLockedByMyThread(m_mutex));
 		Lock lock(m_mutex, false);
 		SendToTunnelUnsafe(data, size);
 	}
