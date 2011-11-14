@@ -49,15 +49,15 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const ACE_INET_Addr &address,
 					const TunnelEx::RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress,
-					boost::shared_ptr<Stream> socket,
-					const std::vector<char> &incomingData,
+					boost::shared_ptr<Stream> &socket,
+					std::auto_ptr<std::vector<char>> &incomingData,
 					Acceptor *const acceptor)
-				: UdpConnection(ruleEndpoint, ruleEndpointAddress),
+				: UdpConnection(ruleEndpoint, ruleEndpointAddress, 61), //! @todo: hardcoded idle time
 				m_remoteAddress(address),
 				m_socket(socket),
 				m_incomingData(incomingData),
 				m_acceptor(acceptor) {
-			ResetIdleTimeout(60);
+			//...//
 		}
 
 		virtual ~IncomingUdpConnection() throw() {
@@ -72,18 +72,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	public:
 
 		virtual AutoPtr<EndpointAddress> GetRemoteAddress() const {
-			using namespace TunnelEx;
-			// Because remote address can be changed dynamically
-			return AutoPtr<EndpointAddress>(
-				new UdpEndpointAddress(WString(L"*:*")));
+			return AutoPtr<EndpointAddress>(new UdpEndpointAddress(m_remoteAddress));
+		}
+
+		const ACE_INET_Addr & GetRemoteAceAddress() const {
+			return m_remoteAddress;
 		}
 
 	public:
-
-		void SetRemoteAddress(const ACE_INET_Addr &address) {
-			SendWriteLock lock(m_sendMutex);
-			m_remoteAddress = address;
-		}
 
 		void NotifyAcceptorClose(const Acceptor &acceptor) {
 			ACE_UNUSED_ARG(acceptor);
@@ -95,12 +91,13 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	protected:
 
 		virtual void Setup() {
-			assert(m_incomingData.size() > 0);
+			assert(m_incomingData.get());
+			assert(!m_incomingData->empty());
 			StartReadRemote();
-			SendToTunnel(&m_incomingData[0], m_incomingData.size());
+			SendToTunnelUnsafe(&(*m_incomingData)[0], m_incomingData->size());
+			m_incomingData.reset();
 			StopReadRemote();
 			Base::Setup();
-			std::vector<char>().swap(m_incomingData);
 		}
 
 		virtual TunnelEx::IoHandleInfo GetIoHandle() {
@@ -117,7 +114,6 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual DataTransferCommand Write(MessageBlock &messageBlock) {
 			assert(messageBlock.GetUnreadedDataSize() > 0);
-			SendReadLock addrLock(m_sendMutex);
 			const ssize_t sentBytesNumb = m_socket->send(
 				messageBlock.GetData(),
 				messageBlock.GetUnreadedDataSize(),
@@ -144,10 +140,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		SendMutex m_sendMutex;
-		ACE_INET_Addr m_remoteAddress;
+		const ACE_INET_Addr m_remoteAddress;
 		boost::shared_ptr<Stream> m_socket;
-		std::vector<char> m_incomingData;
+		std::auto_ptr<std::vector<char>> m_incomingData;
 		AcceptorMutex m_acceptorMutex;
 		Acceptor *m_acceptor;
 

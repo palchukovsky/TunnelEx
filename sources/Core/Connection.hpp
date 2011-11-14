@@ -47,6 +47,14 @@ namespace TunnelEx {
 		explicit Connection(
 				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
 				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> &ruleEndpointAddress);
+		//! C-tor with idle timeout set.
+		/** If idle more then @idleTimeoutSeconds Connection::OnTimeout will be called.
+		  * @sa OnTimeout
+		  */
+		explicit Connection(
+				const ::TunnelEx::RuleEndpoint &ruleEndpoint,
+				::TunnelEx::SharedPtr<const ::TunnelEx::EndpointAddress> &ruleEndpointAddress,
+				TimeSeconds idleTimeoutSeconds);
 		//! D-tor.
 		virtual ~Connection() throw();
 
@@ -65,6 +73,8 @@ namespace TunnelEx {
 				::TunnelEx::SharedPtr<::TunnelEx::ConnectionSignal> signal,
 				Mode mode);
 
+	public:
+
 		//! Starts connection setup.
 		/** @sa Setup
 		  * @sa CompleteSetup
@@ -73,6 +83,8 @@ namespace TunnelEx {
 
 		//! Starts read from connection.
 		void StartReadRemote();
+
+	public:
 
 		//! Sends the message block to remote side.
 		/** @param	messageBlock	the message block to send. Object 
@@ -92,6 +104,8 @@ namespace TunnelEx {
 		  */
 		void SendToRemote(const char *data, size_t size);
 
+	public:
+
 		//! Sends the message block to tunnel.
 		/** @param	messageBlock	the message block to send. Object 
 		  *                         can change message block content.
@@ -104,6 +118,23 @@ namespace TunnelEx {
 		  * to problems with memory or speed.
 		  */
 		void SendToTunnel(const char *data, size_t size);
+
+	protected:
+
+		//! Sends the message block to tunnel without connection object locking.
+		/** @param	messageBlock	the message block to send. Object 
+		  *                         can change message block content.
+		  * @return	command for further actions;
+		  */
+		void SendToTunnelUnsafe(::TunnelEx::MessageBlock &messageBlock);
+
+		//! Sends data into tunnel without connection object locking.
+		/** The internal buffer is not involved in the sending, it can lead
+		  * to problems with memory or speed.
+		  */
+		void SendToTunnelUnsafe(const char *data, size_t size);
+
+	public:
 
 		//! Callback for data block sent event.
 		void OnMessageBlockSent(const ::TunnelEx::MessageBlock &messageBlock);
@@ -204,13 +235,6 @@ namespace TunnelEx {
 		  * @throw TunnelEx::LogicalException 
 		  */
 		void WriteDirectly(const char *data, size_t size);
-
-		//! Sets the connection idle time out.
-		/** If idle more then @seconds Connection::OnTimeout will be called.
-		  * Zero value disables timeout (default).
-		  * @sa OnTimeout
-		  */
-		void ResetIdleTimeout(TimeSeconds seconds);
 
 	private:
 

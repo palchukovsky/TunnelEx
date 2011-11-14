@@ -27,7 +27,8 @@
 #endif
 
 using namespace TunnelEx;
-
+using namespace TunnelEx::Helpers::Asserts;
+	
 //////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -47,57 +48,88 @@ namespace {
 #ifdef DEV_VER
 namespace {
 
+	////////////////////////////////////////////////////////////////////////////////
+
 	struct DebugLockStat {
+
 		static volatile long locks;
 		static volatile long fails;
 		static volatile long proactor;
 		static volatile long recursive;
+
+		static const double errorLevel;
+		static const double warnLevel;
+		static const double infoLevel;
+
+		static void Report() {
+			const auto failesLevel
+				= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
+			Format stat(
+				"Connection locks/fails/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% fails).");
+			stat
+				% DebugLockStat::locks
+				% DebugLockStat::fails
+				% DebugLockStat::proactor
+				% DebugLockStat::recursive
+				% failesLevel;
+			assert(errorLevel > warnLevel && warnLevel > infoLevel);
+			if (failesLevel >= errorLevel) {
+				Log::GetInstance().AppendError(stat.str());
+			} else if (failesLevel >= warnLevel) {
+				Log::GetInstance().AppendWarn(stat.str());
+			} else if (failesLevel >= infoLevel) {
+				Log::GetInstance().AppendInfo(stat.str());
+			} else {
+				Log::GetInstance().AppendDebug(stat.str());
+			}
+		}
+
 	};
+
 	volatile long DebugLockStat::locks = 0;
 	volatile long DebugLockStat::fails = 0;
 	volatile long DebugLockStat::proactor = 0;
 	volatile long DebugLockStat::recursive = 0;
+	
+	const double DebugLockStat::errorLevel = 1;
+	const double DebugLockStat::warnLevel = .85;
+	const double DebugLockStat::infoLevel = .5;
+
+	////////////////////////////////////////////////////////////////////////////////
 
 	template<typename MutexT>
 	class LockWithDebugReports : public ACE_Guard<MutexT> {
+
 	public:
+
 		typedef MutexT Mutex;
 		typedef ACE_Guard<Mutex> Base;
+
 	public:
+
 		explicit LockWithDebugReports(Mutex &mutex, const bool isFromProactor)
 				: Base(mutex, 0) {
-			const bool isWasLocked = locked();
-			if (!isWasLocked) {
+
+			if (!locked()) {
 				if (ACE_OS::thr_self() == mutex.get_thread_id()) {
 					Interlocked::Increment(&DebugLockStat::recursive);
 				}
-				acquire();
+				verify(acquire() != -1);
 				Interlocked::Increment(&DebugLockStat::fails);
 				if (isFromProactor) {
 					Interlocked::Increment(&DebugLockStat::proactor);
 				}
 			}
-			if (!(Interlocked::Increment(&DebugLockStat::locks) % 10000) || !isWasLocked) {
-				const double failesPercent
-					= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
-				Format stat(
-					"Connection locks/fails/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% fails).");
-				stat
-					% DebugLockStat::locks
-					% DebugLockStat::fails
-					% DebugLockStat::proactor
-					% DebugLockStat::recursive
-					% failesPercent;
-				if (failesPercent > 5 && DebugLockStat::locks > 1000) {
-					Log::GetInstance().AppendError(stat.str());
-				} else if (failesPercent > 2.5 && DebugLockStat::locks > 1000) {
-					Log::GetInstance().AppendWarn(stat.str());
-				} else {
-					Log::GetInstance().AppendInfo(stat.str());
-				}
+
+			if (!(Interlocked::Increment(&DebugLockStat::locks) % 20000)) {
+				DebugLockStat::Report();
 			}
+
 		}
+
 	};
+
+	////////////////////////////////////////////////////////////////////////////////
 
 }
 #else
@@ -143,7 +175,8 @@ public:
 	explicit Implementation(
 				Connection &myInteface,
 				const RuleEndpoint &ruleEndpoint,
-				SharedPtr<const EndpointAddress> &ruleEndpointAddress)
+				SharedPtr<const EndpointAddress> &ruleEndpointAddress,
+				TimeSeconds idleTimeoutSeconds = 0)
 			: m_myInterface(myInteface),
 			m_instanceId(m_myInterface.GetInstanceId()),
 			m_refsCount(1),
@@ -160,6 +193,7 @@ public:
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(0),
 			m_sendQueueSize(0),
+			m_idleTimeoutInterval(idleTimeoutSeconds, 0),
 			m_idleTimeoutTimer(-1),
 			m_delTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
@@ -187,6 +221,7 @@ private:
 				"Connection object %1% deleted. Active objects: %2%.",
 				m_instanceId,
 				m_instancesNumber);
+			DebugLockStat::Report();
 #		endif
 	}
 
@@ -248,7 +283,7 @@ private:
 		m_delTimer = m_proactor->schedule_timer(
 			*this,
 			reinterpret_cast<void *>(TIMER_CLOSE),
-			ACE_Time_Value(m_idleTimeoutInterval));
+			ACE_Time_Value::zero);
 		assert(m_delTimer != -1);
 	}
 
@@ -260,7 +295,7 @@ private:
 		m_delTimer = m_proactor->schedule_timer(
 			*this,
 			reinterpret_cast<void *>(TIMER_DELETE),
-			ACE_Time_Value(m_idleTimeoutInterval));
+			ACE_Time_Value::zero);
 		assert(m_delTimer != -1);
 	}
 
@@ -338,7 +373,7 @@ public:
 			boost::function<int(ACE_Message_Block &, size_t)> readStreamFunc;
 			boost::function<int(ACE_Message_Block &, size_t)> writeStreamFunc;
 			
-			if (ioHandleInfo.handle != 0) {
+			if (ioHandleInfo.handle != INVALID_HANDLE_VALUE) {
 				switch (ioHandleInfo.type) {
 					default:
 						assert(false);
@@ -454,35 +489,6 @@ public:
 		
 	}
 
-	void ResetIdleTimeout(TimeSeconds seconds) {
-		
-		// Private in Connection. Called only from proactor thread so
-		// no locking needed (already under lock).
-		AssertLockedByMyThread(m_mutex);
-		assert(IsOpened());
-		
-		if (seconds > 0) {
-			Log::GetInstance().AppendDebug(
-				"Setting idle timeout %1% seconds for connection %2%...",
-				seconds,
-				m_instanceId);
-		} else {
-			Log::GetInstance().AppendDebug(
-				"Disabling idle timeout for connection %1%...",
-				m_instanceId);
-		}
-	
-		ACE_Time_Value oldInterval(m_idleTimeoutInterval);
-		m_idleTimeoutInterval.set(seconds);
-		try {
-			UpdateIdleTimer();
-		} catch (...) {
-			std::swap(oldInterval, m_idleTimeoutInterval);
-			throw;
-		}
-	
-	}
-
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
 		Lock lock(m_mutex, false);
@@ -521,7 +527,7 @@ public:
 
 	void OnMessageBlockSent(const MessageBlock &messageBlock) {
 
-		AssertNotLockedByMyThread(m_mutex);
+		assert(IsNotLockedByMyThread(m_mutex));
 
 		if (!messageBlock.IsTunnelMessage()) {
 			return;
@@ -540,14 +546,15 @@ public:
 	}
 
 	void OnSetupSuccess() {
-		AssertNotLockedOrLockedByMyThread(m_mutex);
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		CompleteSetup(true);
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
 		m_signal->OnConnectionSetupCompleted(m_instanceId);
+		StartIdleTimer();
 	}
 
 	void OnSetupFail(const WString &failReason) {
-		AssertNotLockedOrLockedByMyThread(m_mutex);
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		CompleteSetup(false);
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
@@ -572,7 +579,9 @@ public:
 	}
 
 	void StopRead() {
-		AssertLockedByMyThread(m_mutex); // Protected in Connection
+		// Protected in Connection. Also see the comment about locking assert in
+		// the SendToTunnelUnsafe-method.
+		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		assert(m_isReadingInitiated);
 		m_isReadingInitiated = false;
 	}
@@ -586,7 +595,20 @@ public:
 	}
 
 	void SendToTunnel(MessageBlock &messageBlock) {
-		AssertLockedByMyThread(m_mutex);
+		Lock lock(m_mutex, false);
+		SendToTunnelUnsafe(messageBlock);
+	}
+
+	void SendToTunnel(const char *data, size_t size) {
+		Lock lock(m_mutex, false);
+		SendToTunnelUnsafe(data, size);
+	}
+
+	void SendToTunnelUnsafe(MessageBlock &messageBlock) {
+		// It must be locked by "my" thread or in the setup process (locking not
+		// required at setup). Ex.: UDP incoming connection works so: starts read,
+		// sends initial data, stops read, completes setup.
+		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		if (messageBlock.GetUnreadedDataSize() == 0) {
 			return;
 		}
@@ -595,6 +617,21 @@ public:
 		if (messageBlock.IsAddedToQueue()) {
 			Interlocked::Increment(&m_sentMessageBlockQueueSize);
 		}
+	}
+
+	void SendToTunnelUnsafe(const char *data, size_t size) {
+		assert(size > 0);
+		if (!size) {
+			return;
+		}
+		//! @todo: reimplement, memory usage!!!
+		// not using internal allocator for memory, so buffer can be with any size
+		UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
+		if (messageBlock.Get().copy(data, size) == -1) {
+			throw TunnelEx::InsufficientMemoryException(
+				L"Insufficient message block memory");
+		}
+		SendToTunnelUnsafe(messageBlock);
 	}
 
 	bool IsSetupCompleted() const {
@@ -625,7 +662,7 @@ public:
 
 	virtual void handle_time_out(const ACE_Time_Value &, const void *act = 0) {
 
-		AssertNotLockedByMyThread(m_mutex);
+		assert(IsNotLockedByMyThread(m_mutex));
 
 		switch (reinterpret_cast<int>(act)) {
 			case TIMER_IDLE_TIMEOUT:
@@ -695,7 +732,7 @@ private:
 	template<typename Result>
 	void DoHandleReadStream(const Result &result) {
 
-		AssertNotLockedByMyThread(m_mutex);
+		assert(IsNotLockedByMyThread(m_mutex));
 
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		
@@ -798,7 +835,7 @@ private:
 	  */
 	bool InitReadIfPossible() {
 
-		AssertLockedByMyThread(m_mutex);
+		assert(IsLockedByMyThread(m_mutex));
 
 		// FIXME
 		// Can't explain this situation, try to do it at assert fail.
@@ -852,8 +889,7 @@ private:
 		}
 
 		// read init
-		{
-			assert(m_readStream.get());
+		if (m_readStream.get()) { // ex UDP
 			UniqueMessageBlockHolder messageBlock(
 				UniqueMessageBlockHolder::CreateMessageBlockForTunnel(
 					m_dataBlockSize,
@@ -886,35 +922,52 @@ private:
 	}
 
 	void UpdateIdleTimer() {
-		assert(IsOpened());
-		if (m_idleTimeoutTimer != -1) {
-			assert(m_proactor);
-			m_proactor->cancel_timer(m_idleTimeoutTimer);
-			m_idleTimeoutTimer = -1;
+		assert(m_proactor);
+		if (m_idleTimeoutTimer == -1) {
+			assert(
+				!m_isSetupCompleted // not started
+				|| m_refsCount < 2 // in closing
+				|| m_idleTimeoutInterval == ACE_Time_Value::zero);
+			return;
 		}
-		if (m_idleTimeoutInterval != ACE_Time_Value::zero && m_isSetupCompleted) {
-			assert(m_proactor);
-			m_idleTimeoutTimer = m_proactor->schedule_timer(
-				*this,
-				reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
-				m_idleTimeoutInterval);
-		}
+		assert(m_idleTimeoutInterval != ACE_Time_Value::zero);
+		m_proactor->cancel_timer(m_idleTimeoutTimer);
+		m_idleTimeoutTimer = m_proactor->schedule_timer(
+			*this,
+			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
+			m_idleTimeoutInterval);
+		assert(m_idleTimeoutTimer!= -1);
 	}
-	
+
 	bool IsOpened() const {
 		return m_refsCount == 2 && !m_closeAtLastMessageBlock;
 	}
 
 	void CompleteSetup(bool setupCompletedWithSuccess) {
-		AssertNotLockedOrLockedByMyThread(m_mutex);
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		m_isSetupCompleted = true;
 		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
 		// Must be not started yet!
 		assert(m_idleTimeoutTimer == -1);
 		assert(m_delTimer == -1);
-		if (m_isSetupCompletedWithSuccess) {
-			UpdateIdleTimer();
+	}
+
+	void StartIdleTimer() {
+		assert(m_idleTimeoutTimer == -1);
+		assert(m_isSetupCompleted);
+		assert(m_isSetupCompletedWithSuccess);
+		if (m_idleTimeoutInterval == ACE_Time_Value::zero) {
+			return;
 		}
+		Log::GetInstance().AppendDebug(
+			"Setting idle timeout %1% seconds for connection %2%...",
+			m_idleTimeoutInterval.sec(),
+			m_instanceId);
+		m_idleTimeoutTimer = m_proactor->schedule_timer(
+			*this,
+			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
+			m_idleTimeoutInterval);
+		assert(m_idleTimeoutTimer!= -1);
 	}
 
 private:
@@ -956,7 +1009,7 @@ private:
 	boost::shared_ptr<TunnelBuffer> m_buffer;
 	TunnelBuffer::Allocators m_allocators;
 
-	ACE_Time_Value m_idleTimeoutInterval;
+	const ACE_Time_Value m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
 
 	long m_delTimer;
@@ -973,6 +1026,13 @@ Connection::Connection(
 			const RuleEndpoint &ruleLocalEndpoint,
 			SharedPtr<const EndpointAddress> &ruleEndpointAddress) {
 	m_pimpl = new Implementation(*this, ruleLocalEndpoint, ruleEndpointAddress);
+}
+
+Connection::Connection(
+			const RuleEndpoint &ruleLocalEndpoint,
+			SharedPtr<const EndpointAddress> &ruleEndpointAddress,
+			TimeSeconds idleTimeoutSeconds) {
+	m_pimpl = new Implementation(*this, ruleLocalEndpoint, ruleEndpointAddress, idleTimeoutSeconds);
 }
 
 Connection::~Connection() {
@@ -1030,18 +1090,15 @@ void Connection::SendToTunnel(MessageBlock &messageBlock) {
 }
 
 void Connection::SendToTunnel(const char *data, size_t size) {
-	assert(size > 0);
-	if (!size) {
-		return;
-	}
-	//! @todo: reimplement, memory usage!!!
-	// not using internal allocator for memory, so buffer can be with any size
-	UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
-	if (messageBlock.Get().copy(data, size) == -1) {
-		throw TunnelEx::InsufficientMemoryException(
-			L"Insufficient message block memory");
-	}
-	SendToTunnel(messageBlock);
+	m_pimpl->SendToTunnel(data, size);
+}
+
+void Connection::SendToTunnelUnsafe(MessageBlock &messageBlock) {
+	m_pimpl->SendToTunnelUnsafe(messageBlock);
+}
+
+void Connection::SendToTunnelUnsafe(const char *data, size_t size) {
+	m_pimpl->SendToTunnelUnsafe(data, size);
 }
 
 const RuleEndpoint & Connection::GetRuleEndpoint() const {
@@ -1057,7 +1114,7 @@ void Connection::OnMessageBlockSent(const MessageBlock &messageBlock) {
 }
 
 void Connection::ReadRemote(MessageBlock &messageBlock) {
-	SendToTunnel(messageBlock);
+	SendToTunnelUnsafe(messageBlock);
 }
 
 void Connection::Setup() {
@@ -1086,10 +1143,6 @@ bool Connection::IsSetupCompleted() const {
 
 bool Connection::IsSetupFailed() const {
 	return m_pimpl->IsSetupFailed();
-}
-
-void Connection::ResetIdleTimeout(TimeSeconds seconds) {
-	m_pimpl->ResetIdleTimeout(seconds);
 }
 
 bool Connection::OnIdleTimeout() throw() {

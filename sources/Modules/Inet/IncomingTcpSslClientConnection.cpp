@@ -97,7 +97,7 @@ void IncomingTcpSslClientConnection::Setup() {
 
 	if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
 		try {
-			SendToTunnel(
+			SendToTunnelUnsafe(
 				&GetDataStream().GetEncryptorDecryptorAnswer()[0],
 				GetDataStream().GetEncryptorDecryptorAnswer().size());
 		} catch (...) {
@@ -147,7 +147,7 @@ void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 	}
 	if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
 		try {
-			SendToTunnel(
+			SendToTunnelUnsafe(
 				&GetDataStream().GetEncryptorDecryptorAnswer()[0],
 				GetDataStream().GetEncryptorDecryptorAnswer().size());
 		} catch (...) {

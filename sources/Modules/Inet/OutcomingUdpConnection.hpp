@@ -58,8 +58,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (m_stream.get_remote_addr(addr) == 0) {
 				return AutoPtr<EndpointAddress>(
 					new UdpEndpointAddress(
-					*boost::polymorphic_downcast<const UdpEndpointAddress *>(
-					GetRuleEndpointAddress().Get())));
+						*boost::polymorphic_downcast<const UdpEndpointAddress *>(
+						GetRuleEndpointAddress().Get())));
 			} else {
 				const Error error(errno);
 				WFormat message(

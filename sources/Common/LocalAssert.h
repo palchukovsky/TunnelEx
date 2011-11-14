@@ -22,38 +22,39 @@
 #ifndef INCLUDED_FILE__TUNNELEX__LocalAssert_h__1105130132
 #define INCLUDED_FILE__TUNNELEX__LocalAssert_h__1105130132
 
-template<typename Mutex>
-inline void AssertLocked(const Mutex &mutex) {
-	assert(const_cast<Mutex &>(mutex).get_nesting_level() > 0);
-}
+namespace TunnelEx { namespace Helpers { namespace Asserts {
 
-template<typename Mutex>
-inline void AssertLockedByMyThread(const Mutex &mutex) {
-	assert(const_cast<Mutex &>(mutex).get_nesting_level() > 0);
-	assert(ACE_OS::thr_self() == const_cast<Mutex &>(mutex).get_thread_id());
-	UseUnused(mutex);
-}
+	template<typename Mutex>
+	inline bool IsLocked(const Mutex &mutex) {
+		return const_cast<Mutex &>(mutex).get_nesting_level() > 0;
+	}
 
-template<typename Mutex>
-inline void AssertNotLocked(const Mutex &mutex) {
-	assert(const_cast<Mutex &>(mutex).get_nesting_level() < 1);
-	UseUnused(mutex);
-}
+	template<typename Mutex>
+	inline bool	IsLockedByMyThread(const Mutex &mutex) {
+		return
+			const_cast<Mutex &>(mutex).get_nesting_level() > 0
+			&& ACE_OS::thr_self() == const_cast<Mutex &>(mutex).get_thread_id();
+	}
 
-template<typename Mutex>
-inline void AssertNotLockedOrLockedByMyThread(const Mutex &mutex) {
-	assert(
-		const_cast<Mutex &>(mutex).get_nesting_level() < 1
-		|| ACE_OS::thr_self() == const_cast<Mutex &>(mutex).get_thread_id());
-	UseUnused(mutex);
-}
+	template<typename Mutex>
+	inline bool IsNotLocked(const Mutex &mutex) {
+		return const_cast<Mutex &>(mutex).get_nesting_level() < 1;
+	}
 
-template<typename Mutex>
-inline void AssertNotLockedByMyThread(const Mutex &mutex) {
-	assert(
-		const_cast<Mutex &>(mutex).get_nesting_level() < 1
-		|| ACE_OS::thr_self() != const_cast<Mutex &>(mutex).get_thread_id());
-	UseUnused(mutex);
-}
+	template<typename Mutex>
+	inline bool IsNotLockedOrLockedByMyThread(const Mutex &mutex) {
+		return
+			const_cast<Mutex &>(mutex).get_nesting_level() < 1
+			|| ACE_OS::thr_self() == const_cast<Mutex &>(mutex).get_thread_id();
+	}
+
+	template<typename Mutex>
+	inline bool IsNotLockedByMyThread(const Mutex &mutex) {
+		return
+			const_cast<Mutex &>(mutex).get_nesting_level() < 1
+			|| ACE_OS::thr_self() != const_cast<Mutex &>(mutex).get_thread_id();
+	}
+
+} } }
 
 #endif
