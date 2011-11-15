@@ -65,7 +65,7 @@ namespace {
 			const auto failesLevel
 				= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
 			Format stat(
-				"Connection locks/fails/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% fails).");
+				"Connection locks/waits/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% waits).");
 			stat
 				% DebugLockStat::locks
 				% DebugLockStat::fails
