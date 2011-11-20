@@ -417,7 +417,8 @@ private:
 		typedef std::list<boost::shared_ptr<Tunnel>> Tunnels;
 		
 		TunnelOpeningState()
-				: condition(mutex) {
+				: condition(mutex),
+				threadsCount(0) {
 			//...//
 		}
 		
@@ -427,6 +428,15 @@ private:
 		NewConnections newConnections;
 		Tunnels tunnels;
 
+		volatile long threadsCount;
+
+	};
+
+	enum ThreadGroup {
+		TG_TUNNEL_OPENING,
+		TG_PROACTOR,
+		TG_REACTOR,
+		TG_UPDATING
 	};
 
 public:
@@ -469,16 +479,36 @@ public:
 					L"Failed to start service at server operation system, License Upgrade required");
 			}
 		}
-		m_tunnelOpeningThreadManager.spawn_n(
+		m_threadManager.spawn_n(
 			openingTunnelMinThreadCount,
 			&TunnelOpeningThread,
-			this);
-		m_mainThreadManager.spawn_n(
+			this,
+			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+			ACE_DEFAULT_THREAD_PRIORITY,
+			TG_TUNNEL_OPENING);
+		m_threadManager.spawn_n(
 			proactorMinThreadCount,
 			&ProactorEventLoopThread,
-			this);
-		m_reactorThreadManager.spawn(&ReactorEventLoopThread, this);
-		m_mainThreadManager.spawn(&UpdatingThread, this);
+			this,
+			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+			ACE_DEFAULT_THREAD_PRIORITY,
+			TG_PROACTOR);
+		m_threadManager.spawn(
+			&ReactorEventLoopThread,
+			this,
+			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+			0,
+			0,
+			ACE_DEFAULT_THREAD_PRIORITY,
+			TG_REACTOR);
+		m_threadManager.spawn(
+			&UpdatingThread,
+			this,
+			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+			0,
+			0,
+			ACE_DEFAULT_THREAD_PRIORITY,
+			TG_UPDATING);
 	}
 
 	~Implementation() {
@@ -505,8 +535,8 @@ public:
 		}
 
 		m_reactor.end_reactor_event_loop();
-		m_reactorThreadManager.wait();
-		m_tunnelOpeningThreadManager.wait();
+		m_threadManager.wait_grp(TG_REACTOR);
+		m_threadManager.wait_grp(TG_TUNNEL_OPENING);
 		
 		{
 			ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
@@ -514,7 +544,7 @@ public:
 		}
 		m_proactor.proactor_end_event_loop();
 
-		m_mainThreadManager.wait();
+		m_threadManager.wait();
 
 	}
 
@@ -1051,7 +1081,14 @@ private:
 			m_tunnelRulesToCheck.swap(tmpRulesToCheck);
 			if (m_tunnelRulesToCheck.size() > 0 && !m_isRulesCheckThreadLaunched) {
 				m_isRulesCheckThreadLaunched = true;
-				m_mainThreadManager.spawn(&RulesCheckThread, this);
+				m_threadManager.spawn(
+					&RulesCheckThread,
+					this,
+					THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+					0,
+					0,
+					ACE_DEFAULT_THREAD_PRIORITY,
+					TG_UPDATING);
 			}
 			if (Log::GetInstance().IsDebugRegistrationOn()) {
 				Format message(
@@ -1130,7 +1167,14 @@ private:
 			if (!m_isServicesThreadLaunched) {
 				// Will be completed automatically at error in OpenRule.
 				m_isServicesThreadLaunched = true;
-				m_mainThreadManager.spawn(&ServiceThread, this);
+				m_threadManager.spawn(
+					&ServiceThread,
+					this,
+					THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+					0,
+					0,
+					ACE_DEFAULT_THREAD_PRIORITY,
+					TG_UPDATING);
 			}
 			activeRules.insert(ActiveRule(rule.GetUuid(), false));
 			const size_t oldActiveServicesCount = m_activeServices.size();
@@ -1547,42 +1591,61 @@ private:
 				size_t newConnectionsInQueue,
 				size_t tunnelsToSwitchInQueue) {
 		
-		const auto queue = newConnectionsInQueue + tunnelsToSwitchInQueue;
-		const auto threadsCount = m_tunnelOpeningThreadManager.count_threads();
-		if (queue <= threadsCount) {
+		const long queue = newConnectionsInQueue + tunnelsToSwitchInQueue;
+		if (queue <= m_tunnelOpeningState.threadsCount) {
 			return;
 		}
-		auto threadsToStart = queue - threadsCount + openingTunnelMinThreadCount;
+		auto threadsToStart
+			= queue - m_tunnelOpeningState.threadsCount + openingTunnelMinThreadCount;
 		
 		Log::GetInstance().AppendDebug(
 			"Starting %1% thread(s) for tunnel opening (already started: %2%).",
 			threadsToStart,
-			threadsCount);
+			m_tunnelOpeningState.threadsCount);
 		
-		if (threadsCount + threadsToStart > openingTunnelMaxThreadCount) {
+		if (m_tunnelOpeningState.threadsCount + threadsToStart > openingTunnelMaxThreadCount) {
 			Format message(
 				"Failed to start new tunnel opening thread."
 					" Maximum number of threads exceeded."
 					" Already active %1% threads."
 					" Trying to start %2% threads."
 					" Please contact product support to resolve this issue.");
-			message % threadsCount;
+			message % m_tunnelOpeningState.threadsCount;
 			message % threadsToStart;
 			Log::GetInstance().AppendWarn(message.str());
-			threadsToStart = openingTunnelMaxThreadCount - threadsCount;
+			threadsToStart = openingTunnelMaxThreadCount - m_tunnelOpeningState.threadsCount;
 			assert(threadsToStart > 0);
-			assert(threadsCount + threadsToStart == openingTunnelMaxThreadCount);
 		}
 		
-		m_tunnelOpeningThreadManager.spawn_n(threadsToStart, &TunnelOpeningThread, this);
+		m_threadManager.spawn_n(
+			threadsToStart,
+			&TunnelOpeningThread,
+			this,
+			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
+			ACE_DEFAULT_THREAD_PRIORITY,
+			TG_TUNNEL_OPENING);
 	
 	}
 
 	static ACE_THR_FUNC_RETURN TunnelOpeningThread(void *param) {
 
-		Log::GetInstance().AppendDebug("Started tunnel opening thread.");
 		Implementation &instance = *static_cast<Implementation *>(param);
 		TunnelOpeningState &state = instance.m_tunnelOpeningState;
+		Interlocked::Increment(state.threadsCount);
+		Log::GetInstance().AppendDebug("Started tunnel opening thread.");
+
+		const class Cleanup : private boost::noncopyable {
+		public:
+			Cleanup(volatile long &threadsCountRef)
+					: m_threadsCount(threadsCountRef) {
+				//...//
+			}
+			~Cleanup() {
+				Interlocked::Decrement(m_threadsCount);
+			}
+		private:
+			volatile long &m_threadsCount;
+		} cleanup(state.threadsCount);
 
 		for ( ; ; ) {
 
@@ -1603,12 +1666,10 @@ private:
 
 				if (state.newConnections.empty() && state.tunnels.empty()) {
 
-					if (	isTimeout
-							&& instance.m_tunnelOpeningThreadManager.count_threads() + 2
-								> openingTunnelMinThreadCount) {
+					if (isTimeout && state.threadsCount > openingTunnelMinThreadCount) {
 						Log::GetInstance().AppendDebug(
 							"Too many threads (%1%) for tunnel opening, closing one...",
-							instance.m_tunnelOpeningThreadManager.count_threads());
+							state.threadsCount);
 						return 0;
 					}
 
@@ -1779,9 +1840,7 @@ private:
 	mutable ActiveServicesMutex m_activeServicesMutex;
 	ActiveServices m_activeServices;
 	
-	ACE_Thread_Manager m_mainThreadManager;
-	ACE_Thread_Manager m_tunnelOpeningThreadManager;
-	ACE_Thread_Manager m_reactorThreadManager;
+	ACE_Thread_Manager m_threadManager;
 	volatile long m_isDestructionMode;
 
 	RuleUpdatingState m_ruleUpdatingState;
