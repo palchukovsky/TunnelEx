@@ -669,17 +669,6 @@ public:
 		assert(IsNotLockedByMyThread(m_mutex));
 
 		switch (reinterpret_cast<int>(act)) {
-			case TIMER_IDLE_TIMEOUT:
-				if (!m_myInterface.OnIdleTimeout()) {
-					Log::GetInstance().AppendDebug(
-						"Closing connection %1% by idle timeout...",
-						m_instanceId);
-					m_signal->OnConnectionClose(m_instanceId);
-				} else {
-					Lock lock(m_mutex, true);
-					UpdateIdleTimer();
-				}
-				break;
 			case TIMER_DELETE:
 				Log::GetInstance().AppendDebug(
 					"Connection %1% scheduled for deletion.",
@@ -695,6 +684,15 @@ public:
 					}
 				}
 				break;
+			case TIMER_IDLE_TIMEOUT:
+				if (m_myInterface.OnIdleTimeout()) {
+					Lock lock(m_mutex, true);
+					UpdateIdleTimer();
+					break;
+				}
+				Log::GetInstance().AppendDebug(
+					"Closing connection %1% by idle timeout...",
+					m_instanceId);
 			case TIMER_CLOSE:
 				Log::GetInstance().AppendDebug(
 					"Connection %1% scheduled for closure.",
@@ -947,7 +945,7 @@ private:
 			*this,
 			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
 			m_idleTimeoutInterval);
-		assert(m_idleTimeoutTimer!= -1);
+		assert(m_idleTimeoutTimer != -1);
 	}
 
 	bool IsOpened() const {
