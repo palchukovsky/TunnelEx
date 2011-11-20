@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 			testing::GTEST_FLAG(filter) = "TcpServer.*";
 			testing::GTEST_FLAG(repeat) = -1;
 			std::cout
-				<< "Using endpoint: \"*:" << testing::tcpServerPort << "..."
+				<< "Using endpoint: \"*:" << testing::tcpServerPort << "\"..."
 				<< std::endl;
 			break;
 		case MODE_TCP_CLIENT:
@@ -108,9 +108,10 @@ int main(int argc, char **argv) {
 				testing::GTEST_FLAG(filter)
 					= std::string("TcpClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
+			testing::GTEST_FLAG(break_on_failure) = 1;
 			std::cout
 				<< "Using endpoint: \""
-				<< testing::tcpServerHost << ":" << testing::tcpServerPort << "..."
+				<< testing::tcpServerHost << ":" << testing::tcpServerPort << "\"..."
 				<< std::endl;
 			break;
 		case MODE_UDP_SERVER:
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
 			testing::GTEST_FLAG(filter) = "UdpServer.*";
 			testing::GTEST_FLAG(repeat) = -1;
 			std::cout
-				<< "Using endpoint: \"*:" << testing::udpServerPort << "..."
+				<< "Using endpoint: \"*:" << testing::udpServerPort << "\"..."
 				<< std::endl;
 			break;
 		case MODE_UDP_CLIENT:
@@ -132,9 +133,10 @@ int main(int argc, char **argv) {
 				testing::GTEST_FLAG(filter)
 					= std::string("UdpClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
+			testing::GTEST_FLAG(break_on_failure) = 1;
 			std::cout
 				<< "Using endpoint: \""
-				<< testing::udpServerHost << ":" << testing::udpServerPort << "..."
+				<< testing::udpServerHost << ":" << testing::udpServerPort << "\"..."
 				<< std::endl;
 			break;
 		case MODE_PIPE_SERVER:
@@ -154,6 +156,7 @@ int main(int argc, char **argv) {
 				testing::GTEST_FLAG(filter)
 					= std::string("PipeClient.") + testing::GTEST_FLAG(filter).c_str();
 			}
+			testing::GTEST_FLAG(break_on_failure) = 1;
 			std::cout << "Using endpoint: \"" << testing::pipeServerPath << "\"..." << std::endl;
 			break;
 		default:
