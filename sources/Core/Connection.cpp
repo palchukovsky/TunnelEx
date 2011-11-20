@@ -111,14 +111,16 @@ namespace {
 				: Base(mutex, 0) {
 
 			if (!locked()) {
-				if (ACE_OS::thr_self() == mutex.get_thread_id()) {
-					Interlocked::Increment(&DebugLockStat::recursive);
-				}
 				verify(acquire() != -1);
 				Interlocked::Increment(&DebugLockStat::fails);
-				if (isFromProactor) {
-					Interlocked::Increment(&DebugLockStat::proactor);
-				}
+			}
+
+			if (mutex.get_nesting_level() > 0) {
+				Interlocked::Increment(&DebugLockStat::recursive);
+			}
+
+			if (isFromProactor) {
+				Interlocked::Increment(&DebugLockStat::proactor);
 			}
 
 			if (!(Interlocked::Increment(&DebugLockStat::locks) % 20000)) {
@@ -734,16 +736,24 @@ private:
 	template<typename Result>
 	void DoHandleReadStream(const Result &result) {
 
-		assert(IsNotLockedByMyThread(m_mutex));
+		assert(result.error() == ERROR_OPERATION_ABORTED || IsNotLockedByMyThread(m_mutex));
 
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		
 		assert(messageBlock.IsTunnelMessage());
-		assert(!m_closeAtLastMessageBlock);
+		assert(result.error() == ERROR_OPERATION_ABORTED || !m_closeAtLastMessageBlock);
 
 		// if no will be returned in this "if" - connection will be closed
 		if (!result.success() && ReportReadError(result)) {
-			Log::GetInstance().AppendDebug("Closing connection...");
+			if (result.error() == ERROR_OPERATION_ABORTED) {
+				Log::GetInstance().AppendDebug("Operation aborted, closing connection...");
+				// tunnel closing in progress, it releases all tunnel memory
+				messageBlock.Release();
+				// connection object can be already deleted
+				return;
+			} else {
+				Log::GetInstance().AppendDebug("Closing connection...");
+			}
 		} else if (result.bytes_transferred() == 0) {
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
@@ -775,9 +785,7 @@ private:
 	template<typename Result>
 	bool ReportReadError(const Result &result) const {
 		
-		const Error error(result.error());
-		
-		switch (error.GetErrorNo()) {
+		switch (result.error()) {
 			case ERROR_MORE_DATA: // see TEX-685
 				return false;
 			case ERROR_NETNAME_DELETED: // see TEX-553
@@ -796,6 +804,7 @@ private:
 		}
 
 		if (Log::GetInstance().IsSystemErrorsRegistrationOn()) {
+			const Error error(result.error());
 			Format message(
 				"Connection %3% read operation completes with error: %1% (%2%).");
 			message
