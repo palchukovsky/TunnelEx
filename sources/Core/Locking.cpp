@@ -64,8 +64,16 @@ long Interlocked::Increment(long volatile *ptr) throw() {
 	return BOOST_INTERLOCKED_INCREMENT(ptr);
 }
 
+long Interlocked::Increment(long volatile &ref) throw() {
+	return BOOST_INTERLOCKED_INCREMENT(&ref);
+}
+
 long Interlocked::Decrement(long volatile *ptr) throw() {
 	return BOOST_INTERLOCKED_DECREMENT(ptr);
+}
+
+long Interlocked::Decrement(long volatile &ref) throw() {
+	return BOOST_INTERLOCKED_DECREMENT(&ref);
 }
 
 long Interlocked::Exchange(long volatile &destination, long value) throw() {

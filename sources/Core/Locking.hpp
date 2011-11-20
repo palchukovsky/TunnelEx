@@ -67,8 +67,10 @@ namespace TunnelEx {
 	struct TUNNELEX_CORE_API Interlocked {
 
 		static long Increment(long volatile *) throw();
+		static long Increment(long volatile &) throw();
 
 		static long Decrement(long volatile *) throw();
+		static long Decrement(long volatile &) throw();
 
 		static long Exchange(long volatile &destination, long value) throw();
 
