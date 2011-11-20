@@ -51,6 +51,7 @@
 #	include <ace/Event_Handler.h>
 #	include <ace/Asynch_IO.h>
 #	include <ace/Proactor.h>
+#	include <ace/WIN32_Proactor.h>
 #	include <ace/Reactor.h>
 #	include <ace/OS_NS_unistd.h>
 #	include <ace/Atomic_Op.h>

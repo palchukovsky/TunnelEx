@@ -34,10 +34,17 @@ using namespace TunnelEx;
 
 namespace {
 
-	//! @todo: hadcored min thread number, move to options or config
-	const auto openingTunnelMinThreadCount = 3;
+	//! @todo: hadcored min thread number and tunnel thread opening step, move to options or config
+	const auto openingTunnelMinThreadCount = 4;
+	//! @todo: hardcored maximum thread count
+	const auto openingTunnelMaxThreadCount = 600;
 	//! @todo: hadcored sleep time, move to options or config
-	const auto openingTunnelSleepMinutesBeforeExit = 20;
+	const ACE_Time_Value openingTunnelThreadMaxIdleTime(20 * 60);
+	
+	//! @todo: hadcored min thread number, move to options or config
+	const auto proactorMinThreadCount = 8; // see TEX-689 for details
+	
+	static_assert(openingTunnelMaxThreadCount >= openingTunnelMinThreadCount, "Logic error.");
 
 }
 
@@ -152,29 +159,6 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 namespace {
-
-	class ProactorLoopStopper : public ACE_Handler {
-	public:
-		explicit ProactorLoopStopper(ACE_Proactor &proactor)
-				: m_proactor(proactor) {
-			TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
-		}
-		virtual ~ProactorLoopStopper() {
-			TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
-		}
-	private:
-		ProactorLoopStopper(const ProactorLoopStopper &);
-		const ProactorLoopStopper & operator =(const ProactorLoopStopper &);
-	public:
-		virtual void handle_time_out(const ACE_Time_Value &, const void * = 0) {
-			m_proactor.proactor_end_event_loop();
-			delete this;
-		}
-	private:
-		ACE_Proactor &m_proactor;
-		TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
-	};
-	TUNNELEX_OBJECTS_DELETION_CHECK_DEFINITION(ProactorLoopStopper, m_instancesNumber);
 
 	template<typename Exception>
 	void ReportException(
@@ -450,6 +434,8 @@ public:
 	explicit Implementation(ServerWorker &myInterface, Server::Ref server) 
 			: m_myInterface(myInterface),
 			m_server(server),
+			//! @todo: from boost::io_service::io_service(), check in new versions.
+			m_proactor(new ACE_WIN32_Proactor(std::numeric_limits<size_t>::max()), true),
 			m_isServicesThreadLaunched(false),
 			m_isRulesCheckThreadLaunched(false),
 			m_isDestructionMode(false),
@@ -457,6 +443,13 @@ public:
 			m_tunnelLicense(&m_tunnelLicenseState),
 			m_rwSplitLicense(&m_rwSplitLicenseState),
 			m_serverStopCondition(m_serverStopMutex) {
+		
+		static_assert(
+			sizeof(DWORD) >= sizeof(size_t),
+			"Wrong max thread number for proactor's CreateIoCompletionPort.");
+
+		Log::GetInstance().AppendDebug("Creating server...");
+
 		{
 			const bool isServerOs = IsServerOs();
 			if (!Licensing::ExeLicense().IsFeatureAvailable(true)) {
@@ -480,15 +473,20 @@ public:
 			openingTunnelMinThreadCount,
 			&TunnelOpeningThread,
 			this);
-		m_mainThreadManager.spawn(&ProactorEventLoopThread, this);
-		m_mainThreadManager.spawn(&ReactorEventLoopThread, this);
+		m_mainThreadManager.spawn_n(
+			proactorMinThreadCount,
+			&ProactorEventLoopThread,
+			this);
+		m_reactorThreadManager.spawn(&ReactorEventLoopThread, this);
 		m_mainThreadManager.spawn(&UpdatingThread, this);
 	}
 
 	~Implementation() {
 
-		verify(Interlocked::CompareExchange(m_isDestructionMode, 1, 0) == 0);
+		Log::GetInstance().AppendDebug("Destroying server...");
 
+		verify(Interlocked::CompareExchange(m_isDestructionMode, 1, 0) == 0);
+		
 		m_tunnelOpeningState.condition.broadcast();
 		m_ruleUpdatingState.newRuleCondition.broadcast();
 
@@ -497,6 +495,7 @@ public:
 			{
 				RulesWriteLock lock(m_rulesMutex);
 				m_tunnelRulesToCheck.clear();
+				m_activeRules.clear();
 			}
 			{
 				ActiveServicesWriteLock lock(m_activeServicesMutex);
@@ -504,15 +503,19 @@ public:
 			}
 			m_serverStopCondition.broadcast();
 		}
-		m_activeRules.clear();
-		ScheduleReactorStopping();
+
+		m_reactor.end_reactor_event_loop();
+		m_reactorThreadManager.wait();
+		m_tunnelOpeningThreadManager.wait();
+		
 		{
 			ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
 			m_activeTunnels.clear();
 		}
-		ScheduleProactorStopping();
+		m_proactor.proactor_end_event_loop();
+
 		m_mainThreadManager.wait();
-		m_tunnelOpeningThreadManager.wait();
+
 	}
 
 public:
@@ -711,10 +714,17 @@ public:
 	void OpenTunnel(
 				boost::shared_ptr<RuleInfo> ruleInfo,
 				AutoPtr<Connection> inConnection) {
-		TunnelOpeningState::Lock lock(m_tunnelOpeningState.mutex);
-		m_tunnelOpeningState.newConnections.push_back(
-			TunnelOpeningState::NewConnection(ruleInfo, inConnection));
-		m_tunnelOpeningState.condition.signal();
+		size_t newConnectionsInQueue;
+		size_t tunnelsToSwitchInQueue;
+		{
+			TunnelOpeningState::Lock lock(m_tunnelOpeningState.mutex);
+			newConnectionsInQueue = m_tunnelOpeningState.newConnections.size();
+			tunnelsToSwitchInQueue = m_tunnelOpeningState.tunnels.size();
+			m_tunnelOpeningState.newConnections.push_back(
+				TunnelOpeningState::NewConnection(ruleInfo, inConnection));
+			m_tunnelOpeningState.condition.signal();
+		}
+		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 	}
 
 	SharedPtr<Connection> CreateConnection(
@@ -784,9 +794,16 @@ public:
 			return;
 		}
 
-		TunnelOpeningState::Lock lock(m_tunnelOpeningState.mutex);
-		m_tunnelOpeningState.tunnels.push_back(tunnel);
-		m_tunnelOpeningState.condition.signal();
+		size_t newConnectionsInQueue;
+		size_t tunnelsToSwitchInQueue;
+		{
+			TunnelOpeningState::Lock lock(m_tunnelOpeningState.mutex);
+			newConnectionsInQueue = m_tunnelOpeningState.newConnections.size();
+			tunnelsToSwitchInQueue = m_tunnelOpeningState.tunnels.size();
+			m_tunnelOpeningState.tunnels.push_back(tunnel);
+			m_tunnelOpeningState.condition.signal();
+		}
+		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 
 	}
 
@@ -1329,9 +1346,16 @@ private:
 	}
 
 	void SwitchTunnel(boost::shared_ptr<Tunnel> tunnel) {
-		TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.mutex);
-		m_tunnelOpeningState.tunnels.push_back(tunnel);
-		m_tunnelOpeningState.condition.signal();
+		size_t newConnectionsInQueue;
+		size_t tunnelsToSwitchInQueue;
+		{
+			TunnelOpeningState::Lock conditionLock(m_tunnelOpeningState.mutex);
+			newConnectionsInQueue = m_tunnelOpeningState.newConnections.size();
+			tunnelsToSwitchInQueue = m_tunnelOpeningState.tunnels.size();
+			m_tunnelOpeningState.tunnels.push_back(tunnel);
+			m_tunnelOpeningState.condition.signal();
+		}
+		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 	}
 
 	void OpenTunnelImplementation(
@@ -1519,23 +1543,39 @@ private:
 		return true;
 	}
 
-	void StartTunnelOpeningThread() {
+	void StartTunnelOpeningThread(
+				size_t newConnectionsInQueue,
+				size_t tunnelsToSwitchInQueue) {
+		
+		const auto queue = newConnectionsInQueue + tunnelsToSwitchInQueue;
 		const auto threadsCount = m_tunnelOpeningThreadManager.count_threads();
+		if (queue <= threadsCount) {
+			return;
+		}
+		auto threadsToStart = queue - threadsCount + openingTunnelMinThreadCount;
+		
 		Log::GetInstance().AppendDebug(
-			"Starting one more thread for tunnel opening (already started: %1%).",
+			"Starting %1% thread(s) for tunnel opening (already started: %2%).",
+			threadsToStart,
 			threadsCount);
-		//! @todo: hardcored maximum thread count		
-		if (threadsCount >= 600) {
+		
+		if (threadsCount + threadsToStart > openingTunnelMaxThreadCount) {
 			Format message(
 				"Failed to start new tunnel opening thread."
 					" Maximum number of threads exceeded."
 					" Already active %1% threads."
+					" Trying to start %2% threads."
 					" Please contact product support to resolve this issue.");
 			message % threadsCount;
+			message % threadsToStart;
 			Log::GetInstance().AppendWarn(message.str());
-			return;
+			threadsToStart = openingTunnelMaxThreadCount - threadsCount;
+			assert(threadsToStart > 0);
+			assert(threadsCount + threadsToStart == openingTunnelMaxThreadCount);
 		}
-		m_tunnelOpeningThreadManager.spawn(&TunnelOpeningThread, this);
+		
+		m_tunnelOpeningThreadManager.spawn_n(threadsToStart, &TunnelOpeningThread, this);
+	
 	}
 
 	static ACE_THR_FUNC_RETURN TunnelOpeningThread(void *param) {
@@ -1548,7 +1588,9 @@ private:
 
 			TunnelOpeningState::NewConnection newConnection;
 			boost::shared_ptr<Tunnel> tunnel;
-			bool isRequiresMoreThreads = false;
+			size_t newConnectionsInQueue = 0;
+			size_t tunnelsToSwitchInQueue = 0;
+			const char *logMessageSubject = nullptr;
 
 			for (bool isTimeout = false; ; isTimeout = true) {
 
@@ -1559,41 +1601,24 @@ private:
 					return 0;
 				}
 
-				const char *logMessageSubject = 0;
-				
-				if (!state.newConnections.empty()) {
-				
-					newConnection = *state.newConnections.begin();
-					state.newConnections.pop_front();
-					if (Log::GetInstance().IsDebugRegistrationOn()) {
-						logMessageSubject = "connection is taken to open tunnel";
+				if (state.newConnections.empty() && state.tunnels.empty()) {
+
+					if (	isTimeout
+							&& instance.m_tunnelOpeningThreadManager.count_threads() + 2
+								> openingTunnelMinThreadCount) {
+						Log::GetInstance().AppendDebug(
+							"Too many threads (%1%) for tunnel opening, closing one...",
+							instance.m_tunnelOpeningThreadManager.count_threads());
+						return 0;
 					}
-				
-				} else if (!state.tunnels.empty()) {
-				
-					tunnel = *state.tunnels.begin();
-					state.tunnels.pop_front();
+
 					if (Log::GetInstance().IsDebugRegistrationOn()) {
-						logMessageSubject = "tunnel is taken to switch";
+						Log::GetInstance().AppendDebug(
+							"No connections or tunnels in queue, will wait %1% minutes...",
+							long(floor(openingTunnelThreadMaxIdleTime.sec() / 60.0)));
 					}
-				
-				} else if (
-						isTimeout
-						&& instance.m_tunnelOpeningThreadManager.count_threads() + 2 > openingTunnelMinThreadCount) {
-				
-					Log::GetInstance().AppendDebug(
-						"Too many threads (%1%) for tunnel opening, closing one...",
-						instance.m_tunnelOpeningThreadManager.count_threads());
-					return 0;
-				
-				} else {
-				
-					Log::GetInstance().AppendDebug(
-						"No connections or tunnels in queue, will wait %1% minutes...",
-						openingTunnelSleepMinutesBeforeExit);
 					const ACE_Time_Value waitUntilTime
-						= ACE_OS::gettimeofday()
-						+ ACE_Time_Value(60 * openingTunnelSleepMinutesBeforeExit);
+						= ACE_OS::gettimeofday() + openingTunnelThreadMaxIdleTime;
 					
 					if (state.condition.wait(&waitUntilTime) == -1) {
 						assert(errno == ETIME);
@@ -1607,25 +1632,43 @@ private:
 							return 1;
 						}
 					}
+					
+				}
 
-					continue;
+				newConnectionsInQueue = state.newConnections.size();
+				tunnelsToSwitchInQueue = state.tunnels.size();
 				
+				if (newConnectionsInQueue > 0) {
+					newConnection = *state.newConnections.begin();
+					state.newConnections.pop_front();
+					--newConnectionsInQueue;
+					logMessageSubject = Log::GetInstance().IsDebugRegistrationOn()
+						?	"connection is taken to open tunnel"
+						:	nullptr;
+				} else if (tunnelsToSwitchInQueue > 0) {
+					tunnel = *state.tunnels.begin();
+					state.tunnels.pop_front();
+					--tunnelsToSwitchInQueue;
+					logMessageSubject = Log::GetInstance().IsDebugRegistrationOn()
+						?	"tunnel is taken to switch"
+						:	nullptr;
+				} else {
+					continue;
 				}
 			
-				if (logMessageSubject) {
-					Log::GetInstance().AppendDebug(
-						"One %1%, another connections/tunnels %2%/%3% in queue.",
-						logMessageSubject,
-						state.newConnections.size(),
-						state.tunnels.size());
-				}
-
-				isRequiresMoreThreads
-					= !state.newConnections.empty() || !state.tunnels.empty();
-
 				break;
 			
 			}
+
+			if (logMessageSubject) {
+				Log::GetInstance().AppendDebug(
+					"One %1%, another connections/tunnels %2%/%3% in queue.",
+					logMessageSubject,
+					newConnectionsInQueue,
+					tunnelsToSwitchInQueue);
+			}
+
+			instance.StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 
 			try {
 				if (newConnection) {
@@ -1656,21 +1699,18 @@ private:
 					"Unknown system error occurred in tunnel opening thread.");
 			}
 
-			if (isRequiresMoreThreads) {
-				instance.StartTunnelOpeningThread();
-			}
-
 		}
 
 	}
 
 	static ACE_THR_FUNC_RETURN ProactorEventLoopThread(void *param) {
 		Log::GetInstance().AppendDebug("Started proactor events thread.");
+		Implementation &instance = *static_cast<Implementation *>(param);
 		for ( ; ; ) {
 			try {
-				ACE_Proactor &proactor = static_cast<Implementation *>(param)->m_proactor;
+				ACE_Proactor &proactor = instance.m_proactor;
 				proactor.proactor_run_event_loop();
-				assert(static_cast<Implementation *>(param)->m_activeTunnels.size() == 0);
+				assert(static_cast<Implementation *>(param)->m_activeTunnels.empty());
 				break;
 			} catch (const TunnelEx::LocalException &ex) {
 				Log::GetInstance().AppendFatalError(ConvertString<String>(ex.GetWhat()).GetCStr());
@@ -1702,22 +1742,6 @@ private:
 		}
 		Log::GetInstance().AppendDebug("Reactor events thread completed.");
 		return NULL;
-	}
-
-	void ScheduleProactorStopping() throw() {
-		try {
-			std::unique_ptr<ProactorLoopStopper> handler(new ProactorLoopStopper(m_proactor));
-			// timer will hit after timers for connections handlers d-ion
-			m_proactor.schedule_timer(*handler, 0, ACE_Time_Value(0, 1));
-			handler.release();
-		} catch (...) {
-			assert(false);
-			m_proactor.proactor_end_event_loop();
-		}
-	}
-
-	void ScheduleReactorStopping() throw() {
-		m_reactor.end_reactor_event_loop();
 	}
 
 	inline static bool IsServerOs() {
@@ -1757,6 +1781,7 @@ private:
 	
 	ACE_Thread_Manager m_mainThreadManager;
 	ACE_Thread_Manager m_tunnelOpeningThreadManager;
+	ACE_Thread_Manager m_reactorThreadManager;
 	volatile long m_isDestructionMode;
 
 	RuleUpdatingState m_ruleUpdatingState;
