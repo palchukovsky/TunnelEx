@@ -12,7 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 #include <ace/OS_Errno.h>
 
@@ -69,4 +69,4 @@
 
 #endif
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"

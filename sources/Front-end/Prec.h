@@ -12,7 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 #define BOOST_FILESYSTEM_VERSION 2
 
@@ -91,4 +91,4 @@ extern const wxString defaultFtpsPort;
 
 #endif
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"

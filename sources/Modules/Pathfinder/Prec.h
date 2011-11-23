@@ -11,7 +11,7 @@
 #define INCLUDED_FILE__Prec_h__1006221330
 
 #include "CompileConfig.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 #include <ace/OS_Errno.h>
 
@@ -48,4 +48,4 @@
 
 #endif
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"

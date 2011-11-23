@@ -12,7 +12,7 @@
 
 #include "Api.h"
 #include "Locking.hpp"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 

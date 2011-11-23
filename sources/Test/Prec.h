@@ -12,7 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 #include "Xml.hpp"
 #include "Crypto.hpp"
@@ -49,4 +49,4 @@
 
 #include "TestUtils/Prec.h"
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"

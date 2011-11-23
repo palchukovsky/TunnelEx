@@ -11,7 +11,7 @@
 #define INCLUDED_FILE__Prec_h__1006221353
 
 #include "CompileConfig.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 #include "UseUnused.hpp"
 #include "Foreach.h"
 
@@ -42,4 +42,4 @@
 
 #endif
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"

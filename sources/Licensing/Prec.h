@@ -12,7 +12,7 @@
 
 #include "Constants.h"
 #include "CompileConfig.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 #include "Crypto.hpp"
 #include "Foreach.h"
@@ -53,4 +53,4 @@
 
 #endif
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"

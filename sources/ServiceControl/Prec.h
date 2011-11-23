@@ -12,7 +12,7 @@
 
 #include "CompileConfig.h"
 #include "Constants.h"
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
 
 #define BOOST_FILESYSTEM_VERSION 2
 
@@ -38,4 +38,4 @@
 
 #endif
 
-#include "LocalAssert.h"
+#include "LocalAssert.hpp"
