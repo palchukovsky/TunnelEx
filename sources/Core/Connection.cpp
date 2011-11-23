@@ -247,7 +247,7 @@ private:
 		
 		if (m_idleTimeoutTimer != -1) {
 			assert(m_proactor);
-			m_proactor->cancel_timer(m_idleTimeoutTimer);
+			verify(m_proactor->cancel_timer(m_idleTimeoutTimer) == 1);
 			m_idleTimeoutTimer = -1;
 		}
 		
@@ -678,7 +678,6 @@ public:
 					assert(m_delTimer != -1);
 					assert(m_proactor);
 					assert(m_sendQueueSize == 0);
-					assert(m_proactor->cancel_timer(m_delTimer) == 0);
 					if (!CheckedDelete(lock, true)) {
 						m_proactor = 0;
 					}
@@ -940,12 +939,10 @@ private:
 			return;
 		}
 		assert(m_idleTimeoutInterval != ACE_Time_Value::zero);
-		m_proactor->cancel_timer(m_idleTimeoutTimer);
-		m_idleTimeoutTimer = m_proactor->schedule_timer(
-			*this,
-			reinterpret_cast<void *>(TIMER_IDLE_TIMEOUT),
-			m_idleTimeoutInterval);
-		assert(m_idleTimeoutTimer != -1);
+		verify(m_proactor
+				->timer_queue()
+				->reset_interval(m_idleTimeoutTimer, m_idleTimeoutInterval) 
+			== 0);
 	}
 
 	bool IsOpened() const {
