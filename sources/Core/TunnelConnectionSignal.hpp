@@ -172,9 +172,10 @@ namespace TunnelEx {
 		}
 
 		void DisconnectDataTransfer() {
-			m_onMessageBlockSentSignal.disconnect_all_slots();
-			m_onNewMessageBlockSignal.disconnect_all_slots();
 			m_onConnectionSetupCompletedSignal.disconnect_all_slots();
+			m_onNewMessageBlockSignal.disconnect_all_slots();
+			m_onConnectionCloseSignal.disconnect_all_slots();
+			m_onMessageBlockSentSignal.disconnect_all_slots();
 		}
 
 		void DisconnectAll() {

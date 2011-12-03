@@ -238,14 +238,6 @@ namespace TunnelEx {
 
 	private:
 
-		//! Idle timeout hook.
-		/** If it returns false - tunnel closes. If true - timer restarted.
-		  * @sa SetIdleTimeout
-		  */
-		virtual bool OnIdleTimeout() throw();
-
-	private:
-
 		class Implementation;
 		Implementation *m_pimpl;
 

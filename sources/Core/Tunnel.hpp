@@ -113,8 +113,8 @@ namespace TunnelEx {
 		//! Closes current destination and tries to open next. Returns
 		//! false if there no more destinations in list.
 		bool Switch(
-			const boost::optional<SharedPtr<Connection> > &sourceRead,
-			const boost::optional<SharedPtr<Connection> > &sourceWrite);
+			const boost::optional<SharedPtr<Connection>> &sourceRead,
+			const boost::optional<SharedPtr<Connection>> &sourceWrite);
 
 		bool IsSetupFailed() const;
 
@@ -124,6 +124,7 @@ namespace TunnelEx {
 		void MarkAsDead() throw() {
 			assert(!m_isDead);
 			m_isDead = true;
+			DisconnectDataTransferSignals();
 		}
 		bool IsDead() const {
 			return m_isDead;
@@ -134,6 +135,8 @@ namespace TunnelEx {
 		void Init();
 
 		ReadWriteConnections CreateDestinationConnections(size_t &) const;
+
+		void DisconnectDataTransferSignals() throw();
 
 		void ReportOpened() const;
 		void ReportClosed() const;
@@ -179,7 +182,7 @@ namespace TunnelEx {
 		ReadWriteConnections m_source;
 		ReadWriteConnections m_destination;
 
-		std::list<SharedPtr<const Listener> > m_listeners;
+		std::list<SharedPtr<const Listener>> m_listeners;
 
 		unsigned int m_destinationIndex;
 

@@ -369,23 +369,8 @@ void Tunnel::Init() {
 }
 
 Tunnel::~Tunnel() throw() {
-	try {
-		//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
-		m_sourceDataTransferSignal->DisconnectDataTransfer();
-		m_destinationDataTransferSignal->DisconnectDataTransfer();
-	} catch (...) {
-#		ifdef DEV_VER
-		{
-			Format message("Unexpected exception in tunnel destructor.");
-			message % GetInstanceId();
-			Log::GetInstance().AppendWarn(message.str());
-		}
-#		else
-			Log::GetInstance().AppendDebug(
-				"Unexpected exception in tunnel destructor.",
-				GetInstanceId());
-#		endif
-		assert(false);
+	if (!m_isDead) {
+		MarkAsDead();
 	}
 	ReadWriteConnections().Swap(m_source);
 	ReadWriteConnections().Swap(m_destination);
@@ -414,6 +399,27 @@ Tunnel::~Tunnel() throw() {
 		assert(m_closedConnections == m_connectionsToClose);
 	}
 	ReportClosed();
+}
+
+void Tunnel::DisconnectDataTransferSignals() throw() {
+	try {
+		//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
+		m_sourceDataTransferSignal->DisconnectDataTransfer();
+		m_destinationDataTransferSignal->DisconnectDataTransfer();
+	} catch (...) {
+#		ifdef DEV_VER
+		{
+			Format message("Unexpected exception in tunnel signal disconnecting.");
+			message % GetInstanceId();
+			Log::GetInstance().AppendWarn(message.str());
+		}
+#		else
+			Log::GetInstance().AppendDebug(
+				"Unexpected exception in tunnel destructor.",
+				GetInstanceId());
+#		endif
+		assert(false);
+	}
 }
 
 Tunnel::ReadWriteConnections Tunnel::CreateDestinationConnections(
