@@ -206,7 +206,7 @@ namespace {
 
 	TEST_F(UdpClient, SeveralConnetions) {
 
-#		ifdef _DEBUG
+#		ifdef DEV_VER
 			const testing::ConnectionsNumber connectionsNumber = 10; // see TEX-692
 #		else
 			const testing::ConnectionsNumber connectionsNumber = 200;

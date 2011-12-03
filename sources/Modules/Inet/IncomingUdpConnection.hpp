@@ -134,12 +134,6 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		virtual bool OnIdleTimeout() throw() {
-			return false;
-		}
-
-	private:
-
 		const ACE_INET_Addr m_remoteAddress;
 		boost::shared_ptr<Stream> m_socket;
 		std::auto_ptr<std::vector<char>> m_incomingData;
