@@ -962,7 +962,10 @@ private:
 	}
 
 	void UpdateIdleTimer() throw() {
-		assert(IsLockedByMyThread(m_mutex));
+		// It must be locked by "my" thread or in the setup process (locking not
+		// required at setup). Ex.: UDP incoming connection works so: starts read,
+		// sends initial data, stops read, completes setup.
+		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		assert(m_proactor);
 		if (m_idleTimeoutTimer < 0) {
 			return;
