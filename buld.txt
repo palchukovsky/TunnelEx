@@ -13,7 +13,7 @@
 --------------------
     * ОС Microsoft Windows XP SP3 или выше;
     * Git;
-    * Microsoft Visual С++ 2010 SP1;
+    * Microsoft Visual C++ 2010 SP1;
     * Microsoft Windows SDK for Windows 7 Version 7.1
       (web-installer: http://www.microsoft.com/downloads/en/details.aspx?FamilyID=6b6c21d2-2006-4afa-9702-529fa782d63b&displaylang=en
       full installer: http://www.microsoft.com/downloads/en/details.aspx?FamilyID=35aeda01-421d-4ba5-b44b-543dc8c33a20);
@@ -24,10 +24,7 @@
     * 7-Zip 4.65 (http://7-zip.org);
     * Perl (ActivePerl 5.12.3, http://www.activestate.com/activeperl/);
     * NASM 2.09.08 (http://www.nasm.us, минимальная установка);
-    * Patch for Windows 2.5.9
-      (http://gnuwin32.sourceforge.net/packages/diffutils.htm, готовая к запуску
-      сборка: http://download.tunnelex.net/gnuutils.7z);
-
+    * Gnuwin32 (http://getgnuwin32.sourceforge.net/);
 
 1.2. Требование к настройке
 ---------------------------
@@ -38,7 +35,7 @@
     * к исполнительным файлам doxygen;
     * к исполнительным файлам WiX;
     * к исполнительным файлам 7-Zip;
-    * к исполнительным файлам DiffUtils for Windows;
+    * к исполнительным файлам Gnuwin32;
     * к исполнительным файлам NASM;
 
 1.3. Требования к сторонним библиотекам и компонентам
