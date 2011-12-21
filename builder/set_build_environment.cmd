@@ -51,6 +51,12 @@ goto Help
 shift
 if "%1"=="release" (
 	set IsRelease=true
+	set IsDebug=false
+	goto GetNextKey
+)
+if "%1"=="debug" (
+	set IsRelease=false
+	set IsDebug=true
 	goto GetNextKey
 )
 if "%1"=="full" (
