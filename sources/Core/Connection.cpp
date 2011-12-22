@@ -55,7 +55,6 @@ namespace {
 		static volatile long locks;
 		static volatile long fails;
 		static volatile long proactor;
-		static volatile long recursive;
 
 		static const double errorLevel;
 		static const double warnLevel;
@@ -65,12 +64,11 @@ namespace {
 			const auto failesLevel
 				= (double(DebugLockStat::fails) / double(DebugLockStat::locks)) * 100;
 			Format stat(
-				"Connection locks/waits/proactor/recursive statistic: %1%/%2%/%3%/%4% (%5%%% waits).");
+				"Connection locks/waits/proactor statistic: %1%/%2%/%3% (%4%%% waits).");
 			stat
 				% DebugLockStat::locks
 				% DebugLockStat::fails
 				% DebugLockStat::proactor
-				% DebugLockStat::recursive
 				% failesLevel;
 			assert(errorLevel > warnLevel && warnLevel > infoLevel);
 			if (failesLevel >= errorLevel) {
@@ -89,7 +87,6 @@ namespace {
 	volatile long DebugLockStat::locks = 0;
 	volatile long DebugLockStat::fails = 0;
 	volatile long DebugLockStat::proactor = 0;
-	volatile long DebugLockStat::recursive = 0;
 	
 	const double DebugLockStat::errorLevel = 1;
 	const double DebugLockStat::warnLevel = .85;
@@ -113,10 +110,6 @@ namespace {
 			if (!locked()) {
 				verify(acquire() != -1);
 				Interlocked::Increment(&DebugLockStat::fails);
-			}
-
-			if (mutex.get_nesting_level() > 0) {
-				Interlocked::Increment(&DebugLockStat::recursive);
 			}
 
 			if (isFromProactor) {
@@ -823,38 +816,15 @@ private:
 	
 	template<typename Result>
 	void DoHandleWriteStream(const Result &result) {
-		
-		//! Waits until send method complies works to destroy Result without AV.
-		class SenderWaiter : private boost::noncopyable {
-		public:
-			explicit SenderWaiter(Mutex &mutextRef) throw()
-					: m_mutex(&mutextRef) {
-				//...//
-			}
-			~SenderWaiter() throw() {
-				if (m_mutex) {
-					Lock(*m_mutex, true);
-				}
-			}
-			void Release() throw() {
-				assert(m_mutex);
-				m_mutex = nullptr;
-			}
-		private:
-			Mutex *m_mutex;
-		} senderWaiter(m_mutex);
 
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 
-		// FIXME
-		// Sleep(500);
 		assert(m_sendQueueSize > 0);
 		Interlocked::Decrement(m_sendQueueSize);
 
 		try {
 			if (m_closeAtLastMessageBlock) { 
 				Lock lock(m_mutex, true);
-				senderWaiter.Release();
 				if (m_sendQueueSize == 0) {
 					messageBlock.Reset();
 					CloseUnsafe(lock);
