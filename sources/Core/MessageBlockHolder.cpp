@@ -13,5 +13,5 @@
 using namespace TunnelEx;
 
 TUNNELEX_OBJECTS_DELETION_CHECK_DEFINITION(
-	UniqueMessageBlockHolder::MbImp,
+	UniqueMessageBlockHolder::Timings,
 	m_instancesNumber);

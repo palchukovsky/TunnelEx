@@ -28,6 +28,7 @@
 
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers::Asserts;
+namespace pt = boost::posix_time;
 	
 //////////////////////////////////////////////////////////////////////////
 
@@ -178,13 +179,13 @@ public:
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(nullptr),
 			m_dataBlockSize(1480), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_messageBlockQueueBufferSize((256 * 1024) / m_dataBlockSize),
+			m_messageBlockQueueBufferSize(
+				(256 * 1024) / UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)),
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(false),
 			m_sendQueueSize(0),
-			m_idleTimeoutInterval(idleTimeoutSeconds, 0),
-			m_idleTimeoutTimer(-1),
-			m_idleTimeoutUpdateTime(0) {
+			m_idleTimeoutInterval(0, 0, idleTimeoutSeconds),
+			m_idleTimeoutTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
@@ -206,9 +207,10 @@ private:
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
-				"Connection object %1% deleted. Active objects: %2%.",
+				"Connection object %1% deleted. Active objects: %2%. Timings: %3%.",
 				m_instanceId,
-				m_instancesNumber);
+				m_instancesNumber,
+				UniqueMessageBlockHolder::GetTimingsInstancesNumber());
 			DebugLockStat::Report();
 #		endif
 	}
@@ -318,12 +320,12 @@ public:
 				allocators = buffer->CreateBuffer(
 					1 + 1, // plus 1 for message, that duplicated for proactor
 					1,
-					m_dataBlockSize);
+					UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize));
 			} else {
 				allocators = buffer->CreateBuffer(
 					m_messageBlockQueueBufferSize + 1, // plus 1 for message, that duplicated for proactor
 					m_messageBlockQueueBufferSize,
-					m_dataBlockSize);
+					UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize));
 			}
 
 			ACE_Proactor &proactor = signal->GetTunnel().GetProactor();
@@ -457,21 +459,6 @@ public:
 		
 	}
 
-	DataTransferCommand SendToRemote(const char *data, size_t size) {
-		assert(size > 0);
-		if (!size || m_closeAtLastMessageBlock) {
-			return DATA_TRANSFER_CMD_SEND_PACKET;
-		}
-		//! @todo: reimplement, memory usage!!!
-		// not using internal allocator for memory, so buffer can be with any size
-		UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
-		if (messageBlock.Get().copy(data, size) == -1) {
-			throw TunnelEx::InsufficientMemoryException(
-				L"Insufficient message block memory");
-		}
-		return SendToRemote(messageBlock);
-	}
-
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
 		if (m_closeAtLastMessageBlock) {
@@ -481,7 +468,7 @@ public:
 		UniqueMessageBlockHolder &messageBlockHolder
 			= *boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
 		assert(messageBlock.GetUnreadedDataSize() > 0);
-		UniqueMessageBlockHolder blockToSend(messageBlockHolder.Get().duplicate());
+		UniqueMessageBlockHolder blockToSend(messageBlockHolder.Duplicate());
 
 		Lock lock(m_mutex, false);
 		assert(IsOpened());
@@ -496,17 +483,18 @@ public:
 			return DATA_TRANSFER_CMD_SEND_PACKET;
 		}
 
-		UpdateIdleTimer();
-
 		Interlocked::Increment(m_sendQueueSize);
+		blockToSend.SetSendingStartTimePoint();
 		const auto writeResult = m_writeStreamFunc(
 			blockToSend.Get(),
 			blockToSend.GetUnreadedDataSize());
 		if (writeResult == -1) {
+			const auto errNo = errno;
 			Interlocked::Decrement(m_sendQueueSize);
 			lock.release();
-			ReportSendError(errno); // not only log, can throws
+			ReportSendError(errNo); // not only log, can throws
 		} else {
+			UpdateIdleTimer(blockToSend.GetSendingStartTime());
 			lock.release();
 			blockToSend.Release();
 			messageBlock.MarkAsAddedToQueue();
@@ -596,40 +584,25 @@ public:
 		SendToTunnelUnsafe(messageBlock);
 	}
 
-	void SendToTunnel(const char *data, size_t size) {
-		assert(IsNotLockedByMyThread(m_mutex));
-		Lock lock(m_mutex, false);
-		SendToTunnelUnsafe(data, size);
-	}
-
 	void SendToTunnelUnsafe(MessageBlock &messageBlock) {
 		// It must be locked by "my" thread or in the setup process (locking not
 		// required at setup). Ex.: UDP incoming connection works so: starts read,
 		// sends initial data, stops read, completes setup.
 		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
+		assert(
+			!boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock)
+					->GetReceivingTime()
+					.is_not_a_date_time());
+		UpdateIdleTimer(
+			boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock)
+				->GetReceivingTime());
 		if (messageBlock.GetUnreadedDataSize() == 0) {
 			return;
 		}
-		UpdateIdleTimer();
 		m_signal->OnNewMessageBlock(messageBlock);
 		if (messageBlock.IsAddedToQueue()) {
 			Interlocked::Increment(&m_sentMessageBlockQueueSize);
 		}
-	}
-
-	void SendToTunnelUnsafe(const char *data, size_t size) {
-		assert(size > 0);
-		if (!size) {
-			return;
-		}
-		//! @todo: reimplement, memory usage!!!
-		// not using internal allocator for memory, so buffer can be with any size
-		UniqueMessageBlockHolder messageBlock(new ACE_Message_Block(size));
-		if (messageBlock.Get().copy(data, size) == -1) {
-			throw TunnelEx::InsufficientMemoryException(
-				L"Insufficient message block memory");
-		}
-		SendToTunnelUnsafe(messageBlock);
 	}
 
 	bool IsSetupCompleted() const {
@@ -660,27 +633,34 @@ public:
 
 	virtual void handle_time_out(const ACE_Time_Value &, const void * /*act*/ = 0) {
 
-		assert(m_idleTimeoutInterval != ACE_Time_Value::zero);
+		assert(m_idleTimeoutInterval.ticks() > 0);
 		assert(m_proactor);
 
 		Lock lock(m_mutex, true);
 		
-		if (m_idleTimeoutUpdateTime > 0) {
+		if (!m_idleTimeoutUpdateTime.is_not_a_date_time()) {
 
-			assert(time(nullptr) >= m_idleTimeoutUpdateTime);
-			const auto secondFromLastAction = time(nullptr) - m_idleTimeoutUpdateTime;
-			if (secondFromLastAction <= m_idleTimeoutInterval.sec()) {
+			assert(pt::microsec_clock::local_time() >= m_idleTimeoutUpdateTime);
+			const auto secondFromLastAction
+				= pt::microsec_clock::local_time() - m_idleTimeoutUpdateTime;
+			if (secondFromLastAction <= m_idleTimeoutInterval) {
 
-				m_idleTimeoutUpdateTime = 0;
+				m_idleTimeoutUpdateTime = pt::not_a_date_time;
 
-				const ACE_Time_Value sleepTime(
-					m_idleTimeoutInterval.sec() - secondFromLastAction);
-				Log::GetInstance().AppendDebug(
-					"Resetting idle timeout %1% seconds for connection %2%...",
-					sleepTime.sec(),
-					m_instanceId);
-				m_idleTimeoutTimer
-					= m_proactor->schedule_timer(*this, nullptr, sleepTime);
+				const auto sleepTime
+					= m_idleTimeoutInterval
+						- secondFromLastAction
+						+ pt::microseconds(1000000 - 1);
+				if (Log::GetInstance().IsDebugRegistrationOn()) {
+					Log::GetInstance().AppendDebug(
+						"Resetting idle timeout %1% seconds for connection %2%...",
+						sleepTime.total_seconds(),
+						m_instanceId);
+				}
+				m_idleTimeoutTimer = m_proactor->schedule_timer(
+					*this,
+					nullptr,
+					ACE_Time_Value(sleepTime.total_seconds()));
 				assert(m_idleTimeoutTimer != -1);
 			
 			} else {
@@ -702,6 +682,30 @@ public:
 				m_instanceId);
 			CheckedDelete(lock);
 		}
+
+	}
+
+	AutoPtr<MessageBlock> CreateMessageBlock(
+				size_t size,
+				const char *data = nullptr)
+			const {
+		assert(size > 0);
+		AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
+		result->Reset(
+			&UniqueMessageBlockHolder::Create(
+				size,
+				*m_allocators.messageBlock,
+				*m_allocators.dataBlock,
+				*m_allocators.dataBlockBuffer,
+				false));
+		result->SetReceivingTimePoint();
+
+		if (data && result->Get().copy(data, size) == -1) {
+			throw TunnelEx::InsufficientMemoryException(
+				L"Insufficient message block memory");
+		}
+
+		return result;
 
 	}
 
@@ -730,20 +734,21 @@ private:
 	template<typename Result>
 	void DoHandleReadStream(const Result &result) {
 
-		assert(
-			result.error() == ERROR_OPERATION_ABORTED
-			|| IsNotLockedByMyThread(m_mutex));
-
 		UniqueMessageBlockHolder messageBlock(result.message_block());
+		messageBlock.SetReceivingTimePoint();
 		assert(messageBlock.IsTunnelMessage());
 		assert(
 			result.error() == ERROR_OPERATION_ABORTED
 			|| !m_closeAtLastMessageBlock);
+		assert(
+			result.error() == ERROR_OPERATION_ABORTED
+			|| IsNotLockedByMyThread(m_mutex));
 
 		if (!result.success() && ReportReadError(result)) {
 			
 			Log::GetInstance().AppendDebug(
-				"Closing connection with code %1%...",
+				"Closing connection %1% with code %2%...",
+				m_instanceId,
 				result.error());
 			
 			messageBlock.Reset();
@@ -758,7 +763,7 @@ private:
 				m_instanceId);
 		
 		} else if (m_isReadingAllowed && IsOpened()) {
-		
+
 			Lock lock(m_mutex, true);
 			try {
 				if (IsOpened() && m_isReadingAllowed) {
@@ -818,6 +823,7 @@ private:
 	void DoHandleWriteStream(const Result &result) {
 
 		UniqueMessageBlockHolder messageBlock(result.message_block());
+		messageBlock.SetSendingTimePoint();
 
 		assert(m_sendQueueSize > 0);
 		Interlocked::Decrement(m_sendQueueSize);
@@ -901,11 +907,13 @@ private:
 		// read init
 		if (m_readStream.get()) { // ex UDP
 			UniqueMessageBlockHolder messageBlock(
-				UniqueMessageBlockHolder::CreateMessageBlockForTunnel(
+				UniqueMessageBlockHolder::Create(
 					m_dataBlockSize,
 					*m_allocators.messageBlock,
 					*m_allocators.dataBlock,
-					*m_allocators.dataBlockBuffer));
+					*m_allocators.dataBlockBuffer,
+					true));
+			messageBlock.SetReceivingStartTimePoint();
 			if (m_readStreamFunc(messageBlock.Get(), m_dataBlockSize) == -1) {
 				const Error error(errno);
 				WFormat message(
@@ -931,7 +939,8 @@ private:
 	
 	}
 
-	void UpdateIdleTimer() throw() {
+	void UpdateIdleTimer(const pt::ptime &eventTime) throw() {
+		assert(!eventTime.is_not_a_date_time());
 		// It must be locked by "my" thread or in the setup process (locking not
 		// required at setup). Ex.: UDP incoming connection works so: starts read,
 		// sends initial data, stops read, completes setup.
@@ -940,8 +949,13 @@ private:
 		if (m_idleTimeoutTimer < 0) {
 			return;
 		}
-		assert(m_idleTimeoutInterval != ACE_Time_Value::zero);
-		time(&m_idleTimeoutUpdateTime);
+		assert(m_idleTimeoutInterval.ticks() > 0);
+		try {
+			m_idleTimeoutUpdateTime = eventTime;
+		} catch (...) {
+			Log::GetInstance().AppendError("Failed to update connection idle timer.");
+			assert(false);
+		}
 	}
 
 	bool IsOpened() const {
@@ -961,16 +975,20 @@ private:
 		assert(m_idleTimeoutTimer == -1);
 		assert(m_isSetupCompleted);
 		assert(m_isSetupCompletedWithSuccess);
-		assert(m_idleTimeoutUpdateTime == 0);
-		if (m_idleTimeoutInterval == ACE_Time_Value::zero) {
+		assert(m_idleTimeoutUpdateTime.is_not_a_date_time());
+		if (m_idleTimeoutInterval.ticks() == 0) {
 			return;
 		}
-		Log::GetInstance().AppendDebug(
-			"Setting idle timeout %1% seconds for connection %2%...",
-			m_idleTimeoutInterval.sec(),
-			m_instanceId);
-		m_idleTimeoutTimer
-			= m_proactor->schedule_timer(*this, nullptr, m_idleTimeoutInterval);
+		if (Log::GetInstance().IsDebugRegistrationOn()) {
+			Log::GetInstance().AppendDebug(
+				"Setting idle timeout %1% seconds for connection %2%...",
+				m_idleTimeoutInterval.total_seconds(),
+				m_instanceId);
+		}
+		m_idleTimeoutTimer = m_proactor->schedule_timer(
+			*this,
+			nullptr,
+			ACE_Time_Value(m_idleTimeoutInterval.total_seconds()));
 		assert(m_idleTimeoutTimer >= 0);
 	}
 
@@ -1013,9 +1031,9 @@ private:
 	boost::shared_ptr<TunnelBuffer> m_buffer;
 	TunnelBuffer::Allocators m_allocators;
 
-	const ACE_Time_Value m_idleTimeoutInterval;
+	const pt::time_duration m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
-	time_t m_idleTimeoutUpdateTime;
+	pt::ptime m_idleTimeoutUpdateTime;
 
 	TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 
@@ -1050,10 +1068,6 @@ DataTransferCommand Connection::WriteDirectly(MessageBlock &messageBlock) {
 	return m_pimpl->SendToRemote(messageBlock);
 }
 
-void Connection::WriteDirectly(const char *data, size_t size) {
-	verify(m_pimpl->SendToRemote(data, size) == DATA_TRANSFER_CMD_SEND_PACKET);
-}
-
 DataTransferCommand Connection::Write(MessageBlock &messageBlock) {
 	return WriteDirectly(messageBlock);
 }
@@ -1062,24 +1076,19 @@ DataTransferCommand Connection::SendToRemote(MessageBlock &messageBlock) {
 	return Write(messageBlock);
 }
 
-void Connection::SendToRemote(const char *data, size_t size) {
-	WriteDirectly(data, size);
-}
-
 void Connection::SendToTunnel(MessageBlock &messageBlock) {
 	m_pimpl->SendToTunnel(messageBlock);
-}
-
-void Connection::SendToTunnel(const char *data, size_t size) {
-	m_pimpl->SendToTunnel(data, size);
 }
 
 void Connection::SendToTunnelUnsafe(MessageBlock &messageBlock) {
 	m_pimpl->SendToTunnelUnsafe(messageBlock);
 }
 
-void Connection::SendToTunnelUnsafe(const char *data, size_t size) {
-	m_pimpl->SendToTunnelUnsafe(data, size);
+AutoPtr<MessageBlock> Connection::CreateMessageBlock(
+			size_t size,
+			const char *data /*= nullptr*/)
+		const {
+	return m_pimpl->CreateMessageBlock(size, data);
 }
 
 const RuleEndpoint & Connection::GetRuleEndpoint() const {

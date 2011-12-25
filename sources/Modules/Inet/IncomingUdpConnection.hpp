@@ -50,9 +50,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const TunnelEx::RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress,
 					boost::shared_ptr<Stream> &socket,
-					std::auto_ptr<std::vector<char>> &incomingData,
+					AutoPtr<MessageBlock> incomingData,
 					Acceptor *const acceptor)
-				: UdpConnection(ruleEndpoint, ruleEndpointAddress, 61), //! @todo: hardcoded idle time
+				: UdpConnection(ruleEndpoint, ruleEndpointAddress, 60), //! @todo: hardcoded idle time
 				m_remoteAddress(address),
 				m_socket(socket),
 				m_incomingData(incomingData),
@@ -91,11 +91,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	protected:
 
 		virtual void Setup() {
-			assert(m_incomingData.get());
-			assert(!m_incomingData->empty());
+			assert(m_incomingData);
 			StartReadRemote();
-			SendToTunnelUnsafe(&(*m_incomingData)[0], m_incomingData->size());
-			m_incomingData.reset();
+			SendToTunnelUnsafe(*m_incomingData);
+			m_incomingData.Reset();
 			StopReadRemote();
 			Base::Setup();
 		}
@@ -136,7 +135,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		const ACE_INET_Addr m_remoteAddress;
 		boost::shared_ptr<Stream> m_socket;
-		std::auto_ptr<std::vector<char>> m_incomingData;
+		AutoPtr<MessageBlock> m_incomingData;
 		AcceptorMutex m_acceptorMutex;
 		Acceptor *m_acceptor;
 

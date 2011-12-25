@@ -142,8 +142,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
 				try {
 					WriteDirectly(
-						&GetDataStream().GetEncryptorDecryptorAnswer()[0],
-						GetDataStream().GetEncryptorDecryptorAnswer().size());
+						*CreateMessageBlock(
+							GetDataStream().GetEncryptorDecryptorAnswer().size(),
+							&GetDataStream().GetEncryptorDecryptorAnswer()[0]));
 				} catch (...) {
 					GetDataStream().ResetEncryptorDecryptorAnswer();
 					throw;

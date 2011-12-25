@@ -33,6 +33,9 @@ namespace TunnelEx {
 		virtual const char * GetData() const throw() = 0;
 		virtual size_t GetUnreadedDataSize() const throw() = 0;
 
+		virtual char * GetWritableSpace(size_t size) = 0;
+		virtual void TakeWritableSpace(size_t size) = 0;
+
 		virtual void SetData(const char *data, size_t dataLength) = 0;
 		
 		virtual void MarkAsAddedToQueue() throw() = 0;

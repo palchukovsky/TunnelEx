@@ -86,6 +86,18 @@ namespace TunnelEx {
 
 	public:
 
+		//! Creates a new message block.
+		/** The message block should be created immediately after the data
+		  * reading from system buffers. It is important for latency
+		  * statistics.
+		  */
+		::TunnelEx::AutoPtr<::TunnelEx::MessageBlock> CreateMessageBlock(
+				size_t size,
+				const char *data = nullptr)
+			const;
+
+	public:
+
 		//! Sends the message block to remote side.
 		/** @param	messageBlock	the message block to send. Object 
 		  *                         can change message block content.
@@ -96,28 +108,12 @@ namespace TunnelEx {
 		::TunnelEx::DataTransferCommand SendToRemote(
 				::TunnelEx::MessageBlock &messageBlock);
 
-		//! Sends data to remote side.
-		/** The internal buffer is not involved in the sending, it can lead
-		  * to problems with memory or speed.
-		  * @throw TunnelEx::ConnectionException 
-		  * @throw TunnelEx::LogicalException 
-		  */
-		void SendToRemote(const char *data, size_t size);
-
-	public:
-
 		//! Sends the message block to tunnel.
 		/** @param	messageBlock	the message block to send. Object 
 		  *                         can change message block content.
 		  * @return	command for further actions;
 		  */
 		void SendToTunnel(::TunnelEx::MessageBlock &messageBlock);
-
-		//! Sends data into tunnel.
-		/** The internal buffer is not involved in the sending, it can lead
-		  * to problems with memory or speed.
-		  */
-		void SendToTunnel(const char *data, size_t size);
 
 	protected:
 
@@ -127,12 +123,6 @@ namespace TunnelEx {
 		  * @return	command for further actions;
 		  */
 		void SendToTunnelUnsafe(::TunnelEx::MessageBlock &messageBlock);
-
-		//! Sends data into tunnel without connection object locking.
-		/** The internal buffer is not involved in the sending, it can lead
-		  * to problems with memory or speed.
-		  */
-		void SendToTunnelUnsafe(const char *data, size_t size);
 
 	public:
 
@@ -229,12 +219,6 @@ namespace TunnelEx {
 		  */
 		virtual ::TunnelEx::DataTransferCommand WriteDirectly(
 				::TunnelEx::MessageBlock &messageBlock);
-
-		//! Directly writes data, as is.
-		/** @throw TunnelEx::ConnectionException 
-		  * @throw TunnelEx::LogicalException 
-		  */
-		void WriteDirectly(const char *data, size_t size);
 
 	private:
 

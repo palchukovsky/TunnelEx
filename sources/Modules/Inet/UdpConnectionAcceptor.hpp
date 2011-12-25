@@ -48,8 +48,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const TunnelEx::RuleEndpoint &ruleEndpoint,
 					SharedPtr<const EndpointAddress> ruleEndpointAddress)
 				: Base(ruleEndpoint, ruleEndpointAddress),
-				m_socket(new ACE_SOCK_Dgram, &AceSockDgramCloser),
-				m_dataConnectionIncomingBuffer(new std::vector<char>) {
+				m_socket(new ACE_SOCK_Dgram, &AceSockDgramCloser) {
 
 			const ACE_INET_Addr &inetAddr = address.GetAceInetAddr();
 			if (inetAddr.is_any() && inetAddr.get_port_number() == 0) {
@@ -90,22 +89,15 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual AutoPtr<TunnelEx::Connection> Accept() {
 			
-			assert(m_dataConnectionIncomingBuffer.get());
-			assert(!m_dataConnectionIncomingBuffer->empty());
+			assert(m_dataConnectionIncomingBuffer);
 			
-			std::auto_ptr<std::vector<char>> newIncomingDataBuffer(new std::vector<char>);
-			newIncomingDataBuffer->reserve(m_dataConnectionIncomingBuffer->capacity());
-			
-			std::auto_ptr<std::vector<char>> incomingData(m_dataConnectionIncomingBuffer);
-			m_dataConnectionIncomingBuffer = newIncomingDataBuffer;
-
 			AutoPtr<Connection> result(
 				new Connection(
 					m_senderAddrCache,
 					GetRuleEndpoint(),
 					GetRuleEndpointAddress(),
 					m_socket,
-					incomingData,
+					m_dataConnectionIncomingBuffer,
 					this));
 
 			{
@@ -120,7 +112,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		virtual bool TryToAttach() {
 
-			assert(m_dataConnectionIncomingBuffer.get());
+			assert(!m_dataConnectionIncomingBuffer);
 			int dataLen;
 			if (	ACE_OS::ioctl(m_socket->get_handle(), FIONREAD, &dataLen) == -1
 					|| dataLen <= 0) {
@@ -129,11 +121,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				exception % error.GetString().GetCStr() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
-			m_dataConnectionIncomingBuffer->resize(dataLen);
 
+			AutoPtr<MessageBlock> messageBlock(CreateMessageBlock(dataLen));
 			const ssize_t readResult = m_socket->recv(
-				&(*m_dataConnectionIncomingBuffer)[0],
-				m_dataConnectionIncomingBuffer->size(),
+				messageBlock->GetWritableSpace(dataLen),
+				dataLen,
 				m_senderAddrCache);
 			if (readResult == -1) {
 				const Error error(errno);
@@ -147,18 +139,17 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				assert(false); // just want to see when it happens
 				return true;
 			}
-			assert(size_t(readResult) <= m_dataConnectionIncomingBuffer->size());
-			m_dataConnectionIncomingBuffer->resize(readResult);
+			assert(readResult <= ssize_t(dataLen));
+			messageBlock->TakeWritableSpace(readResult);
 
 			DataConnectionLock lock(m_dataConnectionMutex);
 			const auto connection = m_dataConnections.find(m_senderAddrCache);
 			if (connection == m_dataConnections.end()) {
+				m_dataConnectionIncomingBuffer = messageBlock;
 				return false;
 			}
 			
-			connection->second->SendToTunnel(
-				&(*m_dataConnectionIncomingBuffer)[0],
-				m_dataConnectionIncomingBuffer->size());
+			connection->second->SendToTunnel(*messageBlock);
 
 			return true;
 
@@ -181,7 +172,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		DataConnectionMutex m_dataConnectionMutex;
 		ACE_INET_Addr m_senderAddrCache;
-		std::auto_ptr<std::vector<char>> m_dataConnectionIncomingBuffer;
+		AutoPtr<MessageBlock> m_dataConnectionIncomingBuffer;
 		Connections m_dataConnections;
 
 	};

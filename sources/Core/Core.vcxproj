@@ -137,6 +137,7 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MessageBlock.cpp" />
+    <ClCompile Include="MessageBlockHolder.cpp" />
     <ClCompile Include="ModulesFactory.cpp" />
     <ClCompile Include="Prec.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

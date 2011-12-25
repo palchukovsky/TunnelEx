@@ -174,7 +174,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			cmd << "\r\n";
 
 			const std::string &cmdStr = cmd.str();
-			SendToRemote(cmdStr.c_str(), cmdStr.size());
+			SendToRemote(*CreateMessageBlock(cmdStr.size(), cmdStr.c_str()));
 		
 		}
 

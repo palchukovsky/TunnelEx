@@ -21,6 +21,7 @@ namespace TunnelEx {
 	class RuleEndpoint;
 	class EndpointAddress;
 	class ConnectionOpeningException;
+	class MessageBlock;
 
 	class TUNNELEX_CORE_API Acceptor : public ::TunnelEx::Instance {
 
@@ -35,6 +36,18 @@ namespace TunnelEx {
 
 		Acceptor(const Acceptor &);
 		const Acceptor & operator =(const Acceptor &);
+
+	public:
+
+		//! Creates a new message block.
+		/** The message block should be created immediately after the data
+		  * reading from system buffers. It is important for latency
+		  * statistics.
+		  */
+		::TunnelEx::AutoPtr<::TunnelEx::MessageBlock> CreateMessageBlock(
+				size_t size,
+				const char *data = nullptr)
+			const;
 
 	public:
 
