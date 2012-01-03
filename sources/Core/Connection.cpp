@@ -469,6 +469,7 @@ public:
 		UniqueMessageBlockHolder &messageBlockHolder
 			= *boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
 		assert(messageBlock.GetUnreadedDataSize() > 0);
+		UniqueMessageBlockHolder messageBlockDuplicate(messageBlockHolder.Duplicate());
 
 		Lock lock(m_mutex, false);
 		assert(IsOpened());
@@ -486,8 +487,8 @@ public:
 		Interlocked::Increment(m_sendQueueSize);
 		messageBlockHolder.SetSendingStartTimePoint();
 		const auto writeResult = m_writeStreamFunc(
-			messageBlockHolder.Get(),
-			messageBlockHolder.GetUnreadedDataSize());
+			messageBlockDuplicate.Get(),
+			messageBlockDuplicate.GetUnreadedDataSize());
 		if (writeResult == -1) {
 			const auto errNo = errno;
 			Interlocked::Decrement(m_sendQueueSize);
@@ -496,7 +497,7 @@ public:
 		} else {
 			UpdateIdleTimer(messageBlockHolder.GetSendingStartTime());
 			lock.release();
-			messageBlockHolder.Release();
+			messageBlockDuplicate.Release();
 			messageBlockHolder.MarkAsAddedToQueue();
 		}
 
