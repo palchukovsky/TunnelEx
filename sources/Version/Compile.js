@@ -14,7 +14,7 @@ var vendorName	= "Tunnelex Project";
 var domain		= "tunnelex.net";
 var licenseServiceSubdomain = "licensing";
 var productName	= "TunnelEx";
-var copyright	= "Copyright 2011 (C) " + vendorName + ". All rights reserved.";
+var copyright	= "Copyright 2012 (C) " + vendorName + ". All rights reserved.";
 
 var coreFileName			= "TunnelEx";
 var serviceFileName			= "TunnelEx";
