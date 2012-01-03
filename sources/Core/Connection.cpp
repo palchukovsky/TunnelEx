@@ -178,9 +178,12 @@ public:
 			m_isSetupCompleted(false),
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(nullptr),
-			m_dataBlockSize(1480), //! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_messageBlockQueueBufferSize(
-				(256 * 1024) / UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)),
+			//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
+			m_dataBlockSize(TunnelBuffer::DefautDataBlockSize),
+			//! @todo: hardcoded memory size
+ 			m_messageBlockQueueBufferSize(
+ 				(TunnelBuffer::DefautConnectionBufferSize * 1)
+ 					/ UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)),
 			m_sentMessageBlockQueueSize(0),
 			m_closeAtLastMessageBlock(false),
 			m_sendQueueSize(0),
@@ -202,15 +205,13 @@ private:
 		if (!m_isSetupCompleted) {
 			m_ruleEndpointAddress->StatConnectionSetupCanceling();
 		}
-		//! @todo: fix (currently don't know when buffer deletion is secure)
-		// m_buffer->DeleteBuffer(m_allocators);
 		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
-				"Connection object %1% deleted. Active objects: %2%. Timings: %3%.",
+				"Connection object %1% deleted. Active objects: %2%. Satellites: %3%.",
 				m_instanceId,
 				m_instancesNumber,
-				UniqueMessageBlockHolder::GetTimingsInstancesNumber());
+				UniqueMessageBlockHolder::GetSatellitesInstancesNumber());
 			DebugLockStat::Report();
 #		endif
 	}
@@ -468,7 +469,6 @@ public:
 		UniqueMessageBlockHolder &messageBlockHolder
 			= *boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
 		assert(messageBlock.GetUnreadedDataSize() > 0);
-		UniqueMessageBlockHolder blockToSend(messageBlockHolder.Duplicate());
 
 		Lock lock(m_mutex, false);
 		assert(IsOpened());
@@ -484,20 +484,20 @@ public:
 		}
 
 		Interlocked::Increment(m_sendQueueSize);
-		blockToSend.SetSendingStartTimePoint();
+		messageBlockHolder.SetSendingStartTimePoint();
 		const auto writeResult = m_writeStreamFunc(
-			blockToSend.Get(),
-			blockToSend.GetUnreadedDataSize());
+			messageBlockHolder.Get(),
+			messageBlockHolder.GetUnreadedDataSize());
 		if (writeResult == -1) {
 			const auto errNo = errno;
 			Interlocked::Decrement(m_sendQueueSize);
 			lock.release();
 			ReportSendError(errNo); // not only log, can throws
 		} else {
-			UpdateIdleTimer(blockToSend.GetSendingStartTime());
+			UpdateIdleTimer(messageBlockHolder.GetSendingStartTime());
 			lock.release();
-			blockToSend.Release();
-			messageBlock.MarkAsAddedToQueue();
+			messageBlockHolder.Release();
+			messageBlockHolder.MarkAsAddedToQueue();
 		}
 
 		return DATA_TRANSFER_CMD_SEND_PACKET;
@@ -511,9 +511,7 @@ public:
 		if (!messageBlock.IsTunnelMessage()) {
 			return;
 		}
-		assert(m_sentMessageBlockQueueSize >= 0);
 		Interlocked::Decrement(&m_sentMessageBlockQueueSize);
-		assert(m_sentMessageBlockQueueSize >= 0);
 		if (m_isReadingActive) {
 			return;
 		}
@@ -692,12 +690,7 @@ public:
 		assert(size > 0);
 		AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
 		result->Reset(
-			&UniqueMessageBlockHolder::Create(
-				size,
-				*m_allocators.messageBlock,
-				*m_allocators.dataBlock,
-				*m_allocators.dataBlockBuffer,
-				false));
+			&UniqueMessageBlockHolder::Create(size, m_allocators, false));
 		result->SetReceivingTimePoint();
 
 		if (data && result->Get().copy(data, size) == -1) {
@@ -909,9 +902,7 @@ private:
 			UniqueMessageBlockHolder messageBlock(
 				UniqueMessageBlockHolder::Create(
 					m_dataBlockSize,
-					*m_allocators.messageBlock,
-					*m_allocators.dataBlock,
-					*m_allocators.dataBlockBuffer,
+					m_allocators,
 					true));
 			messageBlock.SetReceivingStartTimePoint();
 			if (m_readStreamFunc(messageBlock.Get(), m_dataBlockSize) == -1) {
@@ -1029,7 +1020,7 @@ private:
 	volatile long m_sendQueueSize;
 
 	boost::shared_ptr<TunnelBuffer> m_buffer;
-	TunnelBuffer::Allocators m_allocators;
+	mutable TunnelBuffer::Allocators m_allocators;
 
 	const pt::time_duration m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;

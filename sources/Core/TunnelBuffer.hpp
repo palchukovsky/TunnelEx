@@ -16,16 +16,20 @@ namespace TunnelEx {
 
 	public:
 
+		const static size_t DefautDataBlockSize;
+		const static size_t DefautConnectionBufferSize;
+
+	public:
+
 		struct Allocators {
-			Allocators()
-					: messageBlock(0),
-					dataBlock(0),
-					dataBlockBuffer(0) {
-				//...//
-			}
+
 			ACE_Allocator *messageBlock;
+			ACE_Allocator *messageBlockSatellite;
 			ACE_Allocator *dataBlock;
 			ACE_Allocator *dataBlockBuffer;
+		
+			Allocators();
+		
 		};
 
 	private:

@@ -2,9 +2,10 @@
 #ifndef MESSAGE_BLOCK_ADAPTER_H_INCLUDED
 #define MESSAGE_BLOCK_ADAPTER_H_INCLUDED
 
+#include "TunnelBuffer.hpp"
 #include "MessageBlock.hpp"
+#include "Locking.hpp"
 #include "Exceptions.hpp"
-#include "ObjectsDeletionCheck.h"
 
 namespace TunnelEx {
 
@@ -12,516 +13,196 @@ namespace TunnelEx {
 
 	class UniqueMessageBlockHolder : public MessageBlock {
 
-	private:
+	public:
 
-		enum Flag {
-			FLAG_TUNNEL_MESSAGE = ACE_Message_Block::USER_FLAGS,
-			FLAG_HAS_TIMINGS
-		};
-
-	private:
-
-		class Timings : private boost::noncopyable {
-
-		public:
-		
-			Timings()
-					: m_refsCount(0) {
-				TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
-			}
-
-			~Timings() {
-				assert(m_refsCount == 0);
-				TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
-			}
+		class Satellite : private boost::noncopyable {
 
 		public:
 
-			long AddRef() throw() {
-				return Interlocked::Increment(m_refsCount);
-			}
-			
-			long RemoveRef() throw() {
-				return Interlocked::Decrement(m_refsCount);
-			}
+			class Timings : private boost::noncopyable {
+
+			public:
+
+				void SetReceivingStartTimePoint();
+
+				void SetReceivingTimePoint();
+				const boost::posix_time::ptime & GetReceivingTime() const;
+
+				void SetSendingStartTimePoint();
+				const boost::posix_time::ptime & GetSendingStartTime() const;
+
+				void SetSendingTimePoint();
+
+			public:
+
+				boost::posix_time::time_duration GetReceivingLatency() const;
+				boost::posix_time::time_duration GetSendingLatency() const;
+				boost::posix_time::time_duration GetProcessingLatency() const;
+				boost::posix_time::time_duration GetFullLatency() const;
+
+			private:
+
+				static void SetCurrentTimePoint(boost::posix_time::ptime &);
+
+			private:
+
+				boost::posix_time::ptime m_receivingStartTime;
+				boost::posix_time::ptime m_receivingTime;
+				boost::posix_time::ptime m_sendingStartTime;
+				boost::posix_time::ptime m_sendingTime;
+
+			};
+
+			class Lock : public ACE_Lock {
+			public:
+				virtual ~Lock();
+			public:
+				virtual int acquire();
+				virtual int remove();
+				virtual int tryacquire();
+				virtual int release();
+				virtual int acquire_read();
+				virtual int acquire_write();
+				virtual int tryacquire_read();
+				virtual int tryacquire_write();
+				virtual int tryacquire_write_upgrade();
+			private:
+				SpinMutex m_mutex;
+			};
 
 		public:
 
-			void SetReceivingStartTimePoint() {
-				SetCurrentTimePoint(m_receivingStartTime);
-			}
-
-			void SetReceivingTimePoint() {
-				SetCurrentTimePoint(m_receivingTime);
-			}
-			const boost::posix_time::ptime & GetReceivingTime() const {
-				assert(!m_receivingTime.is_not_a_date_time());
-				return m_receivingTime;
-			}
-
-			void SetSendingStartTimePoint() {
-				SetCurrentTimePoint(m_sendingStartTime);
-			}
-			const boost::posix_time::ptime & GetSendingStartTime() const {
-				assert(!m_sendingStartTime.is_not_a_date_time());
-				return m_sendingStartTime;
-			}
-
-			void SetSendingTimePoint() {
-				SetCurrentTimePoint(m_sendingTime);
-			}
-
-		public:
-
-			boost::posix_time::time_duration GetReceivingLatency() const {
-				assert(!m_receivingStartTime.is_not_a_date_time());
-				assert(!m_receivingTime.is_not_a_date_time());
-				assert(m_receivingStartTime <= m_receivingTime);
-				return m_receivingTime - m_receivingStartTime;
-			}
-
-			boost::posix_time::time_duration GetSendingLatency() const {
-				assert(!m_sendingStartTime.is_not_a_date_time());
-				assert(!m_sendingTime.is_not_a_date_time());
-				assert(m_sendingStartTime <= m_sendingTime);
-				return m_sendingTime - m_sendingStartTime;
-			}
-
-			boost::posix_time::time_duration GetProcessingLatency() const {
-				assert(!m_receivingTime.is_not_a_date_time());
-				assert(!m_sendingStartTime.is_not_a_date_time());
-				assert(m_receivingTime <= m_sendingStartTime);
-				return m_sendingStartTime - m_receivingTime;
-			}
-
-			boost::posix_time::time_duration GetFullLatency() const {
-				assert(!m_receivingTime.is_not_a_date_time());
-				assert(!m_sendingTime.is_not_a_date_time());
-				assert(m_receivingTime <= m_sendingTime);
-				return m_sendingTime - m_receivingTime;
-			}
+			explicit Satellite(ACE_Allocator &);
+			explicit Satellite(ACE_Allocator &, boost::shared_ptr<const TunnelBuffer>);
+			~Satellite() throw();
 
 		public:
 
 #			ifdef DEV_VER
-				static long GetInstancesNumber() {
-					return m_instancesNumber;
-				}
+				static long GetInstancesNumber();
 #			endif
 
+		public:
+
+			long AddRef() throw();
+			long RemoveRef() throw();
+
+			ACE_Allocator & GetAllocator() throw();
+
+		public:
+
+			Timings & GetTimings();
+			const Timings & GetTimings() const;
+
+			Lock & GetLock();
+			const Lock & GetLock() const;
+
+			boost::shared_ptr<const TunnelBuffer> GetBuffer() const;
+
 		private:
 
-			static void SetCurrentTimePoint(boost::posix_time::ptime &var) {
-				assert(var.is_not_a_date_time());
-				var = boost::posix_time::microsec_clock::local_time();
-			}
-
-		private:
-
-			boost::posix_time::ptime m_receivingStartTime;
-			boost::posix_time::ptime m_receivingTime;
-			boost::posix_time::ptime m_sendingStartTime;
-			boost::posix_time::ptime m_sendingTime;
-
+			ACE_Allocator &m_allocator;
 			volatile long m_refsCount;
+			boost::shared_ptr<const TunnelBuffer> m_buffer;
+
+			Timings m_timings;
+			Lock m_lock;
 
 			TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 
 		};
 
-	public:
-
-		explicit UniqueMessageBlockHolder() throw() 
-				: m_messageBlock(nullptr),
-				m_isAddedToQueue(false) {
-			//...//
-		}
-
-		explicit UniqueMessageBlockHolder(ACE_Message_Block *messageBlock) throw() 
-				: m_messageBlock(messageBlock),
-				m_isAddedToQueue(false) {
-			//...//
-		}
-
-		explicit UniqueMessageBlockHolder(ACE_Message_Block &messageBlock) throw() 
-				: m_messageBlock(&messageBlock),
-				m_isAddedToQueue(false) {
-			//...//
-		}
-
-		virtual ~UniqueMessageBlockHolder() throw() {
-			Reset();
-		}
+		typedef Satellite::Timings Timings;
+		typedef Satellite::Lock Lock;
 
 	public:
 
-		void Reset(ACE_Message_Block *newMessageBlock = nullptr) throw() {
-			if (IsSet()) {
-				Delete(*m_messageBlock);
-			}
-			m_messageBlock = newMessageBlock;
-		}
+		explicit UniqueMessageBlockHolder() throw();
+		explicit UniqueMessageBlockHolder(ACE_Message_Block *) throw();
+		explicit UniqueMessageBlockHolder(ACE_Message_Block &) throw();
 
-		void Release() throw() {
-			assert(IsSet());
-			m_messageBlock = nullptr;
-		}
-
-		bool IsSet() const throw() {
-			return m_messageBlock ? true : false;
-		}
+		virtual ~UniqueMessageBlockHolder() throw();
 
 	public:
 
-		ACE_Message_Block & Get() throw() {
-			assert(IsSet());
-			return *m_messageBlock;
-		}
+		void Reset(ACE_Message_Block * = nullptr) throw();
 
-		const ACE_Message_Block & Get() const throw() {
-			return const_cast<UniqueMessageBlockHolder *>(this)->Get();
-		}
+		void Release() throw();
+
+		bool IsSet() const throw();
 
 	public:
 
-		virtual const char * GetData() const throw() {
-			assert(IsSet());
-			return m_messageBlock->rd_ptr();
-		}
+		ACE_Message_Block & Get() throw();
 
-		virtual char * GetWritableSpace(size_t size) {
-			assert(IsSet());
-			assert(m_messageBlock->space() >= size);
-			if (m_messageBlock->space() < size) {
-				// using SystemException instead InsufficientMemoryException
-				// as using internal memory buffer, not system.
-				throw InsufficientMemoryException(
-					L"Could not allocate new buffer for message block - memory insufficient");
-			}
-			return m_messageBlock->wr_ptr();
-		}
-		virtual void TakeWritableSpace(size_t size) {
-			assert(IsSet());
-			assert(m_messageBlock->space() >= size);
-			if (m_messageBlock->space() < size) {
-				// using SystemException instead InsufficientMemoryException
-				// as using internal memory buffer, not system.
-				throw InsufficientMemoryException(
-					L"Could not allocate new buffer for message block - memory insufficient");
-			}
-			m_messageBlock->wr_ptr(size);
-		}
-
-		virtual size_t GetUnreadedDataSize() const throw() {
-			assert(IsSet());
-			return m_messageBlock->length();
-		}
-
-		virtual void SetData(const char *data, size_t length){
-			
-			assert(IsSet());
-			
-			ACE_Allocator *messageBlocksAllocator = nullptr;
-			ACE_Allocator *dataBlocksAllocator = nullptr;
-			ACE_Allocator *dataBlocksBufferAllocator = nullptr;
-			m_messageBlock->access_allocators(
-				dataBlocksBufferAllocator,
-				dataBlocksAllocator,
-				messageBlocksAllocator);
-
-			const bool hasTimings = m_messageBlock->flags() & FLAG_HAS_TIMINGS;
-			assert(hasTimings);
-			if (hasTimings) {
-				length += sizeof(Timings *);
-			}
-
-			std::unique_ptr<ACE_Message_Block> newBlock(
-				new ACE_Message_Block(
-					length,
-					ACE_Message_Block::MB_DATA,
-					0,
-					0,
-					dataBlocksBufferAllocator,
-					0,
-					ACE_DEFAULT_MESSAGE_BLOCK_PRIORITY,
-					ACE_Time_Value::zero,
-					ACE_Time_Value::max_time,
-					dataBlocksAllocator,
-					messageBlocksAllocator));
-			assert(!(newBlock->data_block()->size() < length));
-
-			if (hasTimings) {
-				assert(m_messageBlock->space() >= sizeof(Timings *));
-				if (newBlock->copy(m_messageBlock->base(), sizeof(Timings *)) == -1) {
-					throw TunnelEx::InsufficientMemoryException(
-						L"Insufficient message block memory");
-				}
-				newBlock->rd_ptr(sizeof(Timings *));
-				newBlock->set_flags(FLAG_HAS_TIMINGS);
-			}
-
-			assert(m_messageBlock->space() >= length);
-			if (newBlock->copy(data, length) == -1) {
-				throw TunnelEx::InsufficientMemoryException(
-					L"Insufficient message block memory");
-			}
-			newBlock->set_flags(FLAG_TUNNEL_MESSAGE);
-			
-			m_messageBlock->clr_flags(FLAG_HAS_TIMINGS);
-			Delete(*m_messageBlock);
-			m_messageBlock = newBlock.release();			
-		
-		}
-
-		virtual void MarkAsAddedToQueue() throw() {
-			assert(IsSet());
-			assert(!m_isAddedToQueue);
-			m_isAddedToQueue = true;
-		}
-		virtual bool IsAddedToQueue() const throw() {
-			assert(IsSet());
-			return m_isAddedToQueue;
-		}
-
-		virtual bool IsTunnelMessage() const throw() {
-			assert(IsSet());
-			return m_messageBlock->flags() & FLAG_TUNNEL_MESSAGE ? true : false;
-		}
+		const ACE_Message_Block & Get() const throw();
 
 	public:
 
-		template<typename T>
-		static T GetMessageMemorySize(T blockSize) {
-			return
-				blockSize
-					+ sizeof(Timings *)
-					+ sizeof(ACE_Message_Block)
-					+ sizeof(ACE_Data_Block);
-		}
+		virtual const char * GetData() const throw();
 
-		ACE_Message_Block & Duplicate() {
-			assert(IsSet());
-			auto result = m_messageBlock->duplicate();
-			assert(result);
-			if (!result) {
-				// using SystemException instead InsufficientMemoryException
-				// as using internal memory buffer, not system.
-				throw InsufficientMemoryException(
-					L"Could not allocate new buffer for message block - memory insufficient");
-			}
-			if (m_messageBlock->flags() & FLAG_HAS_TIMINGS) {
-				verify(GetTimings().AddRef() > 1);
-			}
-			return *result;
-		}
+		virtual char * GetWritableSpace(size_t size);
+		virtual void TakeWritableSpace(size_t size);
+
+		virtual size_t GetUnreadedDataSize() const throw();
+
+		virtual void SetData(const char *data, size_t length);
+
+		virtual void MarkAsAddedToQueue() throw();
+		virtual bool IsAddedToQueue() const throw();
+
+		virtual bool IsTunnelMessage() const throw();
+
+	public:
+
+		static size_t GetMessageMemorySize(size_t clientSize);
+
+		ACE_Message_Block & Duplicate();
 
 		static ACE_Message_Block & Create(
 					size_t size,
-					ACE_Allocator &messageBlocksAllocator,
-					ACE_Allocator &dataBlocksAllocator,
-					ACE_Allocator &dataBlocksBufferAllocator,
-					bool isTunnelMessage) {
-			ACE_Message_Block &result = CreateObject(
-				size,
-				messageBlocksAllocator,
-				dataBlocksAllocator,
-				dataBlocksBufferAllocator);
-			try {
-				Init(isTunnelMessage, result);
-			} catch (...) {
-				Delete(result);
-				throw;
-			}
-			return result;
-		}
+					TunnelBuffer::Allocators &allocators,
+					bool isTunnelMessage,
+					boost::shared_ptr<const TunnelBuffer>);
+		static ACE_Message_Block & Create(
+					size_t size,
+					TunnelBuffer::Allocators &allocators,
+					bool isTunnelMessage);
 
-		static ACE_Message_Block & Create(size_t size, bool isTunnelMessage) {
-			ACE_Message_Block &result = CreateObject(size);
-			try {
-				Init(isTunnelMessage, result);
-			} catch (...) {
-				Delete(result);
-				throw;
-			}
-			return result;
-		}
-
-		static void Delete(ACE_Message_Block &messageBlock) throw() {
-			
-			ACE_Allocator *messageBlocksAllocator = 0;
-			ACE_Allocator *dataBlocksAllocator = 0;
-			ACE_Allocator *dataBlocksBufferAllocator = 0;
-			messageBlock.access_allocators(
-				dataBlocksBufferAllocator,
-				dataBlocksAllocator,
-				messageBlocksAllocator);
-
-			if (
-					messageBlock.flags() & FLAG_HAS_TIMINGS
-					&& GetTimings(messageBlock).RemoveRef() == 0) {
-				delete &GetTimings(messageBlock);
-			}
-
-			if (messageBlocksAllocator) {
-				assert(dataBlocksAllocator);
-				assert(dataBlocksBufferAllocator);
-				messageBlock.~ACE_Message_Block();
-				messageBlocksAllocator->free(&messageBlock);
-			} else {
-				delete &messageBlock;
-			}
-		
-		}
+		static void Delete(ACE_Message_Block &messageBlock) throw();
 
 	public:
 
-		void SetReceivingStartTimePoint() {
-			GetTimings().SetReceivingStartTimePoint();
-		}
+		void SetReceivingStartTimePoint();
+		
+		void SetReceivingTimePoint();
+		const boost::posix_time::ptime & GetReceivingTime() const;
 
-		void SetReceivingTimePoint() {
-			GetTimings().SetReceivingTimePoint();
-		}
-		const boost::posix_time::ptime & GetReceivingTime() const {
-			return GetTimings().GetReceivingTime();
-		}
-
-		void SetSendingStartTimePoint() {
-			GetTimings().SetSendingStartTimePoint();
-		}
-		const boost::posix_time::ptime & GetSendingStartTime() const {
-			return GetTimings().GetSendingStartTime();
-		}
-
-		void SetSendingTimePoint() {
-			GetTimings().SetSendingTimePoint();
-		}
+		void SetSendingStartTimePoint();
+		const boost::posix_time::ptime & GetSendingStartTime() const;
+		
+		void SetSendingTimePoint();
 
 #		ifdef DEV_VER
-			static long GetTimingsInstancesNumber() {
-				return Timings::GetInstancesNumber();
-			}
+			static long GetSatellitesInstancesNumber();
 #		endif
 
 	public:
 
-		boost::posix_time::time_duration GetReceivingLatency() const {
-			return GetTimings().GetReceivingLatency();
-		}
-
-		boost::posix_time::time_duration GetSendingLatency() const {
-			return GetTimings().GetSendingLatency();
-		}
-
-		boost::posix_time::time_duration GetProcessingLatency() const {
-			return GetTimings().GetProcessingLatency();
-		}
-
-		boost::posix_time::time_duration GetFullLatency() const {
-			return GetTimings().GetFullLatency();
-		}
+		boost::posix_time::time_duration GetReceivingLatency() const;
+		boost::posix_time::time_duration GetSendingLatency() const;
+		boost::posix_time::time_duration GetProcessingLatency() const;
+		boost::posix_time::time_duration GetFullLatency() const;
 
 	private:
 
-		static Timings & GetTimings(ACE_Message_Block &messageBlock) {
-			assert(messageBlock.flags() & FLAG_HAS_TIMINGS);
-			Timings *result;
-			memcpy(&result, messageBlock.base(), sizeof(result));
-			return *result;
-		}
-		Timings & GetTimings() {
-			assert(IsSet());
-			return GetTimings(*m_messageBlock);
-		}
-		const Timings & GetTimings() const {
-			return const_cast<UniqueMessageBlockHolder *>(this)->GetTimings();
-		}
+		static Satellite & GetSatellite(ACE_Message_Block &messageBlock);
+		Satellite & GetSatellite();
+		const Satellite & GetSatellite() const;
 
-	private:
-
-		static ACE_Message_Block & CreateObject(
-					size_t size,
-					ACE_Allocator &messageBlocksAllocator,
-					ACE_Allocator &dataBlocksAllocator,
-					ACE_Allocator &dataBlocksBufferAllocator) {
-
-			ACE_Message_Block *result
-				= static_cast<ACE_Message_Block *>(
-					messageBlocksAllocator.malloc(
-						sizeof(ACE_Message_Block)));
-			assert(result != 0);
-			if (result == 0) {
-				// using SystemException instead InsufficientMemoryException
-				// as using internal memory buffer, not system.
-				throw SystemException(
-					L"Could not allocate new message block - insufficient internal memory buffer (internal error)");
-			}
-			
-			try {
-				new(result)ACE_Message_Block(
-					size + sizeof(Timings *),
-					ACE_Message_Block::MB_DATA,
-					0,
-					0,
-					&dataBlocksBufferAllocator,
-					0,
-					ACE_DEFAULT_MESSAGE_BLOCK_PRIORITY,
-					ACE_Time_Value::zero,
-					ACE_Time_Value::max_time,
-					&dataBlocksAllocator,
-					&messageBlocksAllocator);
-			} catch (...) {
-				messageBlocksAllocator.free(result);
-				throw;
-			}
-
-			assert(result->data_block());
-			if (!result->data_block()) {
-				messageBlocksAllocator.free(result);
-				// using SystemException instead InsufficientMemoryException
-				// as using internal memory buffer, not system.
-				throw SystemException(
-					L"Could not allocate new message block - insufficient internal memory buffer (internal error)");
-			}
-
-			return *result;
-
-		}
-
-		static ACE_Message_Block & CreateObject(size_t size) {
-			auto result = new ACE_Message_Block(size + sizeof(Timings *));
-			assert(result->data_block());
-			if (!result->data_block()) {
-				delete result;
-				throw InsufficientMemoryException(
-					L"Could not allocate new buffer for message block - insufficient memory");
-			}
-			return *result;
-		}
-
-		static void Init(bool isTunnelMessage, ACE_Message_Block &object) {
-
-			if (isTunnelMessage) {
-				object.set_flags(FLAG_TUNNEL_MESSAGE);
-			}
-
-			std::unique_ptr<Timings> timings(new Timings);
-			assert(object.size() >= sizeof(Timings *));
-			const Timings *const timingsPtr = timings.get();
-			assert(object.space() >= sizeof(timingsPtr));
-			if (	object.copy(
-							reinterpret_cast<const char *>(&timingsPtr),
-							sizeof(timingsPtr))
-						== -1) {
-				throw TunnelEx::InsufficientMemoryException(
-					L"Insufficient message block memory");
-			}
-			object.rd_ptr(sizeof(Timings *));
-			object.set_flags(FLAG_HAS_TIMINGS);
-			verify(timings->AddRef() == 1);
-			timings.release();
-
-		}
+		static Timings & GetTimings(ACE_Message_Block &messageBlock);
+		Timings & GetTimings();
+		const Timings & GetTimings() const;
 
 	private:
 

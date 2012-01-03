@@ -19,6 +19,26 @@ namespace TunnelEx {
 
 	//////////////////////////////////////////////////////////////////////////
 
+	struct TUNNELEX_CORE_API Interlocked {
+
+		static long Increment(long volatile *) throw();
+		static long Increment(long volatile &) throw();
+
+		static long Decrement(long volatile *) throw();
+		static long Decrement(long volatile &) throw();
+
+		static long Exchange(long volatile &destination, long value) throw();
+
+		static long CompareExchange(
+				long volatile &destination,
+				long exchangeValue,
+				long compareValue)
+			throw();
+
+	};
+
+	//////////////////////////////////////////////////////////////////////////
+
 	//! Recursive mutex.
 	class TUNNELEX_CORE_API RecursiveMutex {
 
@@ -64,24 +84,40 @@ namespace TunnelEx {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	struct TUNNELEX_CORE_API Interlocked {
+	class SpinMutex {
 
-		static long Increment(long volatile *) throw();
-		static long Increment(long volatile &) throw();
+	public:
 
-		static long Decrement(long volatile *) throw();
-		static long Decrement(long volatile &) throw();
+		SpinMutex()
+				: m_isLocked(0) {
+			//...//
+		}
 
-		static long Exchange(long volatile &destination, long value) throw();
+		~SpinMutex() {
+			assert(!m_isLocked);
+		}
 
-		static long CompareExchange(
-				long volatile &destination,
-				long exchangeValue,
-				long compareValue)
-			throw();
+	public:
+
+		void Acquire() throw() {
+			for ( ; ; ) {
+				if (Interlocked::CompareExchange(m_isLocked, 1, 0) == 0) {
+					break;
+				}
+			}
+		}
+
+		void Release() throw() {
+			verify(Interlocked::Exchange(m_isLocked, 0) == 1);
+		}
+
+	private:
+
+		volatile long m_isLocked;
 
 	};
 
+	//////////////////////////////////////////////////////////////////////////
 
 }
 

@@ -9,7 +9,9 @@
 
 #include "Prec.h"
 #include "Acceptor.hpp"
+#include "TunnelBuffer.hpp"
 #include "MessageBlockHolder.hpp"
+#include "Log.hpp"
 
 using namespace TunnelEx;
 
@@ -33,8 +35,77 @@ public:
 
 public:
 
+	AutoPtr<MessageBlock> CreateMessageBlock(
+				size_t size,
+				const char *data = nullptr)
+			const {
+		
+		if (!m_buffer) {
+			const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer(1);
+			assert(m_buffer);
+		}
+
+		assert(size > 0);
+		AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
+		for (bool isError = false; ; ) {
+			try {
+				result->Reset(
+					&UniqueMessageBlockHolder::Create(
+						size,
+						m_bufferAllocators,
+						false,
+						m_buffer));
+				break;
+			} catch (const TunnelEx::InsufficientMemoryException &ex) {
+				if (Log::GetInstance().IsDebugRegistrationOn()) {
+					Log::GetInstance().AppendDebug(
+						"Failed to create accepting buffer: %1%.",
+						ConvertString<String>(ex.GetWhat()).GetCStr());
+				}
+				assert(!isError);
+				if (isError) {
+					throw;
+				}
+				const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer(2);
+				assert(m_buffer);
+				isError = true;
+			}
+		}
+		result->SetReceivingTimePoint();
+		
+		if (data && result->Get().copy(data, size) == -1) {
+			throw TunnelEx::InsufficientMemoryException(
+				L"Insufficient message block memory");
+		}
+
+		return result;
+
+	}
+
+private:
+
+	void CreateNewMessageBlockBuffer(size_t ratio) {
+		// no locking, under server lock
+		boost::shared_ptr<TunnelBuffer> buffer(new TunnelBuffer);
+		//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
+		const auto dataBlockSize = TunnelBuffer::DefautDataBlockSize;
+ 		const auto messageBlockQueueBufferSize =
+			(TunnelBuffer::DefautConnectionBufferSize * ratio)
+				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
+		m_bufferAllocators = buffer->CreateBuffer(
+			messageBlockQueueBufferSize,
+			messageBlockQueueBufferSize,
+			UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize));
+		buffer.swap(m_buffer);
+	}
+
+public:
+
 	const RuleEndpoint &m_ruleEndpoint;
 	const SharedPtr<const EndpointAddress> m_ruleEndpointAddress;
+	
+	mutable boost::shared_ptr<TunnelBuffer> m_buffer;
+	mutable TunnelBuffer::Allocators m_bufferAllocators;
 
 };
 
@@ -55,17 +126,7 @@ AutoPtr<MessageBlock> Acceptor::CreateMessageBlock(
 			size_t size,
 			const char *data /*= nullptr*/)
 		const {
-	assert(size > 0);
-	AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
-	//! @todo: reimplement, memory usage!!!
-	// not using internal allocator for memory, so buffer can be with any size
-	result->Reset(&UniqueMessageBlockHolder::Create(size, false));
-	result->SetReceivingTimePoint();
-	if (data && result->Get().copy(data, size) == -1) {
-		throw TunnelEx::InsufficientMemoryException(
-			L"Insufficient message block memory");
-	}
-	return result;
+	return m_pimpl->CreateMessageBlock(size, data);
 }
 
 const RuleEndpoint & Acceptor::GetRuleEndpoint() const {
