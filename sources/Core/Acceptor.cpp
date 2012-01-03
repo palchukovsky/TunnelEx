@@ -25,7 +25,9 @@ public:
 				const RuleEndpoint &ruleEndpoint, 
 				SharedPtr<const EndpointAddress> ruleEndpointAddress)
 			: m_ruleEndpoint(ruleEndpoint),
-			m_ruleEndpointAddress(ruleEndpointAddress) {
+			m_ruleEndpointAddress(ruleEndpointAddress),
+			//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
+			m_dataBlockSize(TunnelBuffer::DefautDataBlockSize) {
 		//...//
 	}
 
@@ -41,7 +43,10 @@ public:
 			const {
 		
 		if (!m_buffer) {
-			const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer(1);
+			const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer();
+			assert(m_buffer);
+		} else if (size > m_dataBlockSize) {
+			const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer(1, size);
 			assert(m_buffer);
 		}
 
@@ -66,7 +71,8 @@ public:
 				if (isError) {
 					throw;
 				}
-				const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer(2);
+				const_cast<Implementation *>(this)
+					->CreateNewMessageBlockBuffer(2, m_dataBlockSize);
 				assert(m_buffer);
 				isError = true;
 			}
@@ -84,11 +90,13 @@ public:
 
 private:
 
-	void CreateNewMessageBlockBuffer(size_t ratio) {
+	void CreateNewMessageBlockBuffer() {
+		CreateNewMessageBlockBuffer(1, m_dataBlockSize);
+	}
+
+	void CreateNewMessageBlockBuffer(size_t ratio, size_t dataBlockSize) {
 		// no locking, under server lock
 		boost::shared_ptr<TunnelBuffer> buffer(new TunnelBuffer);
-		//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-		const auto dataBlockSize = TunnelBuffer::DefautDataBlockSize;
  		const auto messageBlockQueueBufferSize =
 			(TunnelBuffer::DefautConnectionBufferSize * ratio)
 				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
@@ -97,6 +105,7 @@ private:
 			messageBlockQueueBufferSize,
 			UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize));
 		buffer.swap(m_buffer);
+		m_dataBlockSize = dataBlockSize;
 	}
 
 public:
@@ -104,8 +113,9 @@ public:
 	const RuleEndpoint &m_ruleEndpoint;
 	const SharedPtr<const EndpointAddress> m_ruleEndpointAddress;
 	
-	mutable boost::shared_ptr<TunnelBuffer> m_buffer;
+	boost::shared_ptr<TunnelBuffer> m_buffer;
 	mutable TunnelBuffer::Allocators m_bufferAllocators;
+	size_t m_dataBlockSize;
 
 };
 
