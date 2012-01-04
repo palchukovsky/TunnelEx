@@ -262,22 +262,7 @@ private:
 
 	}
 
-	//! Closed connection and deletes or prepares object to delete.
-	/** Can be called only from 1) reading handling at 0 2) from data send
-	  * notification if m_closeAtLastMessageBlock is true and buffer now is
-	  * empty
-      * @return true if object was deleted
-	  */
 	void Close(Lock &lock) {
-		assert(!m_closeAtLastMessageBlock || m_sendQueueSize == 0);
-		if (m_sendQueueSize != 0) {
-			Interlocked::Exchange(m_closeAtLastMessageBlock, true);
-			return;
-		}
-		CloseUnsafe(lock);
-	}
-
-	void CloseForced(Lock &lock) {
 		Interlocked::Exchange(m_closeAtLastMessageBlock, true);
 		CloseUnsafe(lock);
 	}
@@ -747,7 +732,7 @@ private:
 			
 			messageBlock.Reset();
 			Lock lock(m_mutex, true);
-			CloseForced(lock);
+			Close(lock);
 			return;
 		
 		} else if (result.bytes_transferred() == 0) {
@@ -755,6 +740,11 @@ private:
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
+
+			messageBlock.Reset();
+			Lock lock(m_mutex, true);
+			Close(lock);
+			return;
 		
 		} else if (m_isReadingAllowed && IsOpened()) {
 
