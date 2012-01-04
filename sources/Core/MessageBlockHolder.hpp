@@ -2,12 +2,13 @@
 #ifndef MESSAGE_BLOCK_ADAPTER_H_INCLUDED
 #define MESSAGE_BLOCK_ADAPTER_H_INCLUDED
 
-#include "TunnelBuffer.hpp"
 #include "MessageBlock.hpp"
 #include "Locking.hpp"
 #include "Exceptions.hpp"
 
 namespace TunnelEx {
+
+	class MessagesAllocator;
 
 	//////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +73,7 @@ namespace TunnelEx {
 
 		public:
 
-			explicit Satellite(ACE_Allocator &);
-			explicit Satellite(ACE_Allocator &, boost::shared_ptr<const TunnelBuffer>);
+			explicit Satellite(boost::shared_ptr<MessagesAllocator>);
 			~Satellite() throw();
 
 		public:
@@ -87,7 +87,8 @@ namespace TunnelEx {
 			long AddRef() throw();
 			long RemoveRef() throw();
 
-			ACE_Allocator & GetAllocator() throw();
+			MessagesAllocator & GetAllocators() throw();
+			boost::shared_ptr<MessagesAllocator> GetAllocatorsPtr();
 
 		public:
 
@@ -97,13 +98,10 @@ namespace TunnelEx {
 			Lock & GetLock();
 			const Lock & GetLock() const;
 
-			boost::shared_ptr<const TunnelBuffer> GetBuffer() const;
-
 		private:
 
-			ACE_Allocator &m_allocator;
 			volatile long m_refsCount;
-			boost::shared_ptr<const TunnelBuffer> m_buffer;
+			boost::shared_ptr<MessagesAllocator> m_allocators;
 
 			Timings m_timings;
 			Lock m_lock;
@@ -161,12 +159,7 @@ namespace TunnelEx {
 
 		static ACE_Message_Block & Create(
 					size_t size,
-					TunnelBuffer::Allocators &allocators,
-					bool isTunnelMessage,
-					boost::shared_ptr<const TunnelBuffer>);
-		static ACE_Message_Block & Create(
-					size_t size,
-					TunnelBuffer::Allocators &allocators,
+					boost::shared_ptr<MessagesAllocator>,
 					bool isTunnelMessage);
 
 		static void Delete(ACE_Message_Block &messageBlock) throw();

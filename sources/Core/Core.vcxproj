@@ -138,6 +138,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MessageBlock.cpp" />
     <ClCompile Include="MessageBlockHolder.cpp" />
+    <ClCompile Include="MessagesAllocator.cpp" />
     <ClCompile Include="ModulesFactory.cpp" />
     <ClCompile Include="Prec.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -153,7 +154,6 @@
     <ClCompile Include="String.cpp" />
     <ClCompile Include="TrafficLogger.cpp" />
     <ClCompile Include="Tunnel.cpp" />
-    <ClCompile Include="TunnelBuffer.cpp" />
     <ClCompile Include="..\Common\Xml.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +181,7 @@
     <ClInclude Include="Log.hpp" />
     <ClInclude Include="MessageBlock.hpp" />
     <ClInclude Include="MessageBlockHolder.hpp" />
+    <ClInclude Include="MessagesAllocator.hpp" />
     <ClInclude Include="ModulesFactory.hpp" />
     <ClInclude Include="Prec.h" />
     <ClInclude Include="SmartPtr.hpp" />
@@ -195,7 +196,6 @@
     <ClInclude Include="Time.h" />
     <ClInclude Include="TrafficLogger.hpp" />
     <ClInclude Include="Tunnel.hpp" />
-    <ClInclude Include="TunnelBuffer.hpp" />
     <ClInclude Include="TunnelConnectionSignal.hpp" />
     <ClInclude Include="RuleSet.h">
       <DependentUpon>RuleSet.xsd</DependentUpon>

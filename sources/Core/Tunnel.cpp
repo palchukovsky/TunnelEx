@@ -12,7 +12,6 @@
 #include "Tunnel.hpp"
 #include "SmartPtr.hpp"
 #include "TunnelConnectionSignal.hpp"
-#include "TunnelBuffer.hpp"
 #include "ServerWorker.hpp"
 #include "Connection.hpp"
 #include "Acceptor.hpp"
@@ -201,7 +200,6 @@ Tunnel::Tunnel(
 		m_rule(rule),
 		m_connectionsToClose(0),
 		m_setupComplitedConnections(0),
-		m_buffer(new TunnelBuffer),
 		m_source(sourceRead, sourceWrite),
 		m_destinationIndex(0),
 		m_closedConnections(0),

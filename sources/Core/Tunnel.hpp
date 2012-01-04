@@ -22,7 +22,6 @@ namespace TunnelEx {
 	class Connection;
 	class ServerWorker;
 	class TunnelConnectionSignal;
-	class TunnelBuffer;
 
 	//! Connection process handler.
 	/** Opens and manages the current tunnel instance. */
@@ -106,10 +105,6 @@ namespace TunnelEx {
 
 		void StartSetup();
 
-		boost::shared_ptr<TunnelBuffer> GetBuffer() {
-			return m_buffer;
-		}
-
 		//! Closes current destination and tries to open next. Returns
 		//! false if there no more destinations in list.
 		bool Switch(
@@ -176,8 +171,6 @@ namespace TunnelEx {
 		std::list<Connection *> m_connectionsToSetup;
 		long m_connectionsToClose;
 		size_t m_setupComplitedConnections;
-
-		boost::shared_ptr<TunnelBuffer> m_buffer;
 
 		ReadWriteConnections m_source;
 		ReadWriteConnections m_destination;

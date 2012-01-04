@@ -92,19 +92,19 @@
     <ClCompile Include="Tunnel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TunnelBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Common\Xml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\LocalAssert.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LicenseState.cpp">
+    <ClCompile Include="MessageBlockHolder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MessageBlockHolder.cpp">
+    <ClCompile Include="LicenseState.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MessagesAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -214,13 +214,13 @@
     <ClInclude Include="Licensing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TunnelBuffer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SmartPtr.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LicenseState.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MessagesAllocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

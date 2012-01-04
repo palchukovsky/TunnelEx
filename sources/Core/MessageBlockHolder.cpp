@@ -8,6 +8,7 @@
  **************************************************************************/
 
 #include "Prec.h"
+#include "MessagesAllocator.hpp"
 #include "Log.hpp"
 #include "MessageBlockHolder.hpp"
 #include "ObjectsDeletionCheck.h"
@@ -98,18 +99,10 @@ namespace {
 
 //////////////////////////////////////////////////////////////////////////
 
-UniqueMessageBlockHolder::Satellite::Satellite(ACE_Allocator &allocator)
-		: m_allocator(allocator),
-		m_refsCount(0) {
-	TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
-}
-
 UniqueMessageBlockHolder::Satellite::Satellite(
-			ACE_Allocator &allocator,
-			boost::shared_ptr<const TunnelBuffer> buffer)
-		: m_allocator(allocator),
-		m_refsCount(0),
-		m_buffer(buffer) {
+			boost::shared_ptr<MessagesAllocator> allocators)
+		: m_allocators(allocators),
+		m_refsCount(0) {
 	TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 }
 
@@ -126,8 +119,12 @@ long UniqueMessageBlockHolder::Satellite::RemoveRef() throw() {
 	return Interlocked::Decrement(m_refsCount);
 }
 
-ACE_Allocator & UniqueMessageBlockHolder::Satellite::GetAllocator() {
-	return m_allocator;
+MessagesAllocator & UniqueMessageBlockHolder::Satellite::GetAllocators() {
+	return *m_allocators;
+}
+
+boost::shared_ptr<MessagesAllocator> UniqueMessageBlockHolder::Satellite::GetAllocatorsPtr() {
+	return m_allocators;
 }
 
 UniqueMessageBlockHolder::Satellite::Timings &
@@ -148,11 +145,6 @@ UniqueMessageBlockHolder::Satellite::GetLock() {
 const UniqueMessageBlockHolder::Satellite::Lock &
 UniqueMessageBlockHolder::Satellite::GetLock() const {
 	return const_cast<Satellite *>(this)->GetLock();
-}
-
-boost::shared_ptr<const TunnelBuffer>
-UniqueMessageBlockHolder::Satellite::GetBuffer() const {
-	return m_buffer;
 }
 
 #ifdef DEV_VER
@@ -361,15 +353,15 @@ namespace {
 	ACE_Message_Block & CreateMessageBlock(
 				UniqueMallocPtr<UniqueMessageBlockHolder::Satellite> &satellite,
 				size_t size,
-				TunnelBuffer::Allocators &allocators,
 				bool isTunnelMessage) {
 
 		typedef UniqueMessageBlockHolder::Satellite Satellite;
+		auto &allocators = satellite->GetAllocators();
 
 		UniqueMallocPtr<ACE_Message_Block> result(
 			static_cast<ACE_Message_Block *>(
-				allocators.messageBlock->malloc(sizeof(ACE_Message_Block))),
-			*allocators.messageBlock);
+				allocators.GetMessageBlocksAllocator().malloc(sizeof(ACE_Message_Block))),
+			allocators.GetMessageBlocksAllocator());
 		if (!result) {
 			throw InsufficientMemoryException(
 				L"Failed to allocate memory for new message block");
@@ -379,13 +371,13 @@ namespace {
 			ACE_Message_Block::MB_DATA,
 			0,
 			0,
-			allocators.dataBlockBuffer,
+			&allocators.GetDataBlocksBufferAllocator(),
 			&satellite->GetLock(),
 			ACE_DEFAULT_MESSAGE_BLOCK_PRIORITY,
 			ACE_Time_Value::zero,
 			ACE_Time_Value::max_time,
-			allocators.dataBlock,
-			allocators.messageBlock);
+			&allocators.GetDataBlocksAllocator(),
+			&allocators.GetMessageBlocksAllocator());
 		result.MarkAsCreated();
 		if (!result->data_block()) {
 			throw InsufficientMemoryException(
@@ -421,42 +413,21 @@ namespace {
 
 ACE_Message_Block & UniqueMessageBlockHolder::Create(
 			size_t size,
-			TunnelBuffer::Allocators &allocators,
-			bool isTunnelMessage,
-			boost::shared_ptr<const TunnelBuffer> buffer) {
-
-	UniqueMallocPtr<Satellite> satellite(
-	static_cast<Satellite *>(
-			allocators.messageBlockSatellite->malloc(sizeof(Satellite))),
-		*allocators.messageBlockSatellite);
-	if (!satellite) {
-		throw InsufficientMemoryException(
-			L"Failed to allocate memory for message block satellite");
-	}
-	new(&*satellite)Satellite(*allocators.messageBlockSatellite, buffer);
-	satellite.MarkAsCreated();
-
-	return CreateMessageBlock(satellite, size, allocators, isTunnelMessage);
-
-}
-
-ACE_Message_Block & UniqueMessageBlockHolder::Create(
-			size_t size,
-			TunnelBuffer::Allocators &allocators,
+			boost::shared_ptr<MessagesAllocator> allocators,
 			bool isTunnelMessage) {
 
 	UniqueMallocPtr<Satellite> satellite(
 	static_cast<Satellite *>(
-			allocators.messageBlockSatellite->malloc(sizeof(Satellite))),
-		*allocators.messageBlockSatellite);
+			allocators->GetMessageBlockSatellitesAllocator().malloc(sizeof(Satellite))),
+		allocators->GetMessageBlockSatellitesAllocator());
 	if (!satellite) {
 		throw InsufficientMemoryException(
 			L"Failed to allocate memory for message block satellite");
 	}
-	new(&*satellite)Satellite(*allocators.messageBlockSatellite);
+	new(&*satellite)Satellite(allocators);
 	satellite.MarkAsCreated();
 
-	return CreateMessageBlock(satellite, size, allocators, isTunnelMessage);
+	return CreateMessageBlock(satellite, size, isTunnelMessage);
 
 }
 
@@ -477,15 +448,21 @@ void UniqueMessageBlockHolder::Delete(ACE_Message_Block &messageBlock) throw() {
 	Satellite *satellite = nullptr;
 	if (messageBlock.flags() & UMBHF_HAS_SATELLITE) {
 		satellite = &GetSatellite(messageBlock);
+		assert(
+			messageBlocksAllocator == &satellite->GetAllocators().GetMessageBlocksAllocator()
+			&& dataBlocksAllocator == &satellite->GetAllocators().GetDataBlocksAllocator()
+			&& dataBlocksBufferAllocator == &satellite->GetAllocators().GetDataBlocksBufferAllocator());
 	}
 
 	UniqueMallocPtr<ACE_Message_Block>(&messageBlock, *messageBlocksAllocator)
 		.MarkAsCreated();
 
 	if (satellite && satellite->RemoveRef() == 0) {
-		const boost::shared_ptr<const TunnelBuffer> tunnelBuffer(
-			satellite->GetBuffer());
-		UniqueMallocPtr<Satellite>(satellite, satellite->GetAllocator())
+		const boost::shared_ptr<const MessagesAllocator> allocator(
+			satellite->GetAllocatorsPtr());
+		UniqueMallocPtr<Satellite>(
+					satellite,
+					satellite->GetAllocators().GetMessageBlockSatellitesAllocator())
 			.MarkAsCreated();
 	}
 

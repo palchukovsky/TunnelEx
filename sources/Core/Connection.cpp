@@ -18,7 +18,7 @@
 #include "Format.hpp"
 #include "MessageBlockHolder.hpp"
 #include "Tunnel.hpp"
-#include "TunnelBuffer.hpp"
+#include "MessagesAllocator.hpp"
 #include "Error.hpp"
 #include "Locking.hpp"
 #include "ObjectsDeletionCheck.h"
@@ -105,7 +105,7 @@ namespace {
 
 	public:
 
-		explicit LockWithDebugReports(Mutex &mutex, const bool isFromProactor)
+		explicit LockWithDebugReports(Mutex &mutex, const bool isProactorCall)
 				: Base(mutex, 0) {
 
 			if (!locked()) {
@@ -113,7 +113,7 @@ namespace {
 				Interlocked::Increment(&DebugLockStat::fails);
 			}
 
-			if (isFromProactor) {
+			if (isProactorCall) {
 				Interlocked::Increment(&DebugLockStat::proactor);
 			}
 
@@ -179,14 +179,13 @@ public:
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(nullptr),
 			//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_dataBlockSize(TunnelBuffer::DefautDataBlockSize),
+			m_dataBlockSize(MessagesAllocator::DefautDataBlockSize),
 			//! @todo: hardcoded memory size
  			m_messageBlockQueueBufferSize(
- 				(TunnelBuffer::DefautConnectionBufferSize * 1)
+ 				(MessagesAllocator::DefautConnectionBufferSize * 1)
  					/ UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)),
 			m_sentMessageBlockQueueSize(0),
-			m_closeAtLastMessageBlock(false),
-			m_sendQueueSize(0),
+			m_isClosed(false),
 			m_idleTimeoutInterval(0, 0, idleTimeoutSeconds),
 			m_idleTimeoutTimer(-1) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
@@ -219,8 +218,13 @@ private:
 public:
 
 	void CheckedDelete() {
-		Lock lock(m_mutex, false);
-		CheckedDelete(lock);
+		if (!m_proactor) {
+			assert(!m_signal);
+			delete this;
+		} else {
+			Lock lock(m_mutex, false);
+			CheckedDelete(lock);
+		}
 	}
 
 private:
@@ -229,13 +233,14 @@ private:
 	/** @return true if object was deleted
 	  */
 	bool CheckedDelete(Lock &lock) {
-		
-		assert(m_proactor);
-		assert(m_refsCount <= 2);
-		assert(m_refsCount >= 1);
 
+		assert(m_proactor);
+		assert(m_refsCount > 0);
+
+		Interlocked::Exchange(m_isClosed, true);
 		m_readStream.reset();
 		m_writeStream.reset();
+		m_allocator.reset();
 		
 		if (m_idleTimeoutTimer >= 0) {
 			const auto timerId = m_idleTimeoutTimer;
@@ -243,33 +248,44 @@ private:
 			if (m_proactor->cancel_timer(timerId, nullptr, false) != 1) {
 				return false;
 			}
-		} 
+		}
+
+		lock.release();
 		
-		if (Interlocked::Decrement(&m_refsCount) > 0) {
+		if (Interlocked::Decrement(m_refsCount) > 0) {
 			return false;
 		}
 
-		const auto instanceId = m_instanceId;
-		const auto signal = m_signal;
-		lock.release();
-		delete this;
-
-		if (signal) {
-			signal->OnConnectionClosed(instanceId);
-		}
-
+		UncheckedDelete();
 		return true;
 
 	}
 
-	void Close(Lock &lock) {
-		Interlocked::Exchange(m_closeAtLastMessageBlock, true);
-		CloseUnsafe(lock);
+	//! Object can be deleted after calling.
+	void RemoveRef(const bool isProactorCall) {
+		assert(isProactorCall);
+		if (Interlocked::Decrement(m_refsCount) > 0) {
+			return;
+		}
+		{
+			Lock lock(m_mutex, isProactorCall);
+			if (m_refsCount > 0) {
+				return;
+			}
+		}
+		UncheckedDelete();
 	}
 
-	void CloseUnsafe(Lock &lock) {
-		m_signal->OnConnectionClose(m_instanceId);
-		CheckedDelete(lock);
+	void UncheckedDelete() {
+		assert(m_refsCount == 0);
+		assert(!m_readStream);
+		assert(!m_writeStream);
+		assert(!m_allocator);
+		assert(m_isClosed);
+		const auto instanceId = m_instanceId;
+		const auto signal = m_signal;
+		delete this;
+		signal->OnConnectionClosed(instanceId);		
 	}
 
 public:
@@ -282,7 +298,7 @@ public:
 
 		assert(!m_proactor || m_proactor == &signal->GetTunnel().GetProactor());
 		assert(!m_proactor || m_isReadingAllowed == isReadingAllowed);
-		assert(!IsOpened());
+		assert(!m_allocator);
 
 		if (m_proactor) {
 			if (	m_proactor != &signal->GetTunnel().GetProactor()
@@ -296,55 +312,67 @@ public:
 			return;
 		}
 
-		boost::shared_ptr<TunnelBuffer> buffer;
-		TunnelBuffer::Allocators allocators;
+		boost::shared_ptr<MessagesAllocator> allocator(
+			!isReadingAllowed
+				?	new MessagesAllocator(
+						1 + 1, // plus 1 for message, that duplicated for proactor
+						1,
+						UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize))
+				:	new MessagesAllocator(
+						m_messageBlockQueueBufferSize + 1, // plus 1 for message, that duplicated for proactor
+						m_messageBlockQueueBufferSize,
+						UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)));
 
-		try {
-
-			buffer = signal->GetTunnel().GetBuffer();
-			if (!isReadingAllowed) {
-				allocators = buffer->CreateBuffer(
-					1 + 1, // plus 1 for message, that duplicated for proactor
-					1,
-					UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize));
-			} else {
-				allocators = buffer->CreateBuffer(
-					m_messageBlockQueueBufferSize + 1, // plus 1 for message, that duplicated for proactor
-					m_messageBlockQueueBufferSize,
-					UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize));
-			}
-
-			ACE_Proactor &proactor = signal->GetTunnel().GetProactor();
+		ACE_Proactor &proactor = signal->GetTunnel().GetProactor();
 			
-			IoHandleInfo ioHandleInfo = m_myInterface.GetIoHandle();
+		IoHandleInfo ioHandleInfo = m_myInterface.GetIoHandle();
 			
-			std::auto_ptr<ACE_Asynch_Operation> readStream;
-			std::auto_ptr<ACE_Asynch_Operation> writeStream;
+		std::unique_ptr<ACE_Asynch_Operation> readStream;
+		std::unique_ptr<ACE_Asynch_Operation> writeStream;
 
-			boost::function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
-				openReadStreamFunc;
-			boost::function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
-				openWriteStreamFunc;
+		boost::function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
+			openReadStreamFunc;
+		boost::function<int(ACE_Handler &, ACE_HANDLE, const void *, ACE_Proactor *)>
+			openWriteStreamFunc;
 
-			boost::function<int(ACE_Message_Block &, size_t)> readStreamFunc;
-			boost::function<int(ACE_Message_Block &, size_t)> writeStreamFunc;
+		boost::function<int(ACE_Message_Block &, size_t)> readStreamFunc;
+		boost::function<int(ACE_Message_Block &, size_t)> writeStreamFunc;
 			
-			if (ioHandleInfo.handle != INVALID_HANDLE_VALUE) {
-				switch (ioHandleInfo.type) {
-					default:
-						assert(false);
-					case IoHandleInfo::TYPE_OTHER:
-						readStream.reset(new ACE_Asynch_Read_File);
-						openReadStreamFunc = boost::bind(
-							&ACE_Asynch_Read_File::open,
-							boost::polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
+		if (ioHandleInfo.handle != INVALID_HANDLE_VALUE) {
+			switch (ioHandleInfo.type) {
+				default:
+					assert(false);
+				case IoHandleInfo::TYPE_OTHER:
+					readStream.reset(new ACE_Asynch_Read_File);
+					openReadStreamFunc = boost::bind(
+						&ACE_Asynch_Read_File::open,
+						boost::polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
+						_1,
+						_2,
+						_3,
+						_4);
+					readStreamFunc = boost::bind(
+						&ACE_Asynch_Read_File::read,
+						boost::polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
+						_1,
+						_2,
+						0,
+						0,
+						static_cast<void *>(0),
+						0,
+						ACE_SIGRTMIN);
+					if (isReadingAllowed) {
+						writeStream.reset(new ACE_Asynch_Write_File);
+						openWriteStreamFunc = boost::bind(
+							&ACE_Asynch_Write_File::open,
+							boost::polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
 							_1,
 							_2,
 							_3,
 							_4);
-						readStreamFunc = boost::bind(
-							&ACE_Asynch_Read_File::read,
-							boost::polymorphic_downcast<ACE_Asynch_Read_File *>(readStream.get()),
+						writeStreamFunc = boost::bind(
+							&ACE_Asynch_Write_File::write,
+							boost::polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
 							_1,
 							_2,
 							0,
@@ -352,102 +380,76 @@ public:
 							static_cast<void *>(0),
 							0,
 							ACE_SIGRTMIN);
-						if (isReadingAllowed) {
-							writeStream.reset(new ACE_Asynch_Write_File);
-							openWriteStreamFunc = boost::bind(
-								&ACE_Asynch_Write_File::open,
-								boost::polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
-								_1,
-								_2,
-								_3,
-								_4);
-							writeStreamFunc = boost::bind(
-								&ACE_Asynch_Write_File::write,
-								boost::polymorphic_downcast<ACE_Asynch_Write_File *>(writeStream.get()),
-								_1,
-								_2,
-								0,
-								0,
-								static_cast<void *>(0),
-								0,
-								ACE_SIGRTMIN);
-						}
-						break;
-					case IoHandleInfo::TYPE_SOCKET:
-						readStream.reset(new ACE_Asynch_Read_Stream);
-						openReadStreamFunc = boost::bind(
-							&ACE_Asynch_Read_Stream::open,
-							boost::polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
+					}
+					break;
+				case IoHandleInfo::TYPE_SOCKET:
+					readStream.reset(new ACE_Asynch_Read_Stream);
+					openReadStreamFunc = boost::bind(
+						&ACE_Asynch_Read_Stream::open,
+						boost::polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
+						_1,
+						_2,
+						_3,
+						_4);
+					readStreamFunc = boost::bind(
+						&ACE_Asynch_Read_Stream::read,
+						boost::polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
+						_1,
+						_2,
+						static_cast<void *>(0),
+						0,
+						ACE_SIGRTMIN);
+					if (isReadingAllowed) {
+						writeStream.reset(new ACE_Asynch_Write_Stream);
+						openWriteStreamFunc = boost::bind(
+							&ACE_Asynch_Write_Stream::open,
+							boost::polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
 							_1,
 							_2,
 							_3,
 							_4);
-						readStreamFunc = boost::bind(
-							&ACE_Asynch_Read_Stream::read,
-							boost::polymorphic_downcast<ACE_Asynch_Read_Stream *>(readStream.get()),
+						writeStreamFunc = boost::bind(
+							&ACE_Asynch_Write_Stream::write,
+							boost::polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
 							_1,
 							_2,
 							static_cast<void *>(0),
 							0,
 							ACE_SIGRTMIN);
-						if (isReadingAllowed) {
-							writeStream.reset(new ACE_Asynch_Write_Stream);
-							openWriteStreamFunc = boost::bind(
-								&ACE_Asynch_Write_Stream::open,
-								boost::polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
-								_1,
-								_2,
-								_3,
-								_4);
-							writeStreamFunc = boost::bind(
-								&ACE_Asynch_Write_Stream::write,
-								boost::polymorphic_downcast<ACE_Asynch_Write_Stream *>(writeStream.get()),
-								_1,
-								_2,
-								static_cast<void *>(0),
-								0,
-								ACE_SIGRTMIN);
-						}
-						break;
-				}
-				if (openReadStreamFunc(*this, ioHandleInfo.handle, 0, &proactor) == -1) {
-					const Error error(errno);
-					WFormat message(
-						L"Could not open connection read stream: %1% (%2%)");
-					message % error.GetString().GetCStr() % error.GetErrorNo();
-					throw ConnectionOpeningException(message.str().c_str());
-				}
-				if (	openWriteStreamFunc
-						&& openWriteStreamFunc(*this, ioHandleInfo.handle, 0, &proactor) == -1) {
-					const Error error(errno);
-					WFormat message(
-						L"Could not open connection write stream: %1% (%2%)");
-					message % error.GetString().GetCStr() % error.GetErrorNo();	
-					throw ConnectionOpeningException(message.str().c_str());
-				}
+					}
+					break;
 			}
-
-			m_allocators = allocators;
-			m_buffer.swap(buffer);
-			m_writeStream = writeStream;
-			m_readStream = readStream;
-			m_readStreamFunc.swap(readStreamFunc);
-			m_writeStreamFunc.swap(writeStreamFunc);
-			m_isReadingAllowed = isReadingAllowed;
-			m_signal.Swap(signal);
-			m_proactor = &proactor;
-			++m_refsCount; // no interlocking needed
-
-		} catch (...) {
-			buffer->DeleteBuffer(allocators);
-			throw;
+			if (openReadStreamFunc(*this, ioHandleInfo.handle, 0, &proactor) == -1) {
+				const Error error(errno);
+				WFormat message(
+					L"Could not open connection read stream: %1% (%2%)");
+				message % error.GetString().GetCStr() % error.GetErrorNo();
+				throw ConnectionOpeningException(message.str().c_str());
+			}
+			if (	openWriteStreamFunc
+					&& openWriteStreamFunc(*this, ioHandleInfo.handle, 0, &proactor) == -1) {
+				const Error error(errno);
+				WFormat message(
+					L"Could not open connection write stream: %1% (%2%)");
+				message % error.GetString().GetCStr() % error.GetErrorNo();	
+				throw ConnectionOpeningException(message.str().c_str());
+			}
 		}
-		
+
+		allocator.swap(m_allocator);
+		m_writeStream.reset(writeStream.release());
+		m_readStream.reset(readStream.release());
+		readStreamFunc.swap(m_readStreamFunc);
+		writeStreamFunc.swap(m_writeStreamFunc);
+		m_isReadingAllowed = isReadingAllowed;
+		signal.Swap(m_signal);
+		m_proactor = &proactor;
+
 	}
 
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
-		if (m_closeAtLastMessageBlock) {
+		if (m_isClosed) {
 			return DATA_TRANSFER_CMD_SEND_PACKET;
 		}
 
@@ -457,7 +459,6 @@ public:
 		UniqueMessageBlockHolder messageBlockDuplicate(messageBlockHolder.Duplicate());
 
 		Lock lock(m_mutex, false);
-		assert(IsOpened());
 		assert(m_writeStream.get());
 
 		if (!m_writeStream.get()) {
@@ -465,21 +466,23 @@ public:
 				L"Could not send data in connection, which does not opened");
 		}
 
-		if (m_closeAtLastMessageBlock) {
+		if (m_isClosed) {
 			return DATA_TRANSFER_CMD_SEND_PACKET;
 		}
 
-		Interlocked::Increment(m_sendQueueSize);
 		messageBlockHolder.SetSendingStartTimePoint();
 		const auto writeResult = m_writeStreamFunc(
 			messageBlockDuplicate.Get(),
 			messageBlockDuplicate.GetUnreadedDataSize());
 		if (writeResult == -1) {
 			const auto errNo = errno;
-			Interlocked::Decrement(m_sendQueueSize);
 			lock.release();
 			ReportSendError(errNo); // not only log, can throws
 		} else {
+			// incrementing only here as "isClosed + locking" guaranties that 
+			// the m_refsCount is not zero and object will not destroyed from
+			// another thread (also see read-init incrimination)
+			verify(Interlocked::Increment(m_refsCount) > 1);
 			UpdateIdleTimer(messageBlockHolder.GetSendingStartTime());
 			lock.release();
 			messageBlockDuplicate.Release();
@@ -503,7 +506,7 @@ public:
 		}
 		{
 			Lock lock(m_mutex, false);
-			if (m_isReadingActive || InitReadIfPossible()) {
+			if (m_isReadingActive || InitReadIfPossible(lock)) {
 				return;
 			}
 		}
@@ -535,11 +538,11 @@ public:
 		{
 			Lock lock(m_mutex, false);
 			m_isReadingInitiated = true;
-			if (InitReadIfPossible()) {
+			assert(!m_isClosed); // sanity check, never should be true
+			if (InitReadIfPossible(lock)) {
 				return;
 			}
 		}
-		assert(m_refsCount >= 2);
 		Log::GetInstance().AppendDebug(
 			"Failed to start reading for connection %1%.",
 			m_instanceId);
@@ -618,9 +621,17 @@ public:
 	virtual void handle_time_out(const ACE_Time_Value &, const void * /*act*/ = 0) {
 
 		assert(m_idleTimeoutInterval.ticks() > 0);
-		assert(m_proactor);
 
 		Lock lock(m_mutex, true);
+
+		if (m_idleTimeoutTimer < 0) {
+			assert(m_idleTimeoutTimer == -2);
+			Log::GetInstance().AppendDebug(
+				"Canceling idle timeout for connection %1%...",
+				m_instanceId);
+			CheckedDelete(lock);
+			return;
+		}
 		
 		if (!m_idleTimeoutUpdateTime.is_not_a_date_time()) {
 
@@ -637,7 +648,7 @@ public:
 						+ pt::microseconds(1000000 - 1);
 				if (Log::GetInstance().IsDebugRegistrationOn()) {
 					Log::GetInstance().AppendDebug(
-						"Resetting idle timeout %1% seconds for connection %2%...",
+						"Resetting idle timeout to %1% seconds for connection %2%...",
 						sleepTime.total_seconds(),
 						m_instanceId);
 				}
@@ -646,26 +657,20 @@ public:
 					nullptr,
 					ACE_Time_Value(sleepTime.total_seconds()));
 				assert(m_idleTimeoutTimer != -1);
-			
-			} else {
 
-				const auto signal = m_signal;
-				const auto instanceId = m_instanceId;
-				m_idleTimeoutTimer = -3;
-				lock.release();
-				Log::GetInstance().AppendDebug(
-					"Closing connection %1% by idle timeout...",
-					instanceId);
-				signal->OnConnectionClose(instanceId);
+				return;
 			
 			}
 
-		} else {
-			Log::GetInstance().AppendDebug(
-				"Canceling idle timeout for connection %1%...",
-				m_instanceId);
-			CheckedDelete(lock);
 		}
+
+		const auto signal = m_signal;
+		m_idleTimeoutTimer = -3;
+		lock.release();
+		Log::GetInstance().AppendDebug(
+			"Closing connection %1% by idle timeout...",
+			m_instanceId);
+		signal->OnConnectionClose(m_instanceId);
 
 	}
 
@@ -676,16 +681,13 @@ public:
 		assert(size > 0);
 		AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
 		result->Reset(
-			&UniqueMessageBlockHolder::Create(size, m_allocators, false));
+			&UniqueMessageBlockHolder::Create(size, m_allocator, false));
 		result->SetReceivingTimePoint();
-
 		if (data && result->Get().copy(data, size) == -1) {
 			throw TunnelEx::InsufficientMemoryException(
 				L"Insufficient message block memory");
 		}
-
 		return result;
-
 	}
 
 private:
@@ -718,52 +720,51 @@ private:
 		assert(messageBlock.IsTunnelMessage());
 		assert(
 			result.error() == ERROR_OPERATION_ABORTED
-			|| !m_closeAtLastMessageBlock);
+			|| !m_isClosed);
 		assert(
 			result.error() == ERROR_OPERATION_ABORTED
 			|| IsNotLockedByMyThread(m_mutex));
 
+		bool isSuccess = false;
 		if (!result.success() && ReportReadError(result)) {
-			
 			Log::GetInstance().AppendDebug(
 				"Closing connection %1% with code %2%...",
 				m_instanceId,
 				result.error());
-			
 			messageBlock.Reset();
+			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
-			Close(lock);
+			CheckedDelete(lock);
 			return;
-		
 		} else if (result.bytes_transferred() == 0) {
-			
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
-
 			messageBlock.Reset();
+			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
-			Close(lock);
+			CheckedDelete(lock);
 			return;
-		
-		} else if (m_isReadingAllowed && IsOpened()) {
-
+		} else if (m_isReadingAllowed && !m_isClosed) {
 			Lock lock(m_mutex, true);
 			try {
-				if (IsOpened() && m_isReadingAllowed) {
+				if (m_isReadingAllowed && !m_isClosed) {
 					m_myInterface.ReadRemote(messageBlock);
-					InitReadIfPossible();
-					return;
+					InitReadIfPossible(lock);
+					isSuccess = true;
 				}
 			} catch (const TunnelEx::LocalException &ex) {
 				Log::GetInstance().AppendError(
 					ConvertString<String>(ex.GetWhat()).GetCStr());
 			}
-		
 		}
 
 		messageBlock.Reset();
-		m_signal->OnConnectionClose(m_instanceId);
+		if (!isSuccess) {
+			m_signal->OnConnectionClose(m_instanceId);
+		}
+
+		RemoveRef(true);
 
 	}
 
@@ -805,44 +806,23 @@ private:
 	
 	template<typename Result>
 	void DoHandleWriteStream(const Result &result) {
-
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		messageBlock.SetSendingTimePoint();
-
-		assert(m_sendQueueSize > 0);
-		Interlocked::Decrement(m_sendQueueSize);
-
-		try {
-			if (m_closeAtLastMessageBlock) { 
-				Lock lock(m_mutex, true);
-				if (m_sendQueueSize == 0) {
-					messageBlock.Reset();
-					CloseUnsafe(lock);
-					return;
-				}
-			}
-			m_signal->OnMessageBlockSent(messageBlock);
-		} catch (const TunnelEx::LocalException &ex) {
-			Log::GetInstance().AppendError(
-				ConvertString<String>(ex.GetWhat()).GetCStr());
-			m_signal->OnConnectionClose(m_instanceId);
-		}
-
+		m_signal->OnMessageBlockSent(messageBlock);
+		RemoveRef(true);
 	}
 
 	//! Inits read buffer if it possible and allowed
 	/**  Can be called only from proactor thread.
 	  */
-	bool InitReadIfPossible() {
-
-		assert(IsLockedByMyThread(m_mutex));
+	bool InitReadIfPossible(const Lock &) {
 
 		// FIXME
 		// Can't explain this situation, try to do it at assert fail.
 		// Who can stop reading if it already started and working?
 		assert(m_isReadingInitiated);
-		
-		if (!m_isReadingInitiated) {
+
+		if (m_isClosed || !m_isReadingInitiated) {
 			return true;
 		} else if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize) {
 			if (m_isReadingActive) {
@@ -861,8 +841,7 @@ private:
 					Log::GetInstance().AppendWarn(message.str());
 				}
 #				endif
-				Interlocked::Decrement(&m_isReadingActive);
-				assert(m_isReadingActive == 0);
+				verify(Interlocked::Exchange(m_isReadingActive, false));
 			}
 			return true;
 		} else if (!m_isReadingActive) {
@@ -884,8 +863,7 @@ private:
 				Log::GetInstance().AppendInfo(message.str());
 			}
 #			endif
-			Interlocked::Increment(&m_isReadingActive);
-			assert(m_isReadingActive == 1);
+			verify(!Interlocked::Exchange(m_isReadingActive, true));
 		}
 
 		// read init
@@ -893,7 +871,7 @@ private:
 			UniqueMessageBlockHolder messageBlock(
 				UniqueMessageBlockHolder::Create(
 					m_dataBlockSize,
-					m_allocators,
+					m_allocator,
 					true));
 			messageBlock.SetReceivingStartTimePoint();
 			if (m_readStreamFunc(messageBlock.Get(), m_dataBlockSize) == -1) {
@@ -910,10 +888,13 @@ private:
 						Log::GetInstance().AppendDebug(message.str().c_str());
 						messageBlock.Reset();
 						return false;
-					default:
-						throw ConnectionException(message.str().c_str());
 				}
+				throw ConnectionException(message.str().c_str());
 			}
+			// incrementing only here as "isClosed + locking" guaranties that 
+			// the m_refsCount is not zero and object will not destroyed from
+			// another thread (also see write-init incrimination)
+			verify(Interlocked::Increment(m_refsCount) > 1);
 			messageBlock.Release();
 		}
 
@@ -927,7 +908,6 @@ private:
 		// required at setup). Ex.: UDP incoming connection works so: starts read,
 		// sends initial data, stops read, completes setup.
 		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
-		assert(m_proactor);
 		if (m_idleTimeoutTimer < 0) {
 			return;
 		}
@@ -940,10 +920,6 @@ private:
 		}
 	}
 
-	bool IsOpened() const {
-		return m_refsCount >= 2 && !m_closeAtLastMessageBlock;
-	}
-
 	void CompleteSetup(bool setupCompletedWithSuccess) {
 		assert(IsNotLockedOrLockedByMyThread(m_mutex));
 		m_isSetupCompleted = true;
@@ -953,7 +929,6 @@ private:
 	}
 
 	void StartIdleTimer() {
-		assert(m_proactor);
 		assert(m_idleTimeoutTimer == -1);
 		assert(m_isSetupCompleted);
 		assert(m_isSetupCompletedWithSuccess);
@@ -986,8 +961,8 @@ private:
 	
 	SharedPtr<ConnectionSignal> m_signal;
 	
-	std::auto_ptr<ACE_Asynch_Operation> m_readStream;
-	std::auto_ptr<ACE_Asynch_Operation> m_writeStream;
+	std::unique_ptr<ACE_Asynch_Operation> m_readStream;
+	std::unique_ptr<ACE_Asynch_Operation> m_writeStream;
 	boost::function<int(ACE_Message_Block &, size_t)> m_readStreamFunc;
 	boost::function<int(ACE_Message_Block &, size_t)> m_writeStreamFunc;
 	
@@ -1007,11 +982,9 @@ private:
 	const long m_messageBlockQueueBufferSize;
 	volatile long m_sentMessageBlockQueueSize;
 
-	volatile long m_closeAtLastMessageBlock;
-	volatile long m_sendQueueSize;
+	volatile long m_isClosed;
 
-	boost::shared_ptr<TunnelBuffer> m_buffer;
-	mutable TunnelBuffer::Allocators m_allocators;
+	boost::shared_ptr<MessagesAllocator> m_allocator;
 
 	const pt::time_duration m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;

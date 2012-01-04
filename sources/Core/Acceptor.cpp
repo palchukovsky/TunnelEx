@@ -9,7 +9,7 @@
 
 #include "Prec.h"
 #include "Acceptor.hpp"
-#include "TunnelBuffer.hpp"
+#include "MessagesAllocator.hpp"
 #include "MessageBlockHolder.hpp"
 #include "Log.hpp"
 
@@ -27,7 +27,7 @@ public:
 			: m_ruleEndpoint(ruleEndpoint),
 			m_ruleEndpointAddress(ruleEndpointAddress),
 			//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_dataBlockSize(TunnelBuffer::DefautDataBlockSize) {
+			m_dataBlockSize(MessagesAllocator::DefautDataBlockSize) {
 		//...//
 	}
 
@@ -42,12 +42,12 @@ public:
 				const char *data = nullptr)
 			const {
 		
-		if (!m_buffer) {
-			const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer();
-			assert(m_buffer);
+		if (!m_allocator) {
+			const_cast<Implementation *>(this)->CreateNewAllocator(1, m_dataBlockSize);
+			assert(m_allocator);
 		} else if (size > m_dataBlockSize) {
-			const_cast<Implementation *>(this)->CreateNewMessageBlockBuffer(1, size);
-			assert(m_buffer);
+			const_cast<Implementation *>(this)->CreateNewAllocator(1, size);
+			assert(m_allocator);
 		}
 
 		assert(size > 0);
@@ -55,11 +55,7 @@ public:
 		for (bool isError = false; ; ) {
 			try {
 				result->Reset(
-					&UniqueMessageBlockHolder::Create(
-						size,
-						m_bufferAllocators,
-						false,
-						m_buffer));
+					&UniqueMessageBlockHolder::Create(size, m_allocator, false));
 				break;
 			} catch (const TunnelEx::InsufficientMemoryException &ex) {
 				if (Log::GetInstance().IsDebugRegistrationOn()) {
@@ -72,8 +68,8 @@ public:
 					throw;
 				}
 				const_cast<Implementation *>(this)
-					->CreateNewMessageBlockBuffer(2, m_dataBlockSize);
-				assert(m_buffer);
+					->CreateNewAllocator(2, m_dataBlockSize);
+				assert(m_allocator);
 				isError = true;
 			}
 		}
@@ -90,22 +86,17 @@ public:
 
 private:
 
-	void CreateNewMessageBlockBuffer() {
-		CreateNewMessageBlockBuffer(1, m_dataBlockSize);
-	}
-
-	void CreateNewMessageBlockBuffer(size_t ratio, size_t dataBlockSize) {
+	void CreateNewAllocator(size_t ratio, size_t dataBlockSize) {
 		// no locking, under server lock
-		boost::shared_ptr<TunnelBuffer> buffer(new TunnelBuffer);
- 		const auto messageBlockQueueBufferSize =
-			(TunnelBuffer::DefautConnectionBufferSize * ratio)
+		const auto messageBlockQueueBufferSize
+			= (MessagesAllocator::DefautConnectionBufferSize * ratio)
 				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
-		m_bufferAllocators = buffer->CreateBuffer(
-			messageBlockQueueBufferSize,
-			messageBlockQueueBufferSize,
-			UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize));
-		buffer.swap(m_buffer);
-		m_dataBlockSize = dataBlockSize;
+		boost::shared_ptr<MessagesAllocator> allocator(
+			new MessagesAllocator(
+				messageBlockQueueBufferSize,
+				messageBlockQueueBufferSize,
+				UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize)));
+		allocator.swap(m_allocator);
 	}
 
 public:
@@ -113,8 +104,7 @@ public:
 	const RuleEndpoint &m_ruleEndpoint;
 	const SharedPtr<const EndpointAddress> m_ruleEndpointAddress;
 	
-	boost::shared_ptr<TunnelBuffer> m_buffer;
-	mutable TunnelBuffer::Allocators m_bufferAllocators;
+	boost::shared_ptr<MessagesAllocator> m_allocator;
 	size_t m_dataBlockSize;
 
 };
