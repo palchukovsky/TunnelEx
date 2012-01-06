@@ -896,7 +896,7 @@ private:
 			ruleInfo->mutex,
 			ruleInfo->filters);
 
-		Lock lock(*ruleInfo->mutex); // lock rule for acceptors and accept handlers
+		RecursiveLock lock(*ruleInfo->mutex); // lock rule for acceptors and accept handlers
 		const RuleEndpointCollection &inputs = ruleInfo->rule->GetInputs();
 		const size_t inputsNumb = inputs.GetSize();
 		for (unsigned int inputI = 0; inputI < inputsNumb; ++inputI) {

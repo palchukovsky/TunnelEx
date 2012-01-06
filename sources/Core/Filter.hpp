@@ -12,13 +12,13 @@
 
 #include "Instance.hpp"
 #include "SmartPtr.hpp"
+#include "Locking.hpp"
 #include "Api.h"
 
 namespace TunnelEx {
 
 	class TunnelRule;
 	class RecursiveMutex;
-	class Lock;
 
 	//! Interface for rule filter.
 	class TUNNELEX_CORE_API Filter : public ::TunnelEx::Instance {
@@ -44,7 +44,7 @@ namespace TunnelEx {
 	protected:
 
 		//! Locks rule for changes and returns lock.
-		::TunnelEx::AutoPtr<::TunnelEx::Lock> LockRule();
+		::TunnelEx::AutoPtr<::TunnelEx::RecursiveLock> LockRule();
 
 		//! Rules changing.
 		/** Must be implemented by any derived class. Rule must be changed 

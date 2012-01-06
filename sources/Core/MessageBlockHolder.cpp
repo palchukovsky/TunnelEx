@@ -119,11 +119,18 @@ long UniqueMessageBlockHolder::Satellite::RemoveRef() throw() {
 	return Interlocked::Decrement(m_refsCount);
 }
 
-MessagesAllocator & UniqueMessageBlockHolder::Satellite::GetAllocators() {
+const MessagesAllocator &
+UniqueMessageBlockHolder::Satellite::GetAllocator()
+		const throw() {
+	return const_cast<Satellite *>(this)->GetAllocator();
+}
+
+MessagesAllocator & UniqueMessageBlockHolder::Satellite::GetAllocator() throw() {
 	return *m_allocators;
 }
 
-boost::shared_ptr<MessagesAllocator> UniqueMessageBlockHolder::Satellite::GetAllocatorsPtr() {
+boost::shared_ptr<MessagesAllocator>
+UniqueMessageBlockHolder::Satellite::GetAllocatorPtr() {
 	return m_allocators;
 }
 
@@ -159,6 +166,18 @@ TUNNELEX_OBJECTS_DELETION_CHECK_DEFINITION(
 
 //////////////////////////////////////////////////////////////////////////
 
+UniqueMessageBlockHolder::Satellite::Timings::LatencyPolicy::StatValueType
+UniqueMessageBlockHolder::Satellite::Timings::LatencyPolicy::GetStatValue(
+			const boost::posix_time::time_duration &val) {
+	assert(!val.is_not_a_date_time());
+	return val.total_microseconds();
+}
+
+pt::ptime
+UniqueMessageBlockHolder::Satellite::Timings::LatencyPolicy::GetCurrentTime() {
+	return boost::posix_time::microsec_clock::local_time();
+}
+
 void UniqueMessageBlockHolder::Satellite::Timings::SetReceivingStartTimePoint() {
 	SetCurrentTimePoint(m_receivingStartTime);
 }
@@ -189,7 +208,9 @@ void UniqueMessageBlockHolder::Satellite::Timings::SetSendingTimePoint() {
 
 pt::time_duration
 UniqueMessageBlockHolder::Satellite::Timings::GetReceivingLatency() const {
-	assert(!m_receivingStartTime.is_not_a_date_time());
+	if (m_receivingStartTime.is_not_a_date_time()) {
+		return pt::not_a_date_time;
+	}
 	assert(!m_receivingTime.is_not_a_date_time());
 	assert(m_receivingStartTime <= m_receivingTime);
 	return m_receivingTime - m_receivingStartTime;
@@ -222,7 +243,7 @@ UniqueMessageBlockHolder::Satellite::Timings::GetFullLatency() const {
 void UniqueMessageBlockHolder::Satellite::Timings::SetCurrentTimePoint(
 			pt::ptime &var) {
 	assert(var.is_not_a_date_time());
-	var = boost::posix_time::microsec_clock::local_time();
+	var = LatencyPolicy::GetCurrentTime();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -337,6 +358,18 @@ size_t UniqueMessageBlockHolder::GetMessageMemorySize(size_t clientSize) {
 	return clientSize + sizeof(Satellite *);
 }
 
+double UniqueMessageBlockHolder::GetUsage() const {
+	assert(IsSet());
+	assert(m_messageBlock->rd_ptr() - m_messageBlock->base() >= 0);
+	size_t result = m_messageBlock->rd_ptr() - m_messageBlock->base();
+	assert(result >= 0);
+	if (m_messageBlock->flags() & UMBHF_HAS_SATELLITE) {
+		assert(GetMessageMemorySize(0) <= result);
+		result -= GetMessageMemorySize(0);
+	}
+	return (result * 100) / GetSatellite().GetAllocator().GetDataBlockSize();
+}
+
 ACE_Message_Block & UniqueMessageBlockHolder::Duplicate() {
 	assert(IsSet());
 	auto result = m_messageBlock->duplicate();
@@ -356,7 +389,7 @@ namespace {
 				bool isTunnelMessage) {
 
 		typedef UniqueMessageBlockHolder::Satellite Satellite;
-		auto &allocators = satellite->GetAllocators();
+		auto &allocators = satellite->GetAllocator();
 
 		UniqueMallocPtr<ACE_Message_Block> result(
 			static_cast<ACE_Message_Block *>(
@@ -449,9 +482,9 @@ void UniqueMessageBlockHolder::Delete(ACE_Message_Block &messageBlock) throw() {
 	if (messageBlock.flags() & UMBHF_HAS_SATELLITE) {
 		satellite = &GetSatellite(messageBlock);
 		assert(
-			messageBlocksAllocator == &satellite->GetAllocators().GetMessageBlocksAllocator()
-			&& dataBlocksAllocator == &satellite->GetAllocators().GetDataBlocksAllocator()
-			&& dataBlocksBufferAllocator == &satellite->GetAllocators().GetDataBlocksBufferAllocator());
+			messageBlocksAllocator == &satellite->GetAllocator().GetMessageBlocksAllocator()
+			&& dataBlocksAllocator == &satellite->GetAllocator().GetDataBlocksAllocator()
+			&& dataBlocksBufferAllocator == &satellite->GetAllocator().GetDataBlocksBufferAllocator());
 	}
 
 	UniqueMallocPtr<ACE_Message_Block>(&messageBlock, *messageBlocksAllocator)
@@ -459,10 +492,10 @@ void UniqueMessageBlockHolder::Delete(ACE_Message_Block &messageBlock) throw() {
 
 	if (satellite && satellite->RemoveRef() == 0) {
 		const boost::shared_ptr<const MessagesAllocator> allocator(
-			satellite->GetAllocatorsPtr());
+			satellite->GetAllocatorPtr());
 		UniqueMallocPtr<Satellite>(
 					satellite,
-					satellite->GetAllocators().GetMessageBlockSatellitesAllocator())
+					satellite->GetAllocator().GetMessageBlockSatellitesAllocator())
 			.MarkAsCreated();
 	}
 

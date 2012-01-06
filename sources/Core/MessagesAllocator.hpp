@@ -36,7 +36,7 @@ namespace TunnelEx {
 				return 0;
 			}
 		private:
-			SpinMutex m_impl;
+			SpinMutex<true> m_impl;
 		};
 
 		typedef ACE_Cached_Allocator<ACE_Message_Block, Mutex> MessageBlocksAllocator;
@@ -72,7 +72,13 @@ namespace TunnelEx {
 			return m_dataBlocksBufferAllocator;
 		}
 
+		size_t GetDataBlockSize() const {
+			return m_dataBlockSize;
+		}
+
 	private:
+
+		const size_t m_dataBlockSize;
 
 		MessageBlocksAllocator m_messageBlocksAllocator;
 		MessageBlockSatellitesAllocator m_messageBlockSatellitesAllocator;

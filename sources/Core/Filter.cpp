@@ -5,13 +5,11 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
 #include "Prec.h"
 
 #include "Filter.hpp"
-#include "Locking.hpp"
 #include "Rule.hpp"
 
 using namespace TunnelEx;
@@ -22,17 +20,18 @@ class Filter::Implementation : private boost::noncopyable {
 
 public:
 
-	Implementation(	Filter &myInterface,
-					SharedPtr<TunnelRule> rule,
-					SharedPtr<RecursiveMutex> ruleChangingMutex)
-		: m_myInterface(myInterface)
-		, m_rule(rule)
-		, m_ruleChangingMutex(ruleChangingMutex) {
-		/*...*/
+	Implementation(
+				Filter &myInterface,
+				SharedPtr<TunnelRule> rule,
+				SharedPtr<RecursiveMutex> ruleChangingMutex)
+			: m_myInterface(myInterface),
+			m_rule(rule),
+			m_ruleChangingMutex(ruleChangingMutex) {
+		//...//
 	}
 
 	~Implementation() {
-		/*...*/
+		//...//
 	}
 
 private:
@@ -44,12 +43,12 @@ private:
 public:
 
 	void ScheduleRuleChange() {
-		Lock lock(*m_ruleChangingMutex);
+		RecursiveLock lock(*m_ruleChangingMutex);
 		m_myInterface.ChangeRule(*m_rule);
 	}
 
-	AutoPtr<Lock> LockRule() {
-		return AutoPtr<Lock>(new Lock(*m_ruleChangingMutex));
+	AutoPtr<RecursiveLock> LockRule() {
+		return AutoPtr<RecursiveLock>(new RecursiveLock(*m_ruleChangingMutex));
 	}
 
 	const TunnelRule& GetRule() const {
@@ -60,12 +59,13 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
-
 #pragma warning(push)
 #pragma warning(disable: 4355)
-Filter::Filter(SharedPtr<TunnelRule> rule, SharedPtr<RecursiveMutex> ruleChangingMutex)
-: m_pimpl(new Implementation(*this, rule, ruleChangingMutex)) {
-	/*...*/
+Filter::Filter(
+			SharedPtr<TunnelRule> rule,
+			SharedPtr<RecursiveMutex> ruleChangingMutex)
+		: m_pimpl(new Implementation(*this, rule, ruleChangingMutex)) {
+	//...//
 }
 #pragma warning(pop)
 
@@ -77,7 +77,7 @@ void Filter::ScheduleRuleChange() {
 	m_pimpl->ScheduleRuleChange();
 }
 
-AutoPtr<Lock> Filter::LockRule() {
+AutoPtr<RecursiveLock> Filter::LockRule() {
 	return m_pimpl->LockRule();
 }
 

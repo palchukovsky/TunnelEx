@@ -9,13 +9,13 @@
  **************************************************************************/
 
 #include "Prec.h"
-
 #include "Connection.hpp"
 #include "EndpointAddress.hpp"
 #include "ConnectionSignal.hpp"
 #include "Exceptions.hpp"
 #include "Log.hpp"
 #include "Format.hpp"
+#include "MessageBlocksLatencyStat.hpp"
 #include "MessageBlockHolder.hpp"
 #include "Tunnel.hpp"
 #include "MessagesAllocator.hpp"
@@ -160,6 +160,8 @@ private:
 		Mutex;
 	typedef LockWithDebugReports<Mutex> Lock;
 
+	typedef MessageBlocksLatencyStat LatencyStat;
+
 public:
 
 	explicit Implementation(
@@ -187,7 +189,9 @@ public:
 			m_sentMessageBlockQueueSize(0),
 			m_isClosed(false),
 			m_idleTimeoutInterval(0, 0, idleTimeoutSeconds),
-			m_idleTimeoutTimer(-1) {
+			m_idleTimeoutTimer(-1),
+			//! @todo: hardcoded - latency stat period (secs)
+			m_latencyStat(m_instanceId, 60) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
@@ -204,7 +208,7 @@ private:
 		if (!m_isSetupCompleted) {
 			m_ruleEndpointAddress->StatConnectionSetupCanceling();
 		}
-		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
+		m_latencyStat.Dump();
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
 				"Connection object %1% deleted. Active objects: %2%. Satellites: %3%.",
@@ -213,6 +217,7 @@ private:
 				UniqueMessageBlockHolder::GetSatellitesInstancesNumber());
 			DebugLockStat::Report();
 #		endif
+		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
 	}
 
 public:
@@ -482,7 +487,7 @@ public:
 			// incrementing only here as "isClosed + locking" guaranties that 
 			// the m_refsCount is not zero and object will not destroyed from
 			// another thread (also see read-init incrimination)
-			verify(Interlocked::Increment(m_refsCount) > 1);
+			Interlocked::Increment(m_refsCount);
 			UpdateIdleTimer(messageBlockHolder.GetSendingStartTime());
 			lock.release();
 			messageBlockDuplicate.Release();
@@ -498,9 +503,11 @@ public:
 	void OnMessageBlockSent(const MessageBlock &messageBlock) {
 		assert(IsNotLockedByMyThread(m_mutex));
 		if (!messageBlock.IsTunnelMessage()) {
+			CollectLatencyStat(messageBlock);
 			return;
 		}
 		Interlocked::Decrement(&m_sentMessageBlockQueueSize);
+		CollectLatencyStat(messageBlock);
 		if (m_isReadingActive) {
 			return;
 		}
@@ -587,7 +594,7 @@ public:
 			return;
 		}
 		m_signal->OnNewMessageBlock(messageBlock);
-		if (messageBlock.IsAddedToQueue()) {
+		if (messageBlock.IsAddedToQueue() && messageBlock.IsTunnelMessage()) {
 			Interlocked::Increment(&m_sentMessageBlockQueueSize);
 		}
 	}
@@ -691,7 +698,18 @@ public:
 	}
 
 private:
-	
+
+	void CollectLatencyStat(const MessageBlock &message) {
+		assert(IsNotLockedByMyThread(m_mutex));
+		const UniqueMessageBlockHolder &messageHolder
+			= *boost::polymorphic_downcast<const UniqueMessageBlockHolder *>(
+				&message);
+		assert(m_sentMessageBlockQueueSize <= m_messageBlockQueueBufferSize);
+		m_latencyStat.Accumulate(
+			messageHolder,
+			(m_sentMessageBlockQueueSize * 100) / m_messageBlockQueueBufferSize);
+	}
+
 	void ReportSendError(int errorNo) const {
 		const bool isClosedConnectionError
 			= errorNo == ERROR_NETNAME_DELETED // see TEX-553
@@ -894,7 +912,7 @@ private:
 			// incrementing only here as "isClosed + locking" guaranties that 
 			// the m_refsCount is not zero and object will not destroyed from
 			// another thread (also see write-init incrimination)
-			verify(Interlocked::Increment(m_refsCount) > 1);
+			Interlocked::Increment(m_refsCount);
 			messageBlock.Release();
 		}
 
@@ -975,7 +993,6 @@ private:
 	bool m_isSetupCompleted;
 	bool m_isSetupCompletedWithSuccess;
 	
-	// if null - not opened or closed by DoHandleReadStream
 	ACE_Proactor *m_proactor;
 
 	const size_t m_dataBlockSize;
@@ -989,6 +1006,8 @@ private:
 	const pt::time_duration m_idleTimeoutInterval;
 	long m_idleTimeoutTimer;
 	pt::ptime m_idleTimeoutUpdateTime;
+
+	LatencyStat m_latencyStat;
 
 	TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 

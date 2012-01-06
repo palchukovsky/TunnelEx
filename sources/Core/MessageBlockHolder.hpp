@@ -24,6 +24,18 @@ namespace TunnelEx {
 
 			public:
 
+				struct LatencyPolicy {
+
+					typedef boost::posix_time::time_duration::tick_type StatValueType;
+
+					static StatValueType GetStatValue(
+								const boost::posix_time::time_duration &);
+					static boost::posix_time::ptime GetCurrentTime();
+
+				};
+
+			public:
+
 				void SetReceivingStartTimePoint();
 
 				void SetReceivingTimePoint();
@@ -68,7 +80,7 @@ namespace TunnelEx {
 				virtual int tryacquire_write();
 				virtual int tryacquire_write_upgrade();
 			private:
-				SpinMutex m_mutex;
+				SpinMutex<true> m_mutex;
 			};
 
 		public:
@@ -87,8 +99,9 @@ namespace TunnelEx {
 			long AddRef() throw();
 			long RemoveRef() throw();
 
-			MessagesAllocator & GetAllocators() throw();
-			boost::shared_ptr<MessagesAllocator> GetAllocatorsPtr();
+			const MessagesAllocator & GetAllocator() const throw();
+			MessagesAllocator & GetAllocator() throw();
+			boost::shared_ptr<MessagesAllocator> GetAllocatorPtr();
 
 		public:
 
@@ -154,6 +167,10 @@ namespace TunnelEx {
 	public:
 
 		static size_t GetMessageMemorySize(size_t clientSize);
+
+		double GetUsage() const;
+
+	public:
 
 		ACE_Message_Block & Duplicate();
 

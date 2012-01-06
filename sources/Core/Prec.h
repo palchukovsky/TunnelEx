@@ -81,6 +81,11 @@
 #	include <boost/date_time.hpp>
 #	include <boost/unordered_map.hpp>
 #	include <boost/static_assert.hpp>
+#	include <boost/accumulators/accumulators.hpp>
+#	include <boost/accumulators/statistics/stats.hpp>
+#	include <boost/accumulators/statistics/mean.hpp>
+#	include <boost/accumulators/statistics/min.hpp>
+#	include <boost/accumulators/statistics/max.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <mbstring.h>

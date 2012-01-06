@@ -319,7 +319,7 @@ DestinationPingFilter::DestinationPingFilter(
 			SharedPtr<TunnelRule> rule,
 			SharedPtr<RecursiveMutex> mutex)
 		: Filter(rule, mutex) {
-	AutoPtr<Lock> lock(LockRule());
+	AutoPtr<RecursiveLock> lock(LockRule());
 	const RuleEndpointCollection &endpoints = GetRule().GetDestinations();
 	const size_t size = endpoints.GetSize();
 	for (size_t i = 0; i < size; ++i) {

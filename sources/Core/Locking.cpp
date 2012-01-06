@@ -8,19 +8,18 @@
  **************************************************************************/
 
 #include "Prec.h"
-
 #include "Locking.hpp"
+#ifdef DEV_VER
+//#	include "Log.hpp"
+#endif
 
 using namespace TunnelEx;
 
 //////////////////////////////////////////////////////////////////////////
 
 class RecursiveMutex::Implementation : private boost::noncopyable {
-
 public:
-
 	ACE_Recursive_Thread_Mutex mutex;
-
 };
 
 RecursiveMutex::RecursiveMutex()
@@ -32,31 +31,29 @@ RecursiveMutex::~RecursiveMutex() {
 	delete m_pimpl;
 }
 
+void RecursiveMutex::Acquire() throw() {
+	m_pimpl->mutex.acquire();
+}
+
+void RecursiveMutex::Release() throw() {
+	m_pimpl->mutex.release();
+}
+
 //////////////////////////////////////////////////////////////////////////
 
-class Lock::Implementation : private boost::noncopyable {
+void Helpers::TolerantSpinWait::Sleep() {
+	::Sleep(0);
+}
 
-public:
+//////////////////////////////////////////////////////////////////////////
 
-	Implementation(ACE_Recursive_Thread_Mutex& mutex)
-			: m_lock(mutex) {
-		//...//
+#ifdef DEV_VER
+	void Helpers::AggressiveSpinWait::Report() const {
+// 		std::ostringstream oss;
+// 		oss << "AggressiveSpinWait::m_iterationsCount = " << m_iterationsCount;
+// 		Log::GetInstance().AppendWarn(oss.str());
 	}
-
-private:
-
-	ACE_Guard<ACE_Recursive_Thread_Mutex> m_lock;
-
-};
-
-Lock::Lock(RecursiveMutex& mutex)
-		: m_pimpl(new Implementation(mutex.m_pimpl->mutex)) {
-	//...//
-}
-
-Lock::~Lock() {
-	delete m_pimpl;
-}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 
