@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<LicenseKey Id="E6E00E31-EFB6-4FE1-9C86-1AC57FC3992F" Version="1.1">
+<LicenseKey Id="E6E00E31-EFB6-4FE1-9C86-1AC57FC3992F" Version="1.2">
   <Owner>Join Smith and Co</Owner>
   <Type>regular</Type>
   <Release>
@@ -56,7 +56,7 @@
       <WorkstationScores Property="81D96D9C-3A5D-4FB2-8A9B-8658470B972F">5</WorkstationScores>
     </ScoresOptions>
   </Options>
-  <LicenseKeyRequest Version="1.1">
+  <LicenseKeyRequest Version="1.2">
     <License>056F070E-2374-4A12-9DC6-9AAB0DB309E7</License>
     <Release>
       <Time>2009-09-01 12:08:00</Time>
