@@ -153,6 +153,9 @@
     <ClCompile Include="..\..\Common\LocalAssert.cpp">
       <Filter>Util\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\Format.cpp">
+      <Filter>Util\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Module Inet.rc">

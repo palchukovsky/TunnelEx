@@ -147,10 +147,10 @@ std::wstring SslSockStream::Exception::GetLastError() {
 					= OpenSslError::ErrorNoToString(sysError.GetErrorNo());
 				message % ConvertString<WString>(errorStr.c_str()).GetCStr();
 			} else {
-				message % sysError.GetString().GetCStr();
+				message % sysError.GetStringW();
 			}
 		} else {
-			message % ConvertString<WString>(openSslError.GetAsString()).GetCStr();
+			message % ConvertString<WString>(openSslError.GetAsString());
 		}
 		message % sysError.GetErrorNo();
 		return message.str();
@@ -316,7 +316,7 @@ void SslSockStream::Decrypt(MessageBlock &messageBlock) const {
 					= OpenSslError::ErrorNoToString(error.GetErrorNo());
 				message % ConvertString<WString>(errorStr.c_str()).GetCStr();
 			} else {
-				message % error.GetString().GetCStr();
+				message % error.GetStringW();
 			}
 			message % error.GetErrorNo();
 			throw SystemException(message.str().c_str());
@@ -367,11 +367,9 @@ void SslSockStream::Encrypt(MessageBlock &messageBlock) const {
 			GetBuffers().out.resize(0);
 			WFormat message(L"Error at SSL data sending: \"%1% (%2%)\"");
 			if (!error.CheckError() && OpenSslError::CheckError(error.GetErrorNo())) {
-				const std::string errorStr
-					= OpenSslError::ErrorNoToString(error.GetErrorNo());
-				message % ConvertString<WString>(errorStr.c_str()).GetCStr();
+				message % OpenSslError::ErrorNoToString(error.GetErrorNo());
 			} else {
-				message % error.GetString().GetCStr();
+				message % error.GetStringW();
 			}
 			message % error.GetErrorNo();
 			throw SystemException(message.str().c_str());

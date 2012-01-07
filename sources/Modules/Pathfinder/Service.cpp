@@ -84,7 +84,7 @@ namespace {
 			WFormat message(
 				L"Unable to setup connection to the Pathfinder service: \"%1% (%2%)\","
 					L" please check Internet connection and endpoint proxy server settings");
-			message % error.GetString().GetCStr() % error.GetErrorNo();
+			message % error.GetStringW() % error.GetErrorNo();
 			Log::GetInstance().AppendWarn(
 				ConvertString<String>(message.str().c_str()).GetCStr());
 			throw ServiceException(message.str().c_str());
@@ -216,7 +216,7 @@ void ServiceImpl::InitConnection(const TcpEndpointAddress &target) {
 		WFormat message(
 			L"Unable open connection to the Pathfinder service: \"%1% (%2%)\","
 				L" please check Internet connection and endpoint proxy server settings");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
+		message % error.GetStringW() % error.GetErrorNo();
 		throw ServiceException(message.str().c_str());
 	}
 
@@ -235,7 +235,7 @@ void ServiceImpl::InitConnection(const TcpEndpointAddress &target) {
 		WFormat message(
 			L"Unable to connect to the Pathfinder service: \"%1% (%2%)\","
 				L" please check Internet connection and endpoint proxy server settings");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
+		message % error.GetStringW() % error.GetErrorNo();
 		throw ServiceException(message.str().c_str());
 	}
 
@@ -310,7 +310,7 @@ bool ServiceImpl::RequestProxy(
 		WFormat message(
 			L"Unable to send request to the Pathfinder service: \"%1% (%2%)\","
 				L" please check Internet connection and endpoint proxy server settings");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
+		message % error.GetStringW() % error.GetErrorNo();
 		Log::GetInstance().AppendWarn(
 			ConvertString<String>(message.str().c_str()).GetCStr());
 		throw ServiceException(message.str().c_str());
@@ -324,7 +324,7 @@ bool ServiceImpl::RequestProxy(
 		WFormat message(
 			L"Unable to communicate with the Pathfinder service: \"%1% (%2%)\","
 				L" please check Internet connection and endpoint proxy server settings");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
+		message % error.GetStringW() % error.GetErrorNo();
 		Log::GetInstance().AppendWarn(
 			ConvertString<String>(message.str().c_str()).GetCStr());
 		throw ServiceException(message.str().c_str());
@@ -351,7 +351,7 @@ bool ServiceImpl::RequestProxy(
 				WFormat message(
 					L"Could not read Pathfinder service response: \"%1% (%2%)\","
 						L" please check Internet connection and endpoint proxy server settings");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				Log::GetInstance().AppendWarn(
 					ConvertString<String>(message.str().c_str()).GetCStr());
 				throw ServiceException(message.str().c_str());
@@ -535,12 +535,11 @@ void ServiceImpl::Report(
 	if (!request.handle) {
 		const Error error(GetLastError());
 		m_handles->Reset();
-		WFormat message(
-			L"Unable to send request to the Pathfinder service: \"%1% (%2%)\","
-				L" please check Internet connection and endpoint proxy server settings");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
-		Log::GetInstance().AppendDebug(
-			ConvertString<String>(message.str().c_str()).GetCStr());
+		Format message(
+			"Unable to send request to the Pathfinder service: \"%1% (%2%)\","
+				" please check Internet connection and endpoint proxy server settings");
+		message % error.GetStringA() % error.GetErrorNo();
+		Log::GetInstance().AppendDebug(message);
 		return;
 	}
 
@@ -590,12 +589,11 @@ void ServiceImpl::Report(
 				DWORD(postDataStr.str().size()))) {
 		const Error error(GetLastError());
 		m_handles->Reset();
-		WFormat message(
-			L"Unable to communicate with the Pathfinder service: \"%1% (%2%)\","
-				L" please check Internet connection and endpoint proxy server settings");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
-		Log::GetInstance().AppendDebug(
-			ConvertString<String>(message.str().c_str()).GetCStr());
+		Format message(
+			"Unable to communicate with the Pathfinder service: \"%1% (%2%)\","
+				" please check Internet connection and endpoint proxy server settings");
+		message % error.GetStringA() % error.GetErrorNo();
+		Log::GetInstance().AppendDebug(message);
 		return;
 	}
 

@@ -1687,7 +1687,7 @@ private:
 							const Error error(errno);
 							Format message(
 								"Failed to set tunnel opening condition, system error: %1% (%2%).");
-							message % ConvertString<String>(error.GetString()).GetCStr();
+							message % error.GetStringA();
 							message % error.GetErrorNo();
 							Log::GetInstance().AppendSystemError(message.str());
 							return 1;
@@ -1812,7 +1812,7 @@ private:
 		if (!GetVersionEx(reinterpret_cast<OSVERSIONINFO *>(&verInfo))) {
 			const Error error(GetLastError());
 			WFormat message(L"Failed to get system info: %1% (%2%)");
-			message % error.GetString().GetCStr() % error.GetErrorNo();
+			message % error.GetStringW() % error.GetErrorNo();
 			throw SystemException(message.str().c_str());
 		}
 		return verInfo.wProductType != VER_NT_WORKSTATION;

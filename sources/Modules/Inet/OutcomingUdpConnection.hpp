@@ -35,7 +35,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (m_stream.open(address.GetAceInetAddr()) != 0) {
 				const Error error(errno);
 				WFormat message(L"Failed to open UDP endpoint: %1% (%2%)");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 		}
@@ -64,7 +64,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				const Error error(errno);
 				WFormat message(
 					L"Failed to get remote inet (UDP) address: %1% (%2%)");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw SystemException(message.str().c_str());
 			}
 		}

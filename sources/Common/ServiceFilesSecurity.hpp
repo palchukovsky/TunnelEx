@@ -123,8 +123,8 @@ namespace TunnelEx { namespace Helpers {
 			Error error(result);
 			if (error.IsError()) {
 				Format message("Could not apply security settings for \"%1%\": %2%.");
-				message % ConvertString<String>(file.string().c_str()).GetCStr();
-				message % ConvertString<String>(error.GetString()).GetCStr();
+				message % ConvertString<String>(file.string().c_str());
+				message % error.GetStringA();
 				Log::GetInstance().AppendWarn(message.str());
 			}
 

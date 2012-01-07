@@ -16,10 +16,6 @@
 #include "SmartPtr.hpp"
 #include "Time.h"
 
-//! \todo: remove this headers before API will be released.
-#include "Format.hpp"
-#include <string>
-
 #ifdef _DEBUG
 #	define LOG_LEVEL_TRACK_REGISTRATION_AVAILABLE
 #endif // #ifdef _DEBUG
@@ -71,38 +67,35 @@ namespace TunnelEx {
 						throw();
 #			endif // LOG_LEVEL_TRACK_REGISTRATION_AVAILABLE
 
-			//! Debug information level, for developers version.
-			void AppendDebug(const std::string &) throw();
-			void AppendDebug(const wchar_t *const message) throw() {
+			template<typename T>
+			void AppendDebug(const T &message) throw() {
 				if (!IsDebugRegistrationOn()) {
 					return;
 				}
-				try {
-					AppendDebug(ConvertString<String>(message).GetCStr());
-				} catch (...) {
-					AppendWarn("Format-error for the log string.");
-				}
+				AppendDebugDirect(message);
 			}
 			//! Format and add debug message.
 			template<typename T1>
 			void AppendDebug(const char *str, const T1 &insert1) throw() {
-				if (IsDebugRegistrationOn()) {
-					try {
-						AppendDebug((TunnelEx::Format(str) % insert1).str());
-					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
-					}
+				if (!IsDebugRegistrationOn()) {
+					return;
+				}
+				try {
+					AppendDebugDirect((TunnelEx::Format(str) % insert1).str());
+				} catch (...) {
+					AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
 				}
 			}
 			//! Format and add debug message.
 			template<typename T1, typename T2>
 			void AppendDebug(const char *str, const T1 &insert1, const T2 &insert2) throw() {
-				if (IsDebugRegistrationOn()) {
-					try {
-						AppendDebug((TunnelEx::Format(str) % insert1 % insert2).str());
-					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
-					}
+				if (!IsDebugRegistrationOn()) {
+					return;
+				}
+				try {
+					AppendDebugDirect((TunnelEx::Format(str) % insert1 % insert2).str());
+				} catch (...) {
+					AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
 				}
 			}
 			//! Format and add debug message.
@@ -113,12 +106,13 @@ namespace TunnelEx {
 						const T2 &insert2,
 						const T3 &insert3)
 					throw() {
-				if (IsDebugRegistrationOn()) {
-					try {
-						AppendDebug((TunnelEx::Format(str) % insert1 % insert2 % insert3).str());
-					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
-					}
+				if (!IsDebugRegistrationOn()) {
+					return;
+				}
+				try {
+					AppendDebugDirect((TunnelEx::Format(str) % insert1 % insert2 % insert3).str());
+				} catch (...) {
+					AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
 				}
 			}
 			//! Format and add debug message.
@@ -130,12 +124,13 @@ namespace TunnelEx {
 						const T3 &insert3,
 						const T4 &insert4)
 					throw() {
-				if (IsDebugRegistrationOn()) {
-					try {
-						AppendDebug((TunnelEx::Format(str) % insert1 % insert2 % insert3 % insert4).str());
-					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
-					}
+				if (!IsDebugRegistrationOn()) {
+					return;
+				}
+				try {
+					AppendDebugDirect((TunnelEx::Format(str) % insert1 % insert2 % insert3 % insert4).str());
+				} catch (...) {
+					AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
 				}
 			}
 			//! Format and add debug message.
@@ -148,12 +143,25 @@ namespace TunnelEx {
 						const T4 &insert4,
 						const T5 &insert5)
 					throw() {
-				if (IsDebugRegistrationOn()) {
-					try {
-						AppendDebug((TunnelEx::Format(str) % insert1 % insert2 % insert3 % insert4 % insert5).str());
-					} catch (...) {
-						AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
-					}
+				if (!IsDebugRegistrationOn()) {
+					return;
+				}
+				try {
+					AppendDebugDirect((TunnelEx::Format(str) % insert1 % insert2 % insert3 % insert4 % insert5).str());
+				} catch (...) {
+					AppendWarn((TunnelEx::Format("Format-error for the string \"%1%\".") % str).str());
+				}
+			}
+			//! Format and add debug message.
+			template<typename Formatter>
+			void AppendDebugEx(const Formatter &formatter) throw() {
+				if (!IsDebugRegistrationOn()) {
+					return;
+				}
+				try {
+					AppendDebugDirect(formatter());
+				} catch (...) {
+					AppendWarn("Failed to build log message.");
 				}
 			}
 			//! Information level, says user about completed actions and so on.
@@ -201,6 +209,17 @@ namespace TunnelEx {
 			long GetErrorCount() const;
 
 		private:
+
+			void AppendDebugDirect(const char *) throw();
+			void AppendDebugDirect(const wchar_t *) throw();
+			void AppendDebugDirect(const std::string &) throw();
+			void AppendDebugDirect(const std::wstring &) throw();
+			void AppendDebugDirect(const ::TunnelEx::String &) throw();
+			void AppendDebugDirect(const ::TunnelEx::WString &) throw();
+			void AppendDebugDirect(const ::TunnelEx::Format &) throw();
+			void AppendDebugDirect(const ::TunnelEx::WFormat &) throw();
+
+		private:
 			
 			class Implementation;
 			Implementation *m_pimpl;
@@ -231,7 +250,7 @@ namespace TunnelEx {
 					const char *,
 					unsigned int)
 				throw() {
-			/*...*/
+			//...//
 		}
 #	endif // #ifdef LOG_LEVEL_TRACK_REGISTRATION_AVAILABLE
 

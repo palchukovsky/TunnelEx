@@ -62,7 +62,7 @@ void IncomingTcpSslClientConnection::AcceptConnection(
 	if (acceptor.accept(m_rawStream, &aceRemoteAddr, &timeout) != 0) {
 		const Error error(errno);
 		WFormat message(L"Failed to accept incoming connection: \"%1% (%2%)\"");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
+		message % error.GetStringW() % error.GetErrorNo();
 		throw ConnectionOpeningException(message.str().c_str());
 	}
 	

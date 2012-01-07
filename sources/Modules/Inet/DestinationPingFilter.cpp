@@ -110,9 +110,8 @@ public:
 				} else {
 					const Error error(errno);
 					std::ostringstream oss;
-					String errorStr;
 					oss << "Ping failed with the system error \""
-						<< ConvertString(error.GetString(), errorStr).GetCStr()
+						<< error.GetStringA().GetCStr()
 						<< " (" << error.GetErrorNo() << "), endpoint \""
 						<< ConvertString<String>(m_endpoint.GetUuid()).GetCStr() << ".";
 					Log::GetInstance().AppendSystemError(oss.str());

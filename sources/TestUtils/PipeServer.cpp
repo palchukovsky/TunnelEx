@@ -179,7 +179,7 @@ private:
 			const TunnelEx::Error error(GetLastError());
 			std::cerr
 				<< "Server events wait failed: \""
-				<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<< error.GetStringA().GetCStr()
 				<< "\" (" << error.GetErrorNo() << ")."
 				<< std::endl;
 			throw std::exception("Server events wait failed");

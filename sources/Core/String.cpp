@@ -41,7 +41,7 @@ namespace {
 			0);
 		if (destintationLen == 0) {
 			const Error error(GetLastError());
-			throw SystemException(error.GetString().GetCStr());
+			throw SystemException(error.GetStringW().GetCStr());
 		}
 		std::vector<typename Destination::value_type> destinationBuf(destintationLen, 0);
 		::WideCharToMultiByte(
@@ -86,7 +86,7 @@ namespace {
 			0);
 		if (destinationLen == 0) {
 			const Error error(GetLastError());
-			throw SystemException(error.GetString().GetCStr());
+			throw SystemException(error.GetStringW().GetCStr());
 		}
 		std::vector<wchar_t> destinationTmp(destinationLen, 0);
 		::MultiByteToWideChar(

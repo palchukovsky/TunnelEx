@@ -11,7 +11,6 @@
 #include "MessagesAllocator.hpp"
 #include "Log.hpp"
 #include "MessageBlockHolder.hpp"
-#include "ObjectsDeletionCheck.h"
 
 using namespace TunnelEx;
 namespace pt = boost::posix_time;

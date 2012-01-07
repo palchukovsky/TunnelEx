@@ -32,7 +32,7 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 				std::wostringstream exception;
 				exception
 					<< "Could not open pipe for listening: \""
-					<< error.GetString().GetCStr() << " (" << error.GetErrorNo() << ")\".";
+					<< error.GetStringW().GetCStr() << " (" << error.GetErrorNo() << ")\".";
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
 		}
@@ -60,7 +60,7 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 			if (m_acceptor.get_local_addr(result->GetAcePipeAddr()) != 0) {
 				const Error error(errno);
 				WFormat exception(L"Could not get listening pipe path: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw SystemException(exception.str().c_str());
 			}
 			return result;

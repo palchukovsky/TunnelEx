@@ -124,9 +124,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				const UdpEndpointAddress addr(m_remoteAddress);
 				Log::GetInstance().AppendDebug(
 					"Failed to send UDP data to %3%: %1% (%2%)",
-					ConvertString<String>(error.GetString()).GetCStr(),
+					error.GetStringA(),
 					error.GetErrorNo(),
-					ConvertString<String>(addr.GetResourceIdentifier()).GetCStr());
+					addr.GetResourceIdentifier());
 			}
 			return DATA_TRANSFER_CMD_SEND_PACKET;
 		}

@@ -61,7 +61,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (m_socket->open(inetAddr) != 0) {
 				const Error error(errno);
 				WFormat exception(L"Failed to open UDP listener: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
 
@@ -118,7 +118,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					|| dataLen <= 0) {
 				const Error error(errno);
 				WFormat exception(L"Failed to get incoming UDP data size: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
 
@@ -133,7 +133,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					return true;
 				}
 				WFormat exception(L"Failed to read incoming UDP data: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			} else if (readResult == 0) {
 				assert(false); // just want to see when it happens
@@ -160,7 +160,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (m_socket->get_local_addr(addr) != 0) {
 				const Error error(errno);
 				WFormat exception(L"Failed to get listening UDP socket address: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw SystemException(exception.str().c_str());
 			}
 			return AutoPtr<EndpointAddress>(new UdpEndpointAddress(addr));

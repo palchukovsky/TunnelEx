@@ -175,4 +175,30 @@ namespace {
 	
 	}
 
+	TEST(Strings, Format) {
+
+		const std::string stdString("-=stdString=-");
+		const std::wstring stdWstring(L"-=stdWString=-");
+		const tex::String texString("-=texString=-");
+		const tex::WString texWstring(L"-=texWString=-");
+
+
+		{
+			tex::Format format("###%1%###%2%###%3%###%4%###");
+			format % stdString % stdWstring % texString % texWstring;
+			EXPECT_EQ(
+				format.str(),
+				"###-=stdString=-###-=stdWString=-###-=texString=-###-=texWString=-###");
+		}
+
+		{
+			tex::WFormat format(L"###%1%###%2%###%3%###%4%###");
+			format % stdString % stdWstring % texString % texWstring;
+			EXPECT_EQ(
+				format.str(),
+				L"###-=stdString=-###-=stdWString=-###-=texString=-###-=texWString=-###");
+		}
+	
+	}
+
 }

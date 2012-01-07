@@ -15,6 +15,7 @@
 
 #include "StringUtil.hpp"
 #include "UseUnused.hpp"
+#include "Format.hpp"
 
 #include "CompileWarningsAce.h"
 #	include <ace/Init_ACE.h>

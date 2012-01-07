@@ -68,7 +68,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (GetIoStream().get_remote_addr(result) != 0) {
 				const Error error(errno);
 				WFormat message(L"Failed to get remote inet (TCP) address: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw SystemException(message.str().c_str());
 			}
 		}

@@ -50,7 +50,7 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 			if (acceptor.accept(*stream, 0, &timeout) != 0) {
 				const Error error(errno);
 				WFormat message(L"Failed to accept incoming pipe connection: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 			return stream;

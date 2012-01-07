@@ -13,11 +13,9 @@
 #include "Server.hpp"
 #include "Exceptions.hpp"
 #include "Log.hpp"
-#include "Format.hpp"
 #include "IoHandle.h"
 #include "SmartPtr.hpp"
 #include "Error.hpp"
-#include "ObjectsDeletionCheck.h"
 
 namespace TunnelEx {
 
@@ -58,7 +56,7 @@ namespace TunnelEx {
 				const Error error(errno);
 				delete instance;
 				WFormat message(L"Could not register accept event object: %1% (%2%)");
-				message % error.GetString().GetCStr() % error.GetErrorNo();	
+				message % error.GetStringW() % error.GetErrorNo();	
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 

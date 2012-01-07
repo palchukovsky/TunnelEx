@@ -213,7 +213,7 @@ namespace {
 							const TunnelEx::Error error(GetLastError());
 							std::cerr
 								<< "Client events wait failed: \""
-								<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+								<< error.GetStringA().GetCStr()
 								<< "\" (" << error.GetErrorNo() << ")."
 								<< std::endl;
 							break;

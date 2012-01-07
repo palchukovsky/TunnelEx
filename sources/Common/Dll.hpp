@@ -33,8 +33,8 @@ namespace TunnelEx { namespace Helpers {
 						const ::TunnelEx::Error &error)
 					: DllException(
 						(WFormat(L"Failed to load DLL file \"%1%\" (%2%, %3%).")
-								% TunnelEx::ConvertString<TunnelEx::WString>(dllFile).GetCStr()
-								% error.GetString().GetCStr()
+								% TunnelEx::ConvertString<TunnelEx::WString>(dllFile)
+								% error.GetStringW()
 								% error.GetErrorNo())
 							.str().c_str()) {
 				//...//
@@ -50,9 +50,9 @@ namespace TunnelEx { namespace Helpers {
 						const ::TunnelEx::Error &error)
 					: DllException(
 						(WFormat(L"Failed to find function \"%2%\" in DLL \"%1%\" (%3%, %4%).")
-								% TunnelEx::ConvertString<TunnelEx::WString>(dllFile).GetCStr()
-								% TunnelEx::ConvertString<TunnelEx::WString>(funcName).GetCStr()
-								% error.GetString().GetCStr()
+								% TunnelEx::ConvertString<TunnelEx::WString>(dllFile)
+								% TunnelEx::ConvertString<TunnelEx::WString>(funcName)
+								% error.GetStringW()
 								% error.GetErrorNo())
 							.str().c_str()) {
 				//...//

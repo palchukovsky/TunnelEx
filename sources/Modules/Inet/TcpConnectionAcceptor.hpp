@@ -57,7 +57,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (m_acceptor.open(inetAddr, true) != 0) {
 				const Error error(errno);
 				WFormat exception(L"Failed to open socket for listening: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(exception.str().c_str());
 			}
 		}
@@ -97,7 +97,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (m_acceptor.get_local_addr(addr) != 0) {
 				const Error error(errno);
 				WFormat exception(L"Failed to get listening socket address: %1% (%2%)");
-				exception % error.GetString().GetCStr() % error.GetErrorNo();
+				exception % error.GetStringW() % error.GetErrorNo();
 				throw SystemException(exception.str().c_str());
 			}
 			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(addr));

@@ -10,6 +10,7 @@
 #include "Prec.h"
 
 #include "Log.hpp"
+#include "Locking.hpp"
 #include "String.hpp"
 #include "PosixTime.hpp"
 
@@ -40,7 +41,7 @@ public:
 		}
 
 		const char *name;
-		bool isRegistrationOn;
+		volatile long isRegistrationOn;
 		volatile long eventCount;
 		
 	};
@@ -73,7 +74,7 @@ public:
 	}
 
 	void SetLevelRegistrationState(LogLevel levelId, bool state) throw() {
-		GetLevelInfo(levelId).isRegistrationOn = state; 
+		Interlocked::Exchange(GetLevelInfo(levelId).isRegistrationOn, state);
 	}
 
 	void SetMinimumRegistrationLevel(LogLevel levelId) throw() {
@@ -81,7 +82,7 @@ public:
 		const Levels::iterator begin = m_levels.begin();
 		const Levels::iterator end = m_levels.end();
 		for (Levels::iterator i = begin; i != end; ++i) {
-			i->isRegistrationOn = distance(begin, i) >= levelId;
+			Interlocked::Exchange(i->isRegistrationOn, distance(begin, i) >= levelId);
 		}
 	}
 
@@ -118,8 +119,8 @@ public:
 				m_stream << '.';
 			}
 			m_stream << std::endl;
-			Interlocked::Increment(&level.eventCount);
-			Interlocked::Increment(&m_size);
+			Interlocked::Increment(level.eventCount);
+			Interlocked::Increment(m_size);
 		} catch (...) {
 			assert(false);
 		}
@@ -259,19 +260,96 @@ LogPolicy::~LogPolicy() {
 	}
 #endif // LOG_LEVEL_TRACK_REGISTRATION_AVAILABLE
 
-void LogPolicy::AppendDebug(const std::string &message) throw() {
-	if (!IsDebugRegistrationOn()) {
-		return;
-	}
+void LogPolicy::AppendDebugDirect(const char *message) throw() {
+	assert(IsDebugRegistrationOn());
 	try {
 		std::ostringstream oss;
 		oss << ACE_OS::thr_self() << " " << message;
 		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
 	} catch (...) {
-		assert(false);
 		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), message);
+		assert(false);
 	}
 }
+void LogPolicy::AppendDebugDirect(const wchar_t *message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << ConvertString<String>(message).GetCStr();
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), ConvertString<String>(message).GetCStr());
+		assert(false);
+	}
+}
+void LogPolicy::AppendDebugDirect(const std::string &message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << message;
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), message);
+		assert(false);
+	}
+}
+void LogPolicy::AppendDebugDirect(const std::wstring &message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << ConvertString<String>(message.c_str()).GetCStr();
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), ConvertString<String>(message.c_str()).GetCStr());
+		assert(false);
+	}
+}
+void LogPolicy::AppendDebugDirect(const String &message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << message.GetCStr();
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), message.GetCStr());
+		assert(false);
+	}
+}
+void LogPolicy::AppendDebugDirect(const WString &message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << ConvertString<String>(message).GetCStr();
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), ConvertString<String>(message).GetCStr());
+		assert(false);
+	}
+}
+void LogPolicy::AppendDebugDirect(const Format &message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << message.str();
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), message.str());
+		assert(false);
+	}
+}
+void LogPolicy::AppendDebugDirect(const WFormat &message) throw() {
+	assert(IsDebugRegistrationOn());
+	try {
+		std::ostringstream oss;
+		oss << ACE_OS::thr_self() << " " << ConvertString<String>(message.str().c_str()).GetCStr();
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), oss.str());
+	} catch (...) {
+		m_pimpl->Append(m_pimpl->GetLevelInfo(LOG_LEVEL_DEBUG), ConvertString<String>(message.str().c_str()).GetCStr());
+		assert(false);
+	}
+}
+
+
 void LogPolicy::AppendInfo(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_INFO, message);
 }

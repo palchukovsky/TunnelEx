@@ -37,9 +37,8 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 				O_RDWR | FILE_FLAG_OVERLAPPED);
 			if (connectResult != 0) {
 				const Error error(errno);
-				LogTracking("SerialConnection", "SerialConnection", __FILE__, __LINE__);
 				WFormat message(L"Could not open serial line: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 			// set the appropriate parameters
@@ -47,7 +46,6 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			//! @todo: add params getting, when it will be implemented in ACE.
 			/* if (m_io.control(ACE_TTY_IO::GETPARAMS, &params) != 0) {
 				const Error error(errno);
-				LogTracking("SerialConnection", "SerialConnection", __FILE__, __LINE__);
 				WFormat message(L"Could not get serial device parameters: \"%1% (%2%)\".");
 				message % error.GetString().GetCStr() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
@@ -106,9 +104,8 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			}
 			if (m_io.control(ACE_TTY_IO::SETPARAMS, &params) != 0) {
 				const Error error(errno);
-				LogTracking("SerialConnection", "SerialConnection", __FILE__, __LINE__);
 				WFormat message(L"Could not set serial device parameters: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 			//! @todo: check, maybe it will be implemented in ACE in feature versions
@@ -121,15 +118,13 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			timeouts.WriteTotalTimeoutConstant = 0;
 			if (!SetCommTimeouts(m_io.get_handle(), &timeouts)) {
 				const Error error(errno);
-				LogTracking("SerialConnection", "SerialConnection", __FILE__, __LINE__);
 				WFormat message(L"Could not set device communication timeouts: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 		}
 
 		~SerialConnection() {
-			LogTracking("SerialConnection", "~SerialConnection", __FILE__, __LINE__);
 			m_io.close();
 		}
 

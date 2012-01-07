@@ -34,7 +34,7 @@ void OutcomingTcpConnection::OpenConnection(
 	if (0 != connector.connect(*stream, address, &timeout, ACE_Addr::sap_any, 1)) {
 		const Error error(errno);
 		WFormat message(L"Failed to open connection: %1% (%2%)");
-		message % error.GetString().GetCStr() % error.GetErrorNo();
+		message % error.GetStringW() % error.GetErrorNo();
 		throw ConnectionOpeningException(message.str().c_str());
 	}
 	SetDataStream(stream);

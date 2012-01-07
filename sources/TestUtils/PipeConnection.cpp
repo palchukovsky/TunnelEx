@@ -212,7 +212,7 @@ void PipeConnection::Send(std::auto_ptr<Buffer> data) {
 		if (error.GetErrorNo() != ERROR_IO_PENDING) {
 			std::cerr
 				<< "Failed to send data to pipe: "
-				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<<  error.GetStringA().GetCStr()
 				<< " (" << error.GetErrorNo() << ")." << std::endl;
 			throw SendError("Could not send data to pipe: WriteFile returns FALSE");
 		}
@@ -347,7 +347,7 @@ bool PipeConnection::StartReadAndRead(boost::mutex::scoped_lock &lock) {
 			default:
 				std::cerr
 					<< "Failed to start read from pipe: "
-					<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<< error.GetStringA().GetCStr()
 					<< " (" << error.GetErrorNo() << ")."
 					<< std::endl;
 			case ERROR_BROKEN_PIPE:
@@ -401,7 +401,7 @@ DWORD PipeConnection::ReadOverlappedWriteResult(boost::mutex::scoped_lock &lock)
 		const TunnelEx::Error error(GetLastError());
 		std::cerr
 			<< "Failed to read pipe overlapped write result: "
-			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<<  error.GetStringA().GetCStr()
 			<< " (" << error.GetErrorNo() << ")." << std::endl;
 		throw std::exception("Failed to read pipe overlapped write result");
 	} else if (bytesSent > 0) {
@@ -439,7 +439,7 @@ DWORD PipeConnection::ReadOverlappedReadResult(boost::mutex::scoped_lock &lock) 
 			default:
 				std::cerr
 					<< "Failed to read pipe overlapped read result: "
-					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<<  error.GetStringA().GetCStr()
 					<< " (" << error.GetErrorNo() << ")." << std::endl;
 				throw std::exception("Failed to read pipe overlapped read result");
 		}
@@ -487,7 +487,7 @@ PipeClientConnection::PipeClientConnection(
 			if (error.GetErrorNo() != ERROR_PIPE_BUSY) {
 				std::cerr
 					<< "Failed to open pipe \"" << path <<"\": "
-					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<<  error.GetStringA().GetCStr()
 					<< " (" << error.GetErrorNo() << ")." << std::endl;
 				throw std::exception("Failed to open pipe");
 			}
@@ -497,7 +497,7 @@ PipeClientConnection::PipeClientConnection(
 			TunnelEx::Error error(GetLastError());
 			std::cerr
 				<< "Failed to wait pipe \"" << path <<"\": "
-				<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+				<<  error.GetStringA().GetCStr()
 				<< " (" << error.GetErrorNo() << ")." << std::endl;
 			throw std::exception("Failed to wait pipe");
 		}
@@ -514,7 +514,7 @@ PipeClientConnection::PipeClientConnection(
 		TunnelEx::Error error(GetLastError());
 		std::cerr
 			<< "Failed to set pipe mode: "
-			<< TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<< error.GetStringA().GetCStr()
 			<< " (" << error.GetErrorNo() << ")." << std::endl;
 		throw std::exception("Failed to set pipe mode");
 	}
@@ -547,7 +547,7 @@ PipeServerConnection::PipeServerConnection(
 		TunnelEx::Error error(GetLastError());
 		std::cerr
 			<< "Failed to create pipe: "
-			<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+			<<  error.GetStringA().GetCStr()
 			<< " (" << error.GetErrorNo() << ")." << std::endl;
 		throw std::exception("Failed to create pipe");
 	}
@@ -570,7 +570,7 @@ PipeServerConnection::PipeServerConnection(
 				TunnelEx::Error error(GetLastError());
 				std::cerr
 					<< "Failed to read pipe connection state: "
-					<<  TunnelEx::ConvertString<TunnelEx::String>(error.GetString()).GetCStr()
+					<<  error.GetStringA().GetCStr()
 					<< " (" << error.GetErrorNo() << ")."
 					<< std::endl;
 				throw std::exception("An error occurs during the pipe connect operation.");

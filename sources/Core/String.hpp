@@ -21,14 +21,6 @@ namespace TunnelEx {
 	template<class Element>
 	class TUNNELEX_CORE_API BasicString {
 
-	public:
-
-		typedef unsigned int SizeType;
-		typedef SizeType size_type;
-		typedef typename Element ValueType;
-		typedef ValueType value_type;
-		typedef BasicString<typename Element> MyType;
-
 		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
 				const ::TunnelEx::WString &,
 				::TunnelEx::UString &);
@@ -70,6 +62,14 @@ namespace TunnelEx {
 		friend TUNNELEX_CORE_API ::TunnelEx::UString & ConvertString(
 				const char *,
 				::TunnelEx::UString &);
+
+	public:
+
+		typedef unsigned int SizeType;
+		typedef SizeType size_type;
+		typedef typename Element ValueType;
+		typedef ValueType value_type;
+		typedef BasicString<typename Element> MyType;
 
 	public:
 		

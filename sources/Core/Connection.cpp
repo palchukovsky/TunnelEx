@@ -14,14 +14,12 @@
 #include "ConnectionSignal.hpp"
 #include "Exceptions.hpp"
 #include "Log.hpp"
-#include "Format.hpp"
 #include "MessageBlocksLatencyStat.hpp"
 #include "MessageBlockHolder.hpp"
 #include "Tunnel.hpp"
 #include "MessagesAllocator.hpp"
 #include "Error.hpp"
 #include "Locking.hpp"
-#include "ObjectsDeletionCheck.h"
 #ifdef TUNNELEX_OBJECTS_DELETION_CHECK
 #	include "Server.hpp"
 #endif
@@ -29,7 +27,7 @@
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers::Asserts;
 namespace pt = boost::posix_time;
-	
+
 //////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -211,7 +209,9 @@ private:
 		m_latencyStat.Dump();
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
-				"Connection object %1% deleted. Active objects: %2%. Satellites: %3%.",
+				"Connection object %1% deleted."
+					" Active objects: %2%."
+					" Messages satellites: %3%.",
 				m_instanceId,
 				m_instancesNumber,
 				UniqueMessageBlockHolder::GetSatellitesInstancesNumber());
@@ -428,7 +428,7 @@ public:
 				const Error error(errno);
 				WFormat message(
 					L"Could not open connection read stream: %1% (%2%)");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 			if (	openWriteStreamFunc
@@ -436,7 +436,7 @@ public:
 				const Error error(errno);
 				WFormat message(
 					L"Could not open connection write stream: %1% (%2%)");
-				message % error.GetString().GetCStr() % error.GetErrorNo();	
+				message % error.GetStringW() % error.GetErrorNo();	
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 		}
@@ -653,12 +653,13 @@ public:
 					= m_idleTimeoutInterval
 						- secondFromLastAction
 						+ pt::microseconds(1000000 - 1);
-				if (Log::GetInstance().IsDebugRegistrationOn()) {
-					Log::GetInstance().AppendDebug(
-						"Resetting idle timeout to %1% seconds for connection %2%...",
-						sleepTime.total_seconds(),
-						m_instanceId);
-				}
+				Log::GetInstance().AppendDebugEx(
+					[this, &sleepTime]() -> Format {
+						Format message(
+							"Resetting idle timeout to %1% seconds for connection %2%...");
+						message % sleepTime.total_seconds() % this->m_instanceId;
+						return message;
+					});
 				m_idleTimeoutTimer = m_proactor->schedule_timer(
 					*this,
 					nullptr,
@@ -720,8 +721,7 @@ private:
 		}
 		const Error error(errorNo);
 		WFormat errorStr(L"Could not write data into stream: %1% (%2%)");
-		errorStr % error.GetString().GetCStr();
-		errorStr % error.GetErrorNo();
+		errorStr % error.GetStringW() % error.GetErrorNo();
 		if (isClosedConnectionError) {
 			Log::GetInstance().AppendDebug(
 				ConvertString<String>(errorStr.str().c_str()).GetCStr());
@@ -736,19 +736,20 @@ private:
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		messageBlock.SetReceivingTimePoint();
 		assert(messageBlock.IsTunnelMessage());
-		assert(
-			result.error() == ERROR_OPERATION_ABORTED
-			|| !m_isClosed);
-		assert(
-			result.error() == ERROR_OPERATION_ABORTED
-			|| IsNotLockedByMyThread(m_mutex));
 
 		bool isSuccess = false;
 		if (!result.success() && ReportReadError(result)) {
-			Log::GetInstance().AppendDebug(
-				"Closing connection %1% with code %2%...",
-				m_instanceId,
-				result.error());
+			Log::GetInstance().AppendDebugEx(
+				[this, &result]() -> Format {
+					const Error error(result.error());
+					Format message(
+						"Closing connection %1% with error \"%2%\" (code: %3%)...");
+					message
+						% this->m_instanceId
+						% error.GetStringA()
+						% error.GetErrorNo();
+					return message;
+				});
 			messageBlock.Reset();
 			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
@@ -812,7 +813,7 @@ private:
 			Format message(
 				"Connection %3% read operation completes with error: %1% (%2%).");
 			message
-				% ConvertString<String>(error.GetString()).GetCStr()
+				% error.GetStringA()
 				% error.GetErrorNo()
 				% m_instanceId;
 			Log::GetInstance().AppendSystemError(message.str().c_str());
@@ -844,18 +845,21 @@ private:
 			return true;
 		} else if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize) {
 			if (m_isReadingActive) {
-				const size_t bytes = m_sentMessageBlockQueueSize * m_dataBlockSize;
+				const char *const message
+					= "Message queue size is %1% packets (%2% allowed),"
+						" data read from connection %3% will be suspended.";
 				Log::GetInstance().AppendDebug(
-					"Data queue memory size is %1% bytes,"
-						" data read from connection %2% will be suspended.",
-					bytes,
+					message,
+					m_sentMessageBlockQueueSize,
+					m_messageBlockQueueBufferSize,
 					m_instanceId);
 #				ifdef DEV_VER
 				{
-					Format message(
-						"Data queue memory size is %1% bytes,"
-							" data read from connection %2% will be suspended.");
-					message % bytes % m_instanceId;
+					Format message(message);
+					message
+						% m_sentMessageBlockQueueSize
+						% m_messageBlockQueueBufferSize
+						% m_instanceId;
 					Log::GetInstance().AppendWarn(message.str());
 				}
 #				endif
@@ -866,18 +870,21 @@ private:
 			if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize / 2) {
 				return true;
 			}
-			const size_t bytes = m_sentMessageBlockQueueSize * m_dataBlockSize;
+			const char *const message
+				= "Message queue size is %1% packets (%2% allowed),"
+					" data read from connection %3% will be resumed.";
 			Log::GetInstance().AppendDebug(
-				"Data queue memory size is %1% bytes,"
-					" data read from connection %2% will be resumed.",
-				bytes,
+				message,
+				m_sentMessageBlockQueueSize,
+				m_messageBlockQueueBufferSize,
 				m_instanceId);
 #			ifdef DEV_VER
 			{
-				Format message(
-					"Data queue memory size is %1% bytes,"
-						" data read from connection %2% will be resumed.");
-				message % bytes % m_instanceId;
+				Format message(message);
+				message
+					% m_sentMessageBlockQueueSize
+					% m_messageBlockQueueBufferSize
+					% m_instanceId;
 				Log::GetInstance().AppendInfo(message.str());
 			}
 #			endif
@@ -897,13 +904,13 @@ private:
 				WFormat message(
 					L"Could not initiate read stream for connection %3%: %1% (%2%)");
 				message
-					% error.GetString().GetCStr()
+					% error.GetStringW()
 					% error.GetErrorNo()
 					% m_instanceId;
 				switch (error.GetErrorNo()) {
 					case ERROR_NETNAME_DELETED: // see TEX-553
 					case ERROR_BROKEN_PIPE:
-						Log::GetInstance().AppendDebug(message.str().c_str());
+						Log::GetInstance().AppendDebug(message);
 						messageBlock.Reset();
 						return false;
 				}
@@ -954,12 +961,15 @@ private:
 		if (m_idleTimeoutInterval.ticks() == 0) {
 			return;
 		}
-		if (Log::GetInstance().IsDebugRegistrationOn()) {
-			Log::GetInstance().AppendDebug(
-				"Setting idle timeout %1% seconds for connection %2%...",
-				m_idleTimeoutInterval.total_seconds(),
-				m_instanceId);
-		}
+		Log::GetInstance().AppendDebugEx(
+			[this]() -> Format {
+				Format message(
+					"Setting idle timeout %1% seconds for connection %2%...");
+				message
+					% this->m_idleTimeoutInterval.total_seconds()
+					% this->m_instanceId;
+				return message;
+			});
 		m_idleTimeoutTimer = m_proactor->schedule_timer(
 			*this,
 			nullptr,

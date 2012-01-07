@@ -45,36 +45,69 @@ bool Error::CheckError() const {
 #	endif
 }
 
-WString Error::GetString() const {
-#	ifdef BOOST_WINDOWS
+namespace {
+
+	template<typename String>
+	const typename String::ValueType * GetUnknownErrorTest() {
+		return "Unknown error";
+	}
+	template<>
+	const WString::ValueType * GetUnknownErrorTest<WString>() {
+		return L"Unknown error";
+	}
+	
+	template<typename Char>
+	bool IsLineEnd(Char ch) {
+		return ch == '\n' || ch == '\r';
+	}
+	template<>
+	bool IsLineEnd<WString::ValueType>(WString::ValueType ch) {
+		return ch == L'\n' || ch == L'\r';
+	}
+
+	template<typename String, typename SysGetter>
+	String GetStringFromSys(int errorNo, SysGetter &sysGetter) {
 		LPVOID buffer;
-		auto bufferSize = ::FormatMessageW(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		auto size = sysGetter(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER
+				| FORMAT_MESSAGE_FROM_SYSTEM
+				| FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL,
-			m_errorNo,
+			errorNo,
 			0,
-			(LPWSTR)&buffer,
+			(String::ValueType *)&buffer,
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
 		assert(GetLastError() != ERROR_RESOURCE_LANG_NOT_FOUND);
-		assert(!bufferSize || bufferSize == wcslen(static_cast<LPCWSTR>(buffer)));
-		for (
-				; bufferSize > 0
-					&& (static_cast<LPCWSTR>(buffer)[bufferSize - 1] == L'\n'
-						|| static_cast<LPCWSTR>(buffer)[bufferSize - 1] == L'\r')
-				; --bufferSize);
-		if (bufferSize) {
-			static_cast<LPWSTR>(buffer)[bufferSize - 1] = 0;
-			return WString(static_cast<LPCWSTR>(buffer));
+		String::ValueType *const pch = static_cast<String::ValueType *>(buffer);
+		for ( ; size > 0 && IsLineEnd(pch[size - 1]) ; --size);
+		if (size > 0) {
+			pch[size - 1] = 0;
+			return String(pch);
 		} else {
-			return WString(L"Unknown error");
+			return String(GetUnknownErrorTest<String>());
 		}
+	}
+
+}
+
+WString Error::GetStringW() const {
+#	ifdef BOOST_WINDOWS
+		return GetStringFromSys<WString>(m_errorNo, ::FormatMessageW);
 #	else // BOOST_WINDOWS
 		WString result;
 		namespace fs::boost::system;
 		ConvertString(fs::system_error(m_errorNo, fs::get_system_category()).what(), result);
 		return result;
+#	endif // BOOST_WINDOWS
+}
+
+String Error::GetStringA() const {
+#	ifdef BOOST_WINDOWS
+		return GetStringFromSys<String>(m_errorNo, ::FormatMessageA);
+#	else // BOOST_WINDOWS
+		return fs::system_error(m_errorNo, fs::get_system_category()).what();
 #	endif // BOOST_WINDOWS
 }
 

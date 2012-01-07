@@ -77,14 +77,16 @@ int main(int argc, char **argv) {
 			{
 				testing::AddGlobalTestEnvironment(new LocalEnvironment);
 				const char *const noServerTestsFilter
-					=	"-TcpClient.*:TcpServer.*"
+					=	"TcpClient.*:TcpServer.*"
 						":UdpClient.*:UdpServer.*"
 						":PipeClient.*:PipeServer.*";
 				std::string newFilter = testing::GTEST_FLAG(filter);
 				if (newFilter != "*") {
-					newFilter += std::string(":") + noServerTestsFilter;
+					if (!newFilter.empty() && newFilter[0] == '-') {
+						newFilter += std::string(":") + noServerTestsFilter;
+					}
 				} else {
-					newFilter = noServerTestsFilter;
+					newFilter = std::string("-") + noServerTestsFilter;
 				}
 				testing::GTEST_FLAG(filter) = newFilter;
 			}

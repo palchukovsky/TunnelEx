@@ -70,7 +70,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			BOOST_STATIC_ASSERT(isSecured == false);
 			const Error error(errno);
 			WFormat message(L"Failed to accept incoming connection: \"%1% (%2%)\"");
-			message % error.GetString().GetCStr() % error.GetErrorNo();
+			message % error.GetStringW() % error.GetErrorNo();
 			throw ConnectionOpeningException(message.str().c_str());
 		}
 
@@ -176,17 +176,15 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 							break;
 						default:
 							if (openSslError.CheckError(sysError.GetErrorNo())) {
-								const std::string errorStr
-									= OpenSslError::ErrorNoToString(sysError.GetErrorNo());
-								message % ConvertString<WString>(errorStr.c_str()).GetCStr();
+								message % OpenSslError::ErrorNoToString(sysError.GetErrorNo());
 						} else {
-							message % sysError.GetString().GetCStr();
+							message % sysError.GetStringW();
 						}
 						break;
 					}
 				
 				} else {
-					message % sysError.GetString().GetCStr();
+					message % sysError.GetStringW();
 				}
 			
 			} else {
@@ -196,7 +194,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				} else if (openSslError.IsReason(SSL_R_NO_CERTIFICATE_RETURNED)) {
 					message % accessDeniedWronCertMessage;
 				} else {
-					message % ConvertString<WString>(openSslError.GetAsString()).GetCStr();
+					message % openSslError.GetAsString();
 				}
 
 			}

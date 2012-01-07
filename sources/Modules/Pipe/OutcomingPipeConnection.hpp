@@ -60,7 +60,7 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 			if (connectResult != 0) {
 				const Error error(errno);
 				WFormat message(L"Could not open pipe: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}
 			return stream;

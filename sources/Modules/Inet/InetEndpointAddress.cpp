@@ -360,7 +360,7 @@ public:
 				} else {
 					Error error(GetLastError());
 					WFormat message(L"Could get network adapters list: \"%1%\" (error code: %2%)");
-					message % error.GetString().GetCStr();
+					message % error.GetStringW();
 					message % error.GetErrorNo();
 					throw SystemException(message.str().c_str());
 				}

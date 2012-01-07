@@ -95,6 +95,7 @@
     <ClCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\Format.cpp" />
     <ClCompile Include="..\..\Common\LocalAssert.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Prec.cpp">

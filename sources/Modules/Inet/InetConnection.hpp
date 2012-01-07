@@ -58,7 +58,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (GetIoStream().get_local_addr(addr) != 0) {
 				const Error error(errno);
 				WFormat message(L"Failed to get local inet address: \"%1% (%2%)\".");
-				message % error.GetString().GetCStr() % error.GetErrorNo();
+				message % error.GetStringW() % error.GetErrorNo();
 				throw SystemException(message.str().c_str());
 			}
 			return AutoPtr<EndpointAddress>(new EndpointAddressImpl(addr));

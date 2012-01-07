@@ -24,7 +24,8 @@ namespace TunnelEx {
 
 	public:
 
-		::TunnelEx::WString GetString() const;
+		::TunnelEx::WString GetStringW() const;
+		::TunnelEx::String GetStringA() const;
 		int GetErrorNo() const;
 
 		bool IsError() const;

@@ -84,6 +84,10 @@ namespace TunnelEx {
 						: m_iterationsCount(0) {
 					//...//
 				}
+#			else
+				AggressiveSpinWait() {
+					//...//
+				}
 #			endif
 		private:
 			AggressiveSpinWait(const AggressiveSpinWait &);

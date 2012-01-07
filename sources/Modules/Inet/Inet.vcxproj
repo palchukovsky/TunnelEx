@@ -130,6 +130,7 @@
     <ClInclude Include="Prec.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\Format.cpp" />
     <ClCompile Include="..\..\Common\LocalAssert.cpp" />
     <ClCompile Include="DestinationPingFilter.cpp" />
     <ClCompile Include="FtpListener.cpp" />

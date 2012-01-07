@@ -111,6 +111,7 @@
     <Manifest />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\Format.cpp" />
     <ClCompile Include="..\Common\LocalAssert.cpp" />
     <ClCompile Include="ConnectionAcceptEvent.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
