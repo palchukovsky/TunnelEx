@@ -615,7 +615,9 @@ void UniqueMessageBlockHolder::SetData(const char *data, size_t length) {
 			L"Failed to allocate memory for new data block (existing message block)");
 	}
 	
-	newBlock->set_flags(UMBHF_TUNNEL_MESSAGE);
+	if (m_messageBlock->flags() & UMBHF_TUNNEL_MESSAGE) { 
+		newBlock->set_flags(UMBHF_TUNNEL_MESSAGE);
+	}
 	m_messageBlock->clr_flags(UMBHF_HAS_SATELLITE);
 	newBlock->set_flags(UMBHF_HAS_SATELLITE);
 
