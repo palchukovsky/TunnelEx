@@ -114,6 +114,7 @@ public:
 		try {
 			return GetWhatImpl().c_str();
 		} catch (...) {
+			assert(false);
 			return L"Unknown error";
 		}
 	}
@@ -1233,8 +1234,15 @@ private:
 					instance.m_ruleUpdatingState.exception.Reset(
 						new SystemException(ConvertString<WString>(ex.what()).GetCStr()));
 				} catch (...) {
-					Log::GetInstance().AppendSystemError(
-						"Unknown system error occurred in updating thread.");
+					Format message(
+						"Unknown system error occurred: %1%:%2%."
+							" Please contact product support to resolve this issue."
+							" %3% %4%");
+					message
+						% __FILE__ % __LINE__
+						% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+					Log::GetInstance().AppendFatalError(message.str());
+					assert(false);
 				}
 				state.resultCondition.broadcast();
 			}
@@ -1285,11 +1293,15 @@ private:
 								% ex.what();
 							Log::GetInstance().AppendSystemError(message.str().c_str());
 						} catch (...) {
-							Format message("Error (std) occurred in service: %1%.");
+							Format message(
+								"Unknown system error occurred: %1%:%2%."
+									" Please contact product support to resolve this issue."
+									" %3% %4%");
 							message
-								% ConvertString<String>(svc.service->GetService().name).GetCStr();
-							Log::GetInstance().AppendSystemError(
-								"Unknown system error occurred in service.");
+								% __FILE__ % __LINE__
+								% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+							Log::GetInstance().AppendFatalError(message.str());
+							assert(false);
 						}
 					}
 					continue;
@@ -1306,8 +1318,15 @@ private:
 				Log::GetInstance().AppendSystemError(message.str().c_str());
 				continue;
 			} catch (...) {
-				Log::GetInstance().AppendSystemError(
-					"Unknown system error occurred in services thread.");
+				Format message(
+					"Unknown system error occurred: %1%:%2%."
+						" Please contact product support to resolve this issue."
+						" %3% %4%");
+				message
+					% __FILE__ % __LINE__
+					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+				Log::GetInstance().AppendFatalError(message.str());
+				assert(false);
 				continue;
 			}
 			
@@ -1357,8 +1376,15 @@ private:
 				message % ex.what();
 				Log::GetInstance().AppendSystemError(message.str().c_str());
 			} catch (...) {
-				Log::GetInstance().AppendSystemError(
-					"Unknown system error occurred in rule checking thread.");
+				Format message(
+					"Unknown system error occurred: %1%:%2%."
+						" Please contact product support to resolve this issue."
+						" %3% %4%");
+				message
+					% __FILE__ % __LINE__
+					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+				Log::GetInstance().AppendFatalError(message.str());
+				assert(false);
 			}
 		}
 		Log::GetInstance().AppendDebug("Rules checking thread completed.");
@@ -1756,8 +1782,15 @@ private:
 				message % ex.what();
 				Log::GetInstance().AppendSystemError(message.str().c_str());
 			} catch (...) {
-				Log::GetInstance().AppendSystemError(
-					"Unknown system error occurred in tunnel opening thread.");
+				Format message(
+					"Unknown system error occurred: %1%:%2%."
+						" Please contact product support to resolve this issue."
+						" %3% %4%");
+				message
+					% __FILE__ % __LINE__
+					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+				Log::GetInstance().AppendFatalError(message.str());
+				assert(false);
 			}
 
 		}
@@ -1778,7 +1811,15 @@ private:
 			} catch (const std::exception &ex) {
 				Log::GetInstance().AppendFatalError(ex.what());
 			} catch (...) {
-				Log::GetInstance().AppendSystemError("Unknown system error occurred in proactor thread.");
+				Format message(
+					"Unknown system error occurred: %1%:%2%."
+						" Please contact product support to resolve this issue."
+						" %3% %4%");
+				message
+					% __FILE__ % __LINE__
+					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+				Log::GetInstance().AppendFatalError(message.str());
+				assert(false);
 			}
 		}
 		Log::GetInstance().AppendDebug("Proactor events thread completed.");
@@ -1798,7 +1839,15 @@ private:
 			} catch (const std::exception &ex) {
 				Log::GetInstance().AppendFatalError(ex.what());
 			} catch (...) {
-				Log::GetInstance().AppendSystemError("Unknown system error occurred in reactor thread.");
+				Format message(
+					"Unknown system error occurred: %1%:%2%."
+						" Please contact product support to resolve this issue."
+						" %3% %4%");
+				message
+					% __FILE__ % __LINE__
+					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+				Log::GetInstance().AppendFatalError(message.str());
+				assert(false);
 			}
 		}
 		Log::GetInstance().AppendDebug("Reactor events thread completed.");
