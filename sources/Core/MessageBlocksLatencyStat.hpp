@@ -110,12 +110,13 @@ namespace TunnelEx {
 					const MessageBlock &message,
 					PercentValueType queueBufferUsage) {
 
-			assert(queueBufferUsage <= 100);
-
-			auto now = boost::posix_time::second_clock::local_time();
-			
 			const Lock lock(m_mutex);
 
+			const UniqueMessageBlockHolder &messageHolder
+				= *boost::polymorphic_downcast<const UniqueMessageBlockHolder *>(
+				&message);
+
+			const auto &now = messageHolder.GetSendingTime();
 			auto isNewPeriod = false;
 			if (m_periodStart.is_not_a_date_time()) {
 				m_periodStart = now;
@@ -124,9 +125,6 @@ namespace TunnelEx {
 				isNewPeriod = (now - m_periodStart) > m_period;
 			}
 
-			const UniqueMessageBlockHolder &messageHolder
-				= *boost::polymorphic_downcast<const UniqueMessageBlockHolder *>(
-					&message);
 			m_receiving.Accumulate(messageHolder, isNewPeriod);
 			m_sending.Accumulate(messageHolder, isNewPeriod);
 			m_processing.Accumulate(messageHolder, isNewPeriod);
@@ -136,6 +134,7 @@ namespace TunnelEx {
 
 			if (isNewPeriod) {
 				DumpPeriod();
+				m_periodStart = now;
 			}
 
 		}

@@ -45,6 +45,7 @@ namespace TunnelEx {
 				const boost::posix_time::ptime & GetSendingStartTime() const;
 
 				void SetSendingTimePoint();
+				const boost::posix_time::ptime & GetSendingTime() const;
 
 			public:
 
@@ -192,6 +193,7 @@ namespace TunnelEx {
 		const boost::posix_time::ptime & GetSendingStartTime() const;
 		
 		void SetSendingTimePoint();
+		const boost::posix_time::ptime & GetSendingTime() const;
 
 #		ifdef DEV_VER
 			static long GetSatellitesInstancesNumber();
@@ -210,7 +212,6 @@ namespace TunnelEx {
 		Satellite & GetSatellite();
 		const Satellite & GetSatellite() const;
 
-		static Timings & GetTimings(ACE_Message_Block &messageBlock);
 		Timings & GetTimings();
 		const Timings & GetTimings() const;
 

@@ -205,6 +205,11 @@ void UniqueMessageBlockHolder::Satellite::Timings::SetSendingTimePoint() {
 	SetCurrentTimePoint(m_sendingTime);
 }
 
+const boost::posix_time::ptime & 
+UniqueMessageBlockHolder::Satellite::Timings::GetSendingTime() const {
+	return m_sendingTime;
+}
+
 pt::time_duration
 UniqueMessageBlockHolder::Satellite::Timings::GetReceivingLatency() const {
 	if (m_receivingStartTime.is_not_a_date_time()) {
@@ -338,14 +343,9 @@ UniqueMessageBlockHolder::GetSatellite() const {
 	return const_cast<UniqueMessageBlockHolder *>(this)->GetSatellite();
 }
 
-UniqueMessageBlockHolder::Timings & UniqueMessageBlockHolder::GetTimings(
-			ACE_Message_Block &messageBlock) {
-	return GetSatellite(messageBlock).GetTimings();
-}
-
 UniqueMessageBlockHolder::Timings & UniqueMessageBlockHolder::GetTimings() {
 	assert(IsSet());
-	return GetTimings(*m_messageBlock);
+	return GetSatellite().GetTimings();
 }
 
 const UniqueMessageBlockHolder::Timings & UniqueMessageBlockHolder::GetTimings()
@@ -665,6 +665,10 @@ const pt::ptime & UniqueMessageBlockHolder::GetSendingStartTime() const {
 
 void UniqueMessageBlockHolder::SetSendingTimePoint() {
 	GetTimings().SetSendingTimePoint();
+}
+
+const pt::ptime & UniqueMessageBlockHolder::GetSendingTime() const {
+	return GetTimings().GetSendingTime();
 }
 
 pt::time_duration UniqueMessageBlockHolder::GetReceivingLatency() const {

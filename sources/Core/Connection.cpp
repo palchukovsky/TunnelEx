@@ -193,9 +193,12 @@ public:
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
-				"New connection object %1% created. Active objects: %2%.",
+				"New connection object %1% created."
+					" Active objects: %2%."
+					" Messages satellites: %3%.",
 				m_instanceId,
-				m_instancesNumber);
+				m_instancesNumber,
+				UniqueMessageBlockHolder::GetSatellitesInstancesNumber());
 #		endif
 	}
 	
