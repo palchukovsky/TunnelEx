@@ -59,7 +59,7 @@
 		L"TEST " \
 		TUNNELEX_VERSION_FULL_W \
 		L"." TUNNELEX_VERSION_GEN_UNIQUE_ID_STR_W
-#elif defined(_TEST)
+#elif defined(NTEST) && defined(NDEBUG)
 #	define TUNNELEX_BUILD_IDENTITY \
 		"RELEASE " \
 		TUNNELEX_VERSION_FULL \
