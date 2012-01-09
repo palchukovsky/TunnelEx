@@ -15,7 +15,7 @@
     </Link>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;NTEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
