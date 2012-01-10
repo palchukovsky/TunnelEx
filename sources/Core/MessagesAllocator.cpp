@@ -29,9 +29,9 @@ MessagesAllocator::MessagesAllocator(
 			size_t dataBlockSize)
 		: m_dataBlockSize(dataBlockSize),
 		m_messageBlocksAllocator(messageBlocksCount),
-		m_messageBlockSatellitesAllocator(messageBlocksCount),
-		m_dataBlocksAllocator(messageBlocksCount),
-		m_dataBlocksBufferAllocator(dataBlocksCount, dataBlockSize) {
+		m_messageBlockSatellitesAllocator(dataBlocksCount),
+		m_dataBlocksAllocator(dataBlocksCount),
+		m_dataBlocksBufferAllocator(dataBlocksCount, m_dataBlockSize) {
 	//...//
 }
 

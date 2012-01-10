@@ -36,7 +36,7 @@ namespace TunnelEx {
 		virtual void OnConnectionSetupCompleted(::TunnelEx::Instance::Id) = 0;
 
 		virtual void OnNewMessageBlock(::TunnelEx::MessageBlock &) = 0;
-		virtual void OnMessageBlockSent(const ::TunnelEx::MessageBlock &) = 0;
+		virtual void OnMessageBlockSent(::TunnelEx::MessageBlock &) = 0;
 
 		virtual void OnConnectionClose(::TunnelEx::Instance::Id) = 0;
 		virtual void OnConnectionClosed(::TunnelEx::Instance::Id) = 0;

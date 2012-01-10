@@ -36,7 +36,7 @@ namespace TunnelEx {
 				return 0;
 			}
 		private:
-			SpinMutex<true> m_impl;
+			SpinMutex m_impl;
 		};
 
 		typedef ACE_Cached_Allocator<ACE_Message_Block, Mutex> MessageBlocksAllocator;

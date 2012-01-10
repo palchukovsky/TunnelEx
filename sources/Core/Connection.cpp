@@ -55,6 +55,9 @@ namespace {
 		static volatile long fails;
 		static volatile long proactor;
 
+		static volatile long lastReportTime;
+		static const long reportPeriod;
+
 		static const double errorLevel;
 		static const double warnLevel;
 		static const double infoLevel;
@@ -87,9 +90,12 @@ namespace {
 	volatile long DebugLockStat::fails = 0;
 	volatile long DebugLockStat::proactor = 0;
 	
-	const double DebugLockStat::errorLevel = 1;
-	const double DebugLockStat::warnLevel = .85;
-	const double DebugLockStat::infoLevel = .5;
+	volatile long DebugLockStat::lastReportTime = 0;
+	const long DebugLockStat::reportPeriod = 60;
+	
+	const double DebugLockStat::errorLevel = 15;
+	const double DebugLockStat::warnLevel = 12.5;
+	const double DebugLockStat::infoLevel = 10;
 
 	////////////////////////////////////////////////////////////////////////////////
 
@@ -108,15 +114,19 @@ namespace {
 
 			if (!locked()) {
 				verify(acquire() != -1);
-				Interlocked::Increment(&DebugLockStat::fails);
+				Interlocked::Increment(DebugLockStat::fails);
 			}
 
 			if (isProactorCall) {
-				Interlocked::Increment(&DebugLockStat::proactor);
+				Interlocked::Increment(DebugLockStat::proactor);
 			}
 
-			if (!(Interlocked::Increment(&DebugLockStat::locks) % 20000)) {
-				DebugLockStat::Report();
+			if (!(Interlocked::Increment(DebugLockStat::locks) % 20000)) {
+				const long now = long(time(nullptr));
+				if (now - DebugLockStat::lastReportTime >= DebugLockStat::reportPeriod) {
+					DebugLockStat::Report();
+					Interlocked::Exchange(DebugLockStat::lastReportTime, now);
+				}
 			}
 
 		}
@@ -154,11 +164,49 @@ private:
 		MT_DEFAULT
 	};
 
+	enum ReadingState {
+		RS_NOT_ALLOWED,
+		RS_NOT_STARTED,
+		RS_READING,
+		RS_NOT_READING
+	};
+
 	typedef TypedMutex<ACE_Recursive_Thread_Mutex, MutexTypeToType<MT_DEFAULT>>
 		Mutex;
 	typedef LockWithDebugReports<Mutex> Lock;
 
+	typedef ReadWriteSpinMutex ExternalMessagesAllocatorMutex;
+	typedef ReadLock<ExternalMessagesAllocatorMutex> ExternalMessagesAllocatorReadLock;
+	typedef WriteLock<ExternalMessagesAllocatorMutex> ExternalMessagesAllocatorWriteLock;
+
 	typedef MessageBlocksLatencyStat LatencyStat;
+
+	struct IdleTimeoutPolicy {
+		static pt::ptime GetCurrentTime() {
+			return pt::second_clock::local_time();
+		}
+		static long GetEventOffset(
+					const pt::ptime &startTime,
+					const pt::ptime &eventTime) {
+			assert(startTime <= eventTime);
+			return (startTime - eventTime).total_seconds();
+		}
+		static long GetIdleTime(const pt::ptime &startTime, long eventTime) {
+			const auto now = GetEventOffset(startTime, GetCurrentTime());
+			assert(eventTime <= now);
+			const auto idle = now - eventTime;
+			return idle;
+		}
+		static long GetInterval(long /*hours*/, long /*mins*/, long secs) {
+			return secs;
+		}
+		static long CalcSleepTime(long idleTimeoutInterval, long idleTime) {
+			return idleTimeoutInterval - idleTime;
+		}
+		static ACE_Time_Value IntervalToAceTime(long val) {
+			return ACE_Time_Value(val);
+		}
+	};
 
 public:
 
@@ -172,24 +220,20 @@ public:
 			m_refsCount(1),
 			m_ruleEndpoint(ruleEndpoint),
 			m_ruleEndpointAddress(ruleEndpointAddress),
-			m_isReadingAllowed(false),
-			m_isReadingInitiated(0),
-			m_isReadingActive(true),
+			m_readingState(RS_NOT_ALLOWED),
 			m_isSetupCompleted(false),
 			m_isSetupCompletedWithSuccess(false),
 			m_proactor(nullptr),
-			//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_dataBlockSize(MessagesAllocator::DefautDataBlockSize),
-			//! @todo: hardcoded memory size
- 			m_messageBlockQueueBufferSize(
- 				(MessagesAllocator::DefautConnectionBufferSize * 1)
- 					/ UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)),
-			m_sentMessageBlockQueueSize(0),
 			m_isClosed(false),
-			m_idleTimeoutInterval(0, 0, idleTimeoutSeconds),
+			m_startTime(IdleTimeoutPolicy::GetCurrentTime()),
+			m_idleTimeoutInterval(
+				IdleTimeoutPolicy::GetInterval(0, 0, idleTimeoutSeconds)),
 			m_idleTimeoutTimer(-1),
+			m_idleTimeoutUpdateTime(0),
 			//! @todo: hardcoded - latency stat period (secs)
-			m_latencyStat(m_instanceId, 60) {
+			m_latencyStat(m_instanceId, 60),
+			m_readStartAttemptsCount(0),
+			m_readsMallocFailsCount(0) {
 		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 #		ifdef DEV_VER
 			Log::GetInstance().AppendDebug(
@@ -245,14 +289,15 @@ private:
 		assert(m_proactor);
 		assert(m_refsCount > 0);
 
+		m_readingState = RS_NOT_ALLOWED;
 		Interlocked::Exchange(m_isClosed, true);
 		m_readStream.reset();
 		m_writeStream.reset();
-		m_allocator.reset();
+		m_tunnelMessagesAllocator.reset();
 		
 		if (m_idleTimeoutTimer >= 0) {
-			const auto timerId = m_idleTimeoutTimer;
-			m_idleTimeoutTimer = -2;
+			const auto timerId = Interlocked::Exchange(m_idleTimeoutTimer, -2);
+			assert(timerId >= 0);
 			if (m_proactor->cancel_timer(timerId, nullptr, false) != 1) {
 				return false;
 			}
@@ -288,7 +333,7 @@ private:
 		assert(m_refsCount == 0);
 		assert(!m_readStream);
 		assert(!m_writeStream);
-		assert(!m_allocator);
+		assert(!m_tunnelMessagesAllocator);
 		assert(m_isClosed);
 		const auto instanceId = m_instanceId;
 		const auto signal = m_signal;
@@ -305,12 +350,11 @@ public:
 		Lock lock(m_mutex, false);
 
 		assert(!m_proactor || m_proactor == &signal->GetTunnel().GetProactor());
-		assert(!m_proactor || m_isReadingAllowed == isReadingAllowed);
-		assert(!m_allocator);
+		assert(!m_tunnelMessagesAllocator);
 
 		if (m_proactor) {
 			if (	m_proactor != &signal->GetTunnel().GetProactor()
-					|| m_isReadingAllowed != isReadingAllowed) {
+					|| m_readingState == RS_NOT_ALLOWED || isReadingAllowed) {
 				throw TunnelEx::LogicalException(L"Could not open data transfer twice");
 			}
 			m_signal = signal;
@@ -320,20 +364,23 @@ public:
 			return;
 		}
 
-		boost::shared_ptr<MessagesAllocator> allocator(
-			!isReadingAllowed
-				?	new MessagesAllocator(
-						1 + 1, // plus 1 for message, that duplicated for proactor
-						1,
-						UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize))
-				:	new MessagesAllocator(
-						m_messageBlockQueueBufferSize + 1, // plus 1 for message, that duplicated for proactor
-						m_messageBlockQueueBufferSize,
-						UniqueMessageBlockHolder::GetMessageMemorySize(m_dataBlockSize)));
+		const auto dataBlockSize = MessagesAllocator::DefautDataBlockSize;
+		const auto messageBlockQueueBufferSize
+			= MessagesAllocator::DefautConnectionBufferSize
+				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
+
+		const IoHandleInfo ioHandleInfo = m_myInterface.GetIoHandle();
+
+		boost::shared_ptr<MessagesAllocator> allocator;
+		if (isReadingAllowed && ioHandleInfo.handle != INVALID_HANDLE_VALUE) {
+			allocator.reset(
+				new MessagesAllocator(
+					messageBlockQueueBufferSize + 1, // plus 1 for message, that duplicated for proactor
+					messageBlockQueueBufferSize,
+					UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize)));
+		}
 
 		ACE_Proactor &proactor = signal->GetTunnel().GetProactor();
-			
-		IoHandleInfo ioHandleInfo = m_myInterface.GetIoHandle();
 			
 		std::unique_ptr<ACE_Asynch_Operation> readStream;
 		std::unique_ptr<ACE_Asynch_Operation> writeStream;
@@ -444,12 +491,15 @@ public:
 			}
 		}
 
-		allocator.swap(m_allocator);
+		allocator.swap(m_tunnelMessagesAllocator);
 		m_writeStream.reset(writeStream.release());
 		m_readStream.reset(readStream.release());
 		readStreamFunc.swap(m_readStreamFunc);
 		writeStreamFunc.swap(m_writeStreamFunc);
-		m_isReadingAllowed = isReadingAllowed;
+		m_readingState
+			= !isReadingAllowed || ioHandleInfo.handle == INVALID_HANDLE_VALUE
+				?	RS_NOT_ALLOWED
+				:	RS_NOT_STARTED;
 		signal.Swap(m_signal);
 		m_proactor = &proactor;
 
@@ -491,8 +541,8 @@ public:
 			// the m_refsCount is not zero and object will not destroyed from
 			// another thread (also see read-init incrimination)
 			Interlocked::Increment(m_refsCount);
-			UpdateIdleTimer(messageBlockHolder.GetSendingStartTime());
 			lock.release();
+			UpdateIdleTimer(messageBlockHolder.GetSendingStartTime());
 			messageBlockDuplicate.Release();
 			messageBlockHolder.MarkAsAddedToQueue();
 		}
@@ -503,20 +553,20 @@ public:
 
 public:
 
-	void OnMessageBlockSent(const MessageBlock &messageBlock) {
+	void OnMessageBlockSent(MessageBlock &messageBlock) {
 		assert(IsNotLockedByMyThread(m_mutex));
-		if (!messageBlock.IsTunnelMessage()) {
-			CollectLatencyStat(messageBlock);
+		UniqueMessageBlockHolder &messageHolder
+			= *boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock);
+		if (!messageHolder.IsTunnelMessage()) {
+			CollectLatencyStat(messageHolder);
+			messageHolder.Reset();
 			return;
 		}
-		Interlocked::Decrement(&m_sentMessageBlockQueueSize);
-		CollectLatencyStat(messageBlock);
-		if (m_isReadingActive) {
-			return;
-		}
+		CollectLatencyStat(messageHolder);
+		messageHolder.Reset();
 		{
 			Lock lock(m_mutex, false);
-			if (m_isReadingActive || InitReadIfPossible(lock)) {
+			if (InitReading(false)) {
 				return;
 			}
 		}
@@ -543,13 +593,18 @@ public:
 
 public:
 
-	void StartRead() {
-		assert(!m_isReadingInitiated);
+	void StartReading() {
+		assert(m_readingState <= RS_NOT_STARTED);
+		if (m_readingState == RS_NOT_ALLOWED) {
+			Log::GetInstance().AppendDebug(
+				"Reading not allowed for connection %1%.",
+				m_instanceId);
+			return;
+		}
 		{
 			Lock lock(m_mutex, false);
-			m_isReadingInitiated = true;
-			assert(!m_isClosed); // sanity check, never should be true
-			if (InitReadIfPossible(lock)) {
+			assert(!m_isClosed); // sanity check, never should be true here
+			if (InitReading(true)) {
 				return;
 			}
 		}
@@ -563,8 +618,9 @@ public:
 		// Protected in Connection. Also see the comment about locking assert in
 		// the SendToTunnelUnsafe-method.
 		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
-		assert(m_isReadingInitiated);
-		m_isReadingInitiated = false;
+		if (m_readingState > RS_NOT_ALLOWED) {
+			m_readingState = RS_NOT_STARTED;
+		}
 	}
 
 	const RuleEndpoint & GetRuleEndpoint() const {
@@ -577,15 +633,6 @@ public:
 
 	void SendToTunnel(MessageBlock &messageBlock) {
 		assert(IsNotLockedByMyThread(m_mutex));
-		Lock lock(m_mutex, false);
-		SendToTunnelUnsafe(messageBlock);
-	}
-
-	void SendToTunnelUnsafe(MessageBlock &messageBlock) {
-		// It must be locked by "my" thread or in the setup process (locking not
-		// required at setup). Ex.: UDP incoming connection works so: starts read,
-		// sends initial data, stops read, completes setup.
-		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		assert(
 			!boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock)
 					->GetReceivingTime()
@@ -597,9 +644,6 @@ public:
 			return;
 		}
 		m_signal->OnNewMessageBlock(messageBlock);
-		if (messageBlock.IsAddedToQueue() && messageBlock.IsTunnelMessage()) {
-			Interlocked::Increment(&m_sentMessageBlockQueueSize);
-		}
 	}
 
 	bool IsSetupCompleted() const {
@@ -630,8 +674,6 @@ public:
 
 	virtual void handle_time_out(const ACE_Time_Value &, const void * /*act*/ = 0) {
 
-		assert(m_idleTimeoutInterval.ticks() > 0);
-
 		Lock lock(m_mutex, true);
 
 		if (m_idleTimeoutTimer < 0) {
@@ -643,40 +685,36 @@ public:
 			return;
 		}
 		
-		if (!m_idleTimeoutUpdateTime.is_not_a_date_time()) {
-
-			assert(pt::microsec_clock::local_time() >= m_idleTimeoutUpdateTime);
-			const auto secondFromLastAction
-				= pt::microsec_clock::local_time() - m_idleTimeoutUpdateTime;
-			if (secondFromLastAction <= m_idleTimeoutInterval) {
-
-				m_idleTimeoutUpdateTime = pt::not_a_date_time;
-
-				const auto sleepTime
-					= m_idleTimeoutInterval
-						- secondFromLastAction
-						+ pt::microseconds(1000000 - 1);
+		const auto idleTimeoutUpdateTime = m_idleTimeoutUpdateTime;
+		if (!idleTimeoutUpdateTime) {
+			const auto idleTime = IdleTimeoutPolicy::GetIdleTime(
+				m_startTime,
+				idleTimeoutUpdateTime);
+			if (idleTime < m_idleTimeoutInterval) {
+				const auto sleepTime = IdleTimeoutPolicy::CalcSleepTime(
+					m_idleTimeoutInterval,
+					idleTime);
 				Log::GetInstance().AppendDebugEx(
-					[this, &sleepTime]() -> Format {
+					[this, sleepTime]() -> Format {
 						Format message(
-							"Resetting idle timeout to %1% seconds for connection %2%...");
-						message % sleepTime.total_seconds() % this->m_instanceId;
+							"Resetting idle timeout to %1% for connection %2%...");
+						message
+							% sleepTime
+							% this->m_instanceId;
 						return message;
 					});
-				m_idleTimeoutTimer = m_proactor->schedule_timer(
+				const auto idleTimeoutTimer = m_proactor->schedule_timer(
 					*this,
 					nullptr,
-					ACE_Time_Value(sleepTime.total_seconds()));
-				assert(m_idleTimeoutTimer != -1);
-
+					IdleTimeoutPolicy::IntervalToAceTime(sleepTime));
+				assert(idleTimeoutTimer != -1);
+				Interlocked::Exchange(m_idleTimeoutTimer, idleTimeoutTimer);
 				return;
-			
 			}
-
 		}
 
 		const auto signal = m_signal;
-		m_idleTimeoutTimer = -3;
+		Interlocked::Exchange(m_idleTimeoutTimer, -3);
 		lock.release();
 		Log::GetInstance().AppendDebug(
 			"Closing connection %1% by idle timeout...",
@@ -689,47 +727,113 @@ public:
 				size_t size,
 				const char *data = nullptr)
 			const {
+
 		assert(size > 0);
 		AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
-		result->Reset(
-			&UniqueMessageBlockHolder::Create(size, m_allocator, false));
-		result->SetReceivingTimePoint();
-		if (data && result->Get().copy(data, size) == -1) {
-			throw TunnelEx::InsufficientMemoryException(
-				L"Insufficient message block memory");
-		}
-		return result;
+
+		for (bool isSizeError = false; ; ) {
+
+			{
+				ExternalMessagesAllocatorReadLock readLock(
+					m_externalMessagesAllocatorMutex);
+				if (
+						m_externalMessagesAllocator
+						&& size <= m_externalMessagesAllocator->GetDataBlockSize()) {
+					result->Reset(
+						UniqueMessageBlockHolder::Create(
+							size,
+							m_externalMessagesAllocator,
+							false));
+					if (result->IsSet()) {
+						result->SetReceivingTimePoint();
+						if (!data || result->Get().copy(data, size) != -1) {
+							return result;
+						}
+					}
+					Log::GetInstance().AppendDebug(
+						"Failed to create external messaging buffer"
+							" for connection %1% (%2% bytes).",
+						m_instanceId,
+						size);
+					assert(!isSizeError);
+					if (isSizeError) {
+						throw TunnelEx::InsufficientMemoryException(
+							L"Insufficient memory for external messaging buffer");
+					}
+					isSizeError = true;
+				}
+			} // releasing read lock
+			
+			ExternalMessagesAllocatorWriteLock writeLock(
+				m_externalMessagesAllocatorMutex);
+			if (isSizeError) {
+				assert(m_externalMessagesAllocator);
+				const_cast<Implementation *>(this)
+					->CreateNewExternalMessagesAllocator(
+						2,
+						m_externalMessagesAllocator->GetDataBlockSize());
+			} else if (!m_externalMessagesAllocator) {
+				const_cast<Implementation *>(this)
+					->CreateNewExternalMessagesAllocator(
+						1,
+						std::max(MessagesAllocator::DefautDataBlockSize, size));
+			} else if (size > m_externalMessagesAllocator->GetDataBlockSize()) {
+				const_cast<Implementation *>(this)
+					->CreateNewExternalMessagesAllocator(1, size);
+			}
+			assert(m_externalMessagesAllocator);
+
+		} // for ( ; ; )
+
 	}
 
 private:
 
-	void CollectLatencyStat(const MessageBlock &message) {
+	void CreateNewExternalMessagesAllocator(size_t ratio, size_t dataBlockSize) {
+		const auto queueBufferSize
+			= (MessagesAllocator::DefautConnectionBufferSize * ratio)
+				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
+		boost::shared_ptr<MessagesAllocator> allocator(
+			new MessagesAllocator(
+				queueBufferSize,
+				queueBufferSize,
+				UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize)));
+		allocator.swap(m_externalMessagesAllocator);
+	}
+
+	void CollectLatencyStat(const UniqueMessageBlockHolder &message) {
 		assert(IsNotLockedByMyThread(m_mutex));
-		const UniqueMessageBlockHolder &messageHolder
-			= *boost::polymorphic_downcast<const UniqueMessageBlockHolder *>(
-				&message);
-		assert(m_sentMessageBlockQueueSize <= m_messageBlockQueueBufferSize);
 		m_latencyStat.Accumulate(
-			messageHolder,
-			(m_sentMessageBlockQueueSize * 100) / m_messageBlockQueueBufferSize);
+			message,
+			m_readStartAttemptsCount > 0
+				?	(m_readsMallocFailsCount * 100) / m_readStartAttemptsCount
+				:	0);
 	}
 
 	void ReportSendError(int errorNo) const {
-		const bool isClosedConnectionError
-			= errorNo == ERROR_NETNAME_DELETED // see TEX-553
-				|| errorNo == WSAECONNRESET;
-		if (	isClosedConnectionError
-				&& !Log::GetInstance().IsDebugRegistrationOn()) {
-			return;
-		}
-		const Error error(errorNo);
-		WFormat errorStr(L"Could not write data into stream: %1% (%2%)");
-		errorStr % error.GetStringW() % error.GetErrorNo();
-		if (isClosedConnectionError) {
-			Log::GetInstance().AppendDebug(
-				ConvertString<String>(errorStr.str().c_str()).GetCStr());
-		} else {
-			throw SystemException(errorStr.str().c_str());
+		switch (errorNo) {
+			case ERROR_NETNAME_DELETED: // see TEX-553
+			case WSAECONNABORTED:
+			case WSAECONNRESET:
+				Log::GetInstance().AppendDebugEx(
+					[this, errorNo]() -> Format {
+						const Error error(errorNo);
+						Format message(
+							"Write operation for connection %1% has been canceled: %2% (%3%).");
+						message
+							% this->m_instanceId
+							% error.GetStringA()
+							% error.GetErrorNo();
+						return message;
+					});
+				return;
+			default:
+				if (Log::GetInstance().IsCommonErrorsRegistrationOn()) {
+					const Error error(errorNo);
+					WFormat message(L"Failed to send data to connection %1%: %2% (%3%)");
+					message % m_instanceId % error.GetStringW() % error.GetErrorNo();
+					throw SystemException(message.str().c_str());
+				}
 		}
 	}
 
@@ -740,7 +844,6 @@ private:
 		messageBlock.SetReceivingTimePoint();
 		assert(messageBlock.IsTunnelMessage());
 
-		bool isSuccess = false;
 		if (!result.success() && ReportReadError(result)) {
 			Log::GetInstance().AppendDebugEx(
 				[this, &result]() -> Format {
@@ -767,21 +870,20 @@ private:
 			Lock lock(m_mutex, true);
 			CheckedDelete(lock);
 			return;
-		} else if (m_isReadingAllowed && !m_isClosed) {
+		}
+		
+		bool isSuccess = false;
+		try {
+			m_myInterface.ReadRemote(messageBlock);
+			messageBlock.Reset();
 			Lock lock(m_mutex, true);
-			try {
-				if (m_isReadingAllowed && !m_isClosed) {
-					m_myInterface.ReadRemote(messageBlock);
-					InitReadIfPossible(lock);
-					isSuccess = true;
-				}
-			} catch (const TunnelEx::LocalException &ex) {
-				Log::GetInstance().AppendError(
-					ConvertString<String>(ex.GetWhat()).GetCStr());
-			}
+			isSuccess = InitReading(true);
+		} catch (const TunnelEx::LocalException &ex) {
+			messageBlock.Reset();
+			Log::GetInstance().AppendError(
+				ConvertString<String>(ex.GetWhat()).GetCStr());
 		}
 
-		messageBlock.Reset();
 		if (!isSuccess) {
 			m_signal->OnConnectionClose(m_instanceId);
 		}
@@ -792,38 +894,34 @@ private:
 
 	template<typename Result>
 	bool ReportReadError(const Result &result) const {
-		
 		switch (result.error()) {
 			case ERROR_MORE_DATA: // see TEX-685
 				return false;
 			case ERROR_NETNAME_DELETED: // see TEX-553
 			case ERROR_BROKEN_PIPE: // see TEX-338
 			case ERROR_PIPE_NOT_CONNECTED:
-				Log::GetInstance().AppendDebug(
-					"Read operation has been canceled for connection %1%.",
-					m_instanceId);
-				return true;
 			case ERROR_OPERATION_ABORTED:
-				// don't tall about it anything - proactor just removed
-				// message blocks for canceled operations.
+				Log::GetInstance().AppendDebugEx(
+					[this, &result]() -> Format {
+						const Error error(result.error());
+						Format message(
+							"Read operation for connection %1% has been canceled: %2% (%3%).");
+						message
+							% this->m_instanceId
+							% error.GetStringA()
+							% error.GetErrorNo();
+						return message;
+					});
 				return true;
 			default:
-				break;
+				if (Log::GetInstance().IsCommonErrorsRegistrationOn()) {
+					const Error error(result.error());
+					Format message("Failed read from connection %1%: %2% (%3%).");
+					message % m_instanceId % error.GetStringA() % error.GetErrorNo();
+					Log::GetInstance().AppendError(message.str().c_str());
+				}
+				return true;
 		}
-
-		if (!Log::GetInstance().IsSystemErrorsRegistrationOn()) {
-			const Error error(result.error());
-			Format message(
-				"Connection %3% read operation completes with error: %1% (%2%).");
-			message
-				% error.GetStringA()
-				% error.GetErrorNo()
-				% m_instanceId;
-			Log::GetInstance().AppendSystemError(message.str().c_str());
-		}
-		
-		return true;
-	
 	}
 	
 	template<typename Result>
@@ -831,100 +929,63 @@ private:
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		messageBlock.SetSendingTimePoint();
 		m_signal->OnMessageBlockSent(messageBlock);
+		assert(!messageBlock.IsSet());
 		RemoveRef(true);
 	}
 
-	//! Inits read buffer if it possible and allowed
-	/**  Can be called only from proactor thread.
-	  */
-	bool InitReadIfPossible(const Lock &) {
+	bool InitReading(bool isForcedInit) {
 
-		// FIXME
-		// Can't explain this situation, try to do it at assert fail.
-		// Who can stop reading if it already started and working?
-		assert(m_isReadingInitiated);
+		assert(IsLockedByMyThread(m_mutex));
 
-		if (m_isClosed || !m_isReadingInitiated) {
+		if (isForcedInit) {
+			assert(m_readingState == RS_READING || m_readingState == RS_NOT_STARTED);
+			m_readingState = RS_NOT_READING;
+		} else if (m_readingState < RS_NOT_READING) {
 			return true;
-		} else if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize) {
-			if (m_isReadingActive) {
-				const char *const message
-					= "Message queue size is %1% packets (%2% allowed),"
-						" data read from connection %3% will be suspended.";
-				Log::GetInstance().AppendDebug(
-					message,
-					m_sentMessageBlockQueueSize,
-					m_messageBlockQueueBufferSize,
-					m_instanceId);
-#				ifdef DEV_VER
-				{
-					Format message(message);
-					message
-						% m_sentMessageBlockQueueSize
-						% m_messageBlockQueueBufferSize
-						% m_instanceId;
-					Log::GetInstance().AppendWarn(message.str());
-				}
-#				endif
-				verify(Interlocked::Exchange(m_isReadingActive, false));
+		}
+		assert(m_readingState >= RS_NOT_READING);
+
+		if (isForcedInit) {
+			Interlocked::Increment(m_readStartAttemptsCount);
+		}
+		UniqueMessageBlockHolder messageBlock(
+			UniqueMessageBlockHolder::Create(
+				m_tunnelMessagesAllocator->GetDataBlockSize()
+					- UniqueMessageBlockHolder::GetMessageMemorySize(0),
+				m_tunnelMessagesAllocator,
+				true));
+		if (!messageBlock.IsSet()) {
+			if (isForcedInit) {
+				Interlocked::Increment(m_readsMallocFailsCount);
 			}
 			return true;
-		} else if (!m_isReadingActive) {
-			if (m_sentMessageBlockQueueSize >= m_messageBlockQueueBufferSize / 2) {
-				return true;
-			}
-			const char *const message
-				= "Message queue size is %1% packets (%2% allowed),"
-					" data read from connection %3% will be resumed.";
-			Log::GetInstance().AppendDebug(
-				message,
-				m_sentMessageBlockQueueSize,
-				m_messageBlockQueueBufferSize,
-				m_instanceId);
-#			ifdef DEV_VER
-			{
-				Format message(message);
-				message
-					% m_sentMessageBlockQueueSize
-					% m_messageBlockQueueBufferSize
-					% m_instanceId;
-				Log::GetInstance().AppendInfo(message.str());
-			}
-#			endif
-			verify(!Interlocked::Exchange(m_isReadingActive, true));
 		}
+		messageBlock.SetReceivingStartTimePoint();
 
-		// read init
-		if (m_readStream.get()) { // ex UDP
-			UniqueMessageBlockHolder messageBlock(
-				UniqueMessageBlockHolder::Create(
-					m_dataBlockSize,
-					m_allocator,
-					true));
-			messageBlock.SetReceivingStartTimePoint();
-			if (m_readStreamFunc(messageBlock.Get(), m_dataBlockSize) == -1) {
-				const Error error(errno);
-				WFormat message(
-					L"Could not initiate read stream for connection %3%: %1% (%2%)");
-				message
-					% error.GetStringW()
-					% error.GetErrorNo()
-					% m_instanceId;
-				switch (error.GetErrorNo()) {
-					case ERROR_NETNAME_DELETED: // see TEX-553
-					case ERROR_BROKEN_PIPE:
-						Log::GetInstance().AppendDebug(message);
-						messageBlock.Reset();
-						return false;
-				}
-				throw ConnectionException(message.str().c_str());
+		ACE_Message_Block &aceMessageBlock = messageBlock.Get();
+		if (m_readStreamFunc(aceMessageBlock, aceMessageBlock.space()) == -1) {
+			const Error error(errno);
+			WFormat message(
+				L"Could not initiate read stream for connection %3%: %1% (%2%)");
+			message
+				% error.GetStringW()
+				% error.GetErrorNo()
+				% m_instanceId;
+			switch (error.GetErrorNo()) {
+				case ERROR_NETNAME_DELETED: // see TEX-553
+				case ERROR_BROKEN_PIPE:
+					Log::GetInstance().AppendDebug(message);
+					messageBlock.Reset();
+					return false;
 			}
-			// incrementing only here as "isClosed + locking" guaranties that 
-			// the m_refsCount is not zero and object will not destroyed from
-			// another thread (also see write-init incrimination)
-			Interlocked::Increment(m_refsCount);
-			messageBlock.Release();
+			throw ConnectionException(message.str().c_str());
 		}
+		m_readingState = RS_READING;
+		// incrementing only here as "isClosed + locking" guaranties that 
+		// the m_refsCount is not zero and object will not destroyed from
+		// another thread (also see write-init incrimination)
+		Interlocked::Increment(m_refsCount);
+		messageBlock.Release();
 
 		return true;
 	
@@ -932,16 +993,14 @@ private:
 
 	void UpdateIdleTimer(const pt::ptime &eventTime) throw() {
 		assert(!eventTime.is_not_a_date_time());
-		// It must be locked by "my" thread or in the setup process (locking not
-		// required at setup). Ex.: UDP incoming connection works so: starts read,
-		// sends initial data, stops read, completes setup.
-		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
+		assert(IsNotLockedByMyThread(m_mutex));
 		if (m_idleTimeoutTimer < 0) {
 			return;
 		}
-		assert(m_idleTimeoutInterval.ticks() > 0);
 		try {
-			m_idleTimeoutUpdateTime = eventTime;
+			Interlocked::Exchange(
+				m_idleTimeoutUpdateTime,
+				IdleTimeoutPolicy::GetEventOffset(m_startTime, eventTime));
 		} catch (...) {
 			Log::GetInstance().AppendError("Failed to update connection idle timer.");
 			assert(false);
@@ -957,27 +1016,36 @@ private:
 	}
 
 	void StartIdleTimer() {
+		
 		assert(m_idleTimeoutTimer == -1);
 		assert(m_isSetupCompleted);
 		assert(m_isSetupCompletedWithSuccess);
-		assert(m_idleTimeoutUpdateTime.is_not_a_date_time());
-		if (m_idleTimeoutInterval.ticks() == 0) {
+		assert(!m_idleTimeoutUpdateTime);
+		
+		if (m_idleTimeoutInterval == 0) {
 			return;
 		}
 		Log::GetInstance().AppendDebugEx(
 			[this]() -> Format {
 				Format message(
-					"Setting idle timeout %1% seconds for connection %2%...");
+					"Setting idle timeout %1% for connection %2%...");
 				message
-					% this->m_idleTimeoutInterval.total_seconds()
+					% this->m_idleTimeoutInterval
 					% this->m_instanceId;
 				return message;
 			});
-		m_idleTimeoutTimer = m_proactor->schedule_timer(
-			*this,
-			nullptr,
-			ACE_Time_Value(m_idleTimeoutInterval.total_seconds()));
-		assert(m_idleTimeoutTimer >= 0);
+		
+		assert(IsNotLockedOrLockedByMyThread(m_mutex));
+		{
+			Lock lock(m_mutex, false);
+			// no interlocking needed, work not started yet
+			m_idleTimeoutTimer = m_proactor->schedule_timer(
+				*this,
+				nullptr,
+				IdleTimeoutPolicy::IntervalToAceTime(m_idleTimeoutInterval));
+			assert(m_idleTimeoutTimer >= 0);
+		}
+
 	}
 
 private:
@@ -999,28 +1067,28 @@ private:
 	
 	Mutex m_mutex;
 
-	bool m_isReadingAllowed;
-	
-	bool m_isReadingInitiated;
-	volatile long m_isReadingActive;
+	ReadingState m_readingState;
 	bool m_isSetupCompleted;
 	bool m_isSetupCompletedWithSuccess;
 	
 	ACE_Proactor *m_proactor;
 
-	const size_t m_dataBlockSize;
-	const long m_messageBlockQueueBufferSize;
-	volatile long m_sentMessageBlockQueueSize;
-
 	volatile long m_isClosed;
 
-	boost::shared_ptr<MessagesAllocator> m_allocator;
+	boost::shared_ptr<MessagesAllocator> m_tunnelMessagesAllocator;
+	
+	mutable ExternalMessagesAllocatorMutex m_externalMessagesAllocatorMutex;
+	boost::shared_ptr<MessagesAllocator> m_externalMessagesAllocator;
 
-	const pt::time_duration m_idleTimeoutInterval;
-	long m_idleTimeoutTimer;
-	pt::ptime m_idleTimeoutUpdateTime;
+	//! @todo: create separated structure for these vars
+	const pt::ptime m_startTime;
+	const long m_idleTimeoutInterval;
+	volatile long m_idleTimeoutTimer;
+	volatile long m_idleTimeoutUpdateTime;
 
 	LatencyStat m_latencyStat;
+	volatile long m_readStartAttemptsCount;
+	volatile long m_readsMallocFailsCount;
 
 	TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
 
@@ -1068,7 +1136,7 @@ void Connection::SendToTunnel(MessageBlock &messageBlock) {
 }
 
 void Connection::SendToTunnelUnsafe(MessageBlock &messageBlock) {
-	m_pimpl->SendToTunnelUnsafe(messageBlock);
+	m_pimpl->SendToTunnel(messageBlock);
 }
 
 AutoPtr<MessageBlock> Connection::CreateMessageBlock(
@@ -1086,7 +1154,7 @@ SharedPtr<const EndpointAddress> Connection::GetRuleEndpointAddress() const {
 	return m_pimpl->GetRuleEndpointAddress();
 }
 
-void Connection::OnMessageBlockSent(const MessageBlock &messageBlock) {
+void Connection::OnMessageBlockSent(MessageBlock &messageBlock) {
 	m_pimpl->OnMessageBlockSent(messageBlock);
 }
 
@@ -1107,7 +1175,7 @@ void Connection::CancelSetup(const ::TunnelEx::WString &reason) {
 }
 
 void Connection::StartReadRemote() {
-	m_pimpl->StartRead();
+	m_pimpl->StartReading();
 }
 
 void Connection::StopReadRemote() {

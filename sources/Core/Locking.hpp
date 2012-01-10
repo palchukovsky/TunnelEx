@@ -56,15 +56,15 @@ namespace TunnelEx {
 
 	namespace Helpers {
 		
-		class TolerantSpinWait {
+		class SpinWait {
 		public:
-			TolerantSpinWait()
+			SpinWait()
 					: m_iterationsCount(0) {
 				//...//
 			}
 		private:
-			TolerantSpinWait(const TolerantSpinWait &);
-			const TolerantSpinWait & operator =(const TolerantSpinWait &);
+			SpinWait(const SpinWait &);
+			const SpinWait & operator =(const SpinWait &);
 		public:
 			void SpinOnce() {
 				if (!(++m_iterationsCount % 10)) {
@@ -77,61 +77,15 @@ namespace TunnelEx {
 			size_t m_iterationsCount;
 		};
 
-		class AggressiveSpinWait {
-		public:
-#			ifdef DEV_VER
-				AggressiveSpinWait()
-						: m_iterationsCount(0) {
-					//...//
-				}
-#			else
-				AggressiveSpinWait() {
-					//...//
-				}
-#			endif
-		private:
-			AggressiveSpinWait(const AggressiveSpinWait &);
-			const AggressiveSpinWait & operator =(const AggressiveSpinWait &);
-		public:
-			void SpinOnce() {
-#				ifdef DEV_VER
-					if (!(++m_iterationsCount % 100)) {
-						Report();
-					}
-#				endif
-			}
-		private:
-#			ifdef DEV_VER
-				void Report() const;
-#			endif
-		private:
-#			ifdef DEV_VER
-				size_t m_iterationsCount;
-#			endif
-		};
-
-		template<bool isAggressive>
-		struct FlagToSpinWait {
-			static_assert(isAggressive, "Failed to specialize spin type.");
-			typedef ::TunnelEx::Helpers::AggressiveSpinWait SpinWait;
-		};
-
-		template<>
-		struct FlagToSpinWait<false> {
-			typedef ::TunnelEx::Helpers::TolerantSpinWait SpinWait;
-		};
-
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 
-	template<bool isAggressiveWait>
 	class SpinMutex {
 
 	private:
 
-		typedef typename ::TunnelEx::Helpers::FlagToSpinWait<isAggressiveWait>::SpinWait
-			SpinWait;
+		typedef ::TunnelEx::Helpers::SpinWait SpinWait;
 
 	public:
 
@@ -171,13 +125,11 @@ namespace TunnelEx {
 
 	//////////////////////////////////////////////////////////////////////////
 
-	template<bool isAggressiveWait>
 	class ReadWriteSpinMutex {
 
 	private:
 
-		typedef typename ::TunnelEx::Helpers::FlagToSpinWait<isAggressiveWait>::SpinWait
-			SpinWait;
+		typedef ::TunnelEx::Helpers::SpinWait SpinWait;
 
 		enum Flags {
 			FLAG_WRITER			= 0x80000000,
@@ -208,13 +160,13 @@ namespace TunnelEx {
 			for (SpinWait wait; ; wait.SpinOnce()) {
                 const auto state = m_state;
                 if (	(state == 0 || state == FLAG_WRITER_WAIT)
-						&& :TunnelEx::Interlocked::CompareExchange(
+						&& ::TunnelEx::Interlocked::CompareExchange(
 								m_state, FLAG_WRITER, state)
 							== state) {
                     return;
 				}
                 if ((state & FLAG_WRITER_WAIT) == 0) {
-                    :TunnelEx::Interlocked::CompareExchange(
+                    ::TunnelEx::Interlocked::CompareExchange(
 						m_state,
 						state | FLAG_WRITER_WAIT,
 						state);
@@ -230,7 +182,7 @@ namespace TunnelEx {
 			for (SpinWait wait; ; wait.SpinOnce()) {
 				const auto state = m_state;
 				if (!(state & FLAG_WRITER)) {
-					if (:TunnelEx::Interlocked::CompareExchange(m_state, state + 1, state) == state) {
+					if (::TunnelEx::Interlocked::CompareExchange(m_state, state + 1, state) == state) {
 						return;
 					}
 				}
@@ -244,7 +196,7 @@ namespace TunnelEx {
 				if (!(state & FLAG_READER)) {
 					return;
 				}
-				if (:TunnelEx::Interlocked::CompareExchange(
+				if (::TunnelEx::Interlocked::CompareExchange(
 							m_state,
 							((state & FLAG_READER) - 1) | (state & FLAG_WRITER_WAIT),
 							state)

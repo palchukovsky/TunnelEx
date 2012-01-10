@@ -127,7 +127,7 @@ namespace TunnelEx {
 	public:
 
 		//! Callback for data block sent event.
-		void OnMessageBlockSent(const ::TunnelEx::MessageBlock &messageBlock);
+		void OnMessageBlockSent(::TunnelEx::MessageBlock &messageBlock);
 
 	public:
 

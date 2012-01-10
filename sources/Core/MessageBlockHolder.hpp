@@ -81,7 +81,7 @@ namespace TunnelEx {
 				virtual int tryacquire_write();
 				virtual int tryacquire_write_upgrade();
 			private:
-				SpinMutex<true> m_mutex;
+				SpinMutex m_mutex;
 			};
 
 		public:
@@ -175,7 +175,7 @@ namespace TunnelEx {
 
 		ACE_Message_Block & Duplicate();
 
-		static ACE_Message_Block & Create(
+		static ACE_Message_Block * Create(
 					size_t size,
 					boost::shared_ptr<MessagesAllocator>,
 					bool isTunnelMessage);

@@ -25,13 +25,7 @@ public:
 				const RuleEndpoint &ruleEndpoint, 
 				SharedPtr<const EndpointAddress> ruleEndpointAddress)
 			: m_ruleEndpoint(ruleEndpoint),
-			m_ruleEndpointAddress(ruleEndpointAddress),
-			//! @todo: hardcode, get MTU, see TEX-542 [2010/01/20 21:18]
-			m_dataBlockSize(MessagesAllocator::DefautDataBlockSize) {
-		//...//
-	}
-
-	~Implementation() {
+			m_ruleEndpointAddress(ruleEndpointAddress) {
 		//...//
 	}
 
@@ -41,46 +35,41 @@ public:
 				size_t size,
 				const char *data = nullptr)
 			const {
-		
-		if (!m_allocator) {
-			const_cast<Implementation *>(this)->CreateNewAllocator(1, m_dataBlockSize);
-			assert(m_allocator);
-		} else if (size > m_dataBlockSize) {
-			const_cast<Implementation *>(this)->CreateNewAllocator(1, size);
-			assert(m_allocator);
-		}
 
 		assert(size > 0);
+		
+		if (!m_allocator) {
+			const_cast<Implementation *>(this)->CreateNewAllocator(
+				1,
+				std::max(MessagesAllocator::DefautDataBlockSize, size));
+		} else if (size > m_allocator->GetDataBlockSize()) {
+			const_cast<Implementation *>(this)->CreateNewAllocator(1, size);
+		}
+		assert(m_allocator);
+
 		AutoPtr<UniqueMessageBlockHolder> result(new UniqueMessageBlockHolder);
 		for (bool isError = false; ; ) {
-			try {
-				result->Reset(
-					&UniqueMessageBlockHolder::Create(size, m_allocator, false));
-				break;
-			} catch (const TunnelEx::InsufficientMemoryException &ex) {
-				if (Log::GetInstance().IsDebugRegistrationOn()) {
-					Log::GetInstance().AppendDebug(
-						"Failed to create accepting buffer: %1%.",
-						ConvertString<String>(ex.GetWhat()).GetCStr());
+			result->Reset(
+				UniqueMessageBlockHolder::Create(size, m_allocator, false));
+			if (result->IsSet()) {
+				result->SetReceivingTimePoint();
+				if (!data || result->Get().copy(data, size) != -1) {
+					return result;
 				}
-				assert(!isError);
-				if (isError) {
-					throw;
-				}
-				const_cast<Implementation *>(this)
-					->CreateNewAllocator(2, m_dataBlockSize);
-				assert(m_allocator);
-				isError = true;
 			}
+			Log::GetInstance().AppendDebug(
+				"Failed to create accepting buffer with size %1% bytes.",
+				size);
+			assert(!isError);
+			if (isError) {
+				throw TunnelEx::InsufficientMemoryException(
+					L"Insufficient memory for accepting message block");
+			}
+			const_cast<Implementation *>(this)
+				->CreateNewAllocator(2,  m_allocator->GetDataBlockSize());
+			assert(m_allocator);
+			isError = true;
 		}
-		result->SetReceivingTimePoint();
-		
-		if (data && result->Get().copy(data, size) == -1) {
-			throw TunnelEx::InsufficientMemoryException(
-				L"Insufficient message block memory");
-		}
-
-		return result;
 
 	}
 
@@ -105,7 +94,6 @@ public:
 	const SharedPtr<const EndpointAddress> m_ruleEndpointAddress;
 	
 	boost::shared_ptr<MessagesAllocator> m_allocator;
-	size_t m_dataBlockSize;
 
 };
 

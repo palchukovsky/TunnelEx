@@ -83,7 +83,7 @@ namespace TunnelEx {
 		typedef DataTransferCommand(OnNewMessageBlockSlotSignature)(MessageBlock &);
 		typedef boost::function<OnNewMessageBlockSlotSignature> OnNewMessageBlockSlot;
 
-		typedef void(OnMessageBlockSentSlotSignature)(const MessageBlock &);
+		typedef void(OnMessageBlockSentSlotSignature)(MessageBlock &);
 		typedef boost::function<OnMessageBlockSentSlotSignature> OnMessageBlockSentSlot;
 
 	private:
@@ -132,7 +132,7 @@ namespace TunnelEx {
 			m_onConnectionClosedSignal(instanceId);
 		}
 
-		virtual void OnMessageBlockSent(const ::TunnelEx::MessageBlock &messageBlock) {
+		virtual void OnMessageBlockSent(::TunnelEx::MessageBlock &messageBlock) {
 			m_onMessageBlockSentSignal(messageBlock);
 		}
 

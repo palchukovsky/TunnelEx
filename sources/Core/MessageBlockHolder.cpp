@@ -360,12 +360,7 @@ size_t UniqueMessageBlockHolder::GetMessageMemorySize(size_t clientSize) {
 double UniqueMessageBlockHolder::GetUsage() const {
 	assert(IsSet());
 	assert(m_messageBlock->rd_ptr() - m_messageBlock->base() >= 0);
-	size_t result = m_messageBlock->rd_ptr() - m_messageBlock->base();
-	assert(result >= 0);
-	if (m_messageBlock->flags() & UMBHF_HAS_SATELLITE) {
-		assert(GetMessageMemorySize(0) <= result);
-		result -= GetMessageMemorySize(0);
-	}
+	const size_t result = m_messageBlock->rd_ptr() - m_messageBlock->base();
 	return (result * 100) / GetSatellite().GetAllocator().GetDataBlockSize();
 }
 
@@ -382,7 +377,7 @@ ACE_Message_Block & UniqueMessageBlockHolder::Duplicate() {
 
 namespace {
 
-	ACE_Message_Block & CreateMessageBlock(
+	ACE_Message_Block * CreateMessageBlock(
 				UniqueMallocPtr<UniqueMessageBlockHolder::Satellite> &satellite,
 				size_t size,
 				bool isTunnelMessage) {
@@ -437,13 +432,13 @@ namespace {
 			result->set_flags(UMBHF_TUNNEL_MESSAGE);
 		}
 	
-		return *result.Release();
+		return result.Release();
 
 	}
 
 }
 
-ACE_Message_Block & UniqueMessageBlockHolder::Create(
+ACE_Message_Block * UniqueMessageBlockHolder::Create(
 			size_t size,
 			boost::shared_ptr<MessagesAllocator> allocators,
 			bool isTunnelMessage) {
@@ -453,8 +448,7 @@ ACE_Message_Block & UniqueMessageBlockHolder::Create(
 			allocators->GetMessageBlockSatellitesAllocator().malloc(sizeof(Satellite))),
 		allocators->GetMessageBlockSatellitesAllocator());
 	if (!satellite) {
-		throw InsufficientMemoryException(
-			L"Failed to allocate memory for message block satellite");
+		return nullptr;
 	}
 	new(&*satellite)Satellite(allocators);
 	satellite.MarkAsCreated();

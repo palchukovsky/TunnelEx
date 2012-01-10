@@ -9,9 +9,6 @@
 
 #include "Prec.h"
 #include "Locking.hpp"
-#ifdef DEV_VER
-//#	include "Log.hpp"
-#endif
 
 using namespace TunnelEx;
 
@@ -41,19 +38,9 @@ void RecursiveMutex::Release() throw() {
 
 //////////////////////////////////////////////////////////////////////////
 
-void Helpers::TolerantSpinWait::Sleep() {
+void Helpers::SpinWait::Sleep() {
 	::Sleep(0);
 }
-
-//////////////////////////////////////////////////////////////////////////
-
-#ifdef DEV_VER
-	void Helpers::AggressiveSpinWait::Report() const {
-// 		std::ostringstream oss;
-// 		oss << "AggressiveSpinWait::m_iterationsCount = " << m_iterationsCount;
-// 		Log::GetInstance().AppendWarn(oss.str());
-	}
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 
