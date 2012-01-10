@@ -31,7 +31,7 @@ namespace TunnelEx {
 
 	private:
 
-		typedef SpinMutex<true> Mutex;
+		typedef SpinMutex Mutex;
 		typedef Lock<Mutex> Lock;
 
 		typedef LatencyStat<TimingValueType> TimingsStat;
@@ -108,7 +108,7 @@ namespace TunnelEx {
 
 		void Accumulate(
 					const MessageBlock &message,
-					PercentValueType queueBufferUsage) {
+					PercentValueType queueBufferUsage = .0) {
 
 			const Lock lock(m_mutex);
 
@@ -121,7 +121,6 @@ namespace TunnelEx {
 			if (m_periodStart.is_not_a_date_time()) {
 				m_periodStart = now;
 			} else {
-				assert(m_periodStart <= now);
 				isNewPeriod = (now - m_periodStart) > m_period;
 			}
 
@@ -130,7 +129,11 @@ namespace TunnelEx {
 			m_processing.Accumulate(messageHolder, isNewPeriod);
 			m_full.Accumulate(messageHolder, isNewPeriod);
 			m_blockBuffer.Accumulate(messageHolder.GetUsage(), isNewPeriod);
-			m_queueBuffer.Accumulate(queueBufferUsage, isNewPeriod);
+			if (queueBufferUsage) {
+				m_queueBuffer.Accumulate(queueBufferUsage, isNewPeriod);
+			} else {
+				m_queueBuffer.Accumulate(isNewPeriod);
+			}
 
 			if (isNewPeriod) {
 				DumpPeriod();
@@ -210,9 +213,12 @@ namespace TunnelEx {
 				<< "; send: " << long(send.GetMean())
 					<< '/' << send.GetMin() << '/' << send.GetMax()
 				<< "; block: " << long(block.GetMean())
-					<< '/' << block.GetMin() << '/' << block.GetMax() << '%'
-				<< "; queue: " << long(queue.GetMean())
-					<< '/' << queue.GetMin() << '/' << queue.GetMax() << '%';
+					<< '/' << block.GetMin() << '/' << block.GetMax() << '%';
+			if (queue.GetCount() > 0) {
+				oss
+					<< "; queue: " << long(queue.GetMean())
+						<< '/' << queue.GetMin() << '/' << queue.GetMax() << '%';
+			}
 			Log::GetInstance().AppendDebug(oss.str().c_str());
 		}
 
