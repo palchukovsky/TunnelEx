@@ -66,7 +66,7 @@ public:
 					L"Insufficient memory for accepting message block");
 			}
 			const_cast<Implementation *>(this)
-				->CreateNewAllocator(2,  m_allocator->GetDataBlockSize());
+				->CreateNewAllocator(2, m_allocator->GetDataBlockSize());
 			assert(m_allocator);
 			isError = true;
 		}
@@ -82,7 +82,7 @@ private:
 				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
 		boost::shared_ptr<MessagesAllocator> allocator(
 			new MessagesAllocator(
-				messageBlockQueueBufferSize,
+				messageBlockQueueBufferSize + 1, // +1 for proactor (duplicate method)
 				messageBlockQueueBufferSize,
 				UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize)));
 		allocator.swap(m_allocator);
