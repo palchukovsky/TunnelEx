@@ -615,8 +615,6 @@ public:
 	}
 
 	void StopRead() {
-		// Protected in Connection. Also see the comment about locking assert in
-		// the SendToTunnelUnsafe-method.
 		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		if (m_readingState > RS_NOT_ALLOWED) {
 			m_readingState = RS_NOT_STARTED;
@@ -1135,10 +1133,6 @@ void Connection::SendToTunnel(MessageBlock &messageBlock) {
 	m_pimpl->SendToTunnel(messageBlock);
 }
 
-void Connection::SendToTunnelUnsafe(MessageBlock &messageBlock) {
-	m_pimpl->SendToTunnel(messageBlock);
-}
-
 AutoPtr<MessageBlock> Connection::CreateMessageBlock(
 			size_t size,
 			const char *data /*= nullptr*/)
@@ -1159,7 +1153,7 @@ void Connection::OnMessageBlockSent(MessageBlock &messageBlock) {
 }
 
 void Connection::ReadRemote(MessageBlock &messageBlock) {
-	SendToTunnelUnsafe(messageBlock);
+	SendToTunnel(messageBlock);
 }
 
 void Connection::Setup() {

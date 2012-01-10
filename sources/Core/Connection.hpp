@@ -115,15 +115,6 @@ namespace TunnelEx {
 		  */
 		void SendToTunnel(::TunnelEx::MessageBlock &messageBlock);
 
-	protected:
-
-		//! Sends the message block to tunnel without connection object locking.
-		/** @param	messageBlock	the message block to send. Object 
-		  *                         can change message block content.
-		  * @return	command for further actions;
-		  */
-		void SendToTunnelUnsafe(::TunnelEx::MessageBlock &messageBlock);
-
 	public:
 
 		//! Callback for data block sent event.

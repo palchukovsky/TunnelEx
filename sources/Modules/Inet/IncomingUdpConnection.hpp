@@ -93,7 +93,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual void Setup() {
 			assert(m_incomingData);
 			StartReadRemote();
-			SendToTunnelUnsafe(*m_incomingData);
+			SendToTunnel(*m_incomingData);
 			m_incomingData.Reset();
 			StopReadRemote();
 			Base::Setup();
