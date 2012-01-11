@@ -42,7 +42,9 @@ public:
 			const_cast<Implementation *>(this)->CreateNewAllocator(
 				1,
 				std::max(MessagesAllocator::DefautDataBlockSize, size));
-		} else if (size > m_allocator->GetDataBlockSize()) {
+		} else if (
+				UniqueMessageBlockHolder::GetMessageMemorySize(size)
+					> m_allocator->GetDataBlockSize()) {
 			const_cast<Implementation *>(this)->CreateNewAllocator(1, size);
 		}
 		assert(m_allocator);
@@ -66,7 +68,10 @@ public:
 					L"Insufficient memory for accepting message block");
 			}
 			const_cast<Implementation *>(this)
-				->CreateNewAllocator(2, m_allocator->GetDataBlockSize());
+				->CreateNewAllocator(
+					2,
+					m_allocator->GetDataBlockSize()
+						- UniqueMessageBlockHolder::GetMessageMemorySize(0));
 			assert(m_allocator);
 			isError = true;
 		}

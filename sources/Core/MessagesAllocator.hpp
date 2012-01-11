@@ -10,9 +10,9 @@
 #ifndef INCLUDED_FILE__TUNNELEX__TunnelBuffer_hpp__1001090208
 #define INCLUDED_FILE__TUNNELEX__TunnelBuffer_hpp__1001090208
 
-#include "Locking.hpp"
 #include "MessagesAllocator.hpp"
 #include "MessageBlockHolder.hpp"
+#include "Locking.hpp"
 
 namespace TunnelEx {
 

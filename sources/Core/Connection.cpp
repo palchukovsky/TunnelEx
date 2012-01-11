@@ -737,7 +737,8 @@ public:
 					m_externalMessagesAllocatorMutex);
 				if (
 						m_externalMessagesAllocator
-						&& size <= m_externalMessagesAllocator->GetDataBlockSize()) {
+						&& UniqueMessageBlockHolder::GetMessageMemorySize(size)
+							<= m_externalMessagesAllocator->GetDataBlockSize()) {
 					result->Reset(
 						UniqueMessageBlockHolder::Create(
 							size,
@@ -770,13 +771,16 @@ public:
 				const_cast<Implementation *>(this)
 					->CreateNewExternalMessagesAllocator(
 						2,
-						m_externalMessagesAllocator->GetDataBlockSize());
+						m_externalMessagesAllocator->GetDataBlockSize()
+							- UniqueMessageBlockHolder::GetMessageMemorySize(0));
 			} else if (!m_externalMessagesAllocator) {
 				const_cast<Implementation *>(this)
 					->CreateNewExternalMessagesAllocator(
 						1,
 						std::max(MessagesAllocator::DefautDataBlockSize, size));
-			} else if (size > m_externalMessagesAllocator->GetDataBlockSize()) {
+			} else if (
+					UniqueMessageBlockHolder::GetMessageMemorySize(size)
+						> m_externalMessagesAllocator->GetDataBlockSize()) {
 				const_cast<Implementation *>(this)
 					->CreateNewExternalMessagesAllocator(1, size);
 			}
