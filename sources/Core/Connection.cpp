@@ -189,7 +189,7 @@ private:
 					const pt::ptime &startTime,
 					const pt::ptime &eventTime) {
 			assert(startTime <= eventTime);
-			return (startTime - eventTime).total_seconds();
+			return (eventTime - startTime).total_seconds();
 		}
 		static long GetIdleTime(const pt::ptime &startTime, long eventTime) {
 			const auto now = GetEventOffset(startTime, GetCurrentTime());
@@ -229,7 +229,7 @@ public:
 			m_idleTimeoutInterval(
 				IdleTimeoutPolicy::GetInterval(0, 0, idleTimeoutSeconds)),
 			m_idleTimeoutTimer(-1),
-			m_idleTimeoutUpdateTime(0),
+			m_idleTimeoutUpdateTime(-1),
 			//! @todo: hardcoded - latency stat period (secs)
 			m_latencyStat(m_instanceId, 60),
 			m_readStartAttemptsCount(0),
@@ -684,7 +684,7 @@ public:
 		}
 		
 		const auto idleTimeoutUpdateTime = m_idleTimeoutUpdateTime;
-		if (!idleTimeoutUpdateTime) {
+		if (!(idleTimeoutUpdateTime < 0)) {
 			const auto idleTime = IdleTimeoutPolicy::GetIdleTime(
 				m_startTime,
 				idleTimeoutUpdateTime);
@@ -710,6 +710,7 @@ public:
 				return;
 			}
 		}
+		assert(idleTimeoutUpdateTime >= -1);
 
 		const auto signal = m_signal;
 		Interlocked::Exchange(m_idleTimeoutTimer, -3);
@@ -1018,7 +1019,7 @@ private:
 		assert(m_idleTimeoutTimer == -1);
 		assert(m_isSetupCompleted);
 		assert(m_isSetupCompletedWithSuccess);
-		assert(!m_idleTimeoutUpdateTime);
+		assert(m_idleTimeoutUpdateTime == -1);
 		
 		if (m_idleTimeoutInterval == 0) {
 			return;
