@@ -794,7 +794,7 @@ private:
 				/ UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize);
 		boost::shared_ptr<MessagesAllocator> allocator(
 			new MessagesAllocator(
-				queueBufferSize,
+				queueBufferSize + 1,
 				queueBufferSize,
 				UniqueMessageBlockHolder::GetMessageMemorySize(dataBlockSize)));
 		allocator.swap(m_externalMessagesAllocator);
