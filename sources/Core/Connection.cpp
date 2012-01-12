@@ -932,7 +932,6 @@ private:
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		messageBlock.SetSendingTimePoint();
 		m_signal->OnMessageBlockSent(messageBlock);
-		assert(!messageBlock.IsSet());
 		RemoveRef(true);
 	}
 
