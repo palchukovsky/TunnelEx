@@ -604,6 +604,7 @@ public:
 		{
 			Lock lock(m_mutex, false);
 			assert(!m_isClosed); // sanity check, never should be true here
+			m_readingState = RS_NOT_READING;
 			if (InitMessageReading(true)) {
 				return;
 			}
@@ -939,8 +940,7 @@ private:
 
 		assert(IsLockedByMyThread(m_mutex));
 
-		if (isForcedInit) {
-			assert(m_readingState == RS_READING || m_readingState == RS_NOT_STARTED);
+		if (isForcedInit && m_readingState > RS_NOT_STARTED) {
 			m_readingState = RS_NOT_READING;
 		} else if (m_readingState < RS_NOT_READING) {
 			return true;
