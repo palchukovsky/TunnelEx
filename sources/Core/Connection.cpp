@@ -566,7 +566,7 @@ public:
 		messageHolder.Reset();
 		{
 			Lock lock(m_mutex, false);
-			if (InitReading(false)) {
+			if (InitMessageReading(false)) {
 				return;
 			}
 		}
@@ -604,7 +604,7 @@ public:
 		{
 			Lock lock(m_mutex, false);
 			assert(!m_isClosed); // sanity check, never should be true here
-			if (InitReading(true)) {
+			if (InitMessageReading(true)) {
 				return;
 			}
 		}
@@ -614,7 +614,7 @@ public:
 		m_signal->OnConnectionClose(m_instanceId);
 	}
 
-	void StopRead() {
+	void StopReading() {
 		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
 		if (m_readingState > RS_NOT_ALLOWED) {
 			m_readingState = RS_NOT_STARTED;
@@ -880,7 +880,7 @@ private:
 			m_myInterface.ReadRemote(messageBlock);
 			messageBlock.Reset();
 			Lock lock(m_mutex, true);
-			isSuccess = InitReading(true);
+			isSuccess = InitMessageReading(true);
 		} catch (const TunnelEx::LocalException &ex) {
 			messageBlock.Reset();
 			Log::GetInstance().AppendError(
@@ -935,7 +935,7 @@ private:
 		RemoveRef(true);
 	}
 
-	bool InitReading(bool isForcedInit) {
+	bool InitMessageReading(bool isForcedInit) {
 
 		assert(IsLockedByMyThread(m_mutex));
 
@@ -1172,12 +1172,12 @@ void Connection::CancelSetup(const ::TunnelEx::WString &reason) {
 	m_pimpl->OnSetupFail(reason);
 }
 
-void Connection::StartReadRemote() {
+void Connection::StartReadingRemote() {
 	m_pimpl->StartReading();
 }
 
-void Connection::StopReadRemote() {
-	m_pimpl->StopRead();
+void Connection::StopReadingRemote() {
+	m_pimpl->StopReading();
 }
 
 bool Connection::IsSetupCompleted() const {

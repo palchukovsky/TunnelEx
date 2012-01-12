@@ -106,7 +106,7 @@ void IncomingTcpSslClientConnection::Setup() {
 			throw;
 		}
 		GetDataStream().ResetEncryptorDecryptorAnswer();
-		StartReadRemote();
+		StartReadingRemote();
 	} else if (GetDataStream().IsConnected()) {
 		assert(
 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
@@ -140,7 +140,7 @@ void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 	try {
 		GetDataStream().Connect(messageBlock);
 	} catch (const TunnelEx::LocalException &ex) {
-		StopReadRemote();
+		StopReadingRemote();
 		WFormat message(L"Failed to create SSL/TLS connection for %2%: %1%");
 		message % ex.GetWhat() % GetInstanceId();
 		CancelSetup(message.str().c_str());
@@ -165,7 +165,7 @@ void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 		Log::GetInstance().AppendDebug(
 			"SSL/TLS connection for %1% created.",
 			GetInstanceId());
-		StopReadRemote();
+		StopReadingRemote();
 		Base::Setup();
 		Base::ReadRemote(messageBlock);
 	}

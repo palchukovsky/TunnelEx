@@ -111,7 +111,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					throw;
 				}
 				GetDataStream().ResetEncryptorDecryptorAnswer();
-				StartReadRemote();
+				StartReadingRemote();
 			} else if (GetDataStream().IsConnected()) {
 				assert(
 					SSL_get_peer_certificate(GetDataStream().ssl()) != 0
@@ -147,7 +147,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			try {
 				SslConnect(messageBlock);
 			} catch (const TunnelEx::LocalException &ex) {
-				StopReadRemote();
+				StopReadingRemote();
 				WFormat message(L"Failed to create SSL/TLS connection for %2%: %1%");
 				message % ex.GetWhat() % GetInstanceId();
 				CancelSetup(message.str().c_str());
@@ -172,7 +172,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				Log::GetInstance().AppendDebug(
 					"SSL/TLS connection for %1% created.",
 					GetInstanceId());
-				StopReadRemote();
+				StopReadingRemote();
 				Base::Setup();
 				Base::ReadRemote(messageBlock);
 			}

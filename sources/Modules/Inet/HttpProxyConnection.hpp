@@ -57,7 +57,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	protected:
 
 		virtual void Setup() {
-			StartReadRemote();
+			StartReadingRemote();
 			m_currentProxy = m_address.GetProxyList().begin();
 			assert(m_currentProxy != m_address.GetProxyList().end());
 			SetupCurrentProxy();
@@ -103,7 +103,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				m_isSetupComplited
 					= m_currentProxy == m_address.GetProxyList().end();
 				if (m_isSetupComplited) {
-					StopReadRemote();
+					StopReadingRemote();
 					Log::GetInstance().AppendDebug(
 						"Proxy servers setup completed for %1%.",
 						GetInstanceId());
@@ -113,7 +113,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				}
 			} catch (const ProxyWorkingException &ex) {
 				m_isSetupComplited = true;
-				StopReadRemote();
+				StopReadingRemote();
 				WFormat message(
 					L"Failed to open connection %2% through proxy server: %1%");
 				message % ex.GetWhat() % GetInstanceId();

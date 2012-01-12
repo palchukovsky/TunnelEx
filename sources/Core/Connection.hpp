@@ -82,7 +82,7 @@ namespace TunnelEx {
 		void StartSetup();
 
 		//! Starts read from connection.
-		void StartReadRemote();
+		void StartReadingRemote();
 
 	public:
 
@@ -192,7 +192,7 @@ namespace TunnelEx {
 
 		//! Stops read from connection.
 		/** Works only for calls from Connection::ReadRemote! */ 
-		void StopReadRemote();
+		void StopReadingRemote();
 
 		//! Reads data.
 		virtual void ReadRemote(::TunnelEx::MessageBlock &messageBlock);

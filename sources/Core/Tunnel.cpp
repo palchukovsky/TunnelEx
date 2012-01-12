@@ -636,16 +636,16 @@ void Tunnel::StartSetup() {
 
 void Tunnel::StartRead() {
 	if (&GetIncomingReadConnection() == &GetIncomingWriteConnection()) {
-		GetIncomingReadConnection().StartReadRemote();
+		GetIncomingReadConnection().StartReadingRemote();
 	} else {
-		GetIncomingReadConnection().StartReadRemote();
-		GetIncomingWriteConnection().StartReadRemote();
+		GetIncomingReadConnection().StartReadingRemote();
+		GetIncomingWriteConnection().StartReadingRemote();
 	}
 	if (&GetOutcomingReadConnection() == &GetOutcomingWriteConnection()) {
-		GetOutcomingReadConnection().StartReadRemote();
+		GetOutcomingReadConnection().StartReadingRemote();
 	} else {
-		GetOutcomingReadConnection().StartReadRemote();
-		GetOutcomingWriteConnection().StartReadRemote();
+		GetOutcomingReadConnection().StartReadingRemote();
+		GetOutcomingWriteConnection().StartReadingRemote();
 	}
 	Log::GetInstance().AppendDebug(
 		"Started reading data for tunnel %1%.",
