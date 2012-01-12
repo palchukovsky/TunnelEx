@@ -396,6 +396,7 @@ namespace TestUtil {
 				} else {
 					if (	error.value() != WSAECONNRESET
 							&& error.value() != WSA_OPERATION_ABORTED
+							&& error.value() != ERROR_CONNECTION_ABORTED
 							&& error.value() != boost::asio::error::eof) {
 						std::cerr
 							<< "TestUtil::InetConnection::HandleRead: "
