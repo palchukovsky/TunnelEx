@@ -250,6 +250,7 @@ private:
 
 	//! D-or is private, use ScheduleDeletion instead.
 	virtual ~Implementation() throw() {
+		assert(m_refsCount == 0);
 		if (!m_isSetupCompleted) {
 			m_ruleEndpointAddress->StatConnectionSetupCanceling();
 		}
@@ -723,6 +724,8 @@ public:
 
 	}
 
+public:
+
 	AutoPtr<MessageBlock> CreateMessageBlock(
 				size_t size,
 				const char *data = nullptr)
@@ -848,28 +851,18 @@ private:
 		messageBlock.SetReceivingTimePoint();
 		assert(messageBlock.IsTunnelMessage());
 
-		if (!result.success() && ReportReadError(result)) {
-			Log::GetInstance().AppendDebugEx(
-				[this, &result]() -> Format {
-					const Error error(result.error());
-					Format message(
-						"Closing connection %1% with error \"%2%\" (code: %3%)...");
-					message
-						% this->m_instanceId
-						% error.GetStringA()
-						% error.GetErrorNo();
-					return message;
-				});
+		if (!result.success()) {
 			messageBlock.Reset();
+			ReportReadError(result);
 			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
 			CheckedDelete(lock);
 			return;
 		} else if (result.bytes_transferred() == 0) {
+			messageBlock.Reset();
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
-			messageBlock.Reset();
 			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
 			CheckedDelete(lock);
@@ -897,10 +890,10 @@ private:
 	}
 
 	template<typename Result>
-	bool ReportReadError(const Result &result) const {
+	void ReportReadError(const Result &result) const {
 		switch (result.error()) {
 			case ERROR_MORE_DATA: // see TEX-685
-				return false;
+				break;
 			case ERROR_NETNAME_DELETED: // see TEX-553
 			case ERROR_BROKEN_PIPE: // see TEX-338
 			case ERROR_PIPE_NOT_CONNECTED:
@@ -916,15 +909,20 @@ private:
 							% error.GetErrorNo();
 						return message;
 					});
-				return true;
+				break;
 			default:
+				Log::GetInstance().AppendDebug(
+					"Connection %1% refs: %2%.",
+					m_instanceId,
+					m_refsCount);
 				if (Log::GetInstance().IsCommonErrorsRegistrationOn()) {
 					const Error error(result.error());
+
 					Format message("Failed read from connection %1%: %2% (%3%).");
 					message % m_instanceId % error.GetStringA() % error.GetErrorNo();
 					Log::GetInstance().AppendError(message.str().c_str());
 				}
-				return true;
+				break;
 		}
 	}
 	
