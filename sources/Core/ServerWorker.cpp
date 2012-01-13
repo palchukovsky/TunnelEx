@@ -832,6 +832,7 @@ public:
 			newConnectionsInQueue = m_tunnelOpeningState.newConnections.size();
 			tunnelsToSwitchInQueue = m_tunnelOpeningState.tunnels.size();
 			m_tunnelOpeningState.tunnels.push_back(tunnel);
+			tunnel.reset();
 			m_tunnelOpeningState.condition.signal();
 		}
 		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
@@ -1423,6 +1424,7 @@ private:
 			newConnectionsInQueue = m_tunnelOpeningState.newConnections.size();
 			tunnelsToSwitchInQueue = m_tunnelOpeningState.tunnels.size();
 			m_tunnelOpeningState.tunnels.push_back(tunnel);
+			tunnel.reset();
 			m_tunnelOpeningState.condition.signal();
 		}
 		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
