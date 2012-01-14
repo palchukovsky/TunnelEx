@@ -33,19 +33,18 @@ namespace {
 				const Tunnel &tunnel,
 				const EndpointAddress &remoteAddr,
 				const LocalException &error) {
-		if (!Log::GetInstance().IsDebugRegistrationOn()) {
-			return;
-		}
-		Format message(
-			"Opening new outcoming connection for tunnel %1% to the %2% "
-				"is failed with the error \"%3%\", will try next endpoint...");
-		message % tunnel.GetInstanceId();
-		String buffer;
-		TunnelEx::ConvertString(remoteAddr.GetResourceIdentifier(), buffer);
-		message % buffer.GetCStr();
-		TunnelEx::ConvertString(error.GetWhat(), buffer);
-		message % buffer.GetCStr();
-		Log::GetInstance().AppendDebug(message.str());
+		Log::GetInstance().AppendDebugEx(
+			[&tunnel, &remoteAddr, &error]() -> Format {
+				Format message(
+					"Failed to open new outcoming connection to %1% in tunnel %2%:"
+						" \"%3%\"."
+						" Will try next endpoint...");
+				message
+					% remoteAddr.GetResourceIdentifier()
+					% tunnel.GetInstanceId()
+					% TunnelEx::ConvertString<String>(error.GetWhat());
+				return message;
+			});
 	}
 
 }
@@ -157,7 +156,16 @@ public:
 		try {
 			return GetWhatImpl().c_str();
 		} catch (...) {
-			LogTracking("ConnectionOpeningExceptionImpl", "GetWhat", __FILE__, __LINE__);
+			Format message(
+				"Unknown system error occurred: %1%:%2%."
+					" Please restart the service"
+					" and contact product support to resolve this issue."
+					" %3% %4%");
+			message
+				% __FILE__ % __LINE__
+				% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+			Log::GetInstance().AppendFatalError(message.str());
+			assert(false);
 			return L"Unknown error";
 		}
 	}
@@ -168,13 +176,12 @@ public:
 private:
 	const std::wstring & GetWhatImpl() const {
 		if (m_what.empty()) {
-			WFormat what(
-				L"Opening new %4% connection for tunnel %1% to the %2%"
-				L" is failed with the error \"%3%\"");
-			what % m_tunnelInstanceId;
-			what % m_address->GetResourceIdentifier().GetCStr();
-			what % m_error->GetWhat();
-			what % m_connectionType;
+			WFormat what(L"Failed to open %1%connection to \"%2%\" for tunnel %3%: \"%4%\"");
+			what
+				% m_connectionType
+				% m_address->GetResourceIdentifier()
+				% m_tunnelInstanceId
+				% m_error->GetWhat();
 			m_what = what.str();
 		}
 		return m_what;

@@ -223,7 +223,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			const ACE_Time_Value timeout(ruleEndpoint.GetOpenTimeout());
 			if (0 != connector.connect(m_ioStream, address, &timeout, ACE_Addr::sap_any, 1)) {
 				const Error error(errno);
-				WFormat message(L"Failed to open connection: %1% (%2%)");
+				WFormat message(L"%1% (%2%)");
 				message % error.GetStringW() % error.GetErrorNo();
 				throw ConnectionOpeningException(message.str().c_str());
 			}

@@ -881,16 +881,11 @@ private:
 					});
 				break;
 			default:
-				Log::GetInstance().AppendDebug(
-					"Connection %1% refs: %2%.",
-					m_instanceId,
-					m_refsCount);
 				if (Log::GetInstance().IsCommonErrorsRegistrationOn()) {
 					const Error error(result.error());
-
 					Format message("Failed read from connection %1%: %2% (%3%).");
 					message % m_instanceId % error.GetStringA() % error.GetErrorNo();
-					Log::GetInstance().AppendError(message.str().c_str());
+					Log::GetInstance().AppendError(message.str());
 				}
 				break;
 		}
