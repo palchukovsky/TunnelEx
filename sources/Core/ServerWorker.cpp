@@ -1237,7 +1237,8 @@ private:
 				} catch (...) {
 					Format message(
 						"Unknown system error occurred: %1%:%2%."
-							" Please contact product support to resolve this issue."
+							" Please restart the service"
+							" and contact product support to resolve this issue."
 							" %3% %4%");
 					message
 						% __FILE__ % __LINE__
@@ -1296,7 +1297,8 @@ private:
 						} catch (...) {
 							Format message(
 								"Unknown system error occurred: %1%:%2%."
-									" Please contact product support to resolve this issue."
+									" Please restart the service"
+									" and contact product support to resolve this issue."
 									" %3% %4%");
 							message
 								% __FILE__ % __LINE__
@@ -1321,7 +1323,8 @@ private:
 			} catch (...) {
 				Format message(
 					"Unknown system error occurred: %1%:%2%."
-						" Please contact product support to resolve this issue."
+						" Please restart the service"
+						" and contact product support to resolve this issue."
 						" %3% %4%");
 				message
 					% __FILE__ % __LINE__
@@ -1379,7 +1382,8 @@ private:
 			} catch (...) {
 				Format message(
 					"Unknown system error occurred: %1%:%2%."
-						" Please contact product support to resolve this issue."
+						" Please restart the service"
+						" and contact product support to resolve this issue."
 						" %3% %4%");
 				message
 					% __FILE__ % __LINE__
@@ -1786,7 +1790,8 @@ private:
 			} catch (...) {
 				Format message(
 					"Unknown system error occurred: %1%:%2%."
-						" Please contact product support to resolve this issue."
+						" Please restart the service"
+						" and contact product support to resolve this issue."
 						" %3% %4%");
 				message
 					% __FILE__ % __LINE__
@@ -1815,7 +1820,8 @@ private:
 			} catch (...) {
 				Format message(
 					"Unknown system error occurred: %1%:%2%."
-						" Please contact product support to resolve this issue."
+						" Please restart the service"
+						" and contact product support to resolve this issue."
 						" %3% %4%");
 				message
 					% __FILE__ % __LINE__
@@ -1843,7 +1849,8 @@ private:
 			} catch (...) {
 				Format message(
 					"Unknown system error occurred: %1%:%2%."
-						" Please contact product support to resolve this issue."
+						" Please restart the service"
+						" and contact product support to resolve this issue."
 						" %3% %4%");
 				message
 					% __FILE__ % __LINE__
