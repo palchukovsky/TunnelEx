@@ -20,9 +20,6 @@
 #include "MessagesAllocator.hpp"
 #include "Error.hpp"
 #include "Locking.hpp"
-#ifdef TUNNELEX_OBJECTS_DELETION_CHECK
-#	include "Server.hpp"
-#endif
 
 using namespace TunnelEx;
 using namespace TunnelEx::Helpers::Asserts;
@@ -217,7 +214,7 @@ public:
 				TimeSeconds idleTimeoutSeconds = 0)
 			: m_myInterface(myInteface),
 			m_instanceId(m_myInterface.GetInstanceId()),
-			m_refsCount(1),
+			m_refsCount(0),
 			m_ruleEndpoint(ruleEndpoint),
 			m_ruleEndpointAddress(ruleEndpointAddress),
 			m_readingState(RS_NOT_ALLOWED),
@@ -234,21 +231,9 @@ public:
 			m_latencyStat(m_instanceId, 60),
 			m_readStartAttemptsCount(0),
 			m_readsMallocFailsCount(0) {
-		TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
-#		ifdef DEV_VER
-			Log::GetInstance().AppendDebug(
-				"New connection object %1% created."
-					" Active objects: %2%."
-					" Messages satellites: %3%.",
-				m_instanceId,
-				m_instancesNumber,
-				UniqueMessageBlockHolder::GetSatellitesInstancesNumber());
-#		endif
+		//...//
 	}
 	
-private:
-
-	//! D-or is private, use ScheduleDeletion instead.
 	virtual ~Implementation() throw() {
 		assert(m_refsCount == 0);
 		if (!m_isSetupCompleted) {
@@ -256,90 +241,65 @@ private:
 		}
 		m_latencyStat.Dump();
 #		ifdef DEV_VER
-			Log::GetInstance().AppendDebug(
-				"Connection object %1% deleted."
-					" Active objects: %2%."
-					" Messages satellites: %3%.",
-				m_instanceId,
-				m_instancesNumber,
-				UniqueMessageBlockHolder::GetSatellitesInstancesNumber());
 			DebugLockStat::Report();
 #		endif
-		TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);
-	}
-
-public:
-
-	void CheckedDelete() {
-		if (!m_proactor) {
-			assert(!m_signal);
-			delete this;
-		} else {
-			Lock lock(m_mutex, false);
-			CheckedDelete(lock);
-		}
 	}
 
 private:
 
-	//! Deletes or prepares object to delete.
-	/** @return true if object was deleted
-	  */
-	bool CheckedDelete(Lock &lock) {
+	void CheckedDelete(Lock &lock, bool removeRef = true) throw() {
 
-		assert(m_proactor);
-		assert(m_refsCount > 0);
+		assert(m_refsCount > 0 || !removeRef);
 
 		m_readingState = RS_NOT_ALLOWED;
 		Interlocked::Exchange(m_isClosed, true);
-		m_readStream.reset();
-		m_writeStream.reset();
-		m_tunnelMessagesAllocator.reset();
-		
 		if (m_idleTimeoutTimer >= 0) {
 			const auto timerId = Interlocked::Exchange(m_idleTimeoutTimer, -2);
 			assert(timerId >= 0);
 			if (m_proactor->cancel_timer(timerId, nullptr, false) != 1) {
-				return false;
+				return;
 			}
 		}
 
-		lock.release();
-		
-		if (Interlocked::Decrement(m_refsCount) > 0) {
-			return false;
+		if (removeRef) {
+			verify(Interlocked::Decrement(m_refsCount) >= 0);
 		}
+		if (m_refsCount > 0) {
+			return;
+		}
+		assert(m_refsCount == 0);
 
-		UncheckedDelete();
-		return true;
+		lock.release();
+
+		try {
+			m_signal->OnConnectionClosed(m_instanceId);
+		} catch (...) {
+			Format message(
+				"Unknown system error occurred for connection %5%: %1%:%2%."
+				" Please restart the service"
+				" and contact product support to resolve this issue."
+				" %3% %4%");
+			message
+				% __FILE__ % __LINE__
+				% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY
+				% m_instanceId;
+			Log::GetInstance().AppendFatalError(message.str());
+			assert(false);
+		}
 
 	}
 
 	//! Object can be deleted after calling.
-	void RemoveRef(const bool isProactorCall) {
+	void RemoveRef(const bool isProactorCall) throw() {
 		assert(isProactorCall);
 		if (Interlocked::Decrement(m_refsCount) > 0) {
 			return;
 		}
-		{
-			Lock lock(m_mutex, isProactorCall);
-			if (m_refsCount > 0) {
-				return;
-			}
+		Lock lock(m_mutex, isProactorCall);
+		if (m_refsCount > 0) {
+			return;
 		}
-		UncheckedDelete();
-	}
-
-	void UncheckedDelete() {
-		assert(m_refsCount == 0);
-		assert(!m_readStream);
-		assert(!m_writeStream);
-		assert(!m_tunnelMessagesAllocator);
-		assert(m_isClosed);
-		const auto instanceId = m_instanceId;
-		const auto signal = m_signal;
-		delete this;
-		signal->OnConnectionClosed(instanceId);		
+		CheckedDelete(lock, false);
 	}
 
 public:
@@ -503,8 +463,17 @@ public:
 				:	RS_NOT_STARTED;
 		signal.Swap(m_signal);
 		m_proactor = &proactor;
+		verify(++m_refsCount == 1);
 
 	}
+
+	void Close() throw() {
+		Lock lock(m_mutex, false);
+		assert(m_refsCount > 0);
+		CheckedDelete(lock);
+	}
+
+public:
 
 	DataTransferCommand SendToRemote(MessageBlock &messageBlock) {
 
@@ -657,19 +626,19 @@ public:
 public:
 
 	virtual void handle_read_file(const ACE_Asynch_Read_File::Result &result) {
-		DoHandleReadStream(result);
+		HandleReadStream(result);
 	}
 
 	virtual void handle_write_file(const ACE_Asynch_Write_File::Result &result) {
-		DoHandleWriteStream(result);
+		HandleWriteStream(result);
 	}
 
 	virtual void handle_read_stream(const ACE_Asynch_Read_Stream::Result &result) {
-		DoHandleReadStream(result);
+		HandleReadStream(result);
 	}
 
 	virtual void handle_write_stream(const ACE_Asynch_Write_Stream::Result &result) {
-		DoHandleWriteStream(result);
+		HandleWriteStream(result);
 	}
 
 	virtual void handle_time_out(const ACE_Time_Value &, const void * /*act*/ = 0) {
@@ -845,7 +814,7 @@ private:
 	}
 
 	template<typename Result>
-	void DoHandleReadStream(const Result &result) {
+	void HandleReadStream(const Result &result) {
 
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		messageBlock.SetReceivingTimePoint();
@@ -898,6 +867,7 @@ private:
 			case ERROR_BROKEN_PIPE: // see TEX-338
 			case ERROR_PIPE_NOT_CONNECTED:
 			case ERROR_OPERATION_ABORTED:
+			case ERROR_CONNECTION_ABORTED:
 				Log::GetInstance().AppendDebugEx(
 					[this, &result]() -> Format {
 						const Error error(result.error());
@@ -927,7 +897,7 @@ private:
 	}
 	
 	template<typename Result>
-	void DoHandleWriteStream(const Result &result) {
+	void HandleWriteStream(const Result &result) {
 		UniqueMessageBlockHolder messageBlock(result.message_block());
 		messageBlock.SetSendingTimePoint();
 		m_signal->OnMessageBlockSent(messageBlock);
@@ -1090,11 +1060,7 @@ private:
 	volatile long m_readStartAttemptsCount;
 	volatile long m_readsMallocFailsCount;
 
-	TUNNELEX_OBJECTS_DELETION_CHECK_DECLARATION(m_instancesNumber);
-
 };
-
-TUNNELEX_OBJECTS_DELETION_CHECK_DEFINITION(Connection::Implementation, m_instancesNumber);
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -1112,11 +1078,16 @@ Connection::Connection(
 }
 
 Connection::~Connection() {
-	m_pimpl->CheckedDelete();
+	delete m_pimpl;
 }
 
 void Connection::Open(SharedPtr<ConnectionSignal> signal, Mode mode) {
 	m_pimpl->Open(signal, mode);
+}
+
+void Connection::Close() throw() {
+	CloseIoHandle();
+	m_pimpl->Close();
 }
 
 DataTransferCommand Connection::WriteDirectly(MessageBlock &messageBlock) {

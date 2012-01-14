@@ -136,16 +136,16 @@ namespace TunnelEx {
 		void ReportOpened() const;
 		void ReportClosed() const;
 
-		Connection & GetIncomingReadConnection() {
+		Connection & GetIncomingReadConnection() throw() {
 			return *m_source.read;
 		}
-		Connection & GetIncomingWriteConnection() {
+		Connection & GetIncomingWriteConnection() throw() {
 			return *m_source.write;
 		}
-		Connection & GetOutcomingReadConnection() {
+		Connection & GetOutcomingReadConnection() throw() {
 			return *m_destination.read;
 		}
-		Connection & GetOutcomingWriteConnection() {
+		Connection & GetOutcomingWriteConnection() throw() {
 			return *m_destination.write;
 		}
 

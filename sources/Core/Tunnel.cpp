@@ -206,7 +206,6 @@ Tunnel::Tunnel(
 		m_allConnectionsClosedCondition(m_allConnectionsClosedMutex),
 		m_isDead(false) {
 	m_destination = CreateDestinationConnections(m_destinationIndex);
-	Log::GetInstance().AppendDebug("Outcoming connection created for %1%.", GetInstanceId());
 	Init();
 }
 
@@ -294,8 +293,6 @@ void Tunnel::Init() {
 			if (!GetIncomingReadConnection().IsSetupCompleted()) {
 				connectionsToSetup.push_back(&GetIncomingReadConnection());
 			}
-			Log::GetInstance().AppendDebug(
-				"Incoming connection read/write stream opened.");
 		} else {
 			GetIncomingReadConnection().Open(
 				sourceDataTransferSignal,
@@ -303,16 +300,12 @@ void Tunnel::Init() {
 			if (!GetIncomingReadConnection().IsSetupCompleted()) {
 				connectionsToSetup.push_back(&GetIncomingReadConnection());
 			}
-			Log::GetInstance().AppendDebug(
-				"Incoming connection read stream opened.");
 			GetIncomingWriteConnection().Open(
 				sourceDataTransferSignal,
 				Connection::MODE_WRITE);
 			if (!GetIncomingWriteConnection().IsSetupCompleted()) {
 				connectionsToSetup.push_back(&GetIncomingWriteConnection());
 			}
-			Log::GetInstance().AppendDebug(
-				"Incoming connection write stream opened.");
 		}
 		if (&GetOutcomingReadConnection() == &GetOutcomingWriteConnection()) {
 			GetOutcomingReadConnection().Open(
@@ -321,8 +314,6 @@ void Tunnel::Init() {
 			if (!GetOutcomingReadConnection().IsSetupCompleted()) {
 				connectionsToSetup.push_back(&GetOutcomingReadConnection());
 			}
-			Log::GetInstance().AppendDebug(
-				"Outcoming connection read/write stream opened.");
 		} else {
 			GetOutcomingReadConnection().Open(
 				destinationDataTransferSignal,
@@ -330,16 +321,12 @@ void Tunnel::Init() {
 			if (!GetOutcomingReadConnection().IsSetupCompleted()) {
 				connectionsToSetup.push_back(&GetOutcomingReadConnection());
 			}
-			Log::GetInstance().AppendDebug(
-				"Outcoming connection read stream opened.");
 			GetOutcomingWriteConnection().Open(
 				destinationDataTransferSignal,
 				Connection::MODE_WRITE);
 			if (!GetOutcomingWriteConnection().IsSetupCompleted()) {
 				connectionsToSetup.push_back(&GetOutcomingWriteConnection());
 			}
-			Log::GetInstance().AppendDebug(
-				"Outcoming connection write stream opened.");
 		}
 
 	} catch (...) {
@@ -370,8 +357,16 @@ Tunnel::~Tunnel() throw() {
 	if (!m_isDead) {
 		MarkAsDead();
 	}
-	ReadWriteConnections().Swap(m_source);
-	ReadWriteConnections().Swap(m_destination);
+	{
+		GetIncomingReadConnection().Close();
+		if (&GetIncomingReadConnection() != &GetIncomingWriteConnection()) {
+			GetIncomingWriteConnection().Close();
+		}
+		GetOutcomingReadConnection().Close();
+		if (&GetOutcomingReadConnection() != &GetOutcomingWriteConnection()) {
+			GetOutcomingWriteConnection().Close();
+		}
+	}
 	{
 		AllConnectionsClosedLock lock(m_allConnectionsClosedMutex);
 		assert(m_closedConnections <= m_connectionsToClose);
@@ -401,21 +396,20 @@ Tunnel::~Tunnel() throw() {
 
 void Tunnel::DisconnectDataTransferSignals() throw() {
 	try {
-		//! @todo: WARNING! this is is not exception-safe code and it should be reimplemented!
 		m_sourceDataTransferSignal->DisconnectDataTransfer();
 		m_destinationDataTransferSignal->DisconnectDataTransfer();
 	} catch (...) {
-#		ifdef DEV_VER
-		{
-			Format message("Unexpected exception in tunnel signal disconnecting.");
-			message % GetInstanceId();
-			Log::GetInstance().AppendWarn(message.str());
-		}
-#		else
-			Log::GetInstance().AppendDebug(
-				"Unexpected exception in tunnel destructor.",
-				GetInstanceId());
-#		endif
+		Format message(
+			"Unknown system error occurred for tunnel %5%:"
+				" %1%:%2%."
+				" Please restart the service"
+				" and contact product support to resolve this issue."
+				" %3% %4%");
+		message
+			% __FILE__ % __LINE__
+			% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY
+			% GetInstanceId();
+		Log::GetInstance().AppendFatalError(message.str());
 		assert(false);
 	}
 }

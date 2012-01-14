@@ -70,8 +70,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return IoHandleInfo(GetIoStream().get_handle(), IoHandleInfo::TYPE_SOCKET);
 		}
 
-		virtual ACE_SOCK & GetIoStream() = 0;
-		virtual const ACE_SOCK & GetIoStream() const = 0;
+		virtual void CloseIoHandle() throw() {
+			GetIoStream().close();
+		}
+
+		virtual ACE_SOCK & GetIoStream() throw() = 0;
+		virtual const ACE_SOCK & GetIoStream() const throw() = 0;
 
 
 	};

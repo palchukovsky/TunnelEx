@@ -50,8 +50,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
-		virtual ACE_SOCK & GetIoStream();
-		virtual const ACE_SOCK & GetIoStream() const;
+		virtual ACE_SOCK & GetIoStream() throw();
+		virtual const ACE_SOCK & GetIoStream() const throw();
 
 	private:
 

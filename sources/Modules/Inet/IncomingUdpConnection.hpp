@@ -81,7 +81,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	public:
 
-		void NotifyAcceptorClose(const Acceptor &acceptor) {
+		void NotifyAcceptorClose(const Acceptor &acceptor) throw() {
 			ACE_UNUSED_ARG(acceptor);
 			AcceptorLock lock(m_acceptorMutex);
 			assert(&acceptor == m_acceptor);
@@ -101,11 +101,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return IoHandleInfo(INVALID_HANDLE_VALUE, IoHandleInfo::TYPE_SOCKET);
 		}
 
-		virtual ACE_SOCK & GetIoStream() {
+		virtual ACE_SOCK & GetIoStream() throw() {
 			return *m_socket;
 		}
 
-		virtual const ACE_SOCK & GetIoStream() const {
+		virtual const ACE_SOCK & GetIoStream() const throw() {
 			return const_cast<IncomingUdpConnection *>(this)->GetIoStream();
 		}
 

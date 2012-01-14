@@ -31,6 +31,15 @@ IncomingTcpSslClientConnection::~IncomingTcpSslClientConnection() throw() {
 		assert(result == 0);
 		ACE_UNUSED_ARG(result);
 	} catch (...) {
+		Format message(
+			"Unknown system error occurred: %1%:%2%."
+				" Please restart the service"
+				" and contact product support to resolve this issue."
+				" %3% %4%");
+		message
+			% __FILE__ % __LINE__
+			% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+		Log::GetInstance().AppendFatalError(message.str());
 		assert(false);
 	}
 }
@@ -39,11 +48,11 @@ bool IncomingTcpSslClientConnection::IsOneWay() const {
 	return false;
 }
 
-ACE_SOCK & IncomingTcpSslClientConnection::GetIoStream() {
+ACE_SOCK & IncomingTcpSslClientConnection::GetIoStream() throw() {
 	return m_rawStream;
 }
 
-const ACE_SOCK & IncomingTcpSslClientConnection::GetIoStream() const {
+const ACE_SOCK & IncomingTcpSslClientConnection::GetIoStream() const throw() {
 	return const_cast<IncomingTcpSslClientConnection *>(this)->GetIoStream();
 }
 

@@ -73,6 +73,8 @@ namespace TunnelEx {
 				::TunnelEx::SharedPtr<::TunnelEx::ConnectionSignal> signal,
 				Mode mode);
 
+		void Close() throw();
+
 	public:
 
 		//! Starts connection setup.
@@ -175,6 +177,8 @@ namespace TunnelEx {
 
 		//! Returns IO handle or zero if connection doesn't have own data stream.
 		virtual ::TunnelEx::IoHandleInfo GetIoHandle() = 0;
+
+		virtual void CloseIoHandle() throw() = 0;
 
 		//! Internal setup implementation.
 		/** Must call CompleteSetup after connection setup will be completed.

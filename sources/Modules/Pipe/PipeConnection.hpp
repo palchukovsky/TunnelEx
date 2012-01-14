@@ -55,6 +55,10 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 			return IoHandleInfo(m_stream->get_handle(), IoHandleInfo::TYPE_OTHER);
 		}
 
+		virtual void CloseIoHandle() throw() {
+			m_stream->close();
+		}
+
 	private:
 
 		 std::auto_ptr<ACE_SPIPE_Stream> m_stream;

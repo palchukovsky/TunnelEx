@@ -144,6 +144,10 @@ namespace TunnelEx { namespace Mods { namespace Serial {
 			return IoHandleInfo(m_io.get_handle(), IoHandleInfo::TYPE_OTHER);
 		}
 
+		virtual void CloseIoHandle() throw() {
+			m_io.close();
+		}
+
 	private:
 
 		ACE_DEV_Connector m_connector;
