@@ -398,7 +398,16 @@ int SslSockStream::BioWrite(const char *buf, size_t len, int &errVal) {
 	} catch (const std::exception &ex) {
 		Log::GetInstance().AppendSystemError(ex.what());
 	} catch (...) {
-		Log::GetInstance().AppendError("Unknown error at SslSockStream::BioWrite.");
+		Format message(
+			"Unknown system error occurred: %1%:%2%."
+				" Please restart the service"
+				" and contact product support to resolve this issue."
+				" %3% %4%");
+		message
+			% __FILE__ % __LINE__
+			% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+		Log::GetInstance().AppendFatalError(message.str());
+		assert(false);
 	}
 	errVal = EINVAL;
 	return -1;

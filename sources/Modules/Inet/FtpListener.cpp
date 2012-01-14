@@ -167,7 +167,16 @@ void FtpListener::ReplaceCmd(
 		try {
 			m_server.DeleteRule(dataConnectionRule.GetUuid());
 		} catch (...) {
-			//...//
+			Format message(
+				"Unknown system error occurred: %1%:%2%."
+					" Please restart the service"
+					" and contact product support to resolve this issue."
+					" %3% %4%");
+			message
+				% __FILE__ % __LINE__
+				% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+			Log::GetInstance().AppendFatalError(message.str());
+			assert(false);
 		}
 		throw;
 	}

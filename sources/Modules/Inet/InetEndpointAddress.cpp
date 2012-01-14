@@ -1107,8 +1107,15 @@ void TcpEndpointAddress::ClearResourceIdentifierCache() throw() {
 		m_pimpl->m_sslServerContext.reset();
 		m_pimpl->m_sslClientContext.reset();
 	} catch (...) {
-		Log::GetInstance().AppendFatalError(
-			"Exception at TcpEndpointAddress::ClearResourceIdentifierCache");
+		Format message(
+			"Unknown system error occurred: %1%:%2%."
+				" Please restart the service"
+				" and contact product support to resolve this issue."
+				" %3% %4%");
+		message
+			% __FILE__ % __LINE__
+			% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+		Log::GetInstance().AppendFatalError(message.str());
 		assert(false);
 	}
 }
