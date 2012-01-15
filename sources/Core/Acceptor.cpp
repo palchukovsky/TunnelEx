@@ -59,9 +59,17 @@ public:
 					return result;
 				}
 			}
-			Log::GetInstance().AppendDebug(
-				"Failed to create accepting buffer with size %1% bytes.",
-				size);
+			Log::GetInstance().AppendDebugEx(
+				[this, size]() -> Format {
+					Format message(
+						"Accepting buffer should be reallocated"
+							" with new block size: %1% -> %2%.");
+					message
+						% (this->m_allocator->GetDataBlockSize()
+							- UniqueMessageBlockHolder::GetMessageMemorySize(0))
+						% size;
+					return message;
+				});
 			assert(!isError);
 			if (isError) {
 				throw TunnelEx::InsufficientMemoryException(

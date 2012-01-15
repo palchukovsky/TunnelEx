@@ -230,7 +230,8 @@ public:
 			//! @todo: hardcoded - latency stat period (secs)
 			m_latencyStat(m_instanceId, 60),
 			m_readStartAttemptsCount(0),
-			m_readsMallocFailsCount(0) {
+			m_readsMallocFailsCount(0),
+			m_closeCode(0) {
 		//...//
 	}
 	
@@ -566,9 +567,6 @@ public:
 	void StartReading() {
 		assert(m_readingState <= RS_NOT_STARTED);
 		if (m_readingState == RS_NOT_ALLOWED) {
-			Log::GetInstance().AppendDebug(
-				"Reading not allowed for connection %1%.",
-				m_instanceId);
 			return;
 		}
 		{
@@ -623,6 +621,10 @@ public:
 		return m_isSetupCompleted && !m_isSetupCompletedWithSuccess;
 	}
 
+	long GetCloseCode() const throw() {
+		return m_closeCode;
+	}
+
 public:
 
 	virtual void handle_read_file(const ACE_Asynch_Read_File::Result &result) {
@@ -646,10 +648,10 @@ public:
 		Lock lock(m_mutex, true);
 
 		if (m_idleTimeoutTimer < 0) {
-			assert(m_idleTimeoutTimer == -2);
 			Log::GetInstance().AppendDebug(
 				"Canceling idle timeout for connection %1%...",
 				m_instanceId);
+			assert(m_idleTimeoutTimer == -2);
 			CheckedDelete(lock);
 			return;
 		}
@@ -663,15 +665,6 @@ public:
 				const auto sleepTime = IdleTimeoutPolicy::CalcSleepTime(
 					m_idleTimeoutInterval,
 					idleTime);
-				Log::GetInstance().AppendDebugEx(
-					[this, sleepTime]() -> Format {
-						Format message(
-							"Resetting idle timeout to %1% for connection %2%...");
-						message
-							% sleepTime
-							% this->m_instanceId;
-						return message;
-					});
 				const auto idleTimeoutTimer = m_proactor->schedule_timer(
 					*this,
 					nullptr,
@@ -723,11 +716,19 @@ public:
 							return result;
 						}
 					}
-					Log::GetInstance().AppendDebug(
-						"Failed to create external messaging buffer"
-							" for connection %1% (%2% bytes).",
-						m_instanceId,
-						size);
+					Log::GetInstance().AppendDebugEx(
+						[this, size]() -> Format {
+							Format message(
+								"External messaging buffer for connection %1%"
+									" should be reallocated with new block size:"
+									" %2% -> %3%.");
+							message
+								% this->m_instanceId
+								% (m_externalMessagesAllocator->GetDataBlockSize()
+									- UniqueMessageBlockHolder::GetMessageMemorySize(0))
+								% size;
+							return message;
+						});
 					assert(!isSizeError);
 					if (isSizeError) {
 						throw TunnelEx::InsufficientMemoryException(
@@ -822,6 +823,8 @@ private:
 
 		if (!result.success()) {
 			messageBlock.Reset();
+			assert(m_closeCode == 0);
+			m_closeCode = result.error();
 			ReportReadError(result);
 			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
@@ -829,6 +832,8 @@ private:
 			return;
 		} else if (result.bytes_transferred() == 0) {
 			messageBlock.Reset();
+			assert(m_closeCode == 0);
+			m_closeCode = result.error();
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
@@ -1055,6 +1060,8 @@ private:
 	volatile long m_readStartAttemptsCount;
 	volatile long m_readsMallocFailsCount;
 
+	long m_closeCode;
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -1154,4 +1161,8 @@ bool Connection::IsSetupFailed() const {
 
 bool Connection::IsOneWay() const {
 	return false;
+}
+
+long Connection::GetCloseCode() const throw() {
+	return m_pimpl->GetCloseCode();
 }

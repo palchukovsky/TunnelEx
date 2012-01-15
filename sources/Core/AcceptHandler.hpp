@@ -169,6 +169,15 @@ namespace TunnelEx {
 					m_dtorBarrier->wait();
 				}
 			} catch (...)  {
+				Format message(
+					"Unknown system error occurred: %1%:%2%."
+						" Please restart the service"
+						" and contact product support to resolve this issue."
+						" %3% %4%");
+				message
+					% __FILE__ % __LINE__
+					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+				Log::GetInstance().AppendFatalError(message.str());
 				assert(false);
 			}
 			TUNNELEX_OBJECTS_DELETION_CHECK_DTOR(m_instancesNumber);

@@ -124,6 +124,8 @@ namespace TunnelEx {
 
 	public:
 
+		long GetCloseCode() const throw();
+
 		bool IsSetupCompleted() const;
 
 		bool IsSetupFailed() const;

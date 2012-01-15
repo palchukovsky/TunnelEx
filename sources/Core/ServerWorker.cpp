@@ -114,6 +114,15 @@ public:
 		try {
 			return GetWhatImpl().c_str();
 		} catch (...) {
+			Format message(
+				"Unknown system error occurred: %1%:%2%."
+					" Please restart the service"
+					" and contact product support to resolve this issue."
+					" %3% %4%");
+			message
+				% __FILE__ % __LINE__
+				% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
+			Log::GetInstance().AppendFatalError(message.str());
 			assert(false);
 			return L"Unknown error";
 		}
@@ -712,18 +721,27 @@ public:
 
 	void OpenTunnel(boost::shared_ptr<RuleInfo> ruleInfo, Acceptor &acceptor) {
 		if (!acceptor.TryToAttach()) {
-			Log::GetInstance().AppendDebug(
-				"Incoming connection detected, initializing tunnel...");
+			Log::GetInstance().AppendDebugEx(
+				[this]() -> Format {
+					Format message(
+						"Incoming connection detected, initializing new tunnel."
+							"Number of currently open tunnels: %1%.");
+					message % this->GetTunnelsNumber();
+					return message;
+				});
 			AutoPtr<Connection> inConnection = acceptor.Accept();
 			if (!inConnection->IsOneWay()) {
 				const unsigned long limit
 					= ruleInfo->rule->GetAcceptedConnectionsLimit();
 				if (limit > 0 && ++ruleInfo->acceptedConnectionNumb >= limit) {
-					if (Log::GetInstance().IsDebugRegistrationOn()) {
-						Log::GetInstance().AppendDebug(
-							"Rule %1% will be deleted as max connection number has been exceed for it.",
-							ConvertString<String>(ruleInfo->rule->GetUuid()).GetCStr());
-					}
+					Log::GetInstance().AppendDebugEx(
+						[&ruleInfo]() -> Format {
+							Format message(
+								"Rule %1% will be deleted as max connection number"
+									" has been exceed for it.");
+							message % ruleInfo->rule->GetUuid();
+							return message;
+						});
 					DeleteRule(ruleInfo->rule->GetUuid());
 				}
 				OpenTunnel(ruleInfo, inConnection);
@@ -926,15 +944,10 @@ private:
 			if (acceptorAddress && !acceptorAddress->IsHasMultiClientsType()) {
 				Format message(
 					"Failed to open endpoint for tunnel entrance %1%: endpoint with such type could not be accessible.");
-				message
-					% ConvertString<String>(acceptorAddress->GetResourceIdentifier())
-					.GetCStr();
+				message % acceptorAddress->GetResourceIdentifier();
 				Log::GetInstance().AppendError(message.str());
 				return;
 			}
-			Log::GetInstance().AppendDebug(
-				"Number of currently open tunnels: %1%.",
-				tunnels.size());
 			if (acceptorAddress) {
 				try {
 					const boost::shared_ptr<AcceptHandler> handler(
@@ -954,8 +967,8 @@ private:
 					Format message(
 						"Failed to open endpoint %1% for incoming connections (error: \"%2%\").");
 					message
-						% ConvertString<String>(acceptorAddress->GetResourceIdentifier()).GetCStr()
-						% ConvertString<String>(ex.GetWhat()).GetCStr();
+						% acceptorAddress->GetResourceIdentifier()
+						% ConvertString<String>(ex.GetWhat());
 					Log::GetInstance().AppendError(message.str());
 				}
 			} else if (!m_tunnelLicense.IsFeatureAvailable(tunnels.size() + 1)) {
@@ -966,7 +979,7 @@ private:
 						" will enable this feature at http://" TUNNELEX_DOMAIN "/order"
 						" or get free trial at http://" TUNNELEX_DOMAIN "/order/trial.");
 				message % tunnels.size();
-				Log::GetInstance().AppendWarn(message.str().c_str());
+				Log::GetInstance().AppendWarn(message.str());
 				throw LocalException(
 					L"Failed to open new connection, License Upgrade required");
 			} else {
@@ -1581,9 +1594,6 @@ private:
 	}
 
 	bool OpenTunnelImplementation(boost::shared_ptr<Tunnel> tunnel) {
-		Log::GetInstance().AppendDebug(
-			"Number of currently open tunnels: %1%.",
-			m_activeTunnels.size() + 1);
 		{
 			ActiveTunnelsWriteLock lock(m_activeTunnelsMutex);
 			if (tunnel->IsSetupFailed()) {
@@ -1692,7 +1702,7 @@ private:
 				TunnelOpeningState::Lock conditionLock(state.mutex);
 				if (instance.m_isDestructionMode) {
 					Log::GetInstance().AppendDebug(
-						"Closing tunnel opening thread, because a destruction mode has activated...");
+						"Forcibly closing tunnel opening thread...");
 					return 0;
 				}
 
@@ -1705,11 +1715,6 @@ private:
 						return 0;
 					}
 
-					if (Log::GetInstance().IsDebugRegistrationOn()) {
-						Log::GetInstance().AppendDebug(
-							"No connections or tunnels in queue, will wait %1% minutes...",
-							long(floor(openingTunnelThreadMaxIdleTime.sec() / 60.0)));
-					}
 					const ACE_Time_Value waitUntilTime
 						= ACE_OS::gettimeofday() + openingTunnelThreadMaxIdleTime;
 					

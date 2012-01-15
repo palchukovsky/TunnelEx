@@ -612,13 +612,12 @@ void Tunnel::ReportClosed() const throw() {
 	if (!Log::GetInstance().IsInfoRegistrationOn()) {
 		return;
 	}
-	try {
-		Format message("Closed tunnel %1%.");
-		message % GetInstanceId();
-		Log::GetInstance().AppendInfo(message.str());
-	} catch (...) {
-		assert(false);
-	}
+	Format message("Closed tunnel %1% with code %2%/%3%.");
+	message
+		% GetInstanceId()
+		% GetIncomingReadConnection().GetCloseCode()
+		% GetOutcomingReadConnection().GetCloseCode();
+	Log::GetInstance().AppendInfo(message.str());
 }
 
 ACE_Proactor & Tunnel::GetProactor() {
@@ -626,10 +625,6 @@ ACE_Proactor & Tunnel::GetProactor() {
 }
 
 void Tunnel::StartSetup() {
-	Log::GetInstance().AppendDebug(
-		"Starting setup %1% connections in tunnel %2%...",
-		m_connectionsToSetup.size(),
-		GetInstanceId());
 	foreach (Connection *const connection, m_connectionsToSetup) {
 		connection->StartSetup();
 	}
@@ -648,30 +643,17 @@ void Tunnel::StartRead() {
 		GetOutcomingReadConnection().StartReadingRemote();
 		GetOutcomingWriteConnection().StartReadingRemote();
 	}
-	Log::GetInstance().AppendDebug(
-		"Started reading data for tunnel %1%.",
-		GetInstanceId());
 }
 
-void Tunnel::OnConnectionSetup(Instance::Id instanceId) {
+void Tunnel::OnConnectionSetup(Instance::Id /*instanceId*/) {
 	assert(m_setupComplitedConnections < m_connectionsToSetup.size());
 	++m_setupComplitedConnections;
-	Log::GetInstance().AppendDebug(
-		"Connection %4% setup completed in tunnel %1% (connections: %2%, already completed: %3%).",
-		GetInstanceId(),
-		m_connectionsToSetup.size(),
-		m_setupComplitedConnections,
-		instanceId);
 	if (m_setupComplitedConnections >= m_connectionsToSetup.size()) {
 		StartRead();
 	}
 }
 
-void Tunnel::OnConnectionClose(Instance::Id instanceId) {
-	Log::GetInstance().AppendDebug(
-		"Closing connection %1% in tunnel %2%.",
-		instanceId,
-		GetInstanceId());
+void Tunnel::OnConnectionClose(Instance::Id /*instanceId*/) {
 	m_server.CloseTunnel(GetInstanceId());
 }
 
