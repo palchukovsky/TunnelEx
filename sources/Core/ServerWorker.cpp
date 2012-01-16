@@ -1701,8 +1701,6 @@ private:
 
 				TunnelOpeningState::Lock conditionLock(state.mutex);
 				if (instance.m_isDestructionMode) {
-					Log::GetInstance().AppendDebug(
-						"Forcibly closing tunnel opening thread...");
 					return 0;
 				}
 

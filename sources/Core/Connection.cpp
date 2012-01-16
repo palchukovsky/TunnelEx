@@ -241,9 +241,6 @@ public:
 			m_ruleEndpointAddress->StatConnectionSetupCanceling();
 		}
 		m_latencyStat.Dump();
-#		ifdef DEV_VER
-			DebugLockStat::Report();
-#		endif
 	}
 
 private:
