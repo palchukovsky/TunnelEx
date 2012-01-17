@@ -88,6 +88,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			m_acceptor = 0;
 		}
 
+	public:
+
+		virtual void CloseIoHandle() throw() {
+			m_socket.reset();
+		}
+
 	protected:
 
 		virtual void Setup() {
@@ -102,6 +108,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 
 		virtual ACE_SOCK & GetIoStream() throw() {
+			assert(m_socket);
 			return *m_socket;
 		}
 

@@ -37,14 +37,16 @@ namespace {
 	//! @todo: hadcored min thread number and tunnel thread opening step, move to options or config
 	const auto openingTunnelMinThreadCount = 4;
 	//! @todo: hardcored maximum thread count
-	const auto openingTunnelMaxThreadCount = 600;
+	const auto openingTunnelMaxThreadCount = 200;
 	//! @todo: hadcored sleep time, move to options or config
 	const ACE_Time_Value openingTunnelThreadMaxIdleTime(20 * 60);
 	
 	//! @todo: hadcored min thread number, move to options or config
 	const auto proactorMinThreadCount = 8; // see TEX-689 for details
 	
-	static_assert(openingTunnelMaxThreadCount >= openingTunnelMinThreadCount, "Logic error.");
+	static_assert(
+		openingTunnelMaxThreadCount >= openingTunnelMinThreadCount,
+		"Logic error.");
 
 }
 
@@ -428,8 +430,12 @@ private:
 		
 		TunnelOpeningState()
 				: condition(mutex),
-				threadsCount(0) {
+				threadsCount(0),
+				isStatingNewThreads(false) {
 			//...//
+		}
+		~TunnelOpeningState() {
+			assert(!isStatingNewThreads);
 		}
 		
 		Mutex mutex;
@@ -439,6 +445,7 @@ private:
 		Tunnels tunnels;
 
 		volatile long threadsCount;
+		volatile long isStatingNewThreads;
 
 	};
 
@@ -491,7 +498,7 @@ public:
 		}
 		m_threadManager.spawn_n(
 			openingTunnelMinThreadCount,
-			&TunnelOpeningThread,
+			&ServiceThread,
 			this,
 			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
 			ACE_DEFAULT_THREAD_PRIORITY,
@@ -725,7 +732,7 @@ public:
 				[this]() -> Format {
 					Format message(
 						"Incoming connection detected, initializing new tunnel."
-							"Number of currently open tunnels: %1%.");
+							" Number of currently open tunnels: %1%.");
 					message % this->GetTunnelsNumber();
 					return message;
 				});
@@ -773,7 +780,7 @@ public:
 				TunnelOpeningState::NewConnection(ruleInfo, inConnection));
 			m_tunnelOpeningState.condition.signal();
 		}
-		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
+		StartServiceThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 	}
 
 	SharedPtr<Connection> CreateConnection(
@@ -853,7 +860,7 @@ public:
 			tunnel.reset();
 			m_tunnelOpeningState.condition.signal();
 		}
-		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
+		StartServiceThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 
 	}
 
@@ -1183,7 +1190,7 @@ private:
 				// Will be completed automatically at error in OpenRule.
 				m_isServicesThreadLaunched = true;
 				m_threadManager.spawn(
-					&ServiceThread,
+					&ServicesSchedulerThread,
 					this,
 					THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
 					0,
@@ -1271,9 +1278,9 @@ private:
 
 	}
 
-	static ACE_THR_FUNC_RETURN ServiceThread(void *param) {
+	static ACE_THR_FUNC_RETURN ServicesSchedulerThread(void *param) {
 		
-		Log::GetInstance().AppendDebug("Started services thread.");
+		Log::GetInstance().AppendDebug("Started services scheduler thread.");
 		Implementation &instance = *static_cast<Implementation *>(param);
 		std::auto_ptr<ServerStopLock> lock(
 			new ServerStopLock(instance.m_serverStopMutex));
@@ -1324,12 +1331,12 @@ private:
 				}
 			
 			} catch (const TunnelEx::LocalException &ex) {
-				Format message("Error occurred in services thread: %1%.");
+				Format message("Error occurred at services scheduling: %1%.");
 				message % ConvertString<String>(ex.GetWhat()).GetCStr();
 				Log::GetInstance().AppendFatalError(message.str().c_str());
 				continue;
 			} catch (const std::exception &ex) {
-				Format message("Error occurred in services thread: %1%.");
+				Format message("Error occurred at services scheduling: %1%.");
 				message % ex.what();
 				Log::GetInstance().AppendSystemError(message.str().c_str());
 				continue;
@@ -1355,7 +1362,7 @@ private:
 		
 		}
 	
-		Log::GetInstance().AppendDebug("Services thread completed.");
+		Log::GetInstance().AppendDebug("Services scheduler thread completed.");
 		return 0;
 	
 	}
@@ -1444,7 +1451,7 @@ private:
 			tunnel.reset();
 			m_tunnelOpeningState.condition.signal();
 		}
-		StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
+		StartServiceThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 	}
 
 	void OpenTunnelImplementation(
@@ -1629,25 +1636,33 @@ private:
 		return true;
 	}
 
-	void StartTunnelOpeningThread(
+	void StartServiceThread(
 				size_t newConnectionsInQueue,
 				size_t tunnelsToSwitchInQueue) {
-		
-		const long queue = newConnectionsInQueue + tunnelsToSwitchInQueue;
+
+		const long queue = newConnectionsInQueue + tunnelsToSwitchInQueue / 4;
 		if (queue <= m_tunnelOpeningState.threadsCount) {
 			return;
 		}
+
+		if (Interlocked::CompareExchange(m_tunnelOpeningState.isStatingNewThreads, true, false)) {
+			return;
+		}
+
 		auto threadsToStart
 			= queue - m_tunnelOpeningState.threadsCount + openingTunnelMinThreadCount;
+		if (threadsToStart == 0) {
+			return;
+		}
 		
 		Log::GetInstance().AppendDebug(
-			"Starting %1% thread(s) for tunnel opening (already started: %2%).",
+			"Starting %1% service threads (already started: %2%).",
 			threadsToStart,
 			m_tunnelOpeningState.threadsCount);
 		
 		if (m_tunnelOpeningState.threadsCount + threadsToStart > openingTunnelMaxThreadCount) {
 			Format message(
-				"Failed to start new tunnel opening thread."
+				"Failed to start new service thread."
 					" Maximum number of threads exceeded."
 					" Already active %1% threads."
 					" Trying to start %2% threads."
@@ -1661,20 +1676,22 @@ private:
 		
 		m_threadManager.spawn_n(
 			threadsToStart,
-			&TunnelOpeningThread,
+			&ServiceThread,
 			this,
 			THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED,
 			ACE_DEFAULT_THREAD_PRIORITY,
 			TG_TUNNEL_OPENING);
+
+		verify(Interlocked::Exchange(m_tunnelOpeningState.isStatingNewThreads, false));
 	
 	}
 
-	static ACE_THR_FUNC_RETURN TunnelOpeningThread(void *param) {
+	static ACE_THR_FUNC_RETURN ServiceThread(void *param) {
 
 		Implementation &instance = *static_cast<Implementation *>(param);
 		TunnelOpeningState &state = instance.m_tunnelOpeningState;
 		Interlocked::Increment(state.threadsCount);
-		Log::GetInstance().AppendDebug("Started tunnel opening thread.");
+		Log::GetInstance().AppendDebug("Started service thread.");
 
 		const class Cleanup : private boost::noncopyable {
 		public:
@@ -1708,7 +1725,7 @@ private:
 
 					if (isTimeout && state.threadsCount > openingTunnelMinThreadCount) {
 						Log::GetInstance().AppendDebug(
-							"Too many threads (%1%) for tunnel opening, closing one...",
+							"Too many service threads (%1%), closing one...",
 							state.threadsCount);
 						return 0;
 					}
@@ -1721,7 +1738,7 @@ private:
 						if (errno != ETIME) {
 							const Error error(errno);
 							Format message(
-								"Failed to set tunnel opening condition, system error: %1% (%2%).");
+								"Failed to set service thread condition, system error: %1% (%2%).");
 							message % error.GetStringA();
 							message % error.GetErrorNo();
 							Log::GetInstance().AppendSystemError(message.str());
@@ -1756,7 +1773,9 @@ private:
 			
 			}
 
-			if (logMessageSubject) {
+			if (
+					logMessageSubject
+					&& (newConnectionsInQueue > 0 || tunnelsToSwitchInQueue > 0)) {
 				Log::GetInstance().AppendDebug(
 					"One %1%, another connections/tunnels %2%/%3% in queue.",
 					logMessageSubject,
@@ -1764,7 +1783,7 @@ private:
 					tunnelsToSwitchInQueue);
 			}
 
-			instance.StartTunnelOpeningThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
+			instance.StartServiceThread(newConnectionsInQueue, tunnelsToSwitchInQueue);
 
 			try {
 				if (newConnection) {

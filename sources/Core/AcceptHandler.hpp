@@ -25,6 +25,10 @@ namespace TunnelEx {
 
 	public:
 
+		typedef ACE_Event_Handler Base;
+
+	public:
+
 		static boost::shared_ptr<AcceptHandler<typename EndpointHandle> > CreateInstance(
 				ServerWorker &server,
 				EndpointHandle endpointHandle,
@@ -76,8 +80,10 @@ namespace TunnelEx {
 			} else {
 				barrier = instance->m_dtorBarrier;
 			}
-			reactor.remove_handler(instance, GetEventsMask());
-			if (barrier) {
+			const bool waitAcceptor
+				= reactor.remove_handler(instance, GetEventsMask()) != -1;
+			assert(waitAcceptor);
+			if (waitAcceptor && barrier) {
 				barrier->wait();
 			}
 		}
@@ -201,7 +207,7 @@ namespace TunnelEx {
 			return *m_acceptor;
 		}
 
-	protected:
+	public:
 
 		//! Called by a reactor when there's a new connection to accept.
 		virtual int handle_input(ACE_HANDLE = ACE_INVALID_HANDLE) {
