@@ -657,15 +657,9 @@ void Tunnel::OnConnectionClose(Instance::Id /*instanceId*/) {
 	m_server.CloseTunnel(GetInstanceId());
 }
 
-void Tunnel::OnConnectionClosed(Instance::Id instanceId) {
+void Tunnel::OnConnectionClosed(Instance::Id /*instanceId*/) {
 	AllConnectionsClosedLock lock(m_allConnectionsClosedMutex);
 	assert(m_closedConnections < m_connectionsToClose);
-	Log::GetInstance().AppendDebug(
-		"Connection %1% closed in tunnel %2% (connections: %3%, already closed: %4%).",
-		instanceId,
-		GetInstanceId(),
-		m_connectionsToClose,
-		m_closedConnections + 1);
 	if (++m_closedConnections >= m_connectionsToClose) {
 		m_allConnectionsClosedCondition.broadcast();
 	}
