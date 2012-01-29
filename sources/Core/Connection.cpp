@@ -231,8 +231,8 @@ public:
 			m_latencyStat(m_instanceId, 60),
 			m_readStartAttemptsCount(0),
 			m_readsMallocFailsCount(0),
-			m_closeCode(0) {
-		//...//
+			m_closeCode(m_closeCodeNotSetValue) {
+		assert(m_closeCode == std::numeric_limits<long>::min());
 	}
 	
 	virtual ~Implementation() throw() {
@@ -820,7 +820,10 @@ private:
 
 		if (!result.success()) {
 			messageBlock.Reset();
-			Interlocked::CompareExchange(m_closeCode, result.error(), 0);
+			Interlocked::CompareExchange(
+				m_closeCode,
+				result.error(),
+				m_closeCodeNotSetValue);
 			ReportReadError(result);
 			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
@@ -828,7 +831,10 @@ private:
 			return;
 		} else if (result.bytes_transferred() == 0) {
 			messageBlock.Reset();
-			Interlocked::CompareExchange(m_closeCode, result.error(), 0);
+			Interlocked::CompareExchange(
+				m_closeCode,
+				result.error(),
+				m_closeCodeNotSetValue);
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
@@ -1056,8 +1062,12 @@ private:
 	volatile long m_readsMallocFailsCount;
 
 	volatile long m_closeCode;
+	static const long m_closeCodeNotSetValue;
 
 };
+
+const long Connection::Implementation::m_closeCodeNotSetValue
+	= std::numeric_limits<long>::min();
 
 //////////////////////////////////////////////////////////////////////////
 
