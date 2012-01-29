@@ -534,9 +534,8 @@ char * UniqueMessageBlockHolder::GetWritableSpace(size_t size) {
 	assert(IsSet());
 	assert(m_messageBlock->space() >= size);
 	if (m_messageBlock->space() < size) {
-		assert(false);
 		throw InsufficientMemoryException(
-			L"Failed to allocate memory for existing message block (logic error)");
+			L"Failed to allocate memory in the existing message block");
 	}
 	return m_messageBlock->wr_ptr();
 }
@@ -545,9 +544,8 @@ void UniqueMessageBlockHolder::TakeWritableSpace(size_t size) {
 	assert(IsSet());
 	assert(m_messageBlock->space() >= size);
 	if (m_messageBlock->space() < size) {
-		assert(false);
 		throw InsufficientMemoryException(
-			L"Failed to allocate memory for existing message block (logic error)");
+			L"Failed to allocate memory in the existing message block");
 	}
 	m_messageBlock->wr_ptr(size);
 }
@@ -576,8 +574,8 @@ void UniqueMessageBlockHolder::SetData(const char *data, size_t length) {
 		static_cast<ACE_Message_Block *>(
 			messageBlocksAllocator->malloc(sizeof(ACE_Message_Block))),
 			*messageBlocksAllocator);
+	assert(newBlock);
 	if (!newBlock) {
-		assert(false);
 		throw InsufficientMemoryException(
 			L"Failed to allocate memory for existing message block");
 	}
@@ -594,21 +592,21 @@ void UniqueMessageBlockHolder::SetData(const char *data, size_t length) {
 		dataBlocksAllocator,
 		messageBlocksAllocator);
 	newBlock.MarkAsCreated();
+	assert(newBlock->data_block());
 	if (!newBlock->data_block()) {
-		assert(false);
 		throw InsufficientMemoryException(
-			L"Failed to allocate memory for new data block (existing message block)");
+			L"Failed to allocate memory for the message block replacing");
 	}
 	assert(newBlock->data_block()->size() >= GetMessageMemorySize(length));
-	assert(m_messageBlock->space() >= GetMessageMemorySize(length));
+	assert(newBlock->space() >= GetMessageMemorySize(length));
 
 	{
 		assert(m_messageBlock->flags() & UMBHF_HAS_SATELLITE);
-		assert(m_messageBlock->space() >= sizeof(Satellite *));
+		assert(newBlock->space() >= sizeof(Satellite *));
 		if (newBlock->copy(m_messageBlock->base(), sizeof(Satellite *)) == -1) {
 			assert(false);
 			throw InsufficientMemoryException(
-				L"Failed to allocate memory for new data block (existing message block)");
+				L"Failed to allocate memory for the message block replacing");
 		}
 		newBlock->rd_ptr(sizeof(Satellite *));
 	}
@@ -616,7 +614,7 @@ void UniqueMessageBlockHolder::SetData(const char *data, size_t length) {
 	if (newBlock->copy(data, length) == -1) {
 		assert(false);
 		throw InsufficientMemoryException(
-			L"Failed to allocate memory for new data block (existing message block)");
+			L"Failed to allocate memory for the message block replacing");
 	}
 	
 	if (m_messageBlock->flags() & UMBHF_TUNNEL_MESSAGE) { 

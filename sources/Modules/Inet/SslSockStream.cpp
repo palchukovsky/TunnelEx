@@ -310,7 +310,7 @@ void SslSockStream::Decrypt(MessageBlock &messageBlock) const {
 				break;
 			}
 			GetBuffers().out.resize(0);
-			WFormat message(L"Error at SSL data receiving: \"%1% (%2%)\"");
+			WFormat message(L"Failed to decrypt SSL data: \"%1% (%2%)\"");
 			if (!error.CheckError() && OpenSslError::CheckError(error.GetErrorNo())) {
 				const std::string errorStr
 					= OpenSslError::ErrorNoToString(error.GetErrorNo());
