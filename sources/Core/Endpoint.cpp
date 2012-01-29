@@ -150,7 +150,8 @@ Endpoint::Endpoint(
 
 Endpoint::Endpoint(AutoPtr<EndpointAddress> combinedAddress, bool isAcceptor)
 		: m_pimpl(new Implementation(combinedAddress, isAcceptor)) {
-	//...//
+	assert(m_pimpl->m_combinedOrReadAddress);
+	assert(!m_pimpl->m_writeAddress);
 }
 
 Endpoint::Endpoint(
@@ -158,7 +159,8 @@ Endpoint::Endpoint(
 			AutoPtr<EndpointAddress> writeAddress,
 			Acceptor acceptor)
 		: m_pimpl(new Implementation(readAddress, writeAddress, acceptor)) {
-	//...//
+	assert(m_pimpl->m_combinedOrReadAddress);
+	assert(m_pimpl->m_writeAddress);
 }
 
 Endpoint::~Endpoint() throw() {
