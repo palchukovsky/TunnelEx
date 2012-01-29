@@ -820,8 +820,7 @@ private:
 
 		if (!result.success()) {
 			messageBlock.Reset();
-			assert(m_closeCode == 0);
-			m_closeCode = result.error();
+			Interlocked::CompareExchange(m_closeCode, result.error(), 0);
 			ReportReadError(result);
 			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
@@ -829,8 +828,7 @@ private:
 			return;
 		} else if (result.bytes_transferred() == 0) {
 			messageBlock.Reset();
-			assert(m_closeCode == 0);
-			m_closeCode = result.error();
+			Interlocked::CompareExchange(m_closeCode, result.error(), 0);
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
@@ -1057,7 +1055,7 @@ private:
 	volatile long m_readStartAttemptsCount;
 	volatile long m_readsMallocFailsCount;
 
-	long m_closeCode;
+	volatile long m_closeCode;
 
 };
 
