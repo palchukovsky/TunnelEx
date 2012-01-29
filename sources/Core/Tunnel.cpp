@@ -508,7 +508,10 @@ Tunnel::ReadWriteConnections Tunnel::CreateDestinationConnections(
 
 void Tunnel::ReportOpened() const {
 
-	if (!Log::GetInstance().IsInfoRegistrationOn()) {
+	const bool isSilent = m_rule->IsSilent();
+	if (
+			(!isSilent && !Log::GetInstance().IsInfoRegistrationOn())
+			|| (isSilent && !Log::GetInstance().IsDebugRegistrationOn())) {
 		return;
 	}
 
@@ -604,12 +607,19 @@ void Tunnel::ReportOpened() const {
 	}
 	message << ')';
 
-	Log::GetInstance().AppendInfo(message.str());
+	if (!m_rule->IsSilent()) {
+		Log::GetInstance().AppendInfo(message.str());
+	} else {
+		Log::GetInstance().AppendDebug(message.str());
+	}
 
 }
 
 void Tunnel::ReportClosed() const throw() {
-	if (!Log::GetInstance().IsInfoRegistrationOn()) {
+	const bool isSilent = m_rule->IsSilent();
+	if (
+			(!isSilent && !Log::GetInstance().IsInfoRegistrationOn())
+			|| (isSilent && !Log::GetInstance().IsDebugRegistrationOn())) {
 		return;
 	}
 	Format message("Closed tunnel %1% with code %2%/%3%.");
@@ -617,7 +627,11 @@ void Tunnel::ReportClosed() const throw() {
 		% GetInstanceId()
 		% GetIncomingReadConnection().GetCloseCode()
 		% GetOutcomingReadConnection().GetCloseCode();
-	Log::GetInstance().AppendInfo(message.str());
+	if (!m_rule->IsSilent()) {
+		Log::GetInstance().AppendInfo(message.str());
+	} else {
+		Log::GetInstance().AppendDebug(message.str());
+	}
 }
 
 ACE_Proactor & Tunnel::GetProactor() {

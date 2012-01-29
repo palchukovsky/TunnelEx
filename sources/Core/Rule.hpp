@@ -55,6 +55,9 @@ namespace TunnelEx {
 		bool IsEnabled() const;
 		void Enable(bool);
 
+		bool IsSilent() const;
+		void SetSilent(bool);
+
 	protected:
 
 		void SetUuid(const ::TunnelEx::WString &);

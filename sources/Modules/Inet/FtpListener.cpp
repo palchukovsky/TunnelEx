@@ -73,6 +73,8 @@ TunnelRule FtpListener::CreateRule(
 		const {
 
 	TunnelRule result;
+	result.SetSilent(true);
+
 	WString wStrIpAddressBuffer;
 	std::string inputIpAddress;
 

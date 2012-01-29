@@ -25,7 +25,8 @@ public:
 	explicit Implementation(const WString &uuid)
 			: m_uuid(uuid),
 			m_errorsTreatment(Rule::ERRORS_TREATMENT_ERROR),
-			m_isEnabled(true) {
+			m_isEnabled(true),
+			m_isSilent(false) {
 		//...//
 	}
 
@@ -35,6 +36,7 @@ public:
 	WString m_name;
 	Rule::ErrorsTreatment m_errorsTreatment;
 	bool m_isEnabled;
+	bool m_isSilent;
 
 };
 
@@ -100,6 +102,15 @@ bool Rule::IsEnabled() const {
 void Rule::Enable(bool newVal) {
 	m_pimpl->m_isEnabled = newVal;
 }
+
+bool Rule::IsSilent() const {
+	return m_pimpl->m_isSilent;
+}
+
+void Rule::SetSilent(bool newVal) {
+	m_pimpl->m_isSilent = newVal;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 

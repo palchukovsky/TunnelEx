@@ -103,7 +103,10 @@ namespace TunnelEx {
 					endpoint,
 					m_address)),
 				m_dtorBarrier(dtorBarrier) {
-			if (Log::GetInstance().IsInfoRegistrationOn()) {
+			const bool isSilent = m_endpointHandle->rule->IsSilent();
+			if (
+					(!isSilent && Log::GetInstance().IsInfoRegistrationOn())
+					|| (isSilent && Log::GetInstance().IsDebugRegistrationOn())) {
 				String buffer;
 				std::ostringstream message;
 				message << "Endpoint ";
@@ -131,14 +134,21 @@ namespace TunnelEx {
 				message
 					<< " opened for incoming connections - "
 					<< m_acceptor->GetInstanceId();
-				Log::GetInstance().AppendInfo(message.str());
+				if (!isSilent) {
+					Log::GetInstance().AppendInfo(message.str());
+				} else {
+					Log::GetInstance().AppendDebug(message.str());
+				}
 			}
 			TUNNELEX_OBJECTS_DELETION_CHECK_CTOR(m_instancesNumber);
 		}
 
 		virtual ~AcceptHandler() {
 			try {
-				if (Log::GetInstance().IsInfoRegistrationOn()) {
+				const bool isSilent = m_endpointHandle->rule->IsSilent();
+				if (
+						(!isSilent && Log::GetInstance().IsInfoRegistrationOn())
+						|| (isSilent && Log::GetInstance().IsDebugRegistrationOn())) {
 					String buffer;
 					std::ostringstream message;
 					message << "Closing incoming connections endpoint ";
@@ -168,7 +178,11 @@ namespace TunnelEx {
 					message
 						<< " - "
 						<< m_acceptor->GetInstanceId();
-					Log::GetInstance().AppendInfo(message.str());
+					if (!isSilent) {
+						Log::GetInstance().AppendInfo(message.str());
+					} else {
+						Log::GetInstance().AppendDebug(message.str());
+					}
 				}
 				m_acceptor.Reset();
 				if (m_dtorBarrier) {
