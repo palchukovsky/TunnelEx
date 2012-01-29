@@ -85,7 +85,7 @@ TunnelRule FtpListener::CreateRule(
 		const AutoPtr<const TcpEndpointAddress> currentInputEndpoint(
 			boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				m_currentConnection.GetLocalAddress().Release()));
-		AutoPtr<TcpEndpointAddress> input(
+		AutoPtr<TcpEndpointAddress> inputAddr(
 			new TcpEndpointAddress(
 				ConvertString(
 						currentInputEndpoint->GetHostAddress(),
@@ -95,11 +95,32 @@ TunnelRule FtpListener::CreateRule(
 				currentInputRuleEndpoint.GetServer()));
 		const AutoPtr<const EndpointAddress> remoteAddress(
 			m_currentConnection.GetRemoteAddress());
-		input->CopyCertificate(
+		inputAddr->CopyCertificate(
 			currentInputRuleEndpoint,
 			*boost::polymorphic_downcast<const TcpEndpointAddress *>(
 				remoteAddress.Get()));
-		result.GetInputs().Append(RuleEndpoint(input, true));
+		RuleEndpoint input(inputAddr, true);
+		const auto &preListeners
+			= m_currentConnection.GetRuleEndpoint().GetPreListeners();
+		const size_t preListenersSize = preListeners.GetSize();
+		if (preListenersSize > 1) {
+			for (size_t i = 0; i < preListenersSize; ++i) {
+				const RuleEndpoint::ListenerInfo &listener = preListeners[i];
+				if (
+						listener.name == L"Tunnel/Ftp/Active"
+						|| listener.name == L"Tunnel/Ftp/Passive") {
+					continue;
+				}
+				input.GetPreListeners().Append(preListeners[i]);
+			}
+		}
+		const auto &postListeners
+			= m_currentConnection.GetRuleEndpoint().GetPostListeners();
+		const size_t postListenersSize = postListeners.GetSize();
+		for (size_t i = 0; i < postListenersSize; ++i) {
+			input.GetPreListeners().Append(postListeners[i]);
+		}
+		result.GetInputs().Append(input);
 	}
 
 	{
