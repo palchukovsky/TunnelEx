@@ -81,6 +81,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
+		virtual void CloseIoHandle() throw() {
+			m_stream.close();
+		}
+
 		virtual ACE_SOCK & GetIoStream() throw() {
 			return m_stream;
 		}

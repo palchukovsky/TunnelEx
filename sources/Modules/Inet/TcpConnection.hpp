@@ -98,12 +98,18 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
+		virtual void CloseIoHandle() throw() {
+			CloseDataStream();
+		}
+
 		virtual ACE_SOCK & GetIoStream() throw() {
 			return GetDataStream();
 		}
 		virtual const ACE_SOCK & GetIoStream() const throw() {
 			return const_cast<TcpConnection *>(this)->GetIoStream();
 		}
+
+	protected:
 
 		Stream & GetDataStream() {
 			assert(m_dataStream.get());
@@ -118,9 +124,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			if (!m_dataStream.get()) {
 				return;
 			}
-			const int result = m_dataStream->close();
-			assert(result == 0);
-			ACE_UNUSED_ARG(result);
+			verify(m_dataStream->close() == 0);
 			m_dataStream.reset();
 		}
 
