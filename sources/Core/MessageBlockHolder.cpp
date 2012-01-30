@@ -326,20 +326,23 @@ UniqueMessageBlockHolder::~UniqueMessageBlockHolder() throw() {
 }
 
 UniqueMessageBlockHolder::Satellite & UniqueMessageBlockHolder::GetSatellite(
-			ACE_Message_Block &messageBlock) {
+			ACE_Message_Block &messageBlock)
+		throw() {
 	assert(messageBlock.flags() & UMBHF_HAS_SATELLITE);
 	Satellite *result;
 	memcpy(&result, messageBlock.base(), sizeof(result));
 	return *result;
 }
 
-UniqueMessageBlockHolder::Satellite & UniqueMessageBlockHolder::GetSatellite() {
+UniqueMessageBlockHolder::Satellite & UniqueMessageBlockHolder::GetSatellite() throw() {
 	assert(IsSet());
 	return GetSatellite(*m_messageBlock);
 }
 
 const UniqueMessageBlockHolder::Satellite &
-UniqueMessageBlockHolder::GetSatellite() const {
+UniqueMessageBlockHolder::GetSatellite()
+		const
+		throw()  {
 	return const_cast<UniqueMessageBlockHolder *>(this)->GetSatellite();
 }
 
@@ -550,6 +553,17 @@ void UniqueMessageBlockHolder::TakeWritableSpace(size_t size) {
 	m_messageBlock->wr_ptr(size);
 }
 
+void UniqueMessageBlockHolder::Read(size_t size) {
+	assert(IsSet());
+	assert(m_messageBlock->length() >= size);
+	m_messageBlock->rd_ptr(size);
+}
+
+void UniqueMessageBlockHolder::Read() {
+	assert(IsSet());
+	m_messageBlock->rd_ptr(m_messageBlock->length());
+}
+
 size_t UniqueMessageBlockHolder::GetUnreadedDataSize() const throw() {
 	assert(IsSet());
 	return m_messageBlock->length();
@@ -558,6 +572,14 @@ size_t UniqueMessageBlockHolder::GetUnreadedDataSize() const throw() {
 void UniqueMessageBlockHolder::SetData(const char *data, size_t length) {
 			
 	assert(IsSet());
+	assert(data || length == 0);
+	if (!data || length == 0) {
+		assert(m_messageBlock->flags() & UMBHF_HAS_SATELLITE);
+		m_messageBlock->reset();
+		m_messageBlock->wr_ptr(sizeof(Satellite *));
+		m_messageBlock->rd_ptr(sizeof(Satellite *));
+		return;
+	}
 			
 	ACE_Allocator *messageBlocksAllocator = nullptr;
 	ACE_Allocator *dataBlocksAllocator = nullptr;
@@ -639,6 +661,10 @@ bool UniqueMessageBlockHolder::IsAddedToQueue() const throw() {
 bool UniqueMessageBlockHolder::IsTunnelMessage() const throw() {
 	assert(IsSet());
 	return m_messageBlock->flags() & UMBHF_TUNNEL_MESSAGE ? true : false;
+}
+
+size_t UniqueMessageBlockHolder::GetBlockSize() const throw() {
+	return GetSatellite().GetAllocator().GetDataBlockSize() - GetMessageMemorySize(0);
 }
 
 #ifdef DEV_VER

@@ -156,6 +156,9 @@ namespace TunnelEx {
 		virtual char * GetWritableSpace(size_t size);
 		virtual void TakeWritableSpace(size_t size);
 
+		virtual void Read();
+		virtual void Read(size_t size);
+
 		virtual size_t GetUnreadedDataSize() const throw();
 
 		virtual void SetData(const char *data, size_t length);
@@ -164,6 +167,8 @@ namespace TunnelEx {
 		virtual bool IsAddedToQueue() const throw();
 
 		virtual bool IsTunnelMessage() const throw();
+
+		virtual size_t GetBlockSize() const throw();
 
 	public:
 
@@ -208,9 +213,9 @@ namespace TunnelEx {
 
 	private:
 
-		static Satellite & GetSatellite(ACE_Message_Block &messageBlock);
-		Satellite & GetSatellite();
-		const Satellite & GetSatellite() const;
+		static Satellite & GetSatellite(ACE_Message_Block &messageBlock) throw();
+		Satellite & GetSatellite() throw();
+		const Satellite & GetSatellite() const throw();
 
 		Timings & GetTimings();
 		const Timings & GetTimings() const;

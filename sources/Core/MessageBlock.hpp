@@ -5,7 +5,6 @@
  * -------------------------------------------------------------------
  *   Project: TunnelEx
  *       URL: http://tunnelex.net
- * Copyright: 2007 - 2008 Eugene V. Palchukovsky
  **************************************************************************/
 
 #ifndef INCLUDED_FILE__MessageBlock_h__080731161000
@@ -36,12 +35,17 @@ namespace TunnelEx {
 		virtual char * GetWritableSpace(size_t size) = 0;
 		virtual void TakeWritableSpace(size_t size) = 0;
 
+		virtual void Read() = 0;
+		virtual void Read(size_t size) = 0;
+
 		virtual void SetData(const char *data, size_t dataLength) = 0;
 		
 		virtual void MarkAsAddedToQueue() throw() = 0;
 		virtual bool IsAddedToQueue() const throw() = 0;
 
 		virtual bool IsTunnelMessage() const throw() = 0;
+
+		virtual size_t GetBlockSize() const throw() = 0;
 
 	};
 
