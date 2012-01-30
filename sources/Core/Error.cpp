@@ -29,7 +29,7 @@ bool Error::IsError() const {
 bool Error::CheckError() const {
 #	ifdef BOOST_WINDOWS
 		LPVOID buffer;
-		::FormatMessageW(
+		const auto formatResult = ::FormatMessageW(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL,
 			m_errorNo,
@@ -38,7 +38,7 @@ bool Error::CheckError() const {
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
-		return GetLastError() != ERROR_RESOURCE_LANG_NOT_FOUND;
+		return formatResult != 0;
 #	else
 		// not implemented yet
 		BOOST_STATIC_ASSERT(false);
@@ -79,7 +79,6 @@ namespace {
 			0,
 			NULL);
 		boost::shared_ptr<VOID> bufferPtr(buffer, &::LocalFree);
-		assert(GetLastError() != ERROR_RESOURCE_LANG_NOT_FOUND);
 		String::ValueType *const pch = static_cast<String::ValueType *>(buffer);
 		for ( ; size > 0 && IsLineEnd(pch[size - 1]) ; --size);
 		if (size > 0) {
