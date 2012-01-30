@@ -468,6 +468,7 @@ public:
 	void Close() throw() {
 		Lock lock(m_mutex, false);
 		assert(m_refsCount > 0);
+		m_myInterface.CloseIoHandle();
 		CheckedDelete(lock);
 	}
 
@@ -844,12 +845,22 @@ private:
 			return;
 		}
 		
-		bool isSuccess = false;
+		bool isSuccess = true;
 		try {
-			m_myInterface.ReadRemote(messageBlock);
-			messageBlock.Reset();
-			Lock lock(m_mutex, true);
-			isSuccess = InitMessageReading(true);
+			{
+				Lock lock(m_mutex, true);
+				if (!m_isClosed) {
+					m_myInterface.ReadRemote(messageBlock);
+				} else {
+					isSuccess = false;
+				}
+			}
+			if (isSuccess) {
+				SendToTunnel(messageBlock);
+				messageBlock.Reset();
+				Lock lock(m_mutex, true);
+				isSuccess = InitMessageReading(true);
+			}
 		} catch (const TunnelEx::LocalException &ex) {
 			messageBlock.Reset();
 			Log::GetInstance().AppendError(
@@ -964,7 +975,6 @@ private:
 
 	void UpdateIdleTimer(const pt::ptime &eventTime) throw() {
 		assert(!eventTime.is_not_a_date_time());
-		assert(IsNotLockedByMyThread(m_mutex));
 		if (m_idleTimeoutTimer < 0) {
 			return;
 		}
@@ -1093,7 +1103,6 @@ void Connection::Open(SharedPtr<ConnectionSignal> signal, Mode mode) {
 }
 
 void Connection::Close() throw() {
-	CloseIoHandle();
 	m_pimpl->Close();
 }
 
@@ -1132,8 +1141,8 @@ void Connection::OnMessageBlockSent(MessageBlock &messageBlock) {
 	m_pimpl->OnMessageBlockSent(messageBlock);
 }
 
-void Connection::ReadRemote(MessageBlock &messageBlock) {
-	SendToTunnel(messageBlock);
+void Connection::ReadRemote(MessageBlock &) {
+	//...//
 }
 
 void Connection::Setup() {
