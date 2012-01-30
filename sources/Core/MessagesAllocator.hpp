@@ -72,7 +72,7 @@ namespace TunnelEx {
 			return m_dataBlocksBufferAllocator;
 		}
 
-		size_t GetDataBlockSize() const {
+		size_t GetDataBlockSize() const throw() {
 			return m_dataBlockSize;
 		}
 
