@@ -45,6 +45,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
+		virtual void CloseIoHandle() throw();
+
 		virtual void Setup();
 		void ReadRemote(MessageBlock &);
 
@@ -59,6 +61,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const Acceptor &acceptor,
 					const RuleEndpoint &ruleEndpoint,
 					const EndpointAddress &ruleEndpointAddress);
+
+		void CloseAllStreams() throw();
 
 	private:
 

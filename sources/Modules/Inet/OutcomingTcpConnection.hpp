@@ -39,6 +39,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					SharedPtr<const EndpointAddress> ruleEndpointAddress);
 		~OutcomingTcpConnection();
 
+	protected:
+
+		virtual void CloseIoHandle() throw();
+
 	private:
 	
 		void OpenConnection(
@@ -72,23 +76,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 		
 		virtual ~OutcomingSslTcpConnection() {
-			try {
-				CloseDataStream();
-				const int result = m_ioStream.close();
-				assert(result == 0);
-				ACE_UNUSED_ARG(result);
-			} catch (...) {
-				Format message(
-					"Unknown system error occurred: %1%:%2%."
-						" Please restart the service"
-						" and contact product support to resolve this issue."
-						" %3% %4%");
-				message
-					% __FILE__ % __LINE__
-					% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
-				Log::GetInstance().AppendFatalError(message.str());
-				assert(false);
-			}
+			CloseAllStreams();
 		}
 
 	protected:
@@ -109,17 +97,17 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				return;
 			}
 
-			if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
+			if (GetDataStream().GetEncrypted().size() > 0) {
 				try {
 					WriteDirectly(
 						*CreateMessageBlock(
-							GetDataStream().GetEncryptorDecryptorAnswer().size(),
-							&GetDataStream().GetEncryptorDecryptorAnswer()[0]));
+							GetDataStream().GetEncrypted().size(),
+							&GetDataStream().GetEncrypted()[0]));
 				} catch (...) {
-					GetDataStream().ResetEncryptorDecryptorAnswer();
+					GetDataStream().ClearEncrypted();
 					throw;
 				}
-				GetDataStream().ResetEncryptorDecryptorAnswer();
+				GetDataStream().ClearEncrypted();
 				StartReadingRemote();
 			} else if (GetDataStream().IsConnected()) {
 				assert(
@@ -162,17 +150,17 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				CancelSetup(message.str().c_str());
 				return;
 			}
-			if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
+			if (!GetDataStream().GetEncrypted().empty()) {
 				try {
 					WriteDirectly(
 						*CreateMessageBlock(
-							GetDataStream().GetEncryptorDecryptorAnswer().size(),
-							&GetDataStream().GetEncryptorDecryptorAnswer()[0]));
+							GetDataStream().GetEncrypted().size(),
+							&GetDataStream().GetEncrypted()[0]));
 				} catch (...) {
-					GetDataStream().ResetEncryptorDecryptorAnswer();
+					GetDataStream().ClearEncrypted();
 					throw;
 				}
-				GetDataStream().ResetEncryptorDecryptorAnswer();
+				GetDataStream().ClearEncrypted();
 			}
 
 			assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
@@ -190,6 +178,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
+		virtual void CloseIoHandle() throw() {
+			CloseAllStreams();
+		}
+
 		virtual ACE_SOCK & GetIoStream() throw() {
 			return m_ioStream;
 		}
@@ -199,17 +191,28 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		//! Implements SSL connection process (connect or accept)
-		void SslConnect() {
-			BOOST_STATIC_ASSERT(false);
-		}
-		//! Implements SSL connection process (connect or accept)
-		void SslConnect(MessageBlock &) {
-			BOOST_STATIC_ASSERT(false);
+		void CloseAllStreams() throw() {
+			CloseDataStream();
+			static_assert(
+				boost::is_same<IoStream, ACE_SOCK_Stream>::value,
+				"Stream is not an ACE_SOCK_Stream");
+			verify(m_ioStream.close() == 0);
 		}
 
+		void SslConnect() {
+			static_assert(
+				false,
+				"Implements SSL connection process (connect or accept).");
+		}
+		void SslConnect(MessageBlock &) {
+			static_assert(
+				false,
+				"Implements SSL connection process (connect or accept).");
+		}
 		const ACE_SSL_Context & GetSslContext(const TcpEndpointAddress &) const {
-			BOOST_STATIC_ASSERT(false);
+			static_assert(
+				false,
+				"Implements SSL connection process (connect or accept).");
 		}
 
 	private:

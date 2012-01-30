@@ -98,10 +98,6 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	protected:
 
-		virtual void CloseIoHandle() throw() {
-			CloseDataStream();
-		}
-
 		virtual ACE_SOCK & GetIoStream() throw() {
 			return GetDataStream();
 		}
@@ -119,8 +115,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return const_cast<TcpConnection *>(this)->GetDataStream();
 		}
 
-		void CloseDataStream() {
-			BOOST_MPL_ASSERT((boost::is_same<Stream, ACE_SOCK_Stream>));
+		void CloseDataStream() throw() {
+			static_assert(
+				boost::is_same<Stream, ACE_SOCK_Stream>::value,
+				"Stream is not an ACE_SOCK_Stream");
 			if (!m_dataStream.get()) {
 				return;
 			}
@@ -135,47 +133,94 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	};
 
 	template<>
-	void TcpConnection<SslSockStream>::CloseDataStream() {
+	void TcpConnection<SslSockStream>::CloseDataStream() throw() {
 		if (!m_dataStream.get()) {
 			return;
 		}
 		m_dataStream->SwitchToStreamMode();
-		const int result = m_dataStream->close();
-		assert(result == 0);
-		ACE_UNUSED_ARG(result);
+		verify(m_dataStream->close() == 0);
 		m_dataStream.reset();
 	}
 
 	template<>
 	void TcpConnection<SslSockStream>::ReadRemote(MessageBlock &messageBlock) {
+		
 		assert(m_dataStream.get());
+		
 		if (	GetDataStream().IsDecryptorEncryptorMode()
 				&& messageBlock.GetUnreadedDataSize() > 0) {
+		
 			GetDataStream().Decrypt(messageBlock);
-			if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
+
+			if (!GetDataStream().GetEncrypted().empty()) {
 				try {
 					WriteDirectly(
 						*CreateMessageBlock(
-							GetDataStream().GetEncryptorDecryptorAnswer().size(),
-							&GetDataStream().GetEncryptorDecryptorAnswer()[0]));
+							GetDataStream().GetEncrypted().size(),
+							&GetDataStream().GetEncrypted()[0]));
 				} catch (...) {
-					GetDataStream().ResetEncryptorDecryptorAnswer();
+					GetDataStream().ClearEncrypted();
 					throw;
 				}
-				GetDataStream().ResetEncryptorDecryptorAnswer();
+				GetDataStream().ClearEncrypted();
 			}
+
+			if (GetDataStream().GetDecrypted().size() > messageBlock.GetBlockSize()) {
+				Base::ReadRemote(
+					*CreateMessageBlock(
+						GetDataStream().GetDecrypted().size(),
+						&GetDataStream().GetDecrypted()[0]));
+			} else {
+				if (!GetDataStream().GetDecrypted().empty()) {
+					messageBlock.SetData(
+						&GetDataStream().GetDecrypted()[0],
+						GetDataStream().GetDecrypted().size());
+				} else {
+					messageBlock.Read();
+				}
+				Base::ReadRemote(messageBlock);
+			}
+
+		} else {
+			Base::ReadRemote(messageBlock);
 		}
-		Base::ReadRemote(messageBlock);
+
 	}
 
 	template<>
 	DataTransferCommand TcpConnection<SslSockStream>::Write(MessageBlock &messageBlock) {
-		if (	GetDataStream().IsDecryptorEncryptorMode()
-				&& messageBlock.GetUnreadedDataSize() > 0) {
-			GetDataStream().Encrypt(messageBlock);
-			assert(GetDataStream().GetEncryptorDecryptorAnswer().empty());
+		
+		if (	!GetDataStream().IsDecryptorEncryptorMode()
+				|| messageBlock.GetUnreadedDataSize() == 0) {
+			return Base::Write(messageBlock);
 		}
-		return Base::Write(messageBlock);
+
+		GetDataStream().Encrypt(messageBlock);
+		
+		DataTransferCommand result;
+		try {
+			if (GetDataStream().GetEncrypted().size() <= messageBlock.GetBlockSize()) {
+				if (GetDataStream().GetEncrypted().empty()) {
+					messageBlock.Read();
+				} else {
+					messageBlock.SetData(
+						&GetDataStream().GetEncrypted()[0],
+						GetDataStream().GetEncrypted().size());
+				}
+				result = Base::Write(messageBlock);
+			} else {
+				result = Base::Write(
+					*CreateMessageBlock(
+						GetDataStream().GetEncrypted().size(),
+						&GetDataStream().GetEncrypted()[0]));
+			}
+		} catch (...) {
+			GetDataStream().ClearEncrypted();
+			throw;
+		}
+		GetDataStream().ClearEncrypted();
+		return result;
+
 	}
 
 	template<>

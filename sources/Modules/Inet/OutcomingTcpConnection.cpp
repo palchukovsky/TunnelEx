@@ -25,6 +25,10 @@ OutcomingTcpConnection::~OutcomingTcpConnection() {
 	//...//
 }
 
+void OutcomingTcpConnection::CloseIoHandle() throw() {
+	CloseDataStream();
+}
+
 void OutcomingTcpConnection::OpenConnection(
 				const ACE_INET_Addr &address,
 				const RuleEndpoint &ruleEndpoint) {

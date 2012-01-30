@@ -56,6 +56,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 			return AutoPtr<EndpointAddress>(new TcpEndpointAddress(*m_remoteAddress));
 		}
 
+	protected:
+
+		virtual void CloseIoHandle() throw() {
+			CloseDataStream();
+		}
+
 	private:
 
 		std::auto_ptr<Stream> CreateStream(

@@ -25,23 +25,19 @@ IncomingTcpSslClientConnection::IncomingTcpSslClientConnection(
 }
 
 IncomingTcpSslClientConnection::~IncomingTcpSslClientConnection() throw() {
-	try {
-		CloseDataStream();
-		const int result = m_rawStream.close();
-		assert(result == 0);
-		ACE_UNUSED_ARG(result);
-	} catch (...) {
-		Format message(
-			"Unknown system error occurred: %1%:%2%."
-				" Please restart the service"
-				" and contact product support to resolve this issue."
-				" %3% %4%");
-		message
-			% __FILE__ % __LINE__
-			% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY;
-		Log::GetInstance().AppendFatalError(message.str());
-		assert(false);
-	}
+	CloseAllStreams();
+}
+
+void IncomingTcpSslClientConnection::CloseIoHandle() throw() {
+	CloseAllStreams();
+}
+
+void IncomingTcpSslClientConnection::CloseAllStreams() throw() {
+	CloseDataStream();
+	static_assert(
+		boost::is_same<RawStream, ACE_SOCK_Stream>::value,
+		"Stream is not an ACE_SOCK_Stream");
+	verify(m_rawStream.close() == 0);
 }
 
 bool IncomingTcpSslClientConnection::IsOneWay() const {
@@ -104,17 +100,17 @@ void IncomingTcpSslClientConnection::Setup() {
 		return;
 	}
 
-	if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
+	if (GetDataStream().GetEncrypted().size() > 0) {
 		try {
 			SendToTunnel(
 				*CreateMessageBlock(
-					GetDataStream().GetEncryptorDecryptorAnswer().size(),
-					&GetDataStream().GetEncryptorDecryptorAnswer()[0]));
+					GetDataStream().GetEncrypted().size(),
+					&GetDataStream().GetEncrypted()[0]));
 		} catch (...) {
-			GetDataStream().ResetEncryptorDecryptorAnswer();
+			GetDataStream().ClearEncrypted();
 			throw;
 		}
-		GetDataStream().ResetEncryptorDecryptorAnswer();
+		GetDataStream().ClearEncrypted();
 		StartReadingRemote();
 	} else if (GetDataStream().IsConnected()) {
 		assert(
@@ -155,17 +151,17 @@ void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
 		CancelSetup(message.str().c_str());
 		return;
 	}
-	if (GetDataStream().GetEncryptorDecryptorAnswer().size() > 0) {
+	if (GetDataStream().GetEncrypted().size() > 0) {
 		try {
 			SendToTunnel(
 				*CreateMessageBlock(
-					GetDataStream().GetEncryptorDecryptorAnswer().size(),
-					&GetDataStream().GetEncryptorDecryptorAnswer()[0]));
+					GetDataStream().GetEncrypted().size(),
+					&GetDataStream().GetEncrypted()[0]));
 		} catch (...) {
-			GetDataStream().ResetEncryptorDecryptorAnswer();
+			GetDataStream().ClearEncrypted();
 			throw;
 		}
-		GetDataStream().ResetEncryptorDecryptorAnswer();
+		GetDataStream().ClearEncrypted();
 	}
 
 	assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);

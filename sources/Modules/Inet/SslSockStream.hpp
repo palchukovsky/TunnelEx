@@ -71,19 +71,23 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 
 		void SwitchToDecryptorEncryptorMode();
-		void SwitchToStreamMode();
+		void SwitchToStreamMode() throw();
 
-		bool IsDecryptorEncryptorMode() const {
+		bool IsDecryptorEncryptorMode() const throw() {
 			return m_isDecryptorEncryptorMode;
 		}
 
-		void Decrypt(MessageBlock &) const;
-		void Encrypt(MessageBlock &) const;
+		void Decrypt(const MessageBlock &) const;
+		void Encrypt(const MessageBlock &) const;
 
-		const Buffer & GetEncryptorDecryptorAnswer() const {
+		const Buffer & GetDecrypted() const {
+			return GetBuffers().decryptionFull;
+		}
+
+		const Buffer & GetEncrypted() const {
 			return GetBuffers().out;
 		}
-		void ResetEncryptorDecryptorAnswer() {
+		void ClearEncrypted() {
 			GetBuffers().out.resize(0);
 		}
 
