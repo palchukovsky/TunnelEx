@@ -713,6 +713,13 @@ bool Tunnel::Switch(
 		source.write = *sourceWrite;
 	}
 
+	{
+		GetOutcomingReadConnection().Close();
+		if (&GetOutcomingReadConnection() != &GetOutcomingWriteConnection()) {
+			GetOutcomingWriteConnection().Close();
+		}
+	}
+
 	ReadWriteConnections destination;
 	destination.Swap(m_destination);
 	unsigned int destinationIndex = m_destinationIndex;
