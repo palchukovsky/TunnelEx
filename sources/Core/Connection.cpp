@@ -168,6 +168,13 @@ private:
 		RS_NOT_READING
 	};
 
+	enum SetupState {
+		SETUP_STATE_NOT_COMPLETED,
+		SETUP_STATE_FAILED,
+		SETUP_STATE_COMPLETED_PENDING,
+		SETUP_STATE_COMPLETED,
+	};
+
 	typedef TypedMutex<ACE_Recursive_Thread_Mutex, MutexTypeToType<MT_DEFAULT>>
 		Mutex;
 	typedef LockWithDebugReports<Mutex> Lock;
@@ -218,8 +225,7 @@ public:
 			m_ruleEndpoint(ruleEndpoint),
 			m_ruleEndpointAddress(ruleEndpointAddress),
 			m_readingState(RS_NOT_ALLOWED),
-			m_isSetupCompleted(false),
-			m_isSetupCompletedWithSuccess(false),
+			m_setupState(SETUP_STATE_NOT_COMPLETED),
 			m_proactor(nullptr),
 			m_isClosed(false),
 			m_startTime(IdleTimeoutPolicy::GetCurrentTime()),
@@ -236,8 +242,9 @@ public:
 	}
 	
 	virtual ~Implementation() throw() {
+		assert(m_setupState != SETUP_STATE_COMPLETED_PENDING);
 		assert(m_refsCount == 0);
-		if (!m_isSetupCompleted) {
+		if (!IsSetupCompleted()) {
 			m_ruleEndpointAddress->StatConnectionSetupCanceling();
 		}
 		m_latencyStat.Dump();
@@ -542,22 +549,27 @@ public:
 		m_signal->OnConnectionClose(m_instanceId);
 	}
 
-	void OnSetupSuccess() {
-		assert(IsNotLockedOrLockedByMyThread(m_mutex));
-		CompleteSetup(true);
+	void OnSetupSuccess(bool isDefaultSetupImplementation = false) {
+		Lock lock(m_mutex, false);
+		assert(m_setupState == SETUP_STATE_NOT_COMPLETED);
+		if (!isDefaultSetupImplementation) {
+			m_setupState = SETUP_STATE_COMPLETED_PENDING;
+		} else {
+			m_setupState = SETUP_STATE_COMPLETED;
+			m_signal->OnConnectionSetupCompleted(m_instanceId);
+		}
 		m_ruleEndpointAddress->StatConnectionSetupCompleting();
-		m_signal->OnConnectionSetupCompleted(m_instanceId);
 		StartIdleTimer();
 	}
 
 	void OnSetupFail(const WString &failReason) {
-		assert(IsNotLockedOrLockedByMyThread(m_mutex));
-		CompleteSetup(false);
+		Lock lock(m_mutex, false);
+		assert(m_setupState == SETUP_STATE_NOT_COMPLETED);
+		m_setupState = SETUP_STATE_FAILED;
 		m_ruleEndpointAddress->StatConnectionSetupCanceling(failReason);
 		Log::GetInstance().AppendDebug(
-			"Setup for connection %1% has been canceled - connection will be closed.",
+			"Connection %1% setup has been canceled.",
 			m_instanceId);
-		m_signal->OnConnectionClose(m_instanceId);
 	}
 
 public:
@@ -582,7 +594,7 @@ public:
 	}
 
 	void StopReading() {
-		assert(IsLockedByMyThread(m_mutex) || !m_isSetupCompleted);
+		assert(IsLockedByMyThread(m_mutex));
 		if (m_readingState > RS_NOT_ALLOWED) {
 			m_readingState = RS_NOT_STARTED;
 		}
@@ -612,11 +624,15 @@ public:
 	}
 
 	bool IsSetupCompleted() const {
-		return m_isSetupCompleted && m_isSetupCompletedWithSuccess;
+		Lock lock(m_mutex, false);
+		assert(m_setupState != SETUP_STATE_COMPLETED_PENDING);
+		return m_setupState >= SETUP_STATE_COMPLETED_PENDING;
 	}
 
 	bool IsSetupFailed() const {
-		return m_isSetupCompleted && !m_isSetupCompletedWithSuccess;
+		Lock lock(m_mutex, false);
+		assert(m_setupState != SETUP_STATE_COMPLETED_PENDING);
+		return m_setupState == SETUP_STATE_FAILED;
 	}
 
 	long GetCloseCode() const throw() {
@@ -846,16 +862,30 @@ private:
 		}
 		
 		bool isSuccess = true;
+		bool isSetupCompleted = false;
 		try {
 			{
 				Lock lock(m_mutex, true);
+				assert(
+					m_setupState == SETUP_STATE_NOT_COMPLETED
+					|| m_setupState == SETUP_STATE_COMPLETED);
 				if (!m_isClosed) {
 					m_myInterface.ReadRemote(messageBlock);
+					if (m_setupState != SETUP_STATE_FAILED) {
+						isSuccess = true;
+						if (m_setupState == SETUP_STATE_COMPLETED_PENDING) {
+							m_setupState = SETUP_STATE_COMPLETED;
+							isSetupCompleted = true;
+						}
+					}
 				} else {
 					isSuccess = false;
 				}
 			}
 			if (isSuccess) {
+				if (isSetupCompleted) {
+					m_signal->OnConnectionSetupCompleted(m_instanceId);
+				}
 				SendToTunnel(messageBlock);
 				messageBlock.Reset();
 				Lock lock(m_mutex, true);
@@ -988,19 +1018,9 @@ private:
 		}
 	}
 
-	void CompleteSetup(bool setupCompletedWithSuccess) {
-		assert(IsNotLockedOrLockedByMyThread(m_mutex));
-		m_isSetupCompleted = true;
-		m_isSetupCompletedWithSuccess = setupCompletedWithSuccess;
-		// Must be not be started yet!
-		assert(m_idleTimeoutTimer == -1);
-	}
-
 	void StartIdleTimer() {
 		
 		assert(m_idleTimeoutTimer == -1);
-		assert(m_isSetupCompleted);
-		assert(m_isSetupCompletedWithSuccess);
 		assert(m_idleTimeoutUpdateTime == -1);
 		
 		if (m_idleTimeoutInterval == 0) {
@@ -1046,11 +1066,10 @@ private:
 	boost::function<int(ACE_Message_Block &, size_t)> m_readStreamFunc;
 	boost::function<int(ACE_Message_Block &, size_t)> m_writeStreamFunc;
 	
-	Mutex m_mutex;
+	mutable Mutex m_mutex;
 
 	ReadingState m_readingState;
-	bool m_isSetupCompleted;
-	bool m_isSetupCompletedWithSuccess;
+	SetupState m_setupState;
 	
 	ACE_Proactor *m_proactor;
 
@@ -1146,7 +1165,7 @@ void Connection::ReadRemote(MessageBlock &) {
 }
 
 void Connection::Setup() {
-	m_pimpl->OnSetupSuccess();
+	m_pimpl->OnSetupSuccess(true);
 }
 
 void Connection::StartSetup() {
