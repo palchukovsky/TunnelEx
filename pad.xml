@@ -1,0 +1,256 @@
+<?xml version="1.0" ?>
+<XML_DIZ_INFO>
+	<MASTER_PAD_VERSION_INFO>
+		<MASTER_PAD_VERSION>3.11</MASTER_PAD_VERSION>
+		<MASTER_PAD_EDITOR>PADGen 3.1.1.50 http://www.padgen.org</MASTER_PAD_EDITOR>
+		<MASTER_PAD_INFO>Portable Application Description, or PAD for short, is a data set that is used by shareware authors to disseminate information to anyone interested in their software products. To find out more go to http://pad.asp-software.org</MASTER_PAD_INFO>
+	</MASTER_PAD_VERSION_INFO>
+	<Company_Info>
+		<Company_Name>Tunnelex Project</Company_Name>
+		<Address_1>Kluch-Kamishenskoe plato, 14-244</Address_1>
+		<Address_2 />
+		<City_Town>Novosibirsk</City_Town>
+		<State_Province>NSO</State_Province>
+		<Zip_Postal_Code>630114</Zip_Postal_Code>
+		<Country>Russian Federation</Country>
+		<Company_WebSite_URL>http://tunnelex.net</Company_WebSite_URL>
+		<Contact_Info>
+			<Author_First_Name>Eugene</Author_First_Name>
+			<Author_Last_Name>Palchukovsky</Author_Last_Name>
+			<Author_Email>copyright@tunnelex.net</Author_Email>
+			<Contact_First_Name>Eugene</Contact_First_Name>
+			<Contact_Last_Name>Palchukovsky</Contact_Last_Name>
+			<Contact_Email>support@tunnelex.net</Contact_Email>
+		</Contact_Info>
+		<Support_Info>
+			<Sales_Email>sales@tunnelex.net</Sales_Email>
+			<Support_Email>support@tunnelex.net</Support_Email>
+			<General_Email>support@tunnelex.net</General_Email>
+			<Sales_Phone>+7 913 713-9750</Sales_Phone>
+			<Support_Phone>+7 913 713-9750</Support_Phone>
+			<General_Phone>+7 913 713-9750</General_Phone>
+			<Fax_Phone>+7 913 713-9750</Fax_Phone>
+		</Support_Info>
+	</Company_Info>
+	<Program_Info>
+		<Program_Name>TunnelEx: HTTP Tunneling Software</Program_Name>
+		<Program_Version>2.4.3.1</Program_Version>
+		<Program_Release_Month>02</Program_Release_Month>
+		<Program_Release_Day>03</Program_Release_Day>
+		<Program_Release_Year>2012</Program_Release_Year>
+		<Program_Cost_Dollars>13.95</Program_Cost_Dollars>
+		<Program_Cost_Other_Code>EUR</Program_Cost_Other_Code>
+		<Program_Cost_Other>9.95</Program_Cost_Other>
+		<Program_Type>Shareware</Program_Type>
+		<Program_Release_Status>Major Update</Program_Release_Status>
+		<Program_Install_Support>Install and Uninstall</Program_Install_Support>
+		<Program_OS_Support>Win7 x32,Win7 x64,WinServer,WinVista,WinVista x64,WinXP</Program_OS_Support>
+		<Program_Language>English</Program_Language>
+		<Program_Change_Info>Added new feature: Secure connections via SSL/TLS and FTPS tunneling</Program_Change_Info>
+		<Program_Specific_Category>Internet</Program_Specific_Category>
+		<Program_Category_Class>Network &amp; Internet::Other</Program_Category_Class>
+		<Program_System_Requirements>Less than 15Mb of free disc space.</Program_System_Requirements>
+		<File_Info>
+			<File_Size_Bytes>4207528</File_Size_Bytes>
+			<File_Size_K>4108</File_Size_K>
+			<File_Size_MB>4.01</File_Size_MB>
+		</File_Info>
+		<Expire_Info>
+			<Has_Expire_Info>Y</Has_Expire_Info>
+			<Expire_Count>15</Expire_Count>
+			<Expire_Based_On>Days</Expire_Based_On>
+			<Expire_Other_Info />
+			<Expire_Month />
+			<Expire_Day />
+			<Expire_Year />
+		</Expire_Info>
+	</Program_Info>
+	<Program_Descriptions>
+		<English>
+			<Keywords>http tunnel, bypass firewall, secure tunnel, https tunnel, port forwarding, port mapper, port mapping, forward ports, proxy cascade, tcp connection forward, ftp, ftps, ftp tunnel, ftps tunnel, ftp redirect, ftps redirect, ftp forward, ssl, tls</Keywords>
+			<Char_Desc_45>Expert software for data redirection.</Char_Desc_45>
+			<Char_Desc_80>Powerful application that helps you to redirect and convert data.</Char_Desc_80>
+			<Char_Desc_250>TunnelEx is software designed to redirect TCP, UDP, FTP and others, bypass firewalls and any restrictions imposed by the local security policy.</Char_Desc_250>
+			<Char_Desc_450>TunnelEx is software designed to redirect data removing all the obstacles that can be thrown in its way, bypass firewalls and any restrictions imposed by the local security policy. TunnelEx possesses a unique combination of features that support different data transfer protocols and allow integrating them. Among them there are most frequently used TCP, UDP, UPnP, FTP, named pipes and others.</Char_Desc_450>
+			<Char_Desc_2000>TunnelEx is software designed to redirect data removing all the obstacles that can be thrown in its way, bypass firewalls and any restrictions imposed by the local security policy. TunnelEx possesses a unique combination of features that support different data transfer protocols and allow integrating them. Among them there are most frequently used TCP, UDP, UPnP, FTP, named pipes and others.
+
+Due to the availability of the Pathfinder feature it becomes even easier to use the program because it can automatically ask for a list of free public HTTP servers and build a tunnel through them, however when necessary users can identify a list of preferable servers.
+
+In case a local security policy denies you an access to FTP servers the program can redirect data through HTTP proxy-servers because it provides FTP over HTTP.
+
+It may seem that it is rather complicated to use this program but it operates automatically to such an extent that users can fully rely on it. They will not know that TunnelEx plays an intermediary role taking functions of the real FTP and HTTP servers.
+
+This version also features HTTP tunneling from a proxy cascade ensuring that client applications from different networks will always be able to communicate with each other.
+
+All these sophisticated functions are of particular interest for IT-programmers, system administrators and other IT-specialists but thanks to its friendly user interface the program can be useful for home-users as well.</Char_Desc_2000>
+		</English>
+	</Program_Descriptions>
+	<Web_Info>
+		<Application_URLs>
+			<Application_Info_URL>http://tunnelex.net</Application_Info_URL>
+			<Application_Order_URL>http://tunnelex.net/order</Application_Order_URL>
+			<Application_Screenshot_URL>http://tunnelex.net/screenshots/2_0_1.png</Application_Screenshot_URL>
+			<Application_Icon_URL>http://tunnelex.net/icon.gif</Application_Icon_URL>
+			<Application_XML_File_URL>http://tunnelex.net/pad.xml</Application_XML_File_URL>
+		</Application_URLs>
+		<Download_URLs>
+			<Primary_Download_URL>http://download.tunnelex.net/tunnelex_setup.zip</Primary_Download_URL>
+			<Secondary_Download_URL>http://download.tunnelex.net/tunnelex_setup.msi</Secondary_Download_URL>
+			<Additional_Download_URL_1 />
+			<Additional_Download_URL_2 />
+		</Download_URLs>
+	</Web_Info>
+	<Permissions>
+		<Distribution_Permissions>TUNNELEX END-USER LICENSE AGREEMENT
+
+Except where otherwise noted, all of the documentation and software included in the TunnelEx package is copyrighted by Eugene V. Palchukovsky (copyright@tunnelex.net, "Owner").
+
+IMPORTANT - READ CAREFULLY: This License Agreement is a legal agreement between you (either an individual or a single entity) and the Owner for the TunnelEx software product identified above, which may include associated software components, media, printed materials, and "online" or electronic documentation ("Software"). By installing, copying, or otherwise using the Software, you agree to be bound by the terms of this Agreement. If you do not agree to the terms of this Agreement, do not install or use the Software.
+
+DISCLAIMER
+This Software and any support from the Owner are provided "AS IS" and without warranty, express or implied. The Owner specifically disclaims any implied warranties of merchantability and fitness for a particular purpose. In no event will the Owner be liable for any damages, including but not limited to any lost profits, lost savings or any incidental or consequential damages, whether resulting from impaired or lost data, software or computer failure or any other cause, or for any other claim by the user or for any third party claim.
+
+PROHIBITION ON REVERSE ENGINEERING, DECOMPILATION, AND DISASSEMBLY
+You may NOT reverse engineer, decompile, or disassemble the Software, except and only to the extent that such activity is expressly permitted by applicable law notwithstanding this limitation.
+
+OPEN SOURCE SOFTWARE
+The Software package distributes various open source software components, see the License topic in the Software help for copyright statements and licenses details.</Distribution_Permissions>
+		<EULA>END-USER LICENSE AGREEMENT FOR SHAREWARE
+
+Except where otherwise noted, all of the documentation and software included in the TunnelEx package is copyrighted by Eugene Palchukovsky (copyright@tunnelex.net, "Owner").
+
+IMPORTANT - READ CAREFULLY: This License Agreement is a legal agreement between you (either an individual or a single entity) and the Owner for the TunnelEx software product identified above, which may include associated software components, media, printed materials, and "online" or electronic documentation ("Software"). By installing, copying, or otherwise using the Software, you agree to be bound by the terms of this Agreement. If you do not agree to the terms of this Agreement, do not install or use the Software.
+
+SUPPORT SERVICE
+The Owner may provide you with support services related to the Software ("Support Services"). Any supplemental software components, source codes, updates, media, printed materials, and "online" or electronic documentation provided to you as part of the Support Services shall be considered part of the Software and subject to the terms and conditions of this Agreement.
+
+TRIAL LICENSE
+The Owner grants You the right to install and use copies of the Software, with the unlimited functionality, on computer running a copy of the any operating system for which the Software was designed. You are granted a license for evaluation purposes only. You are NOT allowed to use it for any commercial purpose. After the expiration of the 15-day trial period You must stop use the Software or purchase the Single User Software License. You are NOT allowed to use any of Software features after expiration of trial period without purchasing. You are NOT allowed to make a charge for distributing this Software (either for profit or merely to recover your media and distribution costs) whether as a stand-alone product, or as part of a compilation or anthology, without explicit prior written permission.
+
+SINGLE USER LICENSE
+The Owner grants You the right to install and use copies of the Software on computer, running a copy of the any operating system for which the Software was designed. The License grants the right to use only one product copy at the same time. The Single User License can have the functionality limitations, mention during the purchasing. You are NOT allowed to make a charge for distributing this Software (either for profit or merely to recover your media and distribution costs) whether as a stand-alone product, or as part of a compilation or anthology, without explicit prior written permission.
+
+DISCLAIMER
+This Software and any support from the Owner are provided "AS IS" and without warranty, express or implied. The Owner specifically disclaims any implied warranties of merchantability and fitness for a particular purpose. In no event will the Owner be liable for any damages, including but not limited to any lost profits, lost savings or any incidental or consequential damages, whether resulting from impaired or lost data, software or computer failure or any other cause, or for any other claim by the user or for any third party claim.
+
+PROHIBITION ON REVERSE ENGINEERING, DECOMPILATION, AND DISASSEMBLY You may NOT reverse engineer, decompile, or disassemble the Software, except and only to the extent that such activity is expressly permitted by applicable law notwithstanding this limitation.
+
+OPEN SOURCE SOFTWARE
+The following copyright statements and licenses apply to various open source software components that are distributed the TunnelEx package.</EULA>
+	</Permissions>
+	<Affiliates>
+		<Affiliates_FORM>Y</Affiliates_FORM>
+		<Affiliates_VERSION>1.4</Affiliates_VERSION>
+		<Affiliates_URL>http://pad.asp-software.org/extensions/Affiliates.htm</Affiliates_URL>
+		<Affiliates_Information_Page />
+		<Affiliates_Avangate_Order_Page />
+		<Affiliates_Avangate_Vendor_ID />
+		<Affiliates_Avangate_Product_ID />
+		<Affiliates_Avangate_Maximum_Commission_Rate />
+		<Affiliates_BMTMicro_Order_Page />
+		<Affiliates_BMTMicro_Vendor_ID />
+		<Affiliates_BMTMicro_Product_ID />
+		<Affiliates_BMTMicro_Maximum_Commission_Rate />
+		<Affiliates_Cleverbridge_Order_Page />
+		<Affiliates_Cleverbridge_Vendor_ID />
+		<Affiliates_Cleverbridge_Product_ID />
+		<Affiliates_Cleverbridge_Maximum_Commission_Rate />
+		<Affiliates_clixGalore_Order_Page />
+		<Affiliates_clixGalore_Vendor_ID />
+		<Affiliates_clixGalore_Product_ID />
+		<Affiliates_clixGalore_Maximum_Commission_Rate />
+		<Affiliates_CommissionJunction_Order_Page />
+		<Affiliates_CommissionJunction_Vendor_ID />
+		<Affiliates_CommissionJunction_Product_ID />
+		<Affiliates_CommissionJunction_Maximum_Commission_Rate />
+		<Affiliates_DigiBuy_Order_Page />
+		<Affiliates_DigiBuy_Vendor_ID />
+		<Affiliates_DigiBuy_Product_ID />
+		<Affiliates_DigiBuy_Maximum_Commission_Rate />
+		<Affiliates_DigitalCandle_Order_Page />
+		<Affiliates_DigitalCandle_Vendor_ID />
+		<Affiliates_DigitalCandle_Product_ID />
+		<Affiliates_DigitalCandle_Maximum_Commission_Rate />
+		<Affiliates_Emetrix_Order_Page />
+		<Affiliates_Emetrix_Vendor_ID />
+		<Affiliates_Emetrix_Product_ID />
+		<Affiliates_Emetrix_Maximum_Commission_Rate />
+		<Affiliates_eSellerate_Order_Page />
+		<Affiliates_eSellerate_Vendor_ID />
+		<Affiliates_eSellerate_Product_ID />
+		<Affiliates_eSellerate_Maximum_Commission_Rate />
+		<Affiliates_iPortis_Order_Page />
+		<Affiliates_iPortis_Vendor_ID />
+		<Affiliates_iPortis_Product_ID />
+		<Affiliates_iPortis_Maximum_Commission_Rate />
+		<Affiliates_Kagi_Order_Page />
+		<Affiliates_Kagi_Vendor_ID />
+		<Affiliates_Kagi_Product_ID />
+		<Affiliates_Kagi_Maximum_Commission_Rate />
+		<Affiliates_LinkShare_Order_Page />
+		<Affiliates_LinkShare_Vendor_ID />
+		<Affiliates_LinkShare_Product_ID />
+		<Affiliates_LinkShare_Maximum_Commission_Rate />
+		<Affiliates_NorthStarSol_Order_Page />
+		<Affiliates_NorthStarSol_Vendor_ID />
+		<Affiliates_NorthStarSol_Product_ID />
+		<Affiliates_NorthStarSol_Maximum_Commission_Rate />
+		<Affiliates_OneNetworkDirect_Order_Page />
+		<Affiliates_OneNetworkDirect_Vendor_ID />
+		<Affiliates_OneNetworkDirect_Product_ID />
+		<Affiliates_OneNetworkDirect_Maximum_Commission_Rate />
+		<Affiliates_Order1_Order_Page />
+		<Affiliates_Order1_Vendor_ID />
+		<Affiliates_Order1_Product_ID />
+		<Affiliates_Order1_Maximum_Commission_Rate />
+		<Affiliates_Osolis_Order_Page />
+		<Affiliates_Osolis_Vendor_ID />
+		<Affiliates_Osolis_Product_ID />
+		<Affiliates_Osolis_Maximum_Commission_Rate />
+		<Affiliates_Plimus_Order_Page />
+		<Affiliates_Plimus_Vendor_ID />
+		<Affiliates_Plimus_Product_ID />
+		<Affiliates_Plimus_Maximum_Commission_Rate />
+		<Affiliates_Regnet_Order_Page />
+		<Affiliates_Regnet_Vendor_ID />
+		<Affiliates_Regnet_Product_ID />
+		<Affiliates_Regnet_Maximum_Commission_Rate />
+		<Affiliates_Regnow_Order_Page />
+		<Affiliates_Regnow_Vendor_ID />
+		<Affiliates_Regnow_Product_ID />
+		<Affiliates_Regnow_Maximum_Commission_Rate />
+		<Affiliates_Regsoft_Order_Page />
+		<Affiliates_Regsoft_Vendor_ID />
+		<Affiliates_Regsoft_Product_ID />
+		<Affiliates_Regsoft_Maximum_Commission_Rate />
+		<Affiliates_ShareIt_Order_Page />
+		<Affiliates_ShareIt_Vendor_ID />
+		<Affiliates_ShareIt_Product_ID />
+		<Affiliates_ShareIt_Maximum_Commission_Rate />
+		<Affiliates_Shareasale_Order_Page />
+		<Affiliates_Shareasale_Vendor_ID />
+		<Affiliates_Shareasale_Product_ID />
+		<Affiliates_Shareasale_Maximum_Commission_Rate />
+		<Affiliates_SWReg_Order_Page />
+		<Affiliates_SWReg_Vendor_ID />
+		<Affiliates_SWReg_Product_ID />
+		<Affiliates_SWReg_Maximum_Commission_Rate />
+		<Affiliates_V-Share_Order_Page />
+		<Affiliates_V-Share_Vendor_ID />
+		<Affiliates_V-Share_Product_ID />
+		<Affiliates_V-Share_Maximum_Commission_Rate />
+		<Affiliates_VFree_Order_Page />
+		<Affiliates_VFree_Vendor_ID />
+		<Affiliates_VFree_Product_ID />
+		<Affiliates_VFree_Maximum_Commission_Rate />
+		<Affiliates_Yaskifo_Order_Page />
+		<Affiliates_Yaskifo_Vendor_ID />
+		<Affiliates_Yaskifo_Product_ID />
+		<Affiliates_Yaskifo_Maximum_Commission_Rate />
+	</Affiliates>
+	<ASP>
+		<ASP_FORM>Y</ASP_FORM>
+		<ASP_Member>N</ASP_Member>
+		<ASP_Member_Number />
+	</ASP>
+</XML_DIZ_INFO>
