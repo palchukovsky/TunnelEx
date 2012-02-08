@@ -8,7 +8,6 @@
 	URL: http://tunnelex.net
 '''
 
-import os
 import md5
 from ftplib import FTP
 
@@ -27,27 +26,27 @@ class Client:
 		self._ftp.connect(host)
 		self._ftp.login(login, password)
 
-	def StoreWelcome(self, filePath):
-		f = open(filePath, 'w+')
-		f.write(self._ftp.getwelcome())
+	def GetDump(self):
+		db = dict()
+		db['welcome'] = self._ftp.getwelcome()
+		db['content'] = dict()
+		self._GetContent([], db['content'])
+		return db
 
-	def StoreStruct(self, file_path):
-		f = open(file_path, 'w+')
-		self._StorePathStruct(f, [])
-
-	def _StorePathStruct(self, db, path):
+	def _GetContent(self, path, db):
 
 		cd = self._ftp.pwd()
-		db.write("\ndir: %s\n" % cd)
+		db[cd] = dict()
+		dirDb = db[cd]
 
-		lines = []
+		lines = list()
 		result = self._ftp.retrlines('LIST', lines.append)
 		if result.split()[0] != '226': raise Client.Error('LIST', result)
 
-		db.write("\tstruct:\n")
-		for l in lines: db.write("\t\t%s\n" % l)
+		dirDb['struct'] = list()
+		for l in lines: dirDb['struct'].append(l)
 
-		db.write("\tfiles:\n")
+		dirDb['files'] = dict()
 		for l in lines:
 			if l[0] != 'd':
 				fileName = ' '.join(l.split()[8:])
@@ -55,7 +54,7 @@ class Client:
 				cmd = 'RETR %s' % fileName
 				result = self._ftp.retrbinary(cmd, fileHash.update)
 				if result.split()[0] != '226': raise Client.Error(cmd, result)
-				db.write('\t\t{0}\t{1}\n'.format(fileName, fileHash.hexdigest()))
+				dirDb['files'][fileName] = fileHash.hexdigest()
 
 		for l in lines:
 			if l[0] == 'd':
@@ -63,29 +62,28 @@ class Client:
 				subPath.append(' '.join(l.split()[8:]))
 				fullPath = '/' + '/'.join(subPath)
 				self._ftp.cwd(fullPath)
-				self._StorePathStruct(db, subPath)
+				self._GetContent(subPath, db)
 
 
 class Struct:
 
-	def __init__(self, homePath):
-		self.homePath = homePath
-		self.structFilePath = os.path.join(self.homePath, 'struct.txt')
-		self.welcomeFilePath = os.path.join(self.homePath, 'welcome.txt')
+	def __init__(self, host, login, password):
+		self._struct = Client(host, login, password).GetDump()
 
-	def Create(self, host, login, password):
-
-		if os.access(self.homePath, os.F_OK) == False:
-			os.makedirs(self.homePath)
-
-		ftp = Client(host, login, password)
-		ftp.StoreWelcome(self.welcomeFilePath)
-		ftp.StoreStruct(self.structFilePath)
-
+	def Dump(self):
+		result = self._struct['welcome'] + ":\n"
+		for dirPath, dirContent in self._struct['content'].iteritems():
+			result += '\n{0}\n'.format(dirPath)
+			result += "\tstruct:\n"
+			for l in dirContent['struct']: result += '\t\t{0}\n'.format(l)
+			result += "\tfiles:\n"
+			for name, hexdigest in dirContent['files'].iteritems():
+				result += "\t\t{0:<32}{1}\n".format(name + ":", hexdigest)
+		return result
 
 def CreateMasterCopy(host, login, password):
-	struct = Struct(os.path.join('.', 'Temp', 'Ftp', 'Standard'))
-	struct.create(host, login, password)
+	struct = Struct(host, login, password)
+	print struct.Dump()
 
 def ShowHelp():
 	print '%s:' % __name__
