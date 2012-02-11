@@ -12,7 +12,7 @@ import md5
 from ftplib import FTP
 
 
-class Client:
+class _Client:
 
 	class Error:
 		def __init__(self, cmd, value):
@@ -41,7 +41,7 @@ class Client:
 
 		lines = list()
 		result = self._ftp.retrlines('LIST', lines.append)
-		if result.split()[0] != '226': raise Client.Error('LIST', result)
+		if result.split()[0] != '226': raise _Client.Error('LIST', result)
 
 		dirDb['struct'] = list()
 		for l in lines: dirDb['struct'].append(l)
@@ -53,7 +53,7 @@ class Client:
 				fileHash = md5.new()
 				cmd = 'RETR %s' % fileName
 				result = self._ftp.retrbinary(cmd, fileHash.update)
-				if result.split()[0] != '226': raise Client.Error(cmd, result)
+				if result.split()[0] != '226': raise _Client.Error(cmd, result)
 				dirDb['files'][fileName] = fileHash.hexdigest()
 
 		for l in lines:
@@ -68,7 +68,11 @@ class Client:
 class Struct:
 
 	def __init__(self, host, login, password):
-		self._struct = Client(host, login, password).GetDump()
+		self._struct = _Client(host, login, password).GetDump()
+
+	def Compare(self, rhs):
+		if self._struct['welcome'] != rhs._struct['welcome']: return False;
+		return self._struct == rhs._struct
 
 	def Dump(self):
 		result = self._struct['welcome'] + ":\n"
@@ -80,24 +84,3 @@ class Struct:
 			for name, hexdigest in dirContent['files'].iteritems():
 				result += "\t\t{0:<32}{1}\n".format(name + ":", hexdigest)
 		return result
-
-def CreateMasterCopy(host, login, password):
-	struct = Struct(host, login, password)
-	print struct.Dump()
-
-def ShowHelp():
-	print '%s:' % __name__
-	print '	create_master_copy ${host} ${user} ${password}'
-
-def Execute(argv):
-	actions = {
-		'create_master_copy': CreateMasterCopy,
-		'help': ShowHelp
-	}
-	try:
-		action = actions[argv[1]]
-	except IndexError:
-		print "Error: Invalid command."
-		ShowHelp()
-		return
-	action(*argv[2:])

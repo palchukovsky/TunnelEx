@@ -1,0 +1,8 @@
+*Settings*							
+Library	Lib/Test.py						
+Resource	Resources/Ftp.tsv						
+							
+*Test Cases*							
+Ftp							
+	"Compare FTP servers ""192.168.132.133:21"" and ""192.168.132.133:21"" with username ""q"" and password ""q"""						
+							
