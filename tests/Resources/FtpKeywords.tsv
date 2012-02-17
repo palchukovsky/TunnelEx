@@ -1,0 +1,62 @@
+*Variables*							
+${FTP MASTER COPY}	${EMPTY}						
+							
+*Keywords*							
+"Compare master copy with FTP server ""${host}:${port}"" with username ""${user}"" and password ""${password}"" in ${mode} mode"							
+	Should be created FTP master copy						
+	Check FTP mode	${mode}					
+	${is passive mode}	Set Variable If	'${mode}' == 'passive'	${true}	${false}		
+	${connection}	Connect to FTP server	${host}	${port}	${user}	${password}	${is passive mode}
+	${struct}	Read files structure from FTP server	${connection}				
+	Disconnect from FTP server	${connection}					
+	FTP server files structure should be identical with master copy	${struct}					
+							
+"Compare master copy with FTPES server ""${host}:${port}"" with username ""${user}"" and password ""${password}"" in ${mode} mode and ${transfer mode} transfering"							
+	Should be created FTP master copy						
+	Check FTP mode	${mode}					
+	Check FTP transfer connection protection mode	${transfer mode}					
+	${is passive mode}	Set Variable If	'${mode}' == 'passive'	${true}	${false}		
+	${is transfer protected}	Set Variable If	'${transfer mode}' == 'protected'	${true}	${false}		
+	${connection}	Connect to FTPES server	${host}	${port}	${user}	${password}	${is passive mode}
+	...	${is transfer protected}					
+	${struct}	Read files structure from FTP server	${connection}				
+	Disconnect from FTP server	${connection}					
+	FTP server files structure should be identical with master copy	${struct}					
+							
+Fail FTP servers files structure comparison							
+	[Arguments]	${testStruct}					
+	${master copy dump}	Dump FTP server files structure	${FTP MASTER COPY}				
+	Log	${master copy dump}					
+	${test dump}	Dump FTP server files structure	${test struct}				
+	Log	${test dump}					
+	Fail	Server files structure are not identical with master copy.					
+							
+FTP server files structure should be identical with master copy							
+	[Arguments]	${test struct}					
+	${is identical}	Compare FTP servers files structures	${FTP MASTER COPY}	${test struct}			
+	Run Keyword Unless	${is identical}	Fail FTP servers files structure comparison	${test struct}			
+							
+"Create FTP master copy ""${host}:${port}"" with username ""${user}"" and password ""${password}"""							
+	${isExists}	Convert To Boolean	${FTP MASTER COPY}				
+	Should Be True	${is exists} == ${false}					
+	${connection}	Connect to FTP server	${host}	${port}	${user}	${password}	
+	${struct}	Read files structure from FTP server	${connection}				
+	Disconnect from FTP server	${connection}					
+	Set Suite Variable	${FTP MASTER COPY}	${struct}				
+							
+"Create FTP master copy ""${host}:${port}"" with username ""${user}"" and password ""${password}"" if it dosn't exist"							
+	${is exists}	Convert To Boolean	${FTP MASTER COPY}				
+	Run Keyword Unless	${is exists}	"Create FTP master copy ""${host}:${port}"" with username ""${user}"" and password ""${password}"""				
+							
+Should be created FTP master copy							
+	${is connected}	Convert To Boolean	${FTP MASTER COPY}				
+	Run Keyword Unless	${is connected}	Fail	'Master FTP copy should be created at each test setup.'			
+							
+Check FTP mode							
+	[Arguments]	${mode}					
+	Should Be True	'${mode}' == 'active' or '${mode}' == 'passive'					
+							
+Check FTP transfer connection protection mode							
+	[Arguments]	${mode}					
+	Should Be True	'${mode}' == 'protected' or '${mode}' == 'not protected'					
+							

@@ -1,8 +1,18 @@
 *Settings*							
 Library	Lib/Test.py						
-Resource	Resources/Ftp.tsv						
+Resource	Resources/Config.tsv						
+Resource	Resources/FtpKeywords.tsv						
 							
 *Test Cases*							
-Ftp							
-	"Compare FTP servers ""192.168.132.133:21"" and ""192.168.132.133:21"" with username ""q"" and password ""q"""						
+FTP							
+	[Setup]	"Create FTP master copy ""${FTP DIRECT HOST}:${FTP DIRECT PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" if it dosn't exist"					
+	"Compare master copy with FTP server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in active mode"						
+	"Compare master copy with FTP server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in passive mode"						
+							
+FTPES							
+	[Setup]	"Create FTP master copy ""${FTP DIRECT HOST}:${FTP DIRECT PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" if it dosn't exist"					
+	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in active mode and protected transfering"						
+	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in passive mode and protected transfering"						
+	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in active mode and not protected transfering"						
+	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in passive mode and not protected transfering"						
 							

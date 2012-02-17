@@ -1,6 +1,6 @@
 '''
 	Module: TunnelEx.Test.Ftp
-	Created: Feb 7, 2012 12:48:37 PM
+	Created: Feb 12, 2012 7:44:50 PM
 	Author: Eugene V. Palchukovsky
 	E-mail: eugene@palchukovsky.com
 	-------------------------------------------------------------------
@@ -10,9 +10,9 @@
 
 import md5
 from ftplib import FTP
+from M2Crypto.ftpslib import FTP_TLS
 
-
-class _Client:
+class Connection:
 
 	class Error:
 		def __init__(self, cmd, value):
@@ -21,12 +21,15 @@ class _Client:
 		def __str__(self):
 			return repr('Failed to "{0}": "{1}"'.format(self.cmd, self.result))
 
-	def __init__(self, host, login, password):
-		self._ftp = FTP()
-		self._ftp.connect(host)
-		self._ftp.login(login, password)
+	def __init__(self, ftp, isPassive = None):
+		self._ftp = ftp
+		if isPassive is not None:
+			self._ftp.set_pasv(isPassive)
 
-	def GetDump(self):
+	def Close(self):
+		self._ftp.quit()
+
+	def ReadFilesStruct(self):
 		db = dict()
 		db['welcome'] = self._ftp.getwelcome()
 		db['content'] = dict()
@@ -41,10 +44,12 @@ class _Client:
 
 		lines = list()
 		result = self._ftp.retrlines('LIST', lines.append)
-		if result.split()[0] != '226': raise _Client.Error('LIST', result)
+		if result.split()[0] != '226':
+			raise Connection.Error('LIST', result)
 
 		dirDb['struct'] = list()
-		for l in lines: dirDb['struct'].append(l)
+		for l in lines:
+			dirDb['struct'].append(l)
 
 		dirDb['files'] = dict()
 		for l in lines:
@@ -53,7 +58,8 @@ class _Client:
 				fileHash = md5.new()
 				cmd = 'RETR %s' % fileName
 				result = self._ftp.retrbinary(cmd, fileHash.update)
-				if result.split()[0] != '226': raise _Client.Error(cmd, result)
+				if result.split()[0] != '226':
+					raise Connection.Error(cmd, result)
 				dirDb['files'][fileName] = fileHash.hexdigest()
 
 		for l in lines:
@@ -64,15 +70,48 @@ class _Client:
 				self._ftp.cwd(fullPath)
 				self._GetContent(subPath, db)
 
+class PlainConnection(Connection):
+
+	def __init__(self, host, port, user, password, isPassive = None):
+		ftp = FTP()
+		ftp.connect(host, port)
+		ftp.login(user, password)
+		Connection.__init__(self, ftp, isPassive)
+
+class SecureConnection(Connection):
+
+	def __init__(
+			self
+			, host
+			, port
+			, user
+			, password
+			, isPassive = None
+			, isTransferConnectionProtected = True):
+		ftp = FTP_TLS()
+		ftp.connect(host, port)
+		ftp.auth_tls()
+		ftp.login(user, password)
+		if isTransferConnectionProtected == True:
+			ftp.prot_p()
+		Connection.__init__(self, ftp, isPassive)
 
 class Struct:
 
-	def __init__(self, host, login, password):
-		self._struct = _Client(host, login, password).GetDump()
+	def __init__(self, connection):
+		self._struct = connection.ReadFilesStruct()
 
 	def Compare(self, rhs):
-		if self._struct['welcome'] != rhs._struct['welcome']: return False;
-		return self._struct == rhs._struct
+		if not 'welcome' in self._struct:
+			return False
+		elif len(self._struct['welcome']) == 0:
+			return False
+		elif not 'content' in self._struct:
+			return False
+		elif len(self._struct['content']) == 0:
+			return False
+		else:
+			return self._struct == rhs._struct
 
 	def Dump(self):
 		result = self._struct['welcome'] + ":\n"

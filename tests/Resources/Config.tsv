@@ -1,0 +1,7 @@
+*Variables*							
+${FTP DIRECT HOST}	192.168.132.133						
+${FTP DIRECT PORT}	21						
+${FTP TUNNELED HOST}	192.168.132.133						
+${FTP TUNNELED PORT}	21						
+${FTP USER}	q						
+${FTP PASSWORD}	q						
