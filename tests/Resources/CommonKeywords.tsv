@@ -1,0 +1,26 @@
+*Keywords*							
+Run unit tests and check RC and output							
+	[Arguments]	${parameters}					
+	${suffix}	Get Environment Variable	PROJECT_CONFIGURATION_SUFFIX	${false}			
+	${suffix}	Set Variable If	${suffix} == ${false}	${EMPTY}			
+	${rc}	${output}=	Run And Return Rc And Output	${UNIT TESTS EXEC FILE PATH}${suffix}.exe ${parameters}			
+	Log Many	${output}	${rc}				
+	Should Be Equal As Integers	${rc}	0	Units testing completed with error.			
+	Should be unit test completed successfully	${output}					
+							
+Start project process							
+	${suffix}	Get Environment Variable	PROJECT_CONFIGURATION_SUFFIX	${false}			
+	${suffix}	Set Variable If	${suffix} == ${false}	${EMPTY}			
+	Start Process	${PROJECT EXEC FILE_PATH}${suffix}.exe --standalone	project				
+							
+Start unit tests process							
+	[Arguments]	${parameters}	${alias}				
+	${suffix}	Get Environment Variable	PROJECT_CONFIGURATION_SUFFIX	${false}			
+	${suffix}	Set Variable If	${suffix} == ${false}	${EMPTY}			
+	Start Process	${UNIT TESTS EXEC FILE PATH}${suffix}.exe ${parameters}	${alias}				
+							
+Should be unit test completed successfully							
+	[Arguments]	${output}					
+	Should Not Contain	${output}	FAILED	Found error message in the units testing report.			
+	Should Not Match Regexp	${output}	PASSED\\s+]\\s+0 tests	No tests have been run.			
+							

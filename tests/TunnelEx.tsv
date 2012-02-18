@@ -3,6 +3,7 @@ Suite Setup
 Library	OperatingSystem						
 Library	Collections						
 Library	Lib/Test.py						
+Resource	Resources/CommonKeywords.tsv						
 Resource	Resources/Config.tsv						
 Resource	Resources/ConnectionKeywords.tsv						
 Resource	Resources/FtpKeywords.tsv						
@@ -21,10 +22,16 @@ FTPES
 	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in active mode and not protected transfering"						
 	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in passive mode and not protected transfering"						
 							
-Connections							
-	Test TCP connections						
+TCP connections							
+	[Setup]	Start TCP connections server					
+	Test connections with active data exchange						
+	Test connections with passive data exchange						
+	Test connections with active one-way data exchange						
+	Test connections with passive one-way data exchange						
+	Test connections with several connections						
+	[Teardown]	Stop connections server					
 							
 Units							
 	[Tags]	auto					
-	Test all unit						
+	Test all units						
 							

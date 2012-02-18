@@ -1,15 +1,12 @@
 *Variables*							
 ${CONNECTIONS TEST TYPE}	${EMPTY}						
+${CONNECTIONS TEST FILTER}	${EMPTY}						
 							
 *Keywords*							
-Start connections server							
-	Should be set connections test type						
-	${cmd}	${UNIT TESTS EXEC FILE} --${CONNECTIONS TEST TYPE}-server					
-	Start Process	${cmd}	connections server				
-							
-Start connections client							
-	Should be set connections test type						
-	Start Process	${UNIT TESTS EXEC FILE PATH} --${CONNECTIONS TEST TYPE}-client		connections client			
+Start ${type} connections server							
+	Set connections test type	${type}					
+	Start project process						
+	Start unit tests process	${CONNECTIONS TEST TYPE}-server	connections server				
 							
 Set connections test type							
 	[Arguments]	${type}					
@@ -18,6 +15,14 @@ Set connections test type
 	Dictionary Should Contain Key	${possible values}	${type}	Unknown type of client or server.			
 	${type}	Get From Dictionary	${possible values}	${type}			
 	Set Test Variable	${CONNECTIONS TEST TYPE}	${type}				
+							
+Set TCP connections test filter							
+	[Arguments]	${test}					
+	${possible values}	Create Dictionary	active data exchange	DataExchangeActive	passive data exchange	DataExchangePassive	active one-way data exchange
+	...	DataExchangeOneWayActive	passive one-way data exchange	DataOneWayExchangePassive	several connections	SeveralConnetions	
+	Dictionary Should Contain Key	${possible values}	${test}	Unknown unit test.			
+	${filter}	Get From Dictionary	${possible values}	${test}			
+	Set Test Variable	${CONNECTIONS TEST FILTER}	${filter}				
 							
 Wait for connections test end and check result							
 	Switch Process	connections client					
@@ -29,8 +34,15 @@ Should be set connections test type
 	${is set}	Convert To Boolean	${CONNECTIONS TEST TYPE}				
 	Run Keyword Unless	${is set}	Fail	Connection test type should be set at each test setup.			
 							
-Test ${type} connections							
-	Set connections test type	${type}					
-	Start connections client						
-	Wait for connections test end and check result						
+Test connections with ${test}							
+	Should be set connections test type						
+	Run Keyword	Set ${CONNECTIONS TEST TYPE} connections test filter	${test}				
+	Run unit tests and check RC and output	${CONNECTIONS TEST TYPE}-client --gtest_filter=${CONNECTIONS TEST FILTER}					
+							
+Stop connections server							
+	Should be set connections test type						
+	Stop All Processes						
+	Switch Process	connections server					
+	${test server output}	Read Process Output					
+	Should be unit test completed successfully	${test server output}					
 							
