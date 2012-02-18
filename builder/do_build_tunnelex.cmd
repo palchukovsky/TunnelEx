@@ -23,14 +23,14 @@ if "%IsFinalBuild%"=="true" (
 	if "%IsDebug%" NEQ "true" (
 		devenv.com "%SolutionDir%\sources\TunnelEx.sln" /Build "Test" /project Test
 	)
-	cd "%BinDir%"
-	TexTest_test.exe
+	cd "%SolutionDir%"
+	call test.cmd auto conf=test
 	@if %errorlevel% neq 0 goto Error
 )
 devenv.com "%SolutionDir%\sources\TunnelEx.sln" /Build "Release" /project Test
 if "%IsFinalBuild%"=="true" (
-	cd "%BinDir%"
-	TexTest.exe
+	cd "%SolutionDir%"
+	call test.cmd auto conf=release
 	@if %errorlevel% neq 0 goto Error
 )
 devenv.com "%SolutionDir%\sources\TunnelEx.sln" /Build "Release" /project Setup

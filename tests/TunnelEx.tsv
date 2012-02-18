@@ -25,5 +25,6 @@ Connections
 	Test TCP connections						
 							
 Units							
+	[Tags]	auto					
 	Test all unit						
 							
