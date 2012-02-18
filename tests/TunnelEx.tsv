@@ -1,7 +1,12 @@
 *Settings*							
+Suite Setup							
+Library	OperatingSystem						
+Library	Collections						
 Library	Lib/Test.py						
 Resource	Resources/Config.tsv						
+Resource	Resources/ConnectionKeywords.tsv						
 Resource	Resources/FtpKeywords.tsv						
+Resource	Resources/UnitsTestingKeywords.tsv						
 							
 *Test Cases*							
 FTP							
@@ -15,4 +20,10 @@ FTPES
 	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in passive mode and protected transfering"						
 	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in active mode and not protected transfering"						
 	"Compare master copy with FTPES server ""${FTP TUNNELED HOST}:${FTP TUNNELED PORT}"" with username ""${FTP USER}"" and password ""${FTP PASSWORD}"" in passive mode and not protected transfering"						
+							
+Connections							
+	Test TCP connections						
+							
+Units							
+	Test all unit						
 							

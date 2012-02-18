@@ -1,0 +1,36 @@
+*Variables*							
+${CONNECTIONS TEST TYPE}	${EMPTY}						
+							
+*Keywords*							
+Start connections server							
+	Should be set connections test type						
+	${cmd}	${UNIT TESTS EXEC FILE} --${CONNECTIONS TEST TYPE}-server					
+	Start Process	${cmd}	connections server				
+							
+Start connections client							
+	Should be set connections test type						
+	Start Process	${UNIT TESTS EXEC FILE PATH} --${CONNECTIONS TEST TYPE}-client		connections client			
+							
+Set connections test type							
+	[Arguments]	${type}					
+	${possible values}	Create Dictionary	TCP	tcp	UDP	udp	pipe
+	...	pipe					
+	Dictionary Should Contain Key	${possible values}	${type}	Unknown type of client or server.			
+	${type}	Get From Dictionary	${possible values}	${type}			
+	Set Test Variable	${CONNECTIONS TEST TYPE}	${type}				
+							
+Wait for connections test end and check result							
+	Switch Process	connections client					
+	${client output}	Read Process Output					
+	Log	${client output}					
+	Stop All Processes						
+							
+Should be set connections test type							
+	${is set}	Convert To Boolean	${CONNECTIONS TEST TYPE}				
+	Run Keyword Unless	${is set}	Fail	Connection test type should be set at each test setup.			
+							
+Test ${type} connections							
+	Set connections test type	${type}					
+	Start connections client						
+	Wait for connections test end and check result						
+							

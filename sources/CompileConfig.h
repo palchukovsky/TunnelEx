@@ -50,4 +50,6 @@
 
 #define NULL 0
 
+#define BOOST_FILESYSTEM_VERSION 2
+
 #endif

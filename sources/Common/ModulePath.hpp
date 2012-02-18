@@ -11,7 +11,7 @@
 #ifndef INCLUDED_FILE__TUNNELEX__ModulePath_h__0801041846
 #define INCLUDED_FILE__TUNNELEX__ModulePath_h__0801041846
 
-// include "Xml.hpp" in file, that inludes this file
+// include "Xml.hpp" in file, that includes this file
 
 #include "CompileWarningsBoost.h"
 #	include <boost/filesystem.hpp>

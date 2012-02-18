@@ -14,8 +14,6 @@
 #include "Constants.h"
 #include "LocalAssert.hpp"
 
-#define BOOST_FILESYSTEM_VERSION 2
-
 #include "Foreach.h"
 #include "Format.hpp"
 #include "Xml.hpp"

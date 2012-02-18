@@ -1,0 +1,16 @@
+*Variables*							
+${UNITS TEST FILTER}	${EMPTY}						
+							
+*Keywords*							
+Test ${name} unit							
+	Set unit test	${name}					
+	${rc}	${output}=	Run And Return Rc And Output	${UNIT TESTS EXEC FILE PATH} ${UNITS TEST FILTER}			
+	Log Many	${output}	${rc}				
+	Should Be Equal As Integers	${rc}	0	Units testing completed with error.			
+	Should Not Contain	${output}	FAILED	Found error message in the units testing report.			
+							
+Set unit test							
+	[Arguments]	${name}					
+	Should Be Equal	${name}	all				
+	Set Test Variable	${UNIT TEST NAME}	${EMPTY}				
+							

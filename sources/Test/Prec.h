@@ -17,8 +17,7 @@
 #include "Xml.hpp"
 #include "Crypto.hpp"
 #include "Format.hpp"
-
-#define BOOST_FILESYSTEM_VERSION 2
+#include "ModulePath.hpp"
 
 #include "Licensing/Prec.h"
 

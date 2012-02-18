@@ -463,7 +463,9 @@ namespace {
 		ServiceConfiguration::GetDefault()->Save();
 
 		{
-			fs::wpath ruleSetPath = L"RuleSet_1_3.xml";
+			fs::wpath ruleSetPath
+				= tex::Helpers::GetModuleFilePath().branch_path();
+			ruleSetPath /= L"RuleSet_1_3.xml";
 			std::ifstream orig(ruleSetPath.string().c_str());
 			ASSERT_TRUE(orig ? true : false);
 			std::ofstream test(ServiceConfiguration().GetRulesPath().c_str(), std::ios::trunc);

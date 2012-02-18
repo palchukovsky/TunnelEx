@@ -14,8 +14,6 @@
 #include "Constants.h"
 #include "LocalAssert.hpp"
 
-#define BOOST_FILESYSTEM_VERSION 2
-
 #include "ModulePath.hpp"
 #include "Xml.hpp"
 #include "UseUnused.hpp"
