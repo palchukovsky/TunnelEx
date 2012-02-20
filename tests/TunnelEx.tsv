@@ -8,6 +8,7 @@ Resource	Resources/Config.tsv
 Resource	Resources/ConnectionKeywords.tsv						
 Resource	Resources/FtpKeywords.tsv						
 Resource	Resources/UnitsTestingKeywords.tsv						
+Resource	Resources/sslKeywords.tsv						
 							
 *Test Cases*							
 FTP							
@@ -34,4 +35,7 @@ TCP connections
 Units							
 	[Tags]	auto					
 	Test all units						
+							
+SSL							
+	Create TCP connection, convert to SSL and test echo						
 							

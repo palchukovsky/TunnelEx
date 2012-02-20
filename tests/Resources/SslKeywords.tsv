@@ -1,0 +1,19 @@
+*Variables*							
+${SSL CONNECTION}	${EMPTY}						
+							
+*Keywords*							
+Create TCP connection, convert to SSL and test echo							
+	Start test service process	ssl-echo-server 1234	server				
+	${connection}	Connect to TCP server	localhost	101			
+	Set Test Variable	${SSL CONNECTION}	${connection}				
+	${test data}	Set Variable	qwertyuiop1234567890!@#$%^&*()_+				
+	Repeat Keyword	1000	Send data to TCP server and check echo	${connection}	${test data}		
+	[Teardown]	Close SSL connections and servers					
+							
+Close SSL connections and servers							
+	Disconnect from TCP server	${SSL CONNECTION}					
+	Switch Process	server					
+	${server output}	Read Process Output					
+	Log	${server output}					
+	Stop All Processes						
+							

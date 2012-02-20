@@ -1,5 +1,6 @@
 
 import sys
+import socket
 from TunnelEx.Test import Ftp
 
 class Test:
@@ -36,7 +37,7 @@ class Test:
 
 	def DisconnectFromFtpServer(self, connection):
 		"""Closes FTP server connect."""
-		return connection.Close()
+		connection.Close()
 
 	def ReadFilesStructureFromFtpServer(self, connection):
 		"""Reads files structure and returns as object."""
@@ -49,6 +50,24 @@ class Test:
 	def DumpFtpServerFilesStructure(self, server):
 		"""Dumps the FTP server files structure into a string."""
 		return server.Dump()
+
+	def ConnectToTcpServer(self, host, port):
+		"""Creates TCP connection to server and returns as object."""
+		result = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		result.connect((str(host), int(port)))
+		return result
+
+	def SendToTcpServer(self, connection, data):
+		"""Sends data to TCP connection."""
+		connection.sendall(data)
+
+	def ReceiveFromTcpServer(self, connection):
+		"""Sends data to TCP connection."""
+		return connection.recv(1024)
+
+	def DisconnectFromTcpServer(self, connection):
+		"""Closes TCP connection."""
+		connection.close()
 
 def Main():
 	if len(sys.argv) > 1:
