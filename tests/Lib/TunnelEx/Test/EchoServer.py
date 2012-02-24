@@ -15,6 +15,7 @@ class EchoServer:
 
 	def WaitAndAnswer(self):
 		connection = self._server.Accept()[0]
+#		connection.settimeout(5)
 		self._server.Close()
 		while True:
 			data = None

@@ -1,3 +1,8 @@
+*Settings*
+Library	OperatingSystem
+Library	Collections	
+Resource	CommonKeywords.tsv
+
 *Variables*							
 ${CONNECTIONS TEST TYPE}	${EMPTY}						
 ${CONNECTIONS TEST FILTER}	${EMPTY}						
@@ -41,7 +46,6 @@ Test connections with ${test}
 							
 Stop connections server							
 	Should be set connections test type						
-	Stop All Processes						
 	Switch Process	connections server					
 	${test server output}	Read Process Output					
 	Should be unit test completed successfully	${test server output}					

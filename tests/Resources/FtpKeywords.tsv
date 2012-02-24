@@ -1,5 +1,9 @@
+*Settings*							
+Library	../Lib/Test.py	
+
 *Variables*							
 ${FTP MASTER COPY}	${EMPTY}						
+${FTP CONNECTION}	${EMPTY}						
 							
 *Keywords*							
 "Compare master copy with FTP server ""${host}:${port}"" with username ""${user}"" and password ""${password}"" in ${mode} mode"							
@@ -7,9 +11,10 @@ ${FTP MASTER COPY}	${EMPTY}
 	Check FTP mode	${mode}					
 	${is passive mode}	Set Variable If	'${mode}' == 'passive'	${true}	${false}		
 	${connection}	Connect to FTP server	${host}	${port}	${user}	${password}	${is passive mode}
-	${struct}	Read files structure from FTP server	${connection}				
-	Disconnect from FTP server	${connection}					
+	Set Test Variable	${FTP CONNECTION}	${connection}				
+	${struct}	Read files structure from FTP server	${FTP CONNECTION}				
 	FTP server files structure should be identical with master copy	${struct}					
+	[Teardown]	Diconnect	${FTP CONNECTION}				
 							
 "Compare master copy with FTPES server ""${host}:${port}"" with username ""${user}"" and password ""${password}"" in ${mode} mode and ${transfer mode} transfering"							
 	Should be created FTP master copy						
@@ -19,15 +24,15 @@ ${FTP MASTER COPY}	${EMPTY}
 	${is transfer protected}	Set Variable If	'${transfer mode}' == 'protected'	${true}	${false}		
 	${connection}	Connect to FTPES server	${host}	${port}	${user}	${password}	${is passive mode}
 	...	${is transfer protected}					
-	${struct}	Read files structure from FTP server	${connection}				
-	Disconnect from FTP server	${connection}					
+	Set Test Variable	${FTP CONNECTION}	${connection}				
+	${struct}	Read files structure from FTP server	${FTP CONNECTION}				
 	FTP server files structure should be identical with master copy	${struct}					
 							
 Fail FTP servers files structure comparison							
 	[Arguments]	${testStruct}					
-	${master copy dump}	Dump FTP server files structure	${FTP MASTER COPY}				
+	${master copy dump}	Dump	${FTP MASTER COPY}				
 	Log	${master copy dump}					
-	${test dump}	Dump FTP server files structure	${test struct}				
+	${test dump}	Dump	${test struct}				
 	Log	${test dump}					
 	Fail	Server files structure are not identical with master copy.					
 							
@@ -40,9 +45,10 @@ FTP server files structure should be identical with master copy
 	${isExists}	Convert To Boolean	${FTP MASTER COPY}				
 	Should Be True	${is exists} == ${false}					
 	${connection}	Connect to FTP server	${host}	${port}	${user}	${password}	
-	${struct}	Read files structure from FTP server	${connection}				
-	Disconnect from FTP server	${connection}					
+	Set Test Variable	${FTP CONNECTION}	${connection}				
+	${struct}	Read files structure from FTP server	${FTP CONNECTION}				
 	Set Suite Variable	${FTP MASTER COPY}	${struct}				
+	[Teardown]	Disconnect	${FTP CONNECTION}				
 							
 "Create FTP master copy ""${host}:${port}"" with username ""${user}"" and password ""${password}"" if it dosn't exist"							
 	${is exists}	Convert To Boolean	${FTP MASTER COPY}				

@@ -1,3 +1,6 @@
+*Settings*							
+Library	OperatingSystem						
+							
 *Keywords*							
 Run unit tests and check RC and output							
 	[Arguments]	${parameters}					
@@ -11,13 +14,13 @@ Run unit tests and check RC and output
 Start project process							
 	${suffix}	Get Environment Variable	PROJECT CONFIGURATION SUFFIX	${false}			
 	${suffix}	Set Variable If	${suffix} == ${false}	${EMPTY}			
-	Start Process	${PROJECT EXEC FILE PATH}${suffix}.exe --standalone	project				
+	Start Process	${PROJECT EXEC FILE PATH}${suffix}.exe --standalone	None	project			
 							
 Start unit tests process							
 	[Arguments]	${parameters}	${alias}				
 	${suffix}	Get Environment Variable	PROJECT CONFIGURATION SUFFIX	${false}			
 	${suffix}	Set Variable If	${suffix} == ${false}	${EMPTY}			
-	Start Process	${UNIT TESTS EXEC FILE PATH}${suffix}.exe ${parameters}	${alias}				
+	Start Process	${UNIT TESTS EXEC FILE PATH}${suffix}.exe ${parameters}	None	${alias}			
 							
 Should be unit test completed successfully							
 	[Arguments]	${output}					
@@ -26,11 +29,11 @@ Should be unit test completed successfully
 							
 Start test service process							
 	[Arguments]	${parameters}	${alias}				
-	Start Process	python ${PROJECT TESTS LIB DIR}Service.py ${parameters}		${alias}			
+	Start Process	"""python ${PROJECT TESTS LIB DIR}Service.py ${parameters}"""	None	${alias}			
 							
-Send data to TCP server and check echo							
+Send data to server and check echo							
 	[Arguments]	${connection}	${test data}				
-	Send to TCP server	${connection}	${test data}				
-	${server answer}	Receive from TCP server	${connection}				
+	Send to connection	${connection}	${test data}				
+	${server answer}	Read from connection	${connection}				
 	Should Be Equal	${test data}	${server answer}				
 							

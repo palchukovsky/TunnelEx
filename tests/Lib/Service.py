@@ -14,7 +14,7 @@ from TunnelEx.Test.EchoServer import EchoServer
 
 def Main():
 	if len(sys.argv) > 1:
-		if sys.argv[1] == 'ssl-echo-server':
+		if sys.argv[1] == 'ssl-echo-server' and len(sys.argv) > 2:
 			server = EchoServer(SslServer("A:\\server.pem", int(sys.argv[2])))
 			server.WaitAndAnswer()
 			return

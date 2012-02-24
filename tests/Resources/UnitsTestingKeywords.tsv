@@ -1,3 +1,6 @@
+*Settings*							
+Resource	CommonKeywords.tsv						
+							
 *Variables*							
 ${UNITS TEST FILTER}	${EMPTY}						
 							

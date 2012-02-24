@@ -1,9 +1,13 @@
 
 import sys
 import socket
+from M2Crypto import SSL
 from TunnelEx.Test import Ftp
 
 class Test:
+
+	class UnknownParameterType(Exception):
+		pass
 
 	def ConnectToFtpServer(self, host, port, user, password, isPassive = None):
 		"""Creates connection to FTP server and returns as object."""
@@ -35,39 +39,59 @@ class Test:
 			isPassive,
 			bool(isTransferConnectionProtected))
 
-	def DisconnectFromFtpServer(self, connection):
-		"""Closes FTP server connect."""
-		connection.Close()
-
-	def ReadFilesStructureFromFtpServer(self, connection):
-		"""Reads files structure and returns as object."""
-		return Ftp.Struct(connection)
-
 	def CompareFtpServersFilesStructures(self, server1, server2):
 		"""Compares two FTP servers files structures and returns True if they are identical."""
 		return server1.Compare(server2)
 
-	def DumpFtpServerFilesStructure(self, server):
-		"""Dumps the FTP server files structure into a string."""
-		return server.Dump()
-
 	def ConnectToTcpServer(self, host, port):
 		"""Creates TCP connection to server and returns as object."""
 		result = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		result.settimeout(5)
+		result.connect((str('localhost'), int(101)))
+		return result
+
+	def ConnectToSslServer(self, host, port):
+		"""Creates SSL connection to server and returns as object."""
+		context = SSL.Context()
+		context.set_verify(SSL.verify_peer | SSL.verify_fail_if_no_peer_cert, depth = 9)
+		if context.load_verify_locations('ca.pem') != 1:
+			raise Exception('No CA certificate')
+		result = SSL.Connection(context)
 		result.connect((str(host), int(port)))
 		return result
 
-	def SendToTcpServer(self, connection, data):
-		"""Sends data to TCP connection."""
-		connection.sendall(data)
+	def ReadFilesStructureFromFtpServer(self, connection):
+		return Ftp.Struct(connection)
 
-	def ReceiveFromTcpServer(self, connection):
-		"""Sends data to TCP connection."""
-		return connection.recv(1024)
+	def Dump(self, dumpSubj):
+		"""Dumps into a string."""
+		if isinstance(dumpSubj, Ftp.Struct):
+			return dumpSubj.Dump()
+		else:
+			raise Test.UnknownParameterType
 
-	def DisconnectFromTcpServer(self, connection):
-		"""Closes TCP connection."""
-		connection.close()
+	def SendToConnection(self, connection, data):
+		"""Sends data to connection."""
+		if isinstance(connection, socket.socket):
+			connection.send(data)
+		else:
+			raise Test.UnknownParameterType
+
+	def ReadFromConnection(self, connection):
+		"""Read data from connection."""
+		if isinstance(connection, socket.socket):
+			return connection.recv(1024)
+		else:
+			raise Test.UnknownParameterType
+
+	def Disconnect(self, connection):
+		"""Closes connection."""
+		if isinstance(connection, Ftp.PlainConnection) or isinstance(connection, Ftp.SecureConnection):
+			connection.Close()
+		elif isinstance(connection, socket.socket):
+			connection.close()
+		else:
+			raise Test.UnknownParameterType
 
 def Main():
 	if len(sys.argv) > 1:

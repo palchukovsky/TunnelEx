@@ -1,14 +1,10 @@
 *Settings*							
 Suite Setup							
-Library	OperatingSystem						
-Library	Collections						
-Library	Lib/Test.py						
-Resource	Resources/CommonKeywords.tsv						
 Resource	Resources/Config.tsv						
 Resource	Resources/ConnectionKeywords.tsv						
 Resource	Resources/FtpKeywords.tsv						
 Resource	Resources/UnitsTestingKeywords.tsv						
-Resource	Resources/sslKeywords.tsv						
+Resource	Resources/SslKeywords.tsv						
 							
 *Test Cases*							
 FTP							
@@ -37,5 +33,5 @@ Units
 	Test all units						
 							
 SSL							
-	Create TCP connection, convert to SSL and test echo						
+	"Create TCP connection to ""localhost:101"", convert to SSL and test echo 100 times with ""${FULL KEYBOARD STRING}"""						
 							
