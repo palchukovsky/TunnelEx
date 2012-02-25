@@ -14,5 +14,5 @@ ${FTP TUNNELED HOST}	127.0.0.1
 ${FTP TUNNELED PORT}	21						
 ${FTP USER}	q						
 ${FTP PASSWORD}	q						
-${FULL KEYBOARD STRING}	"`1234567890-=qwertyuiop[]\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:""ZXCVBNM<>?"						
+${FULL KEYBOARD STRING}	"1234567890-=qwertyuiop[]\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:""ZXCVBNM<>?"						
 							

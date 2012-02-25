@@ -3,11 +3,15 @@ import sys
 import socket
 from M2Crypto import SSL
 from TunnelEx.Test import Ftp
+from M2Crypto.SSL.timeout import timeout as SslTimeout
 
 class Test:
 
 	class UnknownParameterType(Exception):
 		pass
+
+	def __init__(self):
+		self._timeout = 5
 
 	def ConnectToFtpServer(self, host, port, user, password, isPassive = None):
 		"""Creates connection to FTP server and returns as object."""
@@ -46,17 +50,21 @@ class Test:
 	def ConnectToTcpServer(self, host, port):
 		"""Creates TCP connection to server and returns as object."""
 		result = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		result.settimeout(5)
-		result.connect((str('localhost'), int(101)))
+		result.settimeout(self._timeout)
+		result.connect((str(host), int(port)))
 		return result
 
 	def ConnectToSslServer(self, host, port):
 		"""Creates SSL connection to server and returns as object."""
 		context = SSL.Context()
-		context.set_verify(SSL.verify_peer | SSL.verify_fail_if_no_peer_cert, depth = 9)
-		if context.load_verify_locations('ca.pem') != 1:
-			raise Exception('No CA certificate')
+		context.set_verify(SSL.verify_none, depth = 0)
+		# caFilePath = os.path.join(Global.testsCryptoKeysDir, 'Server.cer')
+		# if context.load_verify_locations(caFilePath) != 1:
+		#	raise Exception('No CA certificate')
 		result = SSL.Connection(context)
+		timeout = SslTimeout(self._timeout)
+		result.set_socket_read_timeout(timeout)
+		result.set_socket_write_timeout(timeout)
 		result.connect((str(host), int(port)))
 		return result
 
@@ -72,15 +80,15 @@ class Test:
 
 	def SendToConnection(self, connection, data):
 		"""Sends data to connection."""
-		if isinstance(connection, socket.socket):
-			connection.send(data)
+		if isinstance(connection, socket.socket) or isinstance(connection, SSL.Connection):
+			connection.send(str(data))
 		else:
 			raise Test.UnknownParameterType
 
 	def ReadFromConnection(self, connection):
 		"""Read data from connection."""
-		if isinstance(connection, socket.socket):
-			return connection.recv(1024)
+		if isinstance(connection, socket.socket) or isinstance(connection, SSL.Connection):
+			return str(connection.recv(1024))
 		else:
 			raise Test.UnknownParameterType
 
@@ -88,7 +96,7 @@ class Test:
 		"""Closes connection."""
 		if isinstance(connection, Ftp.PlainConnection) or isinstance(connection, Ftp.SecureConnection):
 			connection.Close()
-		elif isinstance(connection, socket.socket):
+		elif isinstance(connection, socket.socket) or isinstance(connection, SSL.Connection):
 			connection.close()
 		else:
 			raise Test.UnknownParameterType
@@ -125,9 +133,18 @@ def Main():
 			test.DumpFtpServerFilesStructure(struct)
 			print 'OK'
 			return
+		elif sys.argv[1] == 'test-ssl-client':
+			print 'Testing SSL client to {0}:{1}...'.format(sys.argv[2], sys.argv[3])
+			test = Test()
+			connection = test.ConnectToSslServer(sys.argv[2], sys.argv[3])
+			connection.send('Hello World!')
+			print connection.recv()
+			print 'OK'
+			return
 	print 'Help:'
 	print '	test-read-from-ftp ${host} ${port} ${user} ${password}'
 	print '	test-read-from-ftpes ${host} ${port} ${user} ${password}'
+	print '	test-ssl-client ${host} ${port}'
 
 if __name__ == '__main__':
 	Main()

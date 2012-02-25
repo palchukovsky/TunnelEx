@@ -32,6 +32,15 @@ Units
 	[Tags]	auto					
 	Test all units						
 							
-SSL							
+TCP <-> SSL							
+	[Setup]	Start SSL echo server					
+	[Timeout]	1 minute					
 	"Create TCP connection to ""localhost:101"", convert to SSL and test echo 100 times with ""${FULL KEYBOARD STRING}"""						
+	[Teardown]	Stop SSL echo server					
+							
+SSL <-> TCP							
+	[Setup]	Start TCP echo server					
+	[Timeout]	1 minute					
+	"Create SSL connection to ""localhost:102"", convert to TCP and test echo 100 times with ""${FULL KEYBOARD STRING}"""						
+	[Teardown]	Stop TCP echo server					
 							

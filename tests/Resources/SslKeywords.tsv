@@ -2,27 +2,33 @@
 Library	../Lib/Test.py						
 Resource	CommonKeywords.tsv						
 							
-*Variables*							
-${SSL CONNECTION}	${EMPTY}						
-							
 *Keywords*							
 "Create TCP connection to ""${host}:${port}"", convert to SSL and test echo ${count} times with ""${test data}"""							
-	Start SSL echo server						
+	[Timeout]	1 minute					
 	${connection}	Connect to TCP server	${host}	${port}			
-	Set Test Variable	${SSL CONNECTION}	${connection}				
+	Repeat Keyword	${count}	Send data to server and check echo	${connection}	${FULL KEYBOARD STRING}		
+	Disconnect	${connection}					
+							
+"Create SSL connection to ""${host}:${port}"", convert to TCP and test echo ${count} times with ""${test data}"""							
+	[Timeout]	1 minute					
+	${connection}	Connect to SSL server	${host}	${port}			
 	Repeat Keyword	${count}	Send data to server and check echo	${connection}	${test data}		
-	[Teardown]	Disconnect SSL connection and stop SSL echo server					
+	Disconnect	${connection}					
 							
 Start SSL echo server							
-	Start test service process	ssl-echo-server 1234	ssl echo server				
+	Start test service process	ssl-echo-server 1234	SSL echo server				
 							
 Stop SSL echo server							
-	Switch Process	ssl echo server					
+	Switch Process	SSL echo server					
 	${ssl echo server output}	Read Process Output					
 	Log	${ssl echo server output}					
 	Stop All Processes						
 							
 Disconnect SSL connection and stop SSL echo server							
-	Disconnect	 ${SSL CONNECTION}					
+	Disconnect	${SSL CONNECTION}					
 	Stop SSL echo server						
+							
+Disconnect SSL connection and stop TCP echo server							
+	Disconnect	${SSL CONNECTION}					
+	Stop TCP echo server						
 							

@@ -29,11 +29,21 @@ Should be unit test completed successfully
 							
 Start test service process							
 	[Arguments]	${parameters}	${alias}				
-	Start Process	"""python ${PROJECT TESTS LIB DIR}Service.py ${parameters}"""	None	${alias}			
+	Start Process	python ${PROJECT TESTS LIB DIR}Service.py ${parameters}	None	${alias}			
 							
 Send data to server and check echo							
 	[Arguments]	${connection}	${test data}				
 	Send to connection	${connection}	${test data}				
 	${server answer}	Read from connection	${connection}				
+	Log	${server answer}					
 	Should Be Equal	${test data}	${server answer}				
+							
+Start TCP echo server							
+	Start test service process	tcp-echo-server 1235	TCP echo server				
+							
+Stop TCP echo server							
+	Switch Process	TCP echo server					
+	${tcp echo server output}	Read Process Output					
+	Log	${tcp echo server output}					
+	Stop All Processes						
 							

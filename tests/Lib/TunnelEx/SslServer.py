@@ -8,22 +8,21 @@
 	URL: http://tunnelex.net
 '''
 
-import socket
+from TunnelEx.TcpServer import TcpServer
 from M2Crypto import SSL
+from M2Crypto.SSL.timeout import timeout as SslTimeout
 
-class SslServer:
+class SslServer(TcpServer):
 
 	def __init__(self, certFile, port, host = 'localhost', backlog = 5):
 		self._context = SSL.Context()
 		self._context.load_cert_chain(certFile)
-		sock = socket.socket()
-		sock.bind((host, port))
-		sock.listen(backlog)
-		self._connection = SSL.Connection(self._context, sock)
+		self._SetConnection(
+			SSL.Connection(
+				self._context,
+				self._OpenPort(host, port, backlog)))
 
-	def Accept(self):
-		clientSocket, clientAddress = self._connection.accept()
-		return [clientSocket, clientAddress]
-
-	def Close(self):
-		self._connection.close()
+	def SetConnectionTimeout(self, connection, timeoutSecs):
+		timeout = SslTimeout(timeoutSecs)
+		connection.set_socket_read_timeout(timeout)
+		connection.set_socket_write_timeout(timeout)
