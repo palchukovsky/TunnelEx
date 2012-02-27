@@ -58,6 +58,7 @@
 #	include <boost/algorithm/string.hpp>
 #	include <boost/cast.hpp>
 #	include <boost/regex.hpp>
+#	include <boost/thread.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <string>

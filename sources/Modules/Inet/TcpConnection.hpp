@@ -146,59 +146,88 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	void TcpConnection<SslSockStream>::ReadRemote(MessageBlock &messageBlock) {
 		
 		assert(m_dataStream.get());
+
+		Stream::Lock streamLock(GetDataStream().GetMutex());
 		
-		if (	GetDataStream().IsDecryptorEncryptorMode()
-				&& messageBlock.GetUnreadedDataSize() > 0) {
-		
-			GetDataStream().Decrypt(messageBlock);
-
-			if (!GetDataStream().GetEncrypted().empty()) {
-				try {
-					WriteDirectly(
-						*CreateMessageBlock(
-							GetDataStream().GetEncrypted().size(),
-							&GetDataStream().GetEncrypted()[0]));
-				} catch (...) {
-					GetDataStream().ClearEncrypted();
-					throw;
-				}
-				GetDataStream().ClearEncrypted();
-			}
-
-			if (GetDataStream().GetDecrypted().size() > messageBlock.GetBlockSize()) {
-				Base::ReadRemote(
-					*CreateMessageBlock(
-						GetDataStream().GetDecrypted().size(),
-						&GetDataStream().GetDecrypted()[0]));
-			} else {
-				if (!GetDataStream().GetDecrypted().empty()) {
-					messageBlock.SetData(
-						&GetDataStream().GetDecrypted()[0],
-						GetDataStream().GetDecrypted().size());
-				} else {
-					messageBlock.Read();
-				}
-				Base::ReadRemote(messageBlock);
-			}
-
-		} else {
+		if (	!GetDataStream().IsDecryptorEncryptorMode()
+				|| messageBlock.GetUnreadedDataSize() == 0) {
+			streamLock.unlock();
 			Base::ReadRemote(messageBlock);
+			return;
 		}
+		
+		GetDataStream().Decrypt(messageBlock);
+
+		AutoPtr<MessageBlock> messageBlockEncrypted;
+		if (!GetDataStream().GetEncrypted().empty()) {
+			struct Cleaner : private boost::noncopyable {
+				explicit Cleaner(Stream &stream)
+						: stream(stream) {
+					//...//
+				}
+				~Cleaner() {
+					stream.ClearEncrypted();
+				}
+				Stream &stream;
+			} cleaner(GetDataStream());
+			messageBlockEncrypted = CreateMessageBlock(
+				GetDataStream().GetEncrypted().size(),
+				&GetDataStream().GetEncrypted()[0]);
+		}
+
+		AutoPtr<MessageBlock> messageBlockDecrypted;
+		MessageBlock *messageBlockToSend = &messageBlock;
+		if (GetDataStream().GetDecrypted().size() > messageBlock.GetBlockSize()) {
+			messageBlockDecrypted = CreateMessageBlock(
+				GetDataStream().GetDecrypted().size(),
+				&GetDataStream().GetDecrypted()[0]);
+			messageBlockToSend = messageBlockDecrypted.Get();
+		} else if (!GetDataStream().GetDecrypted().empty()) {
+			messageBlock.SetData(
+				&GetDataStream().GetDecrypted()[0],
+				GetDataStream().GetDecrypted().size());
+		} else {
+			messageBlock.Read();
+		}
+
+		streamLock.unlock();
+
+		if (messageBlockEncrypted) {
+			WriteDirectly(*messageBlockEncrypted);
+		}
+		Base::ReadRemote(*messageBlockToSend);
 
 	}
 
 	template<>
 	DataTransferCommand TcpConnection<SslSockStream>::Write(MessageBlock &messageBlock) {
+
+		Stream::Lock streamLock(GetDataStream().GetMutex());
 		
 		if (	!GetDataStream().IsDecryptorEncryptorMode()
 				|| messageBlock.GetUnreadedDataSize() == 0) {
+			streamLock.unlock();
 			return Base::Write(messageBlock);
 		}
 
 		GetDataStream().Encrypt(messageBlock);
 		
-		DataTransferCommand result;
-		try {
+		AutoPtr<MessageBlock> messageBlockEncrypted;
+		MessageBlock *messageBlockToSend = &messageBlock;
+		{
+			struct Cleaner : private boost::noncopyable {
+				explicit Cleaner(Stream &stream, Stream::Lock &lock)
+						: stream(stream)
+						, lock(lock) {
+					//...//
+				}
+				~Cleaner() {
+					stream.ClearEncrypted();
+					lock.unlock();
+				}
+				Stream &stream;
+				Stream::Lock &lock;
+			} cleaner(GetDataStream(), streamLock);
 			if (GetDataStream().GetEncrypted().size() <= messageBlock.GetBlockSize()) {
 				if (GetDataStream().GetEncrypted().empty()) {
 					messageBlock.Read();
@@ -207,19 +236,15 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 						&GetDataStream().GetEncrypted()[0],
 						GetDataStream().GetEncrypted().size());
 				}
-				result = Base::Write(messageBlock);
 			} else {
-				result = Base::Write(
-					*CreateMessageBlock(
-						GetDataStream().GetEncrypted().size(),
-						&GetDataStream().GetEncrypted()[0]));
+				messageBlockEncrypted = CreateMessageBlock(
+					GetDataStream().GetEncrypted().size(),
+					&GetDataStream().GetEncrypted()[0]);
+				messageBlockToSend = messageBlockEncrypted.Get();
 			}
-		} catch (...) {
-			GetDataStream().ClearEncrypted();
-			throw;
 		}
-		GetDataStream().ClearEncrypted();
-		return result;
+
+		return Base::Write(*messageBlockToSend);
 
 	}
 

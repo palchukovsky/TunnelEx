@@ -1,0 +1,16 @@
+*Settings*							
+Resource	CommonKeywords.tsv						
+							
+*Variables*							
+${UNITS TEST FILTER}	${EMPTY}						
+							
+*Keywords*							
+Test ${name} units							
+	Set unit test	${name}					
+	Run unit tests and check RC and output	${UNITS TEST FILTER}					
+							
+Set unit test							
+	[Arguments]	${name}					
+	Should Be Equal	${name}	all				
+	Set Test Variable	${UNIT TEST NAME}	${EMPTY}				
+							

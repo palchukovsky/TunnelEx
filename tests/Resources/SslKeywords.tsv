@@ -1,0 +1,46 @@
+*Settings*							
+Library	../Lib/Test.py						
+Resource	CommonKeywords.tsv						
+							
+*Keywords*							
+"Create TCP connection to ""${host}:${port}"", convert to SSL and test echo ${count} times with ""${test data}"""							
+	[Timeout]	1 minute					
+	${connection}	Connect to TCP server	${host}	${port}			
+	Repeat Keyword	${count}	Send data to server and check echo	${connection}	${FULL KEYBOARD STRING}		
+	Disconnect	${connection}					
+							
+"Create TCP connection to ""${host}:${port}"", convert to SSL and test echo ${count} times with big chunk"							
+	[Timeout]	1 minute					
+	${connection}	Connect to TCP server	${host}	${port}			
+	Repeat Keyword	${count}	Send big chunk data to server and check echo	${connection}			
+	Disconnect	${connection}					
+							
+"Create SSL connection to ""${host}:${port}"", convert to TCP and test echo ${count} times with ""${test data}"""							
+	[Timeout]	1 minute					
+	${connection}	Connect to SSL server	${host}	${port}			
+	Repeat Keyword	${count}	Send data to server and check echo	${connection}	${test data}		
+	Disconnect	${connection}					
+							
+"Create SSL connection to ""${host}:${port}"", convert to TCP and test echo ${count} times with big chunk"							
+	[Timeout]	1 minute					
+	${connection}	Connect to SSL server	${host}	${port}			
+	Repeat Keyword	${count}	Send big chunk data to server and check echo	${connection}			
+	Disconnect	${connection}					
+							
+Start SSL echo server							
+	Start test service process	ssl-echo-server 1234	SSL echo server				
+							
+Stop SSL echo server							
+	Switch Process	SSL echo server					
+	${ssl echo server output}	Read Process Output					
+	Log	${ssl echo server output}					
+	Stop All Processes						
+							
+Disconnect SSL connection and stop SSL echo server							
+	Disconnect	${SSL CONNECTION}					
+	Stop SSL echo server						
+							
+Disconnect SSL connection and stop TCP echo server							
+	Disconnect	${SSL CONNECTION}					
+	Stop TCP echo server						
+							

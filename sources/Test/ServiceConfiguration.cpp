@@ -20,7 +20,8 @@ namespace xml = TunnelEx::Helpers::Xml;
 namespace {
 
 	TEST(ServiceConfiguration, DefaultValues) {
-		fs::wpath configurationFile = fs::initial_path<fs::wpath>();
+		fs::wpath configurationFile
+			= tex::Helpers::GetModuleFilePath().branch_path();
 		configurationFile /= L"DefaultServiceConfigurationTest.xml";
 		if (fs::exists(configurationFile)) {
 			ASSERT_TRUE(fs::remove(configurationFile));
@@ -42,7 +43,8 @@ namespace {
 	}
 
 	TEST(ServiceConfiguration, Validation) {
-		fs::wpath configurationFile = fs::initial_path<fs::wpath>();
+		fs::wpath configurationFile
+			= tex::Helpers::GetModuleFilePath().branch_path();
 		configurationFile /= L"DefaultServiceConfigurationTest.xml";
 		if (fs::exists(configurationFile)) {
 			ASSERT_TRUE(fs::remove(configurationFile));
@@ -69,7 +71,8 @@ namespace {
 	}
 
 	TEST(ServiceConfiguration, Set) {
-		fs::wpath configurationFile = fs::initial_path<fs::wpath>();
+		fs::wpath configurationFile
+			= tex::Helpers::GetModuleFilePath().branch_path();
 		configurationFile /= L"DefaultServiceConfigurationTest.xml";
 		if (fs::exists(configurationFile)) {
 			ASSERT_TRUE(fs::remove(configurationFile));

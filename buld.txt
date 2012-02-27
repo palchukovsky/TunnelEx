@@ -22,9 +22,30 @@
     * doxygen 1.6.2 (http://www.doxygen.org);
     * Graphviz 2.26 (http://www.graphviz.org);
     * 7-Zip 4.65 (http://7-zip.org);
-    * Perl (ActivePerl 5.12.3, http://www.activestate.com/activeperl/);
     * NASM 2.09.08 (http://www.nasm.us, минимальная установка);
     * Gnuwin32 (http://getgnuwin32.sourceforge.net/);
+    * Perl (ActivePerl 5.12.3, http://www.activestate.com/activeperl/);
+    * Python (version 2.7.2, 32-bit,
+      http://python.org, http://python.org/ftp/python/2.7.2/python-2.7.2.msi)
+    * Robot Framework (только если требуется функциональное тестирование):
+        * Robot Framework (version 2.6.3, 32-bit,
+          http://code.google.com/p/robotframework,
+          http://robotframework.googlecode.com/files/robotframework-2.6.3.win32.exe);
+        * M2Crypto (version 0.21.1, 32-bit,
+          http://chandlerproject.org/Projects/MeTooCrypto,
+          http://chandlerproject.org/pub/Projects/MeTooCrypto/M2Crypto-0.21.1.win32-py2.7.msi),
+          после установки скопировать в корень директории Python файлы
+          ssleay32.dll и libeay32.dll, которые будут готовы после сборки
+          TunnelEx;
+        * RIDE:
+            * wxPython (version 2.8.12.1, unicode, 32-bit,
+              http://wxpython.org,
+              http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.1-py27.exe);
+            * RIDE (version 0.41, 32-bit,
+              https://github.com/robotframework/RIDE/wiki,
+              https://github.com/downloads/robotframework/RIDE/robotframework-ride-0.41.win32.exe);
+
+
 
 1.2. Требование к настройке
 ---------------------------
@@ -45,26 +66,33 @@
 каталог "externals", в том виде, в котором они были получены с сайта
 производителя (если в перечне ниже не оговорено другое). Для сборки
 проекта требуются следующие сторонние библиотеки:
+
     * ACE 6.0.0 (http://download.dre.vanderbilt.edu/) - архив 
       "sources only"-дистрибутива должен быть запакован с помощью TAR+BZ2
       и иметь имя ACE-src-6.0.0.tar.bz2;
+
     * Boost 1.46.1 (http://boost.org, http://www.boostpro.com/download), все
       компоненты (static-библиотеки, для многопоточной runtime-библиотеки)
       - путь к каталогу, в котором установлена библиотека должен быть указан
       в переменной окружения BOOST_PATH (например если она установлена в
       C:\Program Files\boost\boost_1_47, то BOOST_PATH должна содержать
       C:\Program Files\boost);
+
     * Libxml2 2.7.2 (ftp://xmlsoft.org/libxml2/) - архив дистрибутива должен
       быть запакован с помощью TAR+ZIP и иметь имя libxml2-sources-2.7.2.tar.gz;
+
     * wxWidgets 2.8.10 (http://wxwidgets.org/downloads/) - архив дистрибутива
       должен быть запакован с помощью TAR+BZ2 и иметь имя
       wxWidgets-2.8.10.tar.bz2;
+
     * OpenSSL 1.0.0d (http://openssl.org/source/) - архив дистрибутива должен
       быть запакован с помощью TAR+ZIP и иметь имя openssl-1.0.0d.tar.gz;
+
     * MiniUPnP client (http://miniupnp.free.fr/files/) - дистрибутив должен
       состоять из двух частей: TAR+ZIP архива miniupnpc-1.4.20100418.tar.gz с
       исходными кодами и ZIP архива upnpc-exe-win32-20100418.zip с бинарными
       файлам;
+
     * Google Test 1.6.0 (http://code.google.com/p/googletest/),
       static-библиотеки, для многопоточной runtime-библиотеки - путь к
       каталогу, в котором установлена фреймворк должен быть указан в

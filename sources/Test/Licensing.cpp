@@ -19,6 +19,7 @@
 
 namespace tex = TunnelEx;
 namespace pt = boost::posix_time;
+namespace fs = boost::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -179,21 +180,28 @@ namespace TunnelEx { namespace Licensing {
 		}
 		
 		static std::string GetLocalAsymmetricPrivateKey(const boost::any &) {
-			std::ostringstream oss;
-			oss
+			std::ostringstream fileName;
+			fileName
 				<< "LocalAsymmetricPrivateKey"
 				<< licenseKeyTestServer->GetAsymmetricPrivateKeyFileModif()
 				<< ".pem";
-			std::ifstream f(oss.str().c_str());
+			fs::path path = tex::Helpers::GetModuleFilePathA().branch_path();
+			path /= fileName.str();
+			std::ifstream f(path.string().c_str());
 			assert(f);
 			f.unsetf(std::ios::skipws);
 			return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 		}
 		
 		static std::string GetLicenseKey(const boost::any &) {
-			std::ostringstream oss;
-			oss << "LicenseKey" << licenseKeyTestServer->GetLicenseKeyFileModif() << ".key";
-			std::ifstream f(oss.str().c_str());
+			std::ostringstream fileName;
+			fileName
+				<< "LicenseKey"
+				<< licenseKeyTestServer->GetLicenseKeyFileModif()
+				<< ".key";
+			fs::path path = tex::Helpers::GetModuleFilePathA().branch_path();
+			path /= fileName.str();
+			std::ifstream f(path.string().c_str());
 			assert(f);
 			f.unsetf(std::ios::skipws);
 			return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
@@ -342,9 +350,11 @@ namespace {
 	//////////////////////////////////////////////////////////////////////////
 	
 	std::string LoadEncryptedLicenseKey(const char *licenseKeyFileModif) {
-		std::ostringstream oss;
-		oss << "LicenseKey" << licenseKeyFileModif << ".key";
-		std::ifstream f(oss.str().c_str());
+		std::ostringstream fileName;
+		fileName << "LicenseKey" << licenseKeyFileModif << ".key";
+		fs::path path = tex::Helpers::GetModuleFilePathA().branch_path();
+		path /= fileName.str();
+		std::ifstream f(path.string().c_str());
 		f.unsetf(std::ios::skipws);
 		return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 	}
@@ -352,7 +362,9 @@ namespace {
 	//////////////////////////////////////////////////////////////////////////
 
 	bool GetValidLicenseKeyXml(std::string &result, const boost::any &) {
-		std::ifstream f("LicenseKeyValid.xml");
+		fs::path path = tex::Helpers::GetModuleFilePathA().branch_path();
+		path /= "LicenseKeyValid.xml";
+		std::ifstream f(path.string().c_str());
 		assert(f);
 		f.unsetf(std::ios::skipws);
 		std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()).swap(result);

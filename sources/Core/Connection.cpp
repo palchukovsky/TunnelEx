@@ -608,8 +608,19 @@ public:
 		return m_ruleEndpointAddress;
 	}
 
+	void ReadRemote(MessageBlock &messageBlock) {
+		assert(IsLockedByMyThread(m_mutex));
+		if (m_setupState == SETUP_STATE_FAILED) {
+			return;
+		}
+		if (m_setupState == SETUP_STATE_COMPLETED_PENDING) {
+			m_setupState = SETUP_STATE_COMPLETED;
+			m_signal->OnConnectionSetupCompleted(m_instanceId);
+		}
+		SendToTunnel(messageBlock);
+	}
+
 	void SendToTunnel(MessageBlock &messageBlock) {
-		assert(IsNotLockedByMyThread(m_mutex));
 		assert(
 			!boost::polymorphic_downcast<UniqueMessageBlockHolder *>(&messageBlock)
 					->GetReceivingTime()
@@ -861,38 +872,17 @@ private:
 			return;
 		}
 		
-		bool isSuccess = true;
-		bool isSetupCompleted = false;
+		bool isSuccess = false;
 		try {
-			{
-				Lock lock(m_mutex, true);
-				assert(
-					m_setupState == SETUP_STATE_NOT_COMPLETED
-					|| m_setupState == SETUP_STATE_COMPLETED);
-				if (!m_isClosed) {
-					m_myInterface.ReadRemote(messageBlock);
-					if (m_setupState != SETUP_STATE_FAILED) {
-						isSuccess = true;
-						if (m_setupState == SETUP_STATE_COMPLETED_PENDING) {
-							m_setupState = SETUP_STATE_COMPLETED;
-							isSetupCompleted = true;
-						}
-					}
-				} else {
-					isSuccess = false;
-				}
-			}
-			if (isSuccess) {
-				if (isSetupCompleted) {
-					m_signal->OnConnectionSetupCompleted(m_instanceId);
-				}
-				SendToTunnel(messageBlock);
-				messageBlock.Reset();
-				Lock lock(m_mutex, true);
+			Lock lock(m_mutex, true);
+			assert(
+				m_setupState == SETUP_STATE_NOT_COMPLETED
+				|| m_setupState == SETUP_STATE_COMPLETED);
+			if (!m_isClosed) {
+				m_myInterface.ReadRemote(messageBlock);
 				isSuccess = InitMessageReading(true);
 			}
 		} catch (const TunnelEx::LocalException &ex) {
-			messageBlock.Reset();
 			Log::GetInstance().AppendError(
 				ConvertString<String>(ex.GetWhat()).GetCStr());
 		}
@@ -1160,8 +1150,8 @@ void Connection::OnMessageBlockSent(MessageBlock &messageBlock) {
 	m_pimpl->OnMessageBlockSent(messageBlock);
 }
 
-void Connection::ReadRemote(MessageBlock &) {
-	//...//
+void Connection::ReadRemote(MessageBlock &messageBlock) {
+	m_pimpl->ReadRemote(messageBlock);
 }
 
 void Connection::Setup() {

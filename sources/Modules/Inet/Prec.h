@@ -69,6 +69,7 @@
 #	include <boost/type_traits/integral_constant.hpp>
 #	include <boost/type_traits/is_same.hpp>
 #	include <boost/mpl/assert.hpp>
+#	include <boost/thread.hpp>
 #include "CompileWarningsBoost.h"
 
 #include <numeric>

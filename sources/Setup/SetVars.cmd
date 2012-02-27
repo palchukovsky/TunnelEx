@@ -12,10 +12,10 @@ set MsFileNameSuffix=
 set MsManifestNameSuffix=
 
 if %TIME:~0,1%_==_ goto skipSpace
-set Stamp=%TIME:~0,2%.%TIME:~3,2%
+set Stamp=%TIME:~0,2%.%TIME:~3,2%.%TIME:~6,2%
 goto endSp
 :skipSpace
-set Stamp=0%TIME:~1,1%.%TIME:~3,2%
+set Stamp=0%TIME:~1,1%.%TIME:~3,2%.%TIME:~6,2%
 :endSp
 
 if %DATE:~3,1%_==_ goto Space3
@@ -29,7 +29,7 @@ goto endSp
 set Stamp=%DATE:~9,4%.%DATE:~6,2%.%DATE:~3,2%.%Stamp%
 :endSp
 
-set TexBuildIdentity=%ConfigurationName% %TunnelExVersionFull% %USERDOMAIN%.%TunnelExVersionGenUniqueId% %Stamp%
+set TexBuildIdentity=%ConfigurationName% %TunnelExVersionFull% %USERDOMAIN% %Stamp%
 
 if "%ConfigurationName%" neq "Release" (
 	set ProductFullName=%ProductFullName% [%TexBuildIdentity%]

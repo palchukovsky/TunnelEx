@@ -34,8 +34,12 @@ int main(int argc, char **argv) {
 		MODE_PIPE_CLIENT
 	} mode = MODE_COMMON;
 
+	std::unique_ptr<CloseStopper> closeStopper;
+
 	for (auto i = 1; i < argc; ++i) {
-		if (boost::iequals(argv[i], "tcpserver") || boost::iequals(argv[i], "tcp-server")) {
+		if (boost::iequals(argv[i], "wait")) {
+			closeStopper.reset(new CloseStopper);
+		} else if (boost::iequals(argv[i], "tcpserver") || boost::iequals(argv[i], "tcp-server")) {
 			mode = MODE_TCP_SERVER;
 		} else if (boost::iequals(argv[i], "tcpclient") || boost::iequals(argv[i], "tcp-client")) {
 			mode = MODE_TCP_CLIENT;
@@ -66,8 +70,6 @@ int main(int argc, char **argv) {
 			
 		}
 	}
-
-	CloseStopper closeStopper;
 
 	testing::AddGlobalTestEnvironment(new Environment);
 	testing::InitGoogleTest(&argc, argv);
