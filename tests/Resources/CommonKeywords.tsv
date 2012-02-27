@@ -1,5 +1,6 @@
 *Settings*							
 Library	OperatingSystem						
+Library	String						
 							
 *Keywords*							
 Run unit tests and check RC and output							
@@ -33,6 +34,14 @@ Start test service process
 							
 Send data to server and check echo							
 	[Arguments]	${connection}	${test data}				
+	Send to connection	${connection}	${test data}				
+	${server answer}	Read from connection	${connection}				
+	Log	${server answer}					
+	Should Be Equal	${test data}	${server answer}				
+							
+Send big chunk data to server and check echo							
+	[Arguments]	${connection}					
+	${test data}	Generate Random String	512	[LOWER][UPPER][LETTERS][NUMBERS]			
 	Send to connection	${connection}	${test data}				
 	${server answer}	Read from connection	${connection}				
 	Log	${server answer}					

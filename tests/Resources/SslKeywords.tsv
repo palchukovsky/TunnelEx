@@ -9,10 +9,22 @@ Resource	CommonKeywords.tsv
 	Repeat Keyword	${count}	Send data to server and check echo	${connection}	${FULL KEYBOARD STRING}		
 	Disconnect	${connection}					
 							
+"Create TCP connection to ""${host}:${port}"", convert to SSL and test echo ${count} times with big chunk"							
+	[Timeout]	1 minute					
+	${connection}	Connect to TCP server	${host}	${port}			
+	Repeat Keyword	${count}	Send big chunk data to server and check echo	${connection}			
+	Disconnect	${connection}					
+							
 "Create SSL connection to ""${host}:${port}"", convert to TCP and test echo ${count} times with ""${test data}"""							
 	[Timeout]	1 minute					
 	${connection}	Connect to SSL server	${host}	${port}			
 	Repeat Keyword	${count}	Send data to server and check echo	${connection}	${test data}		
+	Disconnect	${connection}					
+							
+"Create SSL connection to ""${host}:${port}"", convert to TCP and test echo ${count} times with big chunk"							
+	[Timeout]	1 minute					
+	${connection}	Connect to SSL server	${host}	${port}			
+	Repeat Keyword	${count}	Send big chunk data to server and check echo	${connection}			
 	Disconnect	${connection}					
 							
 Start SSL echo server							

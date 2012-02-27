@@ -44,3 +44,15 @@ SSL <-> TCP
 	"Create SSL connection to ""localhost:102"", convert to TCP and test echo 100 times with ""${FULL KEYBOARD STRING}"""						
 	[Teardown]	Stop TCP echo server					
 							
+TCP <-> SSL (big chunk)							
+	[Setup]	Start SSL echo server					
+	[Timeout]	1 minute					
+	"Create TCP connection to ""localhost:101"", convert to SSL and test echo 100 times with big chunk"						
+	[Teardown]	Stop SSL echo server					
+							
+SSL <-> TCP (big chunk)							
+	[Setup]	Start TCP echo server					
+	[Timeout]	1 minute					
+	"Create SSL connection to ""localhost:102"", convert to TCP and test echo 100 times with big chunk"						
+	[Teardown]	Stop TCP echo server					
+							

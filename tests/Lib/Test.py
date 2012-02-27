@@ -137,8 +137,20 @@ def Main():
 			print 'Testing SSL client to {0}:{1}...'.format(sys.argv[2], sys.argv[3])
 			test = Test()
 			connection = test.ConnectToSslServer(sys.argv[2], sys.argv[3])
-			connection.send('Hello World!')
-			print connection.recv()
+			i = 0
+			toSend = str()
+			while i < 256:
+				toSend += str(i)
+				toSend += "|"
+				i += 1
+			print "< " + toSend
+			test.SendToConnection(connection, toSend)
+			echo = test.ReadFromConnection(connection)
+			if (echo == toSend):
+				print 'EQUAL'
+			else:
+				print 'NOT EQUAL'
+			print "> " + echo
 			print 'OK'
 			return
 	print 'Help:'
