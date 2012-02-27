@@ -32,6 +32,9 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		typedef ACE_SSL_SOCK_Stream Base;
 
+		typedef boost::mutex Mutex;
+		typedef Mutex::scoped_lock Lock;
+
 	public:
 
 		typedef std::vector<char> Buffer;
@@ -50,6 +53,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		SslSockStream(const ACE_SSL_Context &context);
 		~SslSockStream() throw();
+
+	public:
+
+		Mutex & GetMutex() {
+			return m_mutex;
+		}
 
 	public:
 
@@ -81,26 +90,20 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		void Encrypt(const MessageBlock &) const;
 
 		const Buffer & GetDecrypted() const {
-			return GetBuffers().decryptionFull;
+			return m_buffers.decryptionFull;
 		}
 
 		const Buffer & GetEncrypted() const {
-			return GetBuffers().out;
+			return m_buffers.out;
 		}
 		void ClearEncrypted() {
-			GetBuffers().out.resize(0);
+			m_buffers.out.resize(0);
 		}
 
 	public:
 
 		int BioWrite(const char *, size_t, int &);
 		int BioRead(char *, size_t, int &);
-
-	protected:
-
-		BufferSet & GetBuffers() const throw() {
-			return m_buffers;
-		}
 
 	private:
 
@@ -118,6 +121,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		bool m_isDecryptorEncryptorMode;
 		BIO *m_biorOrig;
 		BIO *m_biowOrig;
+
+		Mutex m_mutex;
 
 	};
 

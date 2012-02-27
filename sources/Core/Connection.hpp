@@ -204,7 +204,9 @@ namespace TunnelEx {
 		virtual void ReadRemote(::TunnelEx::MessageBlock &messageBlock);
 
 		//! Writes data.
-		/** @throw TunnelEx::ConnectionException 
+		/** Not thread-safe: Method implementations should take care of the
+		  * integrity of their data by themselves.
+		  * @throw TunnelEx::ConnectionException 
 		  * @throw TunnelEx::LogicalException 
 		  */
 		virtual ::TunnelEx::DataTransferCommand Write(
@@ -214,7 +216,7 @@ namespace TunnelEx {
 		/** @throw TunnelEx::ConnectionException 
 		  * @throw TunnelEx::LogicalException 
 		  */
-		virtual ::TunnelEx::DataTransferCommand WriteDirectly(
+		::TunnelEx::DataTransferCommand WriteDirectly(
 				::TunnelEx::MessageBlock &messageBlock);
 
 	private:

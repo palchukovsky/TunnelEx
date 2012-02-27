@@ -196,7 +196,7 @@ SslSockStream::SslSockStream(const ACE_SSL_Context &context)
 SslSockStream::~SslSockStream() throw() {
 	assert(m_biorOrig == 0);
 	assert(m_biowOrig == 0);
-	assert(GetBuffers().out.size() == 0);
+	assert(m_buffers.out.size() == 0);
 	if (m_biorOrig || m_biowOrig) {
 		if (m_biorOrig != m_biowOrig) {
 			BIO_free_all(m_biorOrig);
@@ -293,25 +293,23 @@ void SslSockStream::SwitchToStreamMode() throw() {
 
 void SslSockStream::Decrypt(const MessageBlock &messageBlock) const {
 
-	auto &buffers = GetBuffers();
-
-	assert(buffers.out.size() == 0);
+	assert(m_buffers.out.size() == 0);
 	assert(IsDecryptorEncryptorMode());
 
-	buffers.encryptedMessage = &messageBlock;
-	buffers.encryptedMessageReadPos = 0;
-	buffers.decryptionSub.resize(messageBlock.GetUnreadedDataSize());
-	buffers.decryptionFull.resize(0);
+	m_buffers.encryptedMessage = &messageBlock;
+	m_buffers.encryptedMessageReadPos = 0;
+	m_buffers.decryptionSub.resize(messageBlock.GetUnreadedDataSize());
+	m_buffers.decryptionFull.resize(0);
 
 	for ( ; ; ) {
 		const ssize_t receviedBytes
-			= recv(&buffers.decryptionSub[0], buffers.decryptionSub.size());
+			= recv(&m_buffers.decryptionSub[0], m_buffers.decryptionSub.size());
 		if (receviedBytes == -1) {
 			const Error error(errno);
 			if (error.GetErrorNo() == EWOULDBLOCK) {
 				break;
 			}
-			buffers.out.resize(0);
+			m_buffers.out.resize(0);
 			WFormat message(L"Failed to decrypt SSL data: \"%1% (%2%)\"");
 			if (!error.CheckError() && OpenSslError::CheckError(error.GetErrorNo())) {
 				const std::string errorStr
@@ -323,20 +321,20 @@ void SslSockStream::Decrypt(const MessageBlock &messageBlock) const {
 			message % error.GetErrorNo();
 			throw SystemException(message.str().c_str());
 		} else if (receviedBytes > 0) {
-			const auto oldSize = buffers.decryptionFull.size();
-			buffers.decryptionFull.resize(oldSize + receviedBytes);
+			const auto oldSize = m_buffers.decryptionFull.size();
+			m_buffers.decryptionFull.resize(oldSize + receviedBytes);
 			copy(
-				buffers.decryptionSub.begin(),
-				buffers.decryptionSub.begin() + receviedBytes,
-				buffers.decryptionFull.begin() + oldSize);
+				m_buffers.decryptionSub.begin(),
+				m_buffers.decryptionSub.begin() + receviedBytes,
+				m_buffers.decryptionFull.begin() + oldSize);
 		} else {
 			break;
 		}
 	}
 
 	assert(
-		buffers.encryptedMessage->GetUnreadedDataSize()
-		== buffers.encryptedMessageReadPos);
+		m_buffers.encryptedMessage->GetUnreadedDataSize()
+		== m_buffers.encryptedMessageReadPos);
 
 }
 
@@ -345,7 +343,7 @@ void SslSockStream::Encrypt(const MessageBlock &messageBlock) const {
 	assert(messageBlock.GetUnreadedDataSize() > 0);
 	assert(IsDecryptorEncryptorMode());
 
-	GetBuffers().out.resize(0);
+	m_buffers.out.resize(0);
 	ssize_t sendPos = 0;
 
 	for ( ; ; ) {
@@ -358,7 +356,7 @@ void SslSockStream::Encrypt(const MessageBlock &messageBlock) const {
 			if (error.GetErrorNo() == EWOULDBLOCK) {
 				break;
 			}
-			GetBuffers().out.resize(0);
+			m_buffers.out.resize(0);
 			WFormat message(L"Error at SSL data sending: \"%1% (%2%)\"");
 			if (!error.CheckError() && OpenSslError::CheckError(error.GetErrorNo())) {
 				message % OpenSslError::ErrorNoToString(error.GetErrorNo());
@@ -382,8 +380,8 @@ int SslSockStream::BioWrite(const char *buf, size_t len, int &errVal) {
 	assert(IsDecryptorEncryptorMode());
 	assert(len > 0);
 	try {
-		GetBuffers().out.reserve(GetBuffers().out.size() + len);
-		copy(buf, buf + len, back_inserter(GetBuffers().out));
+		m_buffers.out.reserve(m_buffers.out.size() + len);
+		copy(buf, buf + len, back_inserter(m_buffers.out));
 		errVal = 0; // Ok, go ahead
 		return ACE_Utils::truncate_cast<int>(len);
 	} catch (const std::exception &ex) {
@@ -409,13 +407,13 @@ int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 	assert(len > 0);
 	assert(IsDecryptorEncryptorMode());
 
-	if (!GetBuffers().encryptedMessage) {
+	if (!m_buffers.encryptedMessage) {
 		errVal = EINPROGRESS;
 		return -1;
 	}
 
 	const size_t dataLen = std::min(
-		GetBuffers().encryptedMessage->GetUnreadedDataSize() - GetBuffers().encryptedMessageReadPos,
+		m_buffers.encryptedMessage->GetUnreadedDataSize() - m_buffers.encryptedMessageReadPos,
 		len);
 	if (dataLen == 0) {
 		errVal = EINPROGRESS;
@@ -425,12 +423,12 @@ int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 	errVal = 0;
 	ACE_OS::memcpy(
 		buf,
-		GetBuffers().encryptedMessage->GetData() + GetBuffers().encryptedMessageReadPos,
+		m_buffers.encryptedMessage->GetData() + m_buffers.encryptedMessageReadPos,
 		dataLen);
-	GetBuffers().encryptedMessageReadPos += dataLen;
+	m_buffers.encryptedMessageReadPos += dataLen;
 	assert(
-		GetBuffers().encryptedMessageReadPos
-		<= GetBuffers().encryptedMessage->GetUnreadedDataSize());
+		m_buffers.encryptedMessageReadPos
+		<= m_buffers.encryptedMessage->GetUnreadedDataSize());
 	
 	return ACE_Utils::truncate_cast<int>(dataLen);
 
@@ -438,7 +436,7 @@ int SslSockStream::BioRead(char *buf, size_t len, int &errVal) {
 
 void SslSockStream::Connect() {
 
-	assert(GetBuffers().out.size() == 0);
+	assert(m_buffers.out.size() == 0);
 	assert(IsDecryptorEncryptorMode());
 	assert(!IsConnected());
 	if (IsConnected()) {
@@ -452,22 +450,22 @@ void SslSockStream::Connect() {
 		SSL_set_connect_state(ssl());
 	}
 
-	GetBuffers().encryptedMessage = 0;
+	m_buffers.encryptedMessage = 0;
 
 	try {
 		ConnectSsl();
 	} catch (...) {
-		GetBuffers().out.resize(0);
+		m_buffers.out.resize(0);
 		throw;
 	}
 
-	assert(GetBuffers().out.size() > 0);
+	assert(m_buffers.out.size() > 0);
 
 }
 
 void SslSockStream::Connect(MessageBlock &messageBlock) {
 
-	assert(GetBuffers().out.size() == 0);
+	assert(m_buffers.out.size() == 0);
 	assert(messageBlock.GetUnreadedDataSize() > 0);
 	assert(IsDecryptorEncryptorMode());
 	assert(!IsConnected());
@@ -482,17 +480,17 @@ void SslSockStream::Connect(MessageBlock &messageBlock) {
 		SSL_set_connect_state(ssl());
 	}
 
-	GetBuffers().encryptedMessage = &messageBlock;
-	GetBuffers().encryptedMessageReadPos = 0;
+	m_buffers.encryptedMessage = &messageBlock;
+	m_buffers.encryptedMessageReadPos = 0;
 
 	try {
 		ConnectSsl();
 	} catch (...) {
-		GetBuffers().out.resize(0);
+		m_buffers.out.resize(0);
 		throw;
 	}
 
-	messageBlock.Read(GetBuffers().encryptedMessageReadPos);
+	messageBlock.Read(m_buffers.encryptedMessageReadPos);
 
 }
 
@@ -545,7 +543,7 @@ void SslSockStream::ConnectSsl() {
 
 void SslSockStream::Accept() {
 
-	assert(GetBuffers().out.size() == 0);
+	assert(m_buffers.out.size() == 0);
 	assert(IsDecryptorEncryptorMode());
 	assert(!IsConnected());
 	if (IsConnected()) {
@@ -559,12 +557,12 @@ void SslSockStream::Accept() {
 		SSL_set_accept_state(ssl());
 	}
 
-	GetBuffers().encryptedMessage = 0;
+	m_buffers.encryptedMessage = 0;
 
 	try {
 		AcceptSsl();
 	} catch (...) {
-		GetBuffers().out.resize(0);
+		m_buffers.out.resize(0);
 		throw;
 	}
 
@@ -572,7 +570,7 @@ void SslSockStream::Accept() {
 
 void SslSockStream::Accept(MessageBlock &messageBlock) {
 
-	assert(GetBuffers().out.size() == 0);
+	assert(m_buffers.out.size() == 0);
 	assert(messageBlock.GetUnreadedDataSize() > 0);
 	assert(IsDecryptorEncryptorMode());
 	assert(!IsConnected());
@@ -587,17 +585,17 @@ void SslSockStream::Accept(MessageBlock &messageBlock) {
 		SSL_set_accept_state(ssl());
 	}
 
-	GetBuffers().encryptedMessage = &messageBlock;
-	GetBuffers().encryptedMessageReadPos = 0;
+	m_buffers.encryptedMessage = &messageBlock;
+	m_buffers.encryptedMessageReadPos = 0;
 
 	try {
 		AcceptSsl();
 	} catch (...) {
-		GetBuffers().out.resize(0);
+		m_buffers.out.resize(0);
 		throw;
 	}
 
-	messageBlock.Read(GetBuffers().encryptedMessageReadPos);
+	messageBlock.Read(m_buffers.encryptedMessageReadPos);
 
 }
 
