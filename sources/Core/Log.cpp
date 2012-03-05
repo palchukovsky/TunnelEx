@@ -349,6 +349,9 @@ void LogPolicy::AppendDebugDirect(const WFormat &message) throw() {
 	}
 }
 
+void LogPolicy::AppendForced(LogLevel level, const std::string &message) throw() {
+	m_pimpl->Append(m_pimpl->GetLevelInfo(level), message);
+}
 
 void LogPolicy::AppendInfo(const std::string &message) throw() {
 	m_pimpl->CheckAndAppend(LOG_LEVEL_INFO, message);

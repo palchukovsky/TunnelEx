@@ -1,0 +1,5 @@
+EXPORTS
+	GetModuleName = ?GetModuleName@Ftp@Mods@TunnelEx@@YAPBDXZ
+	GetModuleVersion = ?GetModuleVersion@Ftp@Mods@TunnelEx@@YAPBDXZ
+	CreateActiveFtpListener
+	CreatePassiveFtpListener

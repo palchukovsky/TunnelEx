@@ -37,11 +37,11 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 namespace TunnelEx { namespace Mods { namespace Inet {
 
-	const char * GetTunnelExModuleName() {
+	const char * GetModuleName() {
 		return TUNNELEX_MODULE_INET_NAME_FULL;
 	}
 
-	const char * GetTunnelExModuleVersion() {
+	const char * GetModuleVersion() {
 		return TUNNELEX_VERSION_FULL TUNNELEX_BUILD_IDENTITY_ADD;
 	}
 

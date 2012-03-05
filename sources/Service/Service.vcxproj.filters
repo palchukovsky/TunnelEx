@@ -77,4 +77,7 @@
   <ItemGroup>
     <ResourceCompile Include="Service.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Service.props" />
+  </ItemGroup>
 </Project>

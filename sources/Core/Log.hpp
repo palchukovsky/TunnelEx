@@ -181,6 +181,8 @@ namespace TunnelEx {
 			//! A fatal-error information level (debug version).
 			/** After such error program can't work and will be terminated. */
 			void AppendFatalError(const std::string &) throw();
+
+			void AppendForced(LogLevel, const std::string &) throw();
 			
 			void SetLevelRegistrationState(LogLevel, bool isRegistrationOn) throw();
 			void SetMinimumRegistrationLevel(LogLevel) throw();

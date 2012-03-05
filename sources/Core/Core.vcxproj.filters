@@ -241,4 +241,7 @@
       <Filter>Schemas</Filter>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Core.props" />
+  </ItemGroup>
 </Project>

@@ -79,10 +79,11 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
-    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">true</EnableManagedIncrementalBuild>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TexModInet</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">TexModInet_test</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TexModInet_dbg</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..\..\output\int\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,7 +108,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DestinationPingFilter.hpp" />
-    <ClInclude Include="FtpListener.hpp" />
     <ClInclude Include="Licensing.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="AceSockDgramCloser.h" />
@@ -133,7 +133,6 @@
     <ClCompile Include="..\..\Common\Format.cpp" />
     <ClCompile Include="..\..\Common\LocalAssert.cpp" />
     <ClCompile Include="DestinationPingFilter.cpp" />
-    <ClCompile Include="FtpListener.cpp" />
     <ClCompile Include="AceSockDgramCloser.cpp" />
     <ClCompile Include="IncomingTcpSslClientConnection.cpp" />
     <ClCompile Include="InetEndpointAddress.cpp" />
@@ -152,6 +151,7 @@
     <ResourceCompile Include="Module Inet.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Module Inet.props" />
     <None Include="TexModInet.def" />
   </ItemGroup>
   <ItemGroup>

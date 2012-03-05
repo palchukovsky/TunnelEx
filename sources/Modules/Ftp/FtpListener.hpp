@@ -10,13 +10,17 @@
 #ifndef INCLUDED_FILE__TUNNELEX__FtpProxy_hpp__0803172242
 #define INCLUDED_FILE__TUNNELEX__FtpProxy_hpp__0803172242
 
-#include "InetEndpointAddress.hpp"
+#include "Modules/Inet/InetEndpointAddress.hpp"
 
 #include "Core/Listener.hpp"
 #include "Core/Log.hpp"
 #include "Core/Server.hpp"
 
-namespace TunnelEx { namespace Mods { namespace Inet {
+namespace TunnelEx { namespace Mods { namespace Ftp {
+
+	//////////////////////////////////////////////////////////////////////////
+
+	typedef ::TunnelEx::Mods::Inet::NetworkPort NetworkPort;
 
 	//////////////////////////////////////////////////////////////////////////
 

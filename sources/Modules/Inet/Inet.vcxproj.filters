@@ -12,21 +12,6 @@
       <UniqueIdentifier>{c83345de-20f8-4ab9-8fd0-d0e3ee67771c}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Listeners">
-      <UniqueIdentifier>{88a523f9-c575-49a6-9df6-5b334d8c1c06}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Listeners\Header Files">
-      <UniqueIdentifier>{b9cc9e27-3294-49c3-8c5d-a23f2e51b33d}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Listeners\Source Files">
-      <UniqueIdentifier>{3a45be8f-983c-4c49-9128-36336118b02d}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
     <Filter Include="Connection">
       <UniqueIdentifier>{55b5d996-f840-4a27-b5e1-9e0286dff1c3}</UniqueIdentifier>
     </Filter>
@@ -47,16 +32,17 @@
     <Filter Include="Util\Source Files">
       <UniqueIdentifier>{62bc154f-adf1-4f4a-8ae4-ff8c00b7a598}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Util\Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DestinationPingFilter.hpp">
       <Filter>Filters\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FtpListener.hpp">
-      <Filter>Listeners\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Resource Files</Filter>
+      <Filter>Util\Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="AceSockDgramCloser.h">
       <Filter>Connection\Header Files</Filter>
@@ -120,9 +106,6 @@
     <ClCompile Include="DestinationPingFilter.cpp">
       <Filter>Filters\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FtpListener.cpp">
-      <Filter>Listeners\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="AceSockDgramCloser.cpp">
       <Filter>Connection\Source Files</Filter>
     </ClCompile>
@@ -159,12 +142,15 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Module Inet.rc">
-      <Filter>Resource Files</Filter>
+      <Filter>Util\Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Module Inet.props">
+      <Filter>Util</Filter>
+    </None>
     <None Include="TexModInet.def">
-      <Filter>Filters\Source Files</Filter>
+      <Filter>Util</Filter>
     </None>
   </ItemGroup>
 </Project>

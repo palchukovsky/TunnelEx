@@ -63,8 +63,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="TexModPathfinder.def">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="TexModPathfinder.def" />
+    <None Include="Module Pathfinder.props" />
   </ItemGroup>
 </Project>

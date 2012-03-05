@@ -19,7 +19,10 @@
 #include "Core/MessageBlock.hpp"
 
 using namespace TunnelEx;
-using namespace TunnelEx::Mods::Inet;
+using namespace TunnelEx::Mods::Ftp;
+
+using TunnelEx::Mods::Inet::TcpEndpointAddress;
+using TunnelEx::Mods::Inet::InetEndpointAddress;
 
 FtpListener::FtpListener(
 			TunnelEx::Server::Ref server,
@@ -278,27 +281,3 @@ DataTransferCommand FtpListener::OnNewMessageBlock(MessageBlock &messageBlock) {
 	return DATA_TRANSFER_CMD_SEND_PACKET;
 
 }
-
-namespace TunnelEx { namespace Mods { namespace Inet {
-	
-	SharedPtr<PreListener> CreateActiveFtpListener(
-			Server::Ref server,
-			const RuleEndpoint::ListenerInfo &,
-			const TunnelRule &,
-			const Connection &currentConnection,
-			const Connection &oppositeConnection) {
-		return SharedPtr<PreListener>(
-			new FtpListenerForActiveMode(server, currentConnection, oppositeConnection));
-	}
-
-	SharedPtr<PreListener> CreatePassiveFtpListener(
-			Server::Ref server,
-			const RuleEndpoint::ListenerInfo &,
-			const TunnelRule &,
-			const Connection &currentConnection,
-			const Connection &oppositeConnection) {
-		return SharedPtr<PreListener>(
-			new FtpListenerForPassiveMode(server, currentConnection, oppositeConnection));
-	}
-
-} } }

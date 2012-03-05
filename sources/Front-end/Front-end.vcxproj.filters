@@ -367,4 +367,7 @@
       <Filter>Icons</Filter>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Front-end.props" />
+  </ItemGroup>
 </Project>

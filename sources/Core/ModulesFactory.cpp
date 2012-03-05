@@ -40,23 +40,22 @@ namespace {
 
 	void AppendModuleVetsionToLog(const Helpers::Dll &modDll) {
 		
-		if (!Log::GetInstance().IsDebugRegistrationOn()) {
-			return;
-		}
-		
-		typedef const char *(GetTunnelExModuleNameFuncPrototype)(void);
-		typedef const char *(GetTunnelExModuleVersionFuncPrototype)(void);
-		const char *const getTunnelExModuleNameFuncName = "GetTunnelExModuleName";
-		const char *const getTunnelExModuleVersionFuncName = "GetTunnelExModuleVersion";
+		typedef const char *(GetModuleNameFuncPrototype)(void);
+		typedef const char *(GetModuleVersionFuncPrototype)(void);
+		const char *const getModuleNameFuncName = "GetModuleName";
+		const char *const getModuleVersionFuncName = "GetModuleVersion";
 
+		TunnelEx::Format message("Loaded module \"%1%\" version %2%.");
 		try {
-			Log::GetInstance().AppendDebug(
-				"Loaded module \"%1%\" version %2%.",
-				modDll.GetFunction<GetTunnelExModuleNameFuncPrototype>(getTunnelExModuleNameFuncName)(),
-				modDll.GetFunction<GetTunnelExModuleVersionFuncPrototype>(getTunnelExModuleVersionFuncName)());
-		} catch (const Helpers::Dll::DllFuncException &) {
-			Format message("Failed to find module name or version info for %1%.");
-			message % modDll.GetFile();
+			message
+				% modDll.GetFunction<GetModuleNameFuncPrototype>(getModuleNameFuncName)();
+			message
+				% modDll.GetFunction<GetModuleVersionFuncPrototype>(getModuleVersionFuncName)();
+			Log::GetInstance().AppendForced(LOG_LEVEL_DEBUG, message.str());
+		} catch (const Helpers::Dll::DllFuncException &ex) {
+			Format message(
+				"Failed to find module name or version info for \"%1%\": \"%2%\".");
+			message % modDll.GetFile() % ConvertString<String>(WString(ex.GetWhat()));
 			Log::GetInstance().AppendWarn(message.str());
 		}
 	
@@ -177,20 +176,28 @@ public:
 					L"udp",
 					m_modInetDll->GetFunction<EndpointAddressFabricPrototype>("CreateUdpEndpointAddress")));
 
-			m_listenerFabricCollection.insert(
-				std::make_pair(
-					L"Tunnel/Ftp/Active",
-					m_modInetDll->GetFunction<ListenerFabricPrototype>("CreateActiveFtpListener")));
-			m_listenerFabricCollection.insert(
-				std::make_pair(
-					L"Tunnel/Ftp/Passive",
-					m_modInetDll->GetFunction<ListenerFabricPrototype>("CreatePassiveFtpListener")));
-
 			m_destinationPingFilterFabric
 				= m_modInetDll->GetFunction<DestinationPingFilterFabricPrototype>("CreateDestinationPingFilter");
 
 		} catch (const ::TunnelEx::DllException &ex) {
 			Format message("Could not properly load \"Inet\" module: \"%1%\".");
+			message % ConvertString<String>(ex.GetWhat()).GetCStr();
+			Log::GetInstance().AppendError(message.str());
+		}
+
+		try {
+			m_modFtpDll.reset(new Helpers::Dll(TUNNELEX_MODULE_FTP_DLL_FILE_NAME));
+			AppendModuleVetsionToLog(*m_modFtpDll);
+			m_listenerFabricCollection.insert(
+				std::make_pair(
+					L"Tunnel/Ftp/Active",
+					m_modFtpDll->GetFunction<ListenerFabricPrototype>("CreateActiveFtpListener")));
+			m_listenerFabricCollection.insert(
+				std::make_pair(
+					L"Tunnel/Ftp/Passive",
+					m_modFtpDll->GetFunction<ListenerFabricPrototype>("CreatePassiveFtpListener")));
+		} catch (const ::TunnelEx::DllException &ex) {
+			Format message("Could not properly load \"FTP\" module: \"%1%\".");
 			message % ConvertString<String>(ex.GetWhat()).GetCStr();
 			Log::GetInstance().AppendError(message.str());
 		}
@@ -383,6 +390,7 @@ private:
 	boost::wregex m_enpointAddrTypeExp;
 
 	std::auto_ptr<Helpers::Dll> m_modInetDll;
+	std::auto_ptr<Helpers::Dll> m_modFtpDll;
 	std::auto_ptr<Helpers::Dll> m_modPathfinderDll;
 	std::auto_ptr<Helpers::Dll> m_modPipeDll;
 	std::auto_ptr<Helpers::Dll> m_modSerialDll;
