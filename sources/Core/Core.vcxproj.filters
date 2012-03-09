@@ -101,13 +101,13 @@
     <ClCompile Include="MessageBlockHolder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LicenseState.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="MessagesAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Format.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LicenseState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

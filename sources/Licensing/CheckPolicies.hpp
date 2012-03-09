@@ -134,48 +134,78 @@ namespace TunnelEx { namespace Licensing {
 			return false;
 		}
 
-		inline static bool CheckTime(
+		inline static bool CheckTimeStart(
 					const TimeInterval &interval,
 					const LocalInfo &localInfo) {
-			return 
-				(!interval.first || *interval.first <= localInfo.time)
-				&&	(!interval.second || *interval.second >= localInfo.time);
+			return !interval.first || *interval.first <= localInfo.time;
 		}
 
-		inline static bool CheckTime(
+		inline static bool CheckTimeNotEnd(
+					const TimeInterval &interval,
+					const LocalInfo &localInfo) {
+			return !interval.second || *interval.second >= localInfo.time;
+		}
+
+		inline static bool CheckTimeStart(
 					const Limitations &limitationsInfo,
 					const LocalInfo &localInfo) {
-			return CheckTime(limitationsInfo.timeInterval, localInfo);
+			return CheckTimeStart(limitationsInfo.timeInterval, localInfo);
 		}
 
-		inline static bool CheckTime(
+		inline static bool CheckTimeNotEnd(
+					const Limitations &limitationsInfo,
+					const LocalInfo &localInfo) {
+			return CheckTimeNotEnd(limitationsInfo.timeInterval, localInfo);
+		}
+
+		inline static bool CheckTimeStart(
 					const LicenseKeyInfo &keyInfo,
 					const LocalInfo &localInfo) {
 			return
-				CheckTime(keyInfo.limitations, localInfo)
-				&& CheckTime(keyInfo.update, localInfo);
+				CheckTimeStart(keyInfo.limitations, localInfo)
+				&& CheckTimeStart(keyInfo.update, localInfo);
+		}
+
+		inline static bool CheckTimeNotEnd(
+					const LicenseKeyInfo &keyInfo,
+					const LocalInfo &localInfo) {
+			return
+				CheckTimeNotEnd(keyInfo.limitations, localInfo)
+				&& CheckTimeNotEnd(keyInfo.update, localInfo);
 		}
 
 		inline static UnactivityReason GetCheckTimeFailReason(
 					const LicenseKeyInfo &keyInfo,
 					const LocalInfo &localInfo) {
-			return CheckTime(keyInfo, localInfo)
-				?	UR_NO
-				:	!CheckTime(keyInfo.update, localInfo)
-					?	UR_UPDATE
-					:	UR_TIME;
+			return !CheckTimeStart(keyInfo, localInfo)
+				?	UR_TIME_START
+				:	CheckTimeNotEnd(keyInfo, localInfo)
+					?	UR_NO
+					:	!CheckTimeNotEnd(keyInfo.update, localInfo)
+						?	UR_UPDATE
+						:	UR_TIME_END;
 		}
 
-		inline static bool CheckTime(
+		inline static bool CheckTimeStart(
 					const FeatureInfo &keyInfo,
 					const LocalInfo &localInfo) {
-			return CheckTime(keyInfo.limitations, localInfo);
+			return CheckTimeStart(keyInfo.limitations, localInfo);
+		}
+
+		inline static bool CheckTimeNotEnd(
+					const FeatureInfo &keyInfo,
+					const LocalInfo &localInfo) {
+			return CheckTimeNotEnd(keyInfo.limitations, localInfo);
 		}
 
 		inline static UnactivityReason GetCheckTimeFailReason(
 					const FeatureInfo &keyInfo,
 					const LocalInfo &localInfo) {
-			return CheckTime(keyInfo, localInfo) ? UR_NO : UR_TIME;
+			return !CheckTimeStart(keyInfo, localInfo)
+				?	UR_TIME_START
+				:	!CheckTimeNotEnd(keyInfo, localInfo)
+					?	UR_TIME_END
+					:	UR_NO;
 		}
 
 		inline static bool CheckScores(
@@ -196,7 +226,8 @@ namespace TunnelEx { namespace Licensing {
 					const LicenseKeyInfo &keyInfo,
 					const LocalInfo &localInfo) {
 			return
-				CheckTime(keyInfo, localInfo)
+				CheckTimeStart(keyInfo, localInfo)
+				&& CheckTimeNotEnd(keyInfo, localInfo)
 				&& CheckScores(keyInfo, localInfo)
 				&& CheckWorkstationPropetiesChanges(keyInfo, localInfo);
 		}
@@ -204,7 +235,9 @@ namespace TunnelEx { namespace Licensing {
 		inline static bool IsFeatureActive(
 					const FeatureInfo &keyInfo,
 					const LocalInfo &localInfo) {
-			return CheckTime(keyInfo, localInfo)
+			return
+				CheckTimeStart(keyInfo, localInfo)
+				&& CheckTimeNotEnd(keyInfo, localInfo)
 				&& CheckScores(keyInfo, localInfo)
 				&& CheckWorkstationPropetiesChanges(keyInfo, localInfo);
 		}

@@ -1476,35 +1476,59 @@ bool ServiceWindow::ActivateTrial() {
 		using namespace Licensing;
 		std::unique_ptr<ExeLicense> license(new ExeLicense(LicenseState(GetService())));
 		if (	!license->IsFeatureAvailable(true)
-				&& license->IsTrial()
-				&& license->GetUnactivityReason() == UR_TIME) {
+				&& license->IsTrial()) {
+			const auto reason = license->GetUnactivityReason();
+			license->RegisterError("BA2E1368-97E5-4E91-ABAD-0ADA5913E3ED", reason);
 			std::wstringstream ss;
-			ss << L"Time use of your free trial has come to an end";
-			const boost::optional<pt::ptime> timeToLimit
-				= license->GetLimitationTimeTo();
-			if (timeToLimit) {
-				ss << L" on ";
-				std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%B, %d %Y"));
-				std::locale locTo(std::cout.getloc(), facet.get());
-				facet.release();
-				ss.imbue(locTo);
-				ss << *timeToLimit;
+			wxString error;
+			if (reason == UR_TIME_END) {
+				error = wxT("Free trial has come to an end");
+				ss << L"Time use of your free trial has come to an end";
+				const boost::optional<pt::ptime> timeToLimit
+					= license->GetLimitationTimeTo();
+				if (timeToLimit) {
+					ss << L" on ";
+					std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%B, %d %Y"));
+					std::locale locTo(std::cout.getloc(), facet.get());
+					facet.release();
+					ss.imbue(locTo);
+					ss << *timeToLimit;
+				}
+				ss	<< L". To continue to use the product please purchase"
+						L" the professional version of the product."
+						L" Would you go to the order page?";
+			} else if (reason == UR_TIME_START) {
+				error = wxT("Free trial period has not yet come");
+				ss << L"Time use of your free trial has not yet come.";
+				const boost::optional<pt::ptime> timeToLimit
+					= license->GetLimitationTimeFrom();
+				if (timeToLimit) {
+					ss << L" It begins on ";
+					std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%B, %d %Y"));
+					std::locale locTo(std::cout.getloc(), facet.get());
+					facet.release();
+					ss.imbue(locTo);
+					ss << *timeToLimit << L" GMT.";
+				}
+				ss
+					<< L" To continue to use the product, please check the"
+						L" settings of your local time and time synchronization"
+						L" options or purchase the professional version of the product."
+						L" Would you go to the order page?";
 			}
-			ss	<< L"."
-				wxT(" To continue to use the product please purchase")
-				<< L" the professional version of the product."
-				<< L" Would you go to the order page?";
-			const int answer = wxMessageBox(
-				ss.str().c_str(),
-				wxT("Free trial has come to an end"),
-				wxYES_NO | wxCENTER | wxICON_EXCLAMATION,
-				this);
-			if (answer == wxYES) {
-				wxGetApp().OpenOrderPage();
-			} else {
-				license->RegisterError(
-					"87DCF214-48A7-4766-9EEC-16A51DB22A42",
-					answer);
+			if (!error.IsEmpty()) {
+				const int answer = wxMessageBox(
+					ss.str().c_str(),
+					error,
+					wxYES_NO | wxCENTER | wxICON_EXCLAMATION,
+					this);
+				if (answer == wxYES) {
+					wxGetApp().OpenOrderPage();
+				} else {
+					license->RegisterError(
+						"87DCF214-48A7-4766-9EEC-16A51DB22A42",
+						answer);
+				}
 			}
 		}
 	}
