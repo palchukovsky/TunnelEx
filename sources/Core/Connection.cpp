@@ -164,6 +164,7 @@ private:
 	enum ReadingState {
 		RS_NOT_ALLOWED,
 		RS_NOT_STARTED,
+		RS_STOPPING_READING,
 		RS_READING,
 		RS_NOT_READING
 	};
@@ -575,7 +576,7 @@ public:
 public:
 
 	void StartReading() {
-		assert(m_readingState <= RS_NOT_STARTED);
+		assert(m_readingState <= RS_STOPPING_READING);
 		if (m_readingState == RS_NOT_ALLOWED) {
 			return;
 		}
@@ -596,7 +597,9 @@ public:
 	void StopReading() {
 		assert(IsLockedByMyThread(m_mutex));
 		if (m_readingState > RS_NOT_ALLOWED) {
-			m_readingState = RS_NOT_STARTED;
+			m_readingState = m_readingState == RS_READING
+				?	RS_STOPPING_READING
+				:	RS_NOT_STARTED;
 		}
 	}
 
@@ -875,6 +878,17 @@ private:
 		bool isSuccess = false;
 		try {
 			Lock lock(m_mutex, true);
+			switch (m_readingState) {
+				case RS_STOPPING_READING:
+					m_readingState = RS_NOT_STARTED;
+					break;
+				case  RS_READING:
+					m_readingState = RS_NOT_READING;
+					break;
+				default:
+					assert(false);
+					break;
+			}
 			assert(
 				m_setupState == SETUP_STATE_NOT_COMPLETED
 				|| m_setupState == SETUP_STATE_COMPLETED);
@@ -883,8 +897,9 @@ private:
 				isSuccess = InitMessageReading(true);
 			}
 		} catch (const TunnelEx::LocalException &ex) {
-			Log::GetInstance().AppendError(
-				ConvertString<String>(ex.GetWhat()).GetCStr());
+			Format message("%1% (reading connection %2%)");
+			message % WString(ex.GetWhat()) % m_instanceId;
+			Log::GetInstance().AppendError(message.str());
 		}
 
 		if (!isSuccess) {
@@ -940,9 +955,7 @@ private:
 
 		assert(IsLockedByMyThread(m_mutex));
 
-		if (isForcedInit && m_readingState > RS_NOT_STARTED) {
-			m_readingState = RS_NOT_READING;
-		} else if (m_readingState < RS_NOT_READING) {
+		if (m_readingState < RS_NOT_READING) {
 			return true;
 		}
 		assert(m_readingState >= RS_NOT_READING);
