@@ -120,11 +120,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
 				Base::Setup();
 			} else {
-				WFormat message(L"Failed to create secure (SSL/TLS) connection for %1%: unknown error");
-				message % GetInstanceId();
-				CancelSetup(message.str().c_str());
-				// Object may be deleted here
-				return;
+				StartReadingRemote();
 			}
 
 		}

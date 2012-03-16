@@ -64,6 +64,8 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		void CloseAllStreams() throw();
 
+		bool SetupSslConnection(Stream::Lock &, bool isReadingStarted);
+
 	private:
 
 		TunnelEx::AutoPtr<const TunnelEx::Mods::Inet::TcpEndpointAddress>

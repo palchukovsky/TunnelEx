@@ -85,34 +85,44 @@ void IncomingTcpSslClientConnection::AcceptConnection(
 
 }
 
-void IncomingTcpSslClientConnection::Setup() {
-	
-	assert(!GetDataStream().IsDecryptorEncryptorMode());
-	
-	GetDataStream().SwitchToDecryptorEncryptorMode();
-	
+bool IncomingTcpSslClientConnection::SetupSslConnection(
+			Stream::Lock &streamLock,
+			bool isReadingStarted) {
+
 	try {
 		GetDataStream().Connect();
 	} catch (const TunnelEx::LocalException &ex) {
-		WFormat message(L"Failed to create secure (SSL/TLS) connection for %2%: %1%");
+		streamLock.unlock();
+		WFormat message(
+			L"Failed to create secure (SSL/TLS) incoming connection for %2%: %1%");
 		message % ex.GetWhat() % GetInstanceId();
 		CancelSetup(message.str().c_str());
-		return;
+		return false;
 	}
 
-	if (GetDataStream().GetEncrypted().size() > 0) {
-		try {
-			SendToTunnel(
-				*CreateMessageBlock(
-					GetDataStream().GetEncrypted().size(),
-					&GetDataStream().GetEncrypted()[0]));
-		} catch (...) {
-			GetDataStream().ClearEncrypted();
-			throw;
+	if (!GetDataStream().GetEncrypted().empty()) {
+		AutoPtr<MessageBlock> answer;
+		{
+			auto cleanFunc = [&streamLock](Stream *stream) {
+				stream->ClearEncrypted();
+				streamLock.unlock();
+			};
+			std::unique_ptr<Stream, decltype(cleanFunc)> cleaner(
+				&GetDataStream(),
+				cleanFunc);
+			answer = CreateMessageBlock(
+				GetDataStream().GetEncrypted().size(),
+				&GetDataStream().GetEncrypted()[0]);
 		}
-		GetDataStream().ClearEncrypted();
-		StartReadingRemote();
-	} else if (GetDataStream().IsConnected()) {
+		WriteDirectly(*answer);
+	}
+
+	streamLock.unlock();
+
+	if (GetDataStream().IsConnected()) {
+		Log::GetInstance().AppendDebug(
+			"Incoming SSL/TLS connection for %1% created.",
+			GetInstanceId());
 		assert(
 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
@@ -121,58 +131,35 @@ void IncomingTcpSslClientConnection::Setup() {
 		assert(
 			SSL_get_peer_certificate(GetDataStream().ssl()) == 0
 			|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
+		if (isReadingStarted) {
+			StopReadingRemote();
+		}
 		Base::Setup();
-	} else {
-		WFormat message(L"Failed to create secure (SSL/TLS) connection for %1%: unknown error");
-		message % GetInstanceId();
-		CancelSetup(message.str().c_str());
+	} else if (!isReadingStarted) {
+		StartReadingRemote();
 	}
-	
+
+	return true;
+
+}
+
+void IncomingTcpSslClientConnection::Setup() {
+	Stream::Lock streamLock(GetDataStream().GetMutex());
+	assert(!GetDataStream().IsDecryptorEncryptorMode());
+	GetDataStream().SwitchToDecryptorEncryptorMode();
+	SetupSslConnection(streamLock, false);
 }
 
 void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
-	
 	assert(GetDataStream().IsDecryptorEncryptorMode());
-
 	if (	GetDataStream().IsConnected()
 			|| messageBlock.GetUnreadedDataSize() == 0) {
 		Base::ReadRemote(messageBlock);
 		return;
 	}
-
 	assert(!IsSetupCompleted());
-
-	try {
-		GetDataStream().Connect(messageBlock);
-	} catch (const TunnelEx::LocalException &ex) {
-		StopReadingRemote();
-		WFormat message(L"Failed to create SSL/TLS connection for %2%: %1%");
-		message % ex.GetWhat() % GetInstanceId();
-		CancelSetup(message.str().c_str());
-		return;
-	}
-	if (GetDataStream().GetEncrypted().size() > 0) {
-		try {
-			SendToTunnel(
-				*CreateMessageBlock(
-					GetDataStream().GetEncrypted().size(),
-					&GetDataStream().GetEncrypted()[0]));
-		} catch (...) {
-			GetDataStream().ClearEncrypted();
-			throw;
-		}
-		GetDataStream().ClearEncrypted();
-	}
-
-	assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
-
-	if (GetDataStream().IsConnected()) {
-		Log::GetInstance().AppendDebug(
-			"SSL/TLS connection for %1% created.",
-			GetInstanceId());
-		StopReadingRemote();
-		Base::Setup();
+	Stream::Lock streamLock(GetDataStream().GetMutex());
+	if (SetupSslConnection(streamLock, true) && GetDataStream().IsConnected()) {
 		Base::ReadRemote(messageBlock);
 	}
-
 }
