@@ -7,8 +7,7 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
-#ifndef INCLUDED_FILE__NetworkIncomingConnection_h__0706122024
-#define INCLUDED_FILE__NetworkIncomingConnection_h__0706122024
+#pragma once
 
 #include "TcpConnection.hpp"
 #include "ConnectionsTraits.hpp"
@@ -133,7 +132,6 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	template<>
 	void IncomingTcpConnection<true>::HandleAcceptSuccess(Stream &stream) const {
-
 		assert(
 			SSL_get_peer_certificate(stream.ssl()) != 0
 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
@@ -142,9 +140,10 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		assert(
 			SSL_get_peer_certificate(stream.ssl()) == 0
 			|| SSL_get_verify_result(stream.ssl()) == X509_V_OK);
-
+		Log::GetInstance().AppendDebug(
+			"SSL/TLS connection for %1% created (accepted).",
+			GetInstanceId());
 		stream.SwitchToDecryptorEncryptorMode();
-
 	}
 
 	template<>
@@ -217,5 +216,3 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	}
 
 } } }
-
-#endif // INCLUDED_FILE__NetworkIncomingConnection_h__0706122024

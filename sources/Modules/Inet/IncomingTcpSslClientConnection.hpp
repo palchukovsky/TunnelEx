@@ -7,8 +7,7 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
-#ifndef INCLUDED_FILE__TUNNELEX__IncomingTcpSslClientConnection_hpp__1102201135
-#define INCLUDED_FILE__TUNNELEX__IncomingTcpSslClientConnection_hpp__1102201135
+#pragma once
 
 #include "TcpConnection.hpp"
 #include "ConnectionsTraits.hpp"
@@ -62,7 +61,14 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 					const RuleEndpoint &ruleEndpoint,
 					const EndpointAddress &ruleEndpointAddress);
 
-		void CloseAllStreams() throw();
+		bool SetupSslConnection(bool isReadingStarted, MessageBlock * = nullptr);
+
+		void HandleAcceptError(RawStream &) const;
+		void HandleAcceptSuccess(RawStream &) const;
+		void HandleAcceptSuccess(DecodeStream &) const;
+
+		std::auto_ptr<DecodeStream> CreateStream(const EndpointAddress &)
+				const;
 
 	private:
 
@@ -73,5 +79,3 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	};
 
 } } }
-
-#endif // INCLUDED_FILE__TUNNELEX__IncomingTcpSslClientConnection_hpp__1102201135

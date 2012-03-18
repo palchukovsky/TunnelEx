@@ -25,19 +25,13 @@ IncomingTcpSslClientConnection::IncomingTcpSslClientConnection(
 }
 
 IncomingTcpSslClientConnection::~IncomingTcpSslClientConnection() throw() {
-	CloseAllStreams();
+	assert(m_rawStream.get_handle() == ACE_INVALID_HANDLE);
 }
 
 void IncomingTcpSslClientConnection::CloseIoHandle() throw() {
-	CloseAllStreams();
-}
-
-void IncomingTcpSslClientConnection::CloseAllStreams() throw() {
+	assert(m_rawStream.get_handle() != ACE_INVALID_HANDLE);
 	CloseDataStream();
-	static_assert(
-		boost::is_same<RawStream, ACE_SOCK_Stream>::value,
-		"Stream is not an ACE_SOCK_Stream");
-	verify(m_rawStream.close() == 0);
+	m_rawStream.close();
 }
 
 bool IncomingTcpSslClientConnection::IsOneWay() const {
@@ -60,119 +54,133 @@ void IncomingTcpSslClientConnection::AcceptConnection(
 			const Acceptor &acceptor,
 			const RuleEndpoint &ruleEndpoint,
 			const EndpointAddress &ruleEndpointAddress) {
-	
 	ACE_Time_Value timeout(ruleEndpoint.GetOpenTimeout());
 	ACE_INET_Addr aceRemoteAddr;
-
 	if (acceptor.accept(m_rawStream, &aceRemoteAddr, &timeout) != 0) {
-		const Error error(errno);
-		WFormat message(L"Failed to accept incoming connection: \"%1% (%2%)\"");
-		message % error.GetStringW() % error.GetErrorNo();
-		throw ConnectionOpeningException(message.str().c_str());
+		HandleAcceptError(m_rawStream);
+	} else {
+		HandleAcceptSuccess(m_rawStream);
 	}
-	
 	AutoPtr<const TcpEndpointAddress> remoteAddress(
 		new TcpEndpointAddress(aceRemoteAddr));
+	std::auto_ptr<DecodeStream> decodeStream = CreateStream(ruleEndpointAddress);
+	SetDataStream(decodeStream);
+	remoteAddress.Swap(m_remoteAddress);
+}
 
-	std::auto_ptr<DecodeStream> decodeStream(
+std::auto_ptr<IncomingTcpSslClientConnection::DecodeStream>
+IncomingTcpSslClientConnection::CreateStream(
+			const EndpointAddress &address)
+		const {
+	std::auto_ptr<DecodeStream> result(
 		new DecodeStream(
 			boost::polymorphic_downcast<const TcpEndpointAddress *>(
-					&ruleEndpointAddress)
+					&address)
 				->GetSslClientContext()));
-	SetDataStream(decodeStream);
+	result->set_handle(m_rawStream.get_handle());
+	return result;
+}
 
-	remoteAddress.Swap(m_remoteAddress);
+bool IncomingTcpSslClientConnection::SetupSslConnection(
+			bool isReadingStarted,
+			MessageBlock *messageBlock /*= nullptr*/) {
+	
+	DecodeStream &stream
+		= *boost::polymorphic_downcast<DecodeStream *>(&GetDataStream());
+	
+	try {
+		!messageBlock
+			?	stream.Connect()
+			:	stream.Connect(*messageBlock);
+	} catch (const TunnelEx::LocalException &ex) {
+		if (isReadingStarted) {
+			StopReadingRemote();
+		}
+		WFormat message(
+			L"Failed to create secure (SSL/TLS) incoming connection for %2%: %1%");
+		message % ex.GetWhat() % GetInstanceId();
+		CancelSetup(message.str().c_str());
+		return false;
+	}
+
+	if (!GetDataStream().GetEncrypted().empty()) {
+		auto cleanFunc = [](Stream *stream) {
+			stream->ClearEncrypted();
+		};
+		std::unique_ptr<Stream, decltype(cleanFunc)> cleaner(
+			&GetDataStream(),
+			cleanFunc);
+		WriteDirectly(
+			*CreateMessageBlock(
+				GetDataStream().GetEncrypted().size(),
+				&GetDataStream().GetEncrypted()[0]));
+	}
+
+	if (!GetDataStream().IsConnected()) {
+		if (!isReadingStarted) {
+			StartReadingRemote();
+		}
+		return true;
+	}
+
+	HandleAcceptSuccess(stream);
+	if (isReadingStarted) {
+		StopReadingRemote();
+	}
+	Base::Setup();
+	return true;
 
 }
 
 void IncomingTcpSslClientConnection::Setup() {
-	
 	assert(!GetDataStream().IsDecryptorEncryptorMode());
-	
 	GetDataStream().SwitchToDecryptorEncryptorMode();
-	
-	try {
-		GetDataStream().Connect();
-	} catch (const TunnelEx::LocalException &ex) {
-		WFormat message(L"Failed to create secure (SSL/TLS) connection for %2%: %1%");
-		message % ex.GetWhat() % GetInstanceId();
-		CancelSetup(message.str().c_str());
-		return;
-	}
-
-	if (GetDataStream().GetEncrypted().size() > 0) {
-		try {
-			SendToTunnel(
-				*CreateMessageBlock(
-					GetDataStream().GetEncrypted().size(),
-					&GetDataStream().GetEncrypted()[0]));
-		} catch (...) {
-			GetDataStream().ClearEncrypted();
-			throw;
-		}
-		GetDataStream().ClearEncrypted();
-		StartReadingRemote();
-	} else if (GetDataStream().IsConnected()) {
-		assert(
-			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
-			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
-					GetRuleEndpointAddress().Get())
-				->GetRemoteCertificates().GetSize() == 0);
-		assert(
-			SSL_get_peer_certificate(GetDataStream().ssl()) == 0
-			|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
-		Base::Setup();
-	} else {
-		WFormat message(L"Failed to create secure (SSL/TLS) connection for %1%: unknown error");
-		message % GetInstanceId();
-		CancelSetup(message.str().c_str());
-	}
-	
+	SetupSslConnection(false);
 }
 
 void IncomingTcpSslClientConnection::ReadRemote(MessageBlock &messageBlock) {
-	
 	assert(GetDataStream().IsDecryptorEncryptorMode());
-
 	if (	GetDataStream().IsConnected()
 			|| messageBlock.GetUnreadedDataSize() == 0) {
 		Base::ReadRemote(messageBlock);
 		return;
 	}
-
 	assert(!IsSetupCompleted());
-
-	try {
-		GetDataStream().Connect(messageBlock);
-	} catch (const TunnelEx::LocalException &ex) {
-		StopReadingRemote();
-		WFormat message(L"Failed to create SSL/TLS connection for %2%: %1%");
-		message % ex.GetWhat() % GetInstanceId();
-		CancelSetup(message.str().c_str());
+	if (!SetupSslConnection(true, &messageBlock)) {
 		return;
 	}
-	if (GetDataStream().GetEncrypted().size() > 0) {
-		try {
-			SendToTunnel(
-				*CreateMessageBlock(
-					GetDataStream().GetEncrypted().size(),
-					&GetDataStream().GetEncrypted()[0]));
-		} catch (...) {
-			GetDataStream().ClearEncrypted();
-			throw;
-		}
-		GetDataStream().ClearEncrypted();
-	}
-
-	assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
-
+	assert(
+		GetDataStream().IsConnected()
+		|| messageBlock.GetUnreadedDataSize() == 0);
 	if (GetDataStream().IsConnected()) {
-		Log::GetInstance().AppendDebug(
-			"SSL/TLS connection for %1% created.",
-			GetInstanceId());
-		StopReadingRemote();
-		Base::Setup();
 		Base::ReadRemote(messageBlock);
 	}
+}
+
+void IncomingTcpSslClientConnection::HandleAcceptError(RawStream &) const {
+	const Error error(errno);
+	WFormat message(L"Failed to accept incoming connection: \"%1% (%2%)\"");
+	message % error.GetStringW() % error.GetErrorNo();
+	throw ConnectionOpeningException(message.str().c_str());
+}
+
+void IncomingTcpSslClientConnection::HandleAcceptSuccess(RawStream &) const {
+	//...//
+}
+
+void IncomingTcpSslClientConnection::HandleAcceptSuccess(
+			DecodeStream &stream)
+		const {
+	assert(
+		SSL_get_peer_certificate(stream.ssl()) != 0
+		|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
+				GetRuleEndpointAddress().Get())
+			->GetRemoteCertificates().GetSize() == 0);
+	assert(
+		SSL_get_peer_certificate(stream.ssl()) == 0
+		|| SSL_get_verify_result(stream.ssl()) == X509_V_OK);
+	Log::GetInstance().AppendDebug(
+		"SSL/TLS connection for %1% created (connected).",
+		GetInstanceId());
 
 }

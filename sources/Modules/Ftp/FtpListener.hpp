@@ -40,6 +40,15 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 
 		virtual TunnelEx::DataTransferCommand OnNewMessageBlock(
 				TunnelEx::MessageBlock &);
+
+	protected:
+
+		const TunnelEx::Connection & GetCurrentConnection() const {
+			return m_currentConnection;
+		}
+		const TunnelEx::Connection & GetOppositeConnection() const {
+			return m_oppositeConnection;
+		}
 	
 	protected:
 
@@ -49,6 +58,16 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 				NetworkPort originalPort);
 
 		virtual const char * GetCmdTemplate() const = 0;
+
+		virtual void GetInputCertificates(
+				const TunnelEx::Mods::Inet::TcpEndpointAddress &currentInputRuleEndpoint,
+				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
+			const
+			= 0;
+		virtual void GetDestinationCertificates(
+				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
+			const
+			= 0;
 
 	private:
 
@@ -81,7 +100,9 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 	//////////////////////////////////////////////////////////////////////////
 
 	class FtpListenerForActiveMode : public FtpListener {
+
 	public:
+
 		FtpListenerForActiveMode(
 					TunnelEx::Server::Ref server,
 					const TunnelEx::Connection &currentConnection,
@@ -94,10 +115,13 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 					"PORT ") {
 			//...//
 		}
+
 		virtual ~FtpListenerForActiveMode() throw () {
 			//...//
 		}
+
 	protected:
+
 		virtual void ReplaceCmd(
 					MessageBlock &messageBlock,
 					const std::string &originalIpAddress,
@@ -107,15 +131,27 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 				originalIpAddress, originalPort);
 			FtpListener::ReplaceCmd(messageBlock, originalIpAddress, originalPort);
 		}
+
 		virtual const char * GetCmdTemplate() const {
 			return "PORT %1%,%2%,%3%\r\n";
 		}
+
+		virtual void GetInputCertificates(
+				const TunnelEx::Mods::Inet::TcpEndpointAddress &currentInputRuleEndpoint,
+				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
+			const;
+		virtual void GetDestinationCertificates(
+				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
+			const;
+
 	};
 
 	//////////////////////////////////////////////////////////////////////////
 
 	class FtpListenerForPassiveMode : public FtpListener {
+
 	public:
+
 		FtpListenerForPassiveMode(
 					TunnelEx::Server::Ref server,
 					const TunnelEx::Connection &currentConnection,
@@ -128,10 +164,13 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 					"227 ") {
 			//...//
 		}
+
 		virtual ~FtpListenerForPassiveMode() throw() {
 			//...//
 		}
+
 	protected:
+
 		virtual void ReplaceCmd(
 					MessageBlock &messageBlock,
 					const std::string &originalIpAddress,
@@ -141,9 +180,19 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 				originalIpAddress, originalPort);
 			FtpListener::ReplaceCmd(messageBlock, originalIpAddress, originalPort);
 		}
+
 		virtual const char * GetCmdTemplate() const {
 			return "227 Entering Passive Mode (%1%,%2%,%3%)\r\n";
 		}
+
+		virtual void GetInputCertificates(
+				const TunnelEx::Mods::Inet::TcpEndpointAddress &currentInputRuleEndpoint,
+				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
+			const;
+		virtual void GetDestinationCertificates(
+				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
+			const;
+
 	};
 
 	//////////////////////////////////////////////////////////////////////////

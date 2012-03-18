@@ -7,8 +7,7 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
-#ifndef INCLUDED_FILE__NetworkOutgoingConnection_h__0706122148
-#define INCLUDED_FILE__NetworkOutgoingConnection_h__0706122148
+#pragma once
 
 #include "TcpConnection.hpp"
 #include "InetEndpointAddress.hpp"
@@ -76,7 +75,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		}
 		
 		virtual ~OutcomingSslTcpConnection() {
-			CloseAllStreams();
+			assert(m_ioStream.get_handle() == ACE_INVALID_HANDLE);
 		}
 
 	protected:
@@ -84,48 +83,37 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		virtual void Setup() {
 			
 			assert(!GetDataStream().IsDecryptorEncryptorMode());
-	
 			GetDataStream().SwitchToDecryptorEncryptorMode();
-			
+
 			try {
 				SslConnect();
 			} catch (const TunnelEx::LocalException &ex) {
 				WFormat message(L"Failed to create secure (SSL/TLS) connection for %2%: %1%");
 				message % ex.GetWhat() % GetInstanceId();
 				CancelSetup(message.str().c_str());
-				// Object may be deleted here
 				return;
 			}
 
-			if (GetDataStream().GetEncrypted().size() > 0) {
-				try {
-					WriteDirectly(
-						*CreateMessageBlock(
-							GetDataStream().GetEncrypted().size(),
-							&GetDataStream().GetEncrypted()[0]));
-				} catch (...) {
-					GetDataStream().ClearEncrypted();
-					throw;
-				}
-				GetDataStream().ClearEncrypted();
+			if (!GetDataStream().GetEncrypted().empty()) {
+				auto cleanFunc = [](Stream *stream) {
+					stream->ClearEncrypted();
+				};
+				std::unique_ptr<Stream, decltype(cleanFunc)> cleaner(
+					&GetDataStream(),
+					cleanFunc);
+				WriteDirectly(
+					*CreateMessageBlock(
+						GetDataStream().GetEncrypted().size(),
+						&GetDataStream().GetEncrypted()[0]));
+			}
+			
+			if (!GetDataStream().IsConnected()) {
 				StartReadingRemote();
-			} else if (GetDataStream().IsConnected()) {
-				assert(
-					SSL_get_peer_certificate(GetDataStream().ssl()) != 0
-					|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
-							GetRuleEndpointAddress().Get())
-						->GetRemoteCertificates().GetSize() == 0);
-				assert(
-					SSL_get_peer_certificate(GetDataStream().ssl()) == 0
-					|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
-				Base::Setup();
-			} else {
-				WFormat message(L"Failed to create secure (SSL/TLS) connection for %1%: unknown error");
-				message % GetInstanceId();
-				CancelSetup(message.str().c_str());
-				// Object may be deleted here
 				return;
 			}
+
+			CompleteSslConnect();
+			Base::Setup();
 
 		}
 
@@ -151,35 +139,38 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				return;
 			}
 			if (!GetDataStream().GetEncrypted().empty()) {
-				try {
-					WriteDirectly(
-						*CreateMessageBlock(
-							GetDataStream().GetEncrypted().size(),
-							&GetDataStream().GetEncrypted()[0]));
-				} catch (...) {
-					GetDataStream().ClearEncrypted();
-					throw;
-				}
-				GetDataStream().ClearEncrypted();
+				auto cleanFunc = [](Stream *stream) {
+					stream->ClearEncrypted();
+				};
+				std::unique_ptr<Stream, decltype(cleanFunc)> cleaner(
+					&GetDataStream(),
+					cleanFunc);
+				WriteDirectly(
+					*CreateMessageBlock(
+						GetDataStream().GetEncrypted().size(),
+						&GetDataStream().GetEncrypted()[0]));
 			}
 
-			assert(GetDataStream().IsConnected() || messageBlock.GetUnreadedDataSize() == 0);
-
-			if (GetDataStream().IsConnected()) {
-				Log::GetInstance().AppendDebug(
-					"SSL/TLS connection for %1% created.",
-					GetInstanceId());
-				StopReadingRemote();
-				Base::Setup();
-				Base::ReadRemote(messageBlock);
+			assert(
+				GetDataStream().IsConnected()
+				|| messageBlock.GetUnreadedDataSize() == 0);
+			if (!GetDataStream().IsConnected()) {
+				return;
 			}
+
+			CompleteSslConnect();
+			StopReadingRemote();
+			Base::Setup();
+			Base::ReadRemote(messageBlock);
 
 		}
 
 	protected:
 
 		virtual void CloseIoHandle() throw() {
-			CloseAllStreams();
+			assert(m_ioStream.get_handle() != ACE_INVALID_HANDLE);
+			CloseDataStream();
+			m_ioStream.close();
 		}
 
 		virtual ACE_SOCK & GetIoStream() throw() {
@@ -191,14 +182,6 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	private:
 
-		void CloseAllStreams() throw() {
-			CloseDataStream();
-			static_assert(
-				boost::is_same<IoStream, ACE_SOCK_Stream>::value,
-				"Stream is not an ACE_SOCK_Stream");
-			verify(m_ioStream.close() == 0);
-		}
-
 		void SslConnect() {
 			static_assert(
 				false,
@@ -209,6 +192,13 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				false,
 				"Implements SSL connection process (connect or accept).");
 		}
+
+		void CompleteSslConnect() {
+			static_assert(
+				false,
+				"Implements SSL connection process (connect or accept).");
+		}
+
 		const ACE_SSL_Context & GetSslContext(const TcpEndpointAddress &) const {
 			static_assert(
 				false,
@@ -235,6 +225,7 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 				new DataStream(
 					GetSslContext(
 						*boost::polymorphic_downcast<const TcpEndpointAddress *>(&ruleEndpointAddress))));
+			codeStream->set_handle(m_ioStream.get_handle());
 			SetDataStream(codeStream);
 	
 		}
@@ -251,10 +242,22 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	void OutcomingSslTcpConnection<false>::SslConnect() {
 		GetDataStream().Connect();
 	}
+	template<>
+	void OutcomingSslTcpConnection<false>::SslConnect(
+				MessageBlock &messageBlock) {
+		GetDataStream().Connect(messageBlock);
+	}
 
 	template<>
-	void OutcomingSslTcpConnection<false>::SslConnect(MessageBlock &messageBlock) {
-		GetDataStream().Connect(messageBlock);
+	void OutcomingSslTcpConnection<false>::CompleteSslConnect() {
+		assert(
+ 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
+ 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
+ 					GetRuleEndpointAddress().Get())
+ 				->GetRemoteCertificates().GetSize() == 0);
+		Log::GetInstance().AppendDebug(
+			"SSL/TLS connection for %1% created (connected).",
+			GetInstanceId());
 	}
 
 	template<>
@@ -268,10 +271,24 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	void OutcomingSslTcpConnection<true>::SslConnect() {
 		GetDataStream().Accept();
 	}
-
 	template<>
 	void OutcomingSslTcpConnection<true>::SslConnect(MessageBlock &messageBlock) {
 		GetDataStream().Accept(messageBlock);
+	}
+
+	template<>
+	void OutcomingSslTcpConnection<true>::CompleteSslConnect() {
+		assert(
+			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
+			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
+					GetRuleEndpointAddress().Get())
+				->GetRemoteCertificates().GetSize() == 0);
+		assert(
+			SSL_get_peer_certificate(GetDataStream().ssl()) == 0
+			|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
+		Log::GetInstance().AppendDebug(
+			"SSL/TLS connection for %1% created (accepted).",
+			GetInstanceId());
 	}
 
 	template<>
@@ -284,5 +301,3 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	//////////////////////////////////////////////////////////////////////////
 
 } } }
-
-#endif // INCLUDED_FILE__NetworkOutgoingConnection_h__0706122148

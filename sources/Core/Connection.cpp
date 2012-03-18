@@ -885,13 +885,11 @@ private:
 				case  RS_READING:
 					m_readingState = RS_NOT_READING;
 					break;
-				default:
-					assert(false);
-					break;
 			}
 			assert(
 				m_setupState == SETUP_STATE_NOT_COMPLETED
 				|| m_setupState == SETUP_STATE_COMPLETED);
+			assert(!IsSetupFailed());
 			if (!m_isClosed) {
 				m_myInterface.ReadRemote(messageBlock);
 				isSuccess = InitMessageReading(true);
