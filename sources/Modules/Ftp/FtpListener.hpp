@@ -59,17 +59,15 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 
 		virtual const char * GetCmdTemplate() const = 0;
 
-		virtual void GetInputCertificates(
+	private:
+
+		void GetInputCertificates(
 				const TunnelEx::Mods::Inet::TcpEndpointAddress &currentInputRuleEndpoint,
 				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-			const
-			= 0;
-		virtual void GetDestinationCertificates(
+			const;
+		void GetDestinationCertificates(
 				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-			const
-			= 0;
-
-	private:
+			const;
 
 		static NetworkPort MakePort(
 				const std::string &lowNumb,
@@ -136,14 +134,6 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 			return "PORT %1%,%2%,%3%\r\n";
 		}
 
-		virtual void GetInputCertificates(
-				const TunnelEx::Mods::Inet::TcpEndpointAddress &currentInputRuleEndpoint,
-				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-			const;
-		virtual void GetDestinationCertificates(
-				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-			const;
-
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -184,14 +174,6 @@ namespace TunnelEx { namespace Mods { namespace Ftp {
 		virtual const char * GetCmdTemplate() const {
 			return "227 Entering Passive Mode (%1%,%2%,%3%)\r\n";
 		}
-
-		virtual void GetInputCertificates(
-				const TunnelEx::Mods::Inet::TcpEndpointAddress &currentInputRuleEndpoint,
-				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-			const;
-		virtual void GetDestinationCertificates(
-				TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-			const;
 
 	};
 

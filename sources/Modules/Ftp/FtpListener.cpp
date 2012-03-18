@@ -273,9 +273,7 @@ DataTransferCommand FtpListener::OnNewMessageBlock(MessageBlock &messageBlock) {
 
 }
 
-//////////////////////////////////////////////////////////////////////////
-
-void FtpListenerForPassiveMode::GetInputCertificates(
+void FtpListener::GetInputCertificates(
 			const TcpEndpointAddress &currentInputRuleEndpoint,
 			TcpEndpointAddress &destination)
 		const {
@@ -287,7 +285,7 @@ void FtpListenerForPassiveMode::GetInputCertificates(
 			remoteAddress.Get()));
 }
 
-void FtpListenerForPassiveMode::GetDestinationCertificates(
+void FtpListener::GetDestinationCertificates(
 			TcpEndpointAddress &destination)
 		const {
 	const AutoPtr<const EndpointAddress> oppositeAddress(
@@ -295,28 +293,3 @@ void FtpListenerForPassiveMode::GetDestinationCertificates(
 	destination.CopyRemoteCertificate(
 		*boost::polymorphic_downcast<const TcpEndpointAddress *>(oppositeAddress.Get()));
 }
-
-//////////////////////////////////////////////////////////////////////////
-
-void FtpListenerForActiveMode::GetInputCertificates(
-			const TcpEndpointAddress &currentInputRuleEndpoint,
-			TcpEndpointAddress &destination)
-		const {
-	const AutoPtr<const EndpointAddress> remoteAddress(
-		GetCurrentConnection().GetRemoteAddress());
-	destination.CopyCertificate(
-		currentInputRuleEndpoint,
-		*boost::polymorphic_downcast<const TcpEndpointAddress *>(
-			remoteAddress.Get()));
-}
-
-void FtpListenerForActiveMode::GetDestinationCertificates(
-			TunnelEx::Mods::Inet::TcpEndpointAddress &destination)
-		const {
-	const AutoPtr<const EndpointAddress> oppositeAddress(
-		GetOppositeConnection().GetRemoteAddress());
-	destination.CopyRemoteCertificate(
-		*boost::polymorphic_downcast<const TcpEndpointAddress *>(oppositeAddress.Get()));
-}
-
-//////////////////////////////////////////////////////////////////////////
