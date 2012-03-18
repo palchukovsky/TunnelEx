@@ -389,7 +389,7 @@
             <Shortcut Id="ControlCenterPMenuShortcut"
 								  Directory="ProgramMenuDir"
 								  WorkingDirectory="INSTALLDIR"
-								  Name="$(var.ProductName) Control Center"
+								  Name="$(var.ProductName)"
 								  Target="[!TunnelExControlCenter$(var.TexFileNameSuffix).exe]"/>
             <RemoveFolder Id="RemoveControlCenterPMenuShortcutDir"
 									  Directory="ProgramMenuDir"
@@ -466,7 +466,7 @@
           <Shortcut Id="ControlCenterDesktopShortcut"
 							  Directory="DesktopFolder"
 							  WorkingDirectory="INSTALLDIR"
-							  Name="$(var.ProductName) Control Center"
+							  Name="$(var.ProductName)"
 							  Target="[!TunnelExControlCenter$(var.TexFileNameSuffix).exe]" />
         </Component>
       </Directory>

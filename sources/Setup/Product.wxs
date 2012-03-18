@@ -79,7 +79,7 @@
 				<ComponentRef Id="ModuleUpnp" />
 			</Feature>
 			<Feature Id="ControlCenterFeature"
-					 Title="$(var.ProductFullName) TunnelEx Control Center"
+					 Title="$(var.ProductFullName) Control Center"
 					 TypicalDefault="install"
 					 Level="1"
 					 AllowAdvertise="no">
