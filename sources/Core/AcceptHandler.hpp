@@ -258,6 +258,15 @@ namespace TunnelEx {
 			try {
 				m_server.OpenTunnel(m_endpointHandle, *m_acceptor);
 				return true;
+			} catch (const TunnelEx::ConnectionOpeningGracefullyCanceled &ex) {
+				// see TEX-698
+				Log::GetInstance().AppendDebugEx(
+					[&ex]() -> Format {
+						Format message(
+							"False alarm, no connections accepted: \"%1%\".");
+						message % WString(ex.GetWhat());
+						return message;
+					});
 			} catch (const TunnelEx::LocalException &ex) {
 				Log::GetInstance().AppendError(
 					ConvertString<String>(ex.GetWhat()).GetCStr());

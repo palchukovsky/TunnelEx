@@ -7,8 +7,7 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
-#ifndef INCLUDED_FILE_Exception_h__0702110530
-#define INCLUDED_FILE_Exception_h__0702110530
+#pragma once
 
 #include "SmartPtr.hpp"
 #include "Api.h"
@@ -80,6 +79,21 @@ namespace TunnelEx {
 		virtual ~ConnectionOpeningException() throw();
 		ConnectionOpeningException & operator =(
 				const ConnectionOpeningException &)
+			throw();
+		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
+	};
+
+	//! Special case for false alarms (see TEX-698 for details).
+	class TUNNELEX_CORE_API ConnectionOpeningGracefullyCanceled
+			: public ConnectionOpeningException {
+	public:
+		explicit ConnectionOpeningGracefullyCanceled() throw();
+		ConnectionOpeningGracefullyCanceled(
+				const ConnectionOpeningGracefullyCanceled &)
+			throw();
+		virtual ~ConnectionOpeningGracefullyCanceled() throw();
+		ConnectionOpeningGracefullyCanceled & operator =(
+				const ConnectionOpeningGracefullyCanceled &)
 			throw();
 		virtual ::TunnelEx::AutoPtr<::TunnelEx::LocalException> Clone() const;
 	};
@@ -251,5 +265,3 @@ namespace TunnelEx {
 	//////////////////////////////////////////////////////////////////////////
 
 }
-
-#endif // INCLUDED_FILE_Exception_h__0702110530

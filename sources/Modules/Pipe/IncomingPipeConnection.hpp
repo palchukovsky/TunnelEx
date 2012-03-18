@@ -47,13 +47,16 @@ namespace TunnelEx { namespace Mods { namespace Pipe {
 				const {
 			std::auto_ptr<ACE_SPIPE_Stream> stream(new ACE_SPIPE_Stream);
 			ACE_Time_Value timeout(ruleEndpoint.GetOpenTimeout());
-			if (acceptor.accept(*stream, 0, &timeout) != 0) {
-				const Error error(errno);
-				WFormat message(L"Failed to accept incoming pipe connection: \"%1% (%2%)\".");
-				message % error.GetStringW() % error.GetErrorNo();
-				throw ConnectionOpeningException(message.str().c_str());
+			if (acceptor.accept(*stream, 0, &timeout) == 0) {
+				return stream;
 			}
-			return stream;
+			const Error error(errno);
+			if (!error.IsError()) {
+				throw ConnectionOpeningGracefullyCanceled();
+			}
+			WFormat message(L"Failed to accept incoming pipe connection: \"%1% (%2%)\".");
+			message % error.GetStringW() % error.GetErrorNo();
+			throw ConnectionOpeningException(message.str().c_str());
 		}
 
 	};
