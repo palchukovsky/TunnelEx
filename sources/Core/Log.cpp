@@ -358,19 +358,19 @@ void LogPolicy::AppendInfo(const std::string &message) throw() {
 }
 
 void LogPolicy::AppendWarn(const std::string &message) throw() {
-	m_pimpl->CheckAndAppend(LOG_LEVEL_WARN, message);
+	AppendForced(LOG_LEVEL_WARN, message);
 }
 
 void LogPolicy::AppendError(const std::string &message) throw() {
-	m_pimpl->CheckAndAppend(LOG_LEVEL_ERROR, message);
+	AppendForced(LOG_LEVEL_ERROR, message);
 }
 
 void LogPolicy::AppendSystemError(const std::string &message) throw() {
-	m_pimpl->CheckAndAppend(LOG_LEVEL_SYSTEM_ERROR, message);
+	AppendForced(LOG_LEVEL_SYSTEM_ERROR, message);
 }
 
 void LogPolicy::AppendFatalError(const std::string &message) throw() {
-	m_pimpl->CheckAndAppend(LOG_LEVEL_FATAL_ERROR, message);
+	AppendForced(LOG_LEVEL_FATAL_ERROR, message);
 }
 
 void LogPolicy::SetLevelRegistrationState(LogLevel level, bool state) throw() {
