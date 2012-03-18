@@ -102,7 +102,6 @@ bool IncomingTcpSslClientConnection::SetupSslConnection(
 		CancelSetup(message.str().c_str());
 		return false;
 	}
-//	assert(!isReadingStarted || !GetDataStream().GetEncrypted().empty());
 
 	if (!GetDataStream().GetEncrypted().empty()) {
 		auto cleanFunc = [](Stream *stream) {

@@ -250,14 +250,11 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 	template<>
 	void OutcomingSslTcpConnection<false>::CompleteSslConnect() {
-// 		assert(
-// 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
-// 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
-// 					GetRuleEndpointAddress().Get())
-// 				->GetRemoteCertificates().GetSize() == 0);
-// 		assert(
-// 			SSL_get_peer_certificate(GetDataStream().ssl()) == 0
-// 			|| SSL_get_verify_result(GetDataStream().ssl()) == X509_V_OK);
+		assert(
+ 			SSL_get_peer_certificate(GetDataStream().ssl()) != 0
+ 			|| boost::polymorphic_downcast<const TcpEndpointAddress *>(
+ 					GetRuleEndpointAddress().Get())
+ 				->GetRemoteCertificates().GetSize() == 0);
 		Log::GetInstance().AppendDebug(
 			"SSL/TLS connection for %1% created (connected).",
 			GetInstanceId());
