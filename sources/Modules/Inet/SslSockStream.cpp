@@ -459,7 +459,7 @@ void SslSockStream::Connect() {
 		throw;
 	}
 
-	assert(m_buffers.out.size() > 0);
+	// assert(m_buffers.out.size() > 0);
 
 }
 
