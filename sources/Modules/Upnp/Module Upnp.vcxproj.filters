@@ -87,8 +87,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="TexModUpnp.def">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="Module Upnp.props" />
+    <None Include="TexModUpnp.def" />
   </ItemGroup>
 </Project>

@@ -7,8 +7,7 @@
  *       URL: http://tunnelex.net
  **************************************************************************/
 
-#ifndef INCLUDED_FILE__TUNNELEX__TcpConnection_hpp__0809231544
-#define INCLUDED_FILE__TUNNELEX__TcpConnection_hpp__0809231544
+#pragma once
 
 #include "InetConnection.hpp"
 #include "InetEndpointAddress.hpp"
@@ -160,16 +159,12 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 
 		AutoPtr<MessageBlock> messageBlockEncrypted;
 		if (!GetDataStream().GetEncrypted().empty()) {
-			struct Cleaner : private boost::noncopyable {
-				explicit Cleaner(Stream &stream)
-						: stream(stream) {
-					//...//
-				}
-				~Cleaner() {
-					stream.ClearEncrypted();
-				}
-				Stream &stream;
-			} cleaner(GetDataStream());
+			auto cleanFunc = [](Stream *stream) {
+				stream->ClearEncrypted();
+			};
+			std::unique_ptr<Stream, decltype(cleanFunc)> cleaner(
+				&GetDataStream(),
+				cleanFunc);
 			messageBlockEncrypted = CreateMessageBlock(
 				GetDataStream().GetEncrypted().size(),
 				&GetDataStream().GetEncrypted()[0]);
@@ -215,19 +210,13 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 		AutoPtr<MessageBlock> messageBlockEncrypted;
 		MessageBlock *messageBlockToSend = &messageBlock;
 		{
-			struct Cleaner : private boost::noncopyable {
-				explicit Cleaner(Stream &stream, Stream::Lock &lock)
-						: stream(stream)
-						, lock(lock) {
-					//...//
-				}
-				~Cleaner() {
-					stream.ClearEncrypted();
-					lock.unlock();
-				}
-				Stream &stream;
-				Stream::Lock &lock;
-			} cleaner(GetDataStream(), streamLock);
+			auto cleanFunc = [&streamLock](Stream *stream) {
+				stream->ClearEncrypted();
+				streamLock.unlock();
+			};
+			std::unique_ptr<Stream, decltype(cleanFunc)> cleaner(
+				&GetDataStream(),
+				cleanFunc);
 			if (GetDataStream().GetEncrypted().size() <= messageBlock.GetBlockSize()) {
 				if (GetDataStream().GetEncrypted().empty()) {
 					messageBlock.Read();
@@ -264,5 +253,3 @@ namespace TunnelEx { namespace Mods { namespace Inet {
 	}
 
 } } }
-
-#endif // INCLUDED_FILE__TUNNELEX__TcpConnection_hpp__0809231544

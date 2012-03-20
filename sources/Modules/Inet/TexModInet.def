@@ -1,8 +1,6 @@
 EXPORTS
-	GetTunnelExModuleName
-	GetTunnelExModuleVersion
+	GetModuleName = ?GetModuleName@Inet@Mods@TunnelEx@@YAPBDXZ
+	GetModuleVersion = ?GetModuleVersion@Inet@Mods@TunnelEx@@YAPBDXZ
 	CreateTcpEndpointAddress
 	CreateUdpEndpointAddress
-	CreateActiveFtpListener
-	CreatePassiveFtpListener
 	CreateDestinationPingFilter

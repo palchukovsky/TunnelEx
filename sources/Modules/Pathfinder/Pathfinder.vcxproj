@@ -76,7 +76,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
-    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">true</EnableManagedIncrementalBuild>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">TexModPathfinder_test</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TexModPathfinder</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TexModPathfinder_dbg</TargetName>
@@ -129,6 +129,7 @@
     <ResourceCompile Include="Module Pathfinder.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Module Pathfinder.props" />
     <None Include="TexModPathfinder.def" />
   </ItemGroup>
   <ItemGroup>

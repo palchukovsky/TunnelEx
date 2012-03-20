@@ -63,8 +63,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="TexModPipe.def">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="TexModPipe.def" />
+    <None Include="Module Pipe.props" />
   </ItemGroup>
 </Project>

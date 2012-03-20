@@ -67,7 +67,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
-    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">true</EnableManagedIncrementalBuild>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TexLegacy_dbg</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TexLegacy</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">TexLegacy_test</TargetName>
@@ -111,6 +111,7 @@
     <ResourceCompile Include="Legacy support.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Legacy support.props" />
     <None Include="Legacy.def" />
   </ItemGroup>
   <ItemGroup>

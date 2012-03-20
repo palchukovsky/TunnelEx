@@ -477,7 +477,9 @@ namespace TunnelEx { namespace Licensing {
 						valueToCheck,
 						UR_SCORES,
 						defaultValue));
-			} else if (!Check::CheckTime(keyInfo, localInfo)) {
+			} else if (
+					!Check::CheckTimeStart(keyInfo, localInfo)
+					||	!Check::CheckTimeNotEnd(keyInfo, localInfo)) {
 				result.reset(
 					new Cache(
 						false,

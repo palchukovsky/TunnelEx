@@ -74,7 +74,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
-    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">true</EnableManagedIncrementalBuild>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TunnelExControlCenter_dbg</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TunnelExControlCenter</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">TunnelExControlCenter_test</TargetName>
@@ -817,6 +817,9 @@ copy /Y "%(FullPath)" "$(OutDir)Templates"</Command>
       <Project>{6884dfb9-d84c-4f37-853f-79565671a1e3}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Front-end.props" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

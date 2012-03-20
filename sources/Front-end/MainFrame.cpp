@@ -930,7 +930,8 @@ void MainFrame::Check(std::auto_ptr<License> &license) {
 	
 	license->UpdateCache();
 	
-	switch (license->GetUnactivityReason()) {
+	const auto unactivityReason = license->GetUnactivityReason();
+	switch (unactivityReason) {
 		default:
 		case UR_NO:
 			break;
@@ -950,7 +951,8 @@ void MainFrame::Check(std::auto_ptr<License> &license) {
 				}
 			}
 			break;
-		case UR_TIME:
+		case UR_TIME_START:
+		case UR_TIME_END:
 			if (	license->IsTrial()
 					&& (!wxGetApp().GetConfig().Exists(wxT("/License/TrialLicense"))
 						|| wxGetApp().GetConfig().Read(wxT("/License/TrialLicense"))
@@ -958,12 +960,39 @@ void MainFrame::Check(std::auto_ptr<License> &license) {
 				wxGetApp().GetConfig().Write(
 					wxT("/License/TrialLicense"),
 					wxString::FromAscii(license->GetLicense().c_str()));
+				wxString title;
+				wxString message;
+				if (unactivityReason == UR_TIME_START) {
+					title = wxT("Free trial period has not yet come");
+					message = wxT("Time use of your free trial has not yet come.");
+					const boost::optional<pt::ptime> timeToLimit
+						= license->GetLimitationTimeFrom();
+					if (timeToLimit) {
+						std::wostringstream oss;
+						oss << L" It begins on ";
+						std::auto_ptr<pt::wtime_facet> facet(new pt::wtime_facet(L"%B, %d %Y"));
+						std::locale locTo(std::cout.getloc(), facet.get());
+						facet.release();
+						oss.imbue(locTo);
+						oss << *timeToLimit << L" GMT.";
+						message += oss.str();
+					}
+					message
+						+= wxT(" To continue to use the product, please check the")
+							wxT(" settings of your local time and time synchronization")
+							wxT(" options or purchase the professional version of the product.")
+							wxT(" Would you go to the order page?");
+				} else {
+					title = wxT("Free trial has come to an end");
+					message
+						= wxT("Time use of your free trial has come to an end.")
+							wxT(" To continue to use the product please purchase")
+							wxT(" the professional version of the product.")
+							wxT(" Would you go to the order page?");
+				}
 				const int answer = wxMessageBox(
-					wxT("Time use of your free trial has come to an end.")
-						wxT(" To continue to use the product please purchase")
-						wxT(" the professional version of the product.")
-						wxT(" Would you go to the order page?"),
-					wxT("Free trial has come to an end"),
+					message,
+					title,
 					wxYES_NO | wxCENTER | wxICON_EXCLAMATION,
 					this);
 				if (answer == wxYES) {

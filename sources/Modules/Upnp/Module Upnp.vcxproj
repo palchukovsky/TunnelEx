@@ -77,7 +77,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" />
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
-    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">false</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">true</EnableManagedIncrementalBuild>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TexModUpnp_dbg</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TexModUpnp</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">TexModUpnp_test</TargetName>
@@ -136,6 +136,7 @@
     <ResourceCompile Include="Module Upnp.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Module Upnp.props" />
     <None Include="TexModUpnp.def" />
   </ItemGroup>
   <ItemGroup>

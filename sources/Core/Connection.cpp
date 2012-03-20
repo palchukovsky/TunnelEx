@@ -41,7 +41,7 @@ namespace {
 
 }
 
-#ifdef DEV_VER
+#if defined(DEV_VER) && defined(NOT_DEFINED)
 namespace {
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +164,7 @@ private:
 	enum ReadingState {
 		RS_NOT_ALLOWED,
 		RS_NOT_STARTED,
+		RS_STOPPING_READING,
 		RS_READING,
 		RS_NOT_READING
 	};
@@ -256,7 +257,6 @@ private:
 
 		assert(m_refsCount > 0 || !removeRef);
 
-		m_readingState = RS_NOT_ALLOWED;
 		Interlocked::Exchange(m_isClosed, true);
 		if (m_idleTimeoutTimer >= 0) {
 			const auto timerId = Interlocked::Exchange(m_idleTimeoutTimer, -2);
@@ -272,12 +272,17 @@ private:
 		if (m_refsCount > 0) {
 			return;
 		}
+
 		assert(m_refsCount == 0);
+		assert(m_readingState != RS_STOPPING_READING);
+		assert(m_readingState != RS_READING);
 
 		lock.release();
 
+		const auto instanceId = m_instanceId;
 		try {
-			m_signal->OnConnectionClosed(m_instanceId);
+			SharedPtr<ConnectionSignal> signal = m_signal;
+			signal->OnConnectionClosed(m_instanceId);
 		} catch (...) {
 			Format message(
 				"Unknown system error occurred for connection %5%: %1%:%2%."
@@ -287,7 +292,7 @@ private:
 			message
 				% __FILE__ % __LINE__
 				% TUNNELEX_NAME % TUNNELEX_BUILD_IDENTITY
-				% m_instanceId;
+				% instanceId;
 			Log::GetInstance().AppendFatalError(message.str());
 			assert(false);
 		}
@@ -301,6 +306,7 @@ private:
 			return;
 		}
 		Lock lock(m_mutex, isProactorCall);
+		assert(m_refsCount >= 0);
 		if (m_refsCount > 0) {
 			return;
 		}
@@ -468,13 +474,18 @@ public:
 				:	RS_NOT_STARTED;
 		signal.Swap(m_signal);
 		m_proactor = &proactor;
-		verify(++m_refsCount == 1);
+		verify(Interlocked::Increment(m_refsCount) == 1);
 
 	}
 
 	void Close() throw() {
+		assert(IsNotLockedByMyThread(m_mutex));
 		Lock lock(m_mutex, false);
 		assert(m_refsCount > 0);
+		assert(
+			m_refsCount > 1
+			|| (m_readingState != RS_STOPPING_READING
+				&& m_readingState != RS_READING));
 		m_myInterface.CloseIoHandle();
 		CheckedDelete(lock);
 	}
@@ -540,11 +551,9 @@ public:
 		}
 		CollectLatencyStat(messageHolder);
 		messageHolder.Reset();
-		{
-			Lock lock(m_mutex, false);
-			if (InitMessageReading(false)) {
-				return;
-			}
+		Lock lock(m_mutex, false);
+		if (!m_isClosed && InitMessageReading(false)) {
+			return;
 		}
 		m_signal->OnConnectionClose(m_instanceId);
 	}
@@ -575,13 +584,13 @@ public:
 public:
 
 	void StartReading() {
-		assert(m_readingState <= RS_NOT_STARTED);
-		if (m_readingState == RS_NOT_ALLOWED) {
-			return;
-		}
 		{
 			Lock lock(m_mutex, false);
-			assert(!m_isClosed); // sanity check, never should be true here
+			assert(m_readingState <= RS_STOPPING_READING);
+			assert(!m_isClosed);
+			if (m_readingState == RS_NOT_ALLOWED) {
+				return;
+			}
 			m_readingState = RS_NOT_READING;
 			if (InitMessageReading(true)) {
 				return;
@@ -596,7 +605,9 @@ public:
 	void StopReading() {
 		assert(IsLockedByMyThread(m_mutex));
 		if (m_readingState > RS_NOT_ALLOWED) {
-			m_readingState = RS_NOT_STARTED;
+			m_readingState = m_readingState == RS_READING
+				?	RS_STOPPING_READING
+				:	RS_NOT_STARTED;
 		}
 	}
 
@@ -839,6 +850,22 @@ private:
 		}
 	}
 
+	void CancelReadingState() throw() {
+		assert(IsLockedByMyThread(m_mutex));
+		assert(m_refsCount > 0);
+		assert(
+			m_readingState == RS_STOPPING_READING
+			|| m_readingState == RS_READING);
+		switch (m_readingState) {
+			case RS_STOPPING_READING:
+				m_readingState = RS_NOT_STARTED;
+				break;
+			case  RS_READING:
+				m_readingState = RS_NOT_READING;
+				break;
+		}
+	}
+
 	template<typename Result>
 	void HandleReadStream(const Result &result) {
 
@@ -853,8 +880,10 @@ private:
 				result.error(),
 				m_closeCodeNotSetValue);
 			ReportReadError(result);
-			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
+			CancelReadingState();
+			m_signal->OnConnectionClose(m_instanceId);
+			assert(m_refsCount > 0);
 			CheckedDelete(lock);
 			return;
 		} else if (result.bytes_transferred() == 0) {
@@ -866,8 +895,10 @@ private:
 			Log::GetInstance().AppendDebug(
 				"Connection %1% closed by remote side.",
 				m_instanceId);
-			m_signal->OnConnectionClose(m_instanceId);
 			Lock lock(m_mutex, true);
+			CancelReadingState();
+			m_signal->OnConnectionClose(m_instanceId);
+			assert(m_refsCount > 0);
 			CheckedDelete(lock);
 			return;
 		}
@@ -875,16 +906,19 @@ private:
 		bool isSuccess = false;
 		try {
 			Lock lock(m_mutex, true);
+			CancelReadingState();
 			assert(
 				m_setupState == SETUP_STATE_NOT_COMPLETED
 				|| m_setupState == SETUP_STATE_COMPLETED);
+			assert(!IsSetupFailed());
 			if (!m_isClosed) {
 				m_myInterface.ReadRemote(messageBlock);
 				isSuccess = InitMessageReading(true);
 			}
 		} catch (const TunnelEx::LocalException &ex) {
-			Log::GetInstance().AppendError(
-				ConvertString<String>(ex.GetWhat()).GetCStr());
+			Format message("%1% (reading connection %2%)");
+			message % WString(ex.GetWhat()) % m_instanceId;
+			Log::GetInstance().AppendError(message.str());
 		}
 
 		if (!isSuccess) {
@@ -939,10 +973,9 @@ private:
 	bool InitMessageReading(bool isForcedInit) {
 
 		assert(IsLockedByMyThread(m_mutex));
+		assert(!m_isClosed);
 
-		if (isForcedInit && m_readingState > RS_NOT_STARTED) {
-			m_readingState = RS_NOT_READING;
-		} else if (m_readingState < RS_NOT_READING) {
+		if (m_readingState < RS_NOT_READING) {
 			return true;
 		}
 		assert(m_readingState >= RS_NOT_READING);

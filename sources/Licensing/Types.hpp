@@ -18,8 +18,10 @@ namespace TunnelEx { namespace Licensing {
 		UR_FEATURE,
 		//! from license key format (XML, encrypted or sign)
 		UR_FORMAT,
-		//! time limit
-		UR_TIME,
+		//! time limit (not starter yet)
+		UR_TIME_START,
+		//! time limit (period is over)
+		UR_TIME_END,
 		//! should be updated
 		UR_UPDATE,
 		//! too more scores

@@ -54,8 +54,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="TexModSerial.def">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="TexModSerial.def" />
+    <None Include="Module Serial.props" />
   </ItemGroup>
 </Project>

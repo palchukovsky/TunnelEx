@@ -19,7 +19,10 @@
 #include "Core/MessageBlock.hpp"
 
 using namespace TunnelEx;
-using namespace TunnelEx::Mods::Inet;
+using namespace TunnelEx::Mods::Ftp;
+
+using TunnelEx::Mods::Inet::TcpEndpointAddress;
+using TunnelEx::Mods::Inet::InetEndpointAddress;
 
 FtpListener::FtpListener(
 			TunnelEx::Server::Ref server,
@@ -95,12 +98,7 @@ TunnelRule FtpListener::CreateRule(
 					.GetCStr(),
 				0,
 				currentInputRuleEndpoint.GetServer()));
-		const AutoPtr<const EndpointAddress> remoteAddress(
-			m_currentConnection.GetRemoteAddress());
-		inputAddr->CopyCertificate(
-			currentInputRuleEndpoint,
-			*boost::polymorphic_downcast<const TcpEndpointAddress *>(
-				remoteAddress.Get()));
+		GetInputCertificates(currentInputRuleEndpoint, *inputAddr);
 		RuleEndpoint input(inputAddr, true);
 		const auto &preListeners
 			= m_currentConnection.GetRuleEndpoint().GetPreListeners();
@@ -129,11 +127,7 @@ TunnelRule FtpListener::CreateRule(
 		AutoPtr<TcpEndpointAddress> destination(
 			boost::polymorphic_downcast<TcpEndpointAddress *>(
 				m_oppositeConnection.GetRuleEndpointAddress()->Clone().Release()));
-		const AutoPtr<const EndpointAddress> oppositeAddress(
-			m_oppositeConnection.GetRemoteAddress());
-		destination->CopyRemoteCertificate(
-			*boost::polymorphic_downcast<const TcpEndpointAddress *>(
-				oppositeAddress.Get()));
+		GetDestinationCertificates(*destination);
 		destination->SetHost(
 			ConvertString(originalIpAddress.c_str(), wStrIpAddressBuffer).GetCStr());
 		destination->SetPort(originalPort);
@@ -279,26 +273,23 @@ DataTransferCommand FtpListener::OnNewMessageBlock(MessageBlock &messageBlock) {
 
 }
 
-namespace TunnelEx { namespace Mods { namespace Inet {
-	
-	SharedPtr<PreListener> CreateActiveFtpListener(
-			Server::Ref server,
-			const RuleEndpoint::ListenerInfo &,
-			const TunnelRule &,
-			const Connection &currentConnection,
-			const Connection &oppositeConnection) {
-		return SharedPtr<PreListener>(
-			new FtpListenerForActiveMode(server, currentConnection, oppositeConnection));
-	}
+void FtpListener::GetInputCertificates(
+			const TcpEndpointAddress &currentInputRuleEndpoint,
+			TcpEndpointAddress &destination)
+		const {
+	const AutoPtr<const EndpointAddress> remoteAddress(
+		GetCurrentConnection().GetRemoteAddress());
+	destination.CopyCertificate(
+		currentInputRuleEndpoint,
+		*boost::polymorphic_downcast<const TcpEndpointAddress *>(
+			remoteAddress.Get()));
+}
 
-	SharedPtr<PreListener> CreatePassiveFtpListener(
-			Server::Ref server,
-			const RuleEndpoint::ListenerInfo &,
-			const TunnelRule &,
-			const Connection &currentConnection,
-			const Connection &oppositeConnection) {
-		return SharedPtr<PreListener>(
-			new FtpListenerForPassiveMode(server, currentConnection, oppositeConnection));
-	}
-
-} } }
+void FtpListener::GetDestinationCertificates(
+			TcpEndpointAddress &destination)
+		const {
+	const AutoPtr<const EndpointAddress> oppositeAddress(
+		GetOppositeConnection().GetRemoteAddress());
+	destination.CopyRemoteCertificate(
+		*boost::polymorphic_downcast<const TcpEndpointAddress *>(oppositeAddress.Get()));
+}

@@ -22,6 +22,7 @@ var controlCenterFileName	= "TunnelExControlCenter";
 var legacyFileName			= "TexLegacy";
 var modulePipeFileName		= "TexModPipe";
 var moduleInetFileName		= "TexModInet";
+var moduleFtpFileName		= "TexModFtp";
 var moduleSerialFileName	= "TexModSerial";
 var modulePathfinderFileName = "TexModPathfinder";
 var moduleUpnpFileName		= "TexModUpnp";
@@ -125,6 +126,7 @@ function CreateVersionCppHeaderFile() {
 	var legacyFileNameLine		= "#\tdefine TUNNELEX_LEGACY_FILE_NAME\t\t\t\"" + legacyFileName + "\"";
 	var modulePipeFileNameLine	= "#\tdefine TUNNELEX_MODULE_PIPE_FILE_NAME\t\t\"" + modulePipeFileName + "\"";
 	var moduleInetFileNameLine	= "#\tdefine TUNNELEX_MODULE_INET_FILE_NAME\t\t\"" + moduleInetFileName + "\"";
+    var moduleFtpFileNameLine = "#\tdefine TUNNELEX_MODULE_FTP_FILE_NAME\t\t\"" + moduleFtpFileName + "\"";
 	var moduleSerialFileNameLine = "#\tdefine TUNNELEX_MODULE_SERIAL_FILE_NAME\t\t\"" + moduleSerialFileName + "\"";
 	var modulePathfinderFileNameLine = "#\tdefine TUNNELEX_MODULE_PATHFINDER_FILE_NAME\t\"" + modulePathfinderFileName + "\"";
 	var moduleUpnpFileNameLine	= "#\tdefine TUNNELEX_MODULE_UPNP_FILE_NAME\t\t\"" + moduleUpnpFileName + "\"";
@@ -148,6 +150,7 @@ function CreateVersionCppHeaderFile() {
 			|| !IsExistsInFile(fullFileName, legacyFileNameLine)
 			|| !IsExistsInFile(fullFileName, modulePipeFileNameLine)
 			|| !IsExistsInFile(fullFileName, moduleInetFileNameLine)
+            || !IsExistsInFile(fullFileName, moduleFtpFileNameLine)
 			|| !IsExistsInFile(fullFileName, moduleSerialFileNameLine)
 			|| !IsExistsInFile(fullFileName, modulePathfinderFileNameLine)
 			|| !IsExistsInFile(fullFileName, moduleUpnpFileNameLine)
@@ -193,6 +196,7 @@ function CreateVersionCppHeaderFile() {
 		f.WriteLine(legacyFileNameLine);
 		f.WriteLine(modulePipeFileNameLine);
 		f.WriteLine(moduleInetFileNameLine);
+        f.WriteLine(moduleFtpFileNameLine);
 		f.WriteLine(moduleSerialFileNameLine);
 		f.WriteLine(modulePathfinderFileNameLine);
 		f.WriteLine(moduleUpnpFileNameLine);

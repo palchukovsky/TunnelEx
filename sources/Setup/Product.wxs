@@ -72,13 +72,14 @@
 				<ComponentRef Id="Ace" />
 				<ComponentRef Id="MsFramework" />
 				<ComponentRef Id="ModuleInet" />
+        <ComponentRef Id="ModuleFtp" />
 				<ComponentRef Id="ModulePathfinder" />
 				<ComponentRef Id="ModulePipe" />
 				<ComponentRef Id="ModuleSerial" />
 				<ComponentRef Id="ModuleUpnp" />
 			</Feature>
 			<Feature Id="ControlCenterFeature"
-					 Title="$(var.ProductFullName) TunnelEx Control Center"
+					 Title="$(var.ProductFullName) Control Center"
 					 TypicalDefault="install"
 					 Level="1"
 					 AllowAdvertise="no">
@@ -88,6 +89,7 @@
 				<ComponentRef Id="ControlCenterTemplates" />
 				<ComponentRef Id="ServiceControl" />
 				<ComponentRef Id="ModuleInet" />
+        <ComponentRef Id="ModuleFtp" />
 				<ComponentRef Id="ModulePathfinder" />
 				<ComponentRef Id="ModuleSerial" />
 				<ComponentRef Id="ModuleUpnp" />

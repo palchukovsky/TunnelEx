@@ -860,7 +860,7 @@ namespace {
 
 	}
 
-	TEST(Licensing, NoStartedTimeForLicenseKey) {
+	TEST(Licensing, NotStartedTimeForLicenseKey) {
 
 		licenseKeyTestServer.reset(
 			new LicenseKeyTestServer(
@@ -875,7 +875,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -886,7 +886,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(10));
 			EXPECT_FALSE(license.IsFeatureAvailable(10 + 1));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(10 + 1));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -897,7 +897,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(5));
 			EXPECT_FALSE(license.IsFeatureAvailable(5 + 1));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(5 + 1));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -908,14 +908,14 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
 
 	}
 
-	TEST(Licensing, NoStartedTimeForLicenseKeyUpdate) {
+	TEST(Licensing, NotStartedTimeForLicenseKeyUpdate) {
 
 		licenseKeyTestServer.reset(
 			new LicenseKeyTestServer(
@@ -930,7 +930,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_UPDATE, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -941,7 +941,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(10));
 			EXPECT_FALSE(license.IsFeatureAvailable(10 + 1));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(10 + 1));
-			EXPECT_EQ(tex::Licensing::UR_UPDATE, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -952,7 +952,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(5));
 			EXPECT_FALSE(license.IsFeatureAvailable(5 + 1));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(5 + 1));
-			EXPECT_EQ(tex::Licensing::UR_UPDATE, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -963,7 +963,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_UPDATE, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -985,7 +985,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_END, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -996,7 +996,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(10));
 			EXPECT_FALSE(license.IsFeatureAvailable(10 + 1));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(10 + 1));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_END, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -1007,7 +1007,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(5));
 			EXPECT_FALSE(license.IsFeatureAvailable(5 + 1));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(5 + 1));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_END, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -1018,7 +1018,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_END, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -1131,7 +1131,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_START, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}
@@ -1189,7 +1189,7 @@ namespace {
 			EXPECT_FALSE(license.IsFeatureValueAvailable(true));
 			EXPECT_FALSE(license.IsFeatureAvailable(false));
 			EXPECT_FALSE(license.IsFeatureValueAvailable(false));
-			EXPECT_EQ(tex::Licensing::UR_TIME, license.GetUnactivityReason());
+			EXPECT_EQ(tex::Licensing::UR_TIME_END, license.GetUnactivityReason());
 			License::FeatureValue featureValue;
 			EXPECT_FALSE(license.GetFeatureValue(featureValue));
 		}

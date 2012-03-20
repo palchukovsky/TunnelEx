@@ -191,6 +191,36 @@ AutoPtr<LocalException> ConnectionOpeningException::Clone() const {
 
 //////////////////////////////////////////////////////////////////////////
 
+ConnectionOpeningGracefullyCanceled::ConnectionOpeningGracefullyCanceled()
+		throw()
+		: ConnectionOpeningException(L"Connection opening gracefully canceled") {
+	//...//
+}
+
+ConnectionOpeningGracefullyCanceled::ConnectionOpeningGracefullyCanceled(
+			const ConnectionOpeningGracefullyCanceled &rhs)
+		throw()
+		: ConnectionOpeningException(rhs) {
+	//...//
+}
+
+ConnectionOpeningGracefullyCanceled::~ConnectionOpeningGracefullyCanceled() throw() {
+	//...//
+}
+
+ConnectionOpeningGracefullyCanceled & ConnectionOpeningGracefullyCanceled::operator =(
+			const ConnectionOpeningGracefullyCanceled &rhs)
+		throw() {
+	ConnectionOpeningException::operator =(rhs);
+	return *this;
+}
+
+AutoPtr<LocalException> ConnectionOpeningGracefullyCanceled::Clone() const {
+	return AutoPtr<LocalException>(new ConnectionOpeningGracefullyCanceled(*this));
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 SourceConnectionOpeningException::SourceConnectionOpeningException(
 			const wchar_t *what) throw()
 		: ConnectionOpeningException(what) {
