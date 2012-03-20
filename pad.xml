@@ -34,9 +34,9 @@
 	</Company_Info>
 	<Program_Info>
 		<Program_Name>TunnelEx: HTTP Tunneling Software</Program_Name>
-		<Program_Version>2.4.4.0</Program_Version>
-		<Program_Release_Month>02</Program_Release_Month>
-		<Program_Release_Day>27</Program_Release_Day>
+		<Program_Version>2.4.5.0</Program_Version>
+		<Program_Release_Month>03</Program_Release_Month>
+		<Program_Release_Day>21</Program_Release_Day>
 		<Program_Release_Year>2012</Program_Release_Year>
 		<Program_Cost_Dollars>13.95</Program_Cost_Dollars>
 		<Program_Cost_Other_Code>EUR</Program_Cost_Other_Code>
@@ -46,14 +46,14 @@
 		<Program_Install_Support>Install and Uninstall</Program_Install_Support>
 		<Program_OS_Support>Win7 x32,Win7 x64,WinServer,WinVista,WinVista x64,WinXP</Program_OS_Support>
 		<Program_Language>English</Program_Language>
-		<Program_Change_Info>Fixed several problems with the SSL and FTPS connections.</Program_Change_Info>
+		<Program_Change_Info>Fixed several problems with the SSL and active mode FTPS.</Program_Change_Info>
 		<Program_Specific_Category>Internet</Program_Specific_Category>
 		<Program_Category_Class>Network &amp; Internet::Other</Program_Category_Class>
 		<Program_System_Requirements>Less than 15Mb of free disc space.</Program_System_Requirements>
 		<File_Info>
-			<File_Size_Bytes>4232104</File_Size_Bytes>
-			<File_Size_K>4132</File_Size_K>
-			<File_Size_MB>4.04</File_Size_MB>
+			<File_Size_Bytes>4309941</File_Size_Bytes>
+			<File_Size_K>4208</File_Size_K>
+			<File_Size_MB>4.11</File_Size_MB>
 		</File_Info>
 		<Expire_Info>
 			<Has_Expire_Info>Y</Has_Expire_Info>
