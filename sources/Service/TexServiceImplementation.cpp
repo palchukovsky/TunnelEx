@@ -365,8 +365,9 @@ TexServiceImplementation::TexServiceImplementation(boost::optional<LogLevel> for
 	Log::GetInstance().SetMinimumRegistrationLevel(forcedLogLevel
 		?	*forcedLogLevel
 		:	conf.GetLogLevel());
-	Log::GetInstance().AppendInfo(
-		"Stated " TUNNELEX_NAME " " TUNNELEX_VERSION_FULL TUNNELEX_BUILD_IDENTITY_ADD);
+	Log::GetInstance().AppendForced(
+		TunnelEx::LOG_LEVEL_INFO,
+		"Started " TUNNELEX_NAME " " TUNNELEX_VERSION_FULL TUNNELEX_BUILD_IDENTITY_ADD);
 	if (logWasTruncated) {
 		Log::GetInstance().AppendInfo(
 			(Format("Log was truncated, previous size - %1% bytes.") % previousLogSize).str());
