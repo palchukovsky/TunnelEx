@@ -179,6 +179,7 @@ void IncomingTcpSslClientConnection::HandleAcceptSuccess(
 	assert(
 		SSL_get_peer_certificate(stream.ssl()) == 0
 		|| SSL_get_verify_result(stream.ssl()) == X509_V_OK);
+	UseUnused(stream);
 	Log::GetInstance().AppendDebug(
 		"SSL/TLS connection for %1% created (connected).",
 		GetInstanceId());
