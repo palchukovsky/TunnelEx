@@ -36,6 +36,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName)$(TargetExt).pdb</ProgramDatabaseFile>
       <ProfileGuidedDatabase>$(TargetDir)$(TargetName)$(TargetExt).pgd</ProfileGuidedDatabase>
       <AdditionalLibraryDirectories>$(BOOST_PATH)\boost_1_46_1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
